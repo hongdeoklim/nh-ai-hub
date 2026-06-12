@@ -1,0 +1,51 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Secrets / credentials (절대 커밋 금지)
+.env
+.env.*
+!.env.example
+key.txt
+*.pem
+*.key
+nh-ai-hub-*.json
+
+# NH-AX-HUB Root Dummy / Debug Scripts
+test-gemini.js
+test-gemini-models.js
+test-gemini-dim.js
+search_code.js
+search_transcript.js
+db-output.txt
+
+
+.vercel
+
+# Secrets
+.env
+key.txt
+dify.txt
+nh-ai-hub-*.json
+

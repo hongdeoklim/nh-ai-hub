@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./node_modules/**)",
+      "Read(./dist/**)",
+      "Read(./.firebase/**)",
+      "Read(./package-lock.json)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./key.txt)",
+      "Read(./nh-ai-hub-*.json)",
+      "Read(./*.pem)",
+      "Read(./*.key)"
+    ]
+  }
+}

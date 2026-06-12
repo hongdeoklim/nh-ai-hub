@@ -1,0 +1,70 @@
+openapi: 3.0.0
+info:
+  title: NH-AX-HUB Employee Search API
+  description: 사내 직원 연락처 및 부서, 직급 정보를 조회하는 API (Dify Custom Tool 연동용)
+  version: "1.0.0"
+servers:
+  - url: "https://wndnjrcljdvbnezfpisb.supabase.co/functions/v1/dify-hub-api"
+    description: "Production Server"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /:
+    get:
+      summary: "협력업체 검색"
+      description: "회사명이나 관련 조건을 기반으로 협력업체 및 관계처 정보를 조회합니다."
+      operationId: searchPartners
+      parameters:
+        - name: query
+          in: query
+          description: "검색할 협력업체 이름 (선택사항)"
+          required: false
+          schema:
+            type: string
+        - name: department
+          in: query
+          description: "조회할 특정 부서명 (선택사항, 예: 인사팀)"
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "조회 성공"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  partners:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        company_name:
+                          type: string
+                        business_number:
+                          type: string
+                        representative_name:
+                          type: string
+                        contact_person:
+                          type: string
+                        contact_phone:
+                          type: string
+                        email:
+                          type: string
+                        extra_data:
+                          type: object
+        '401':
+          description: "인증 실패 (토큰 오류)"
+        '500':
+          description: "서버 내부 오류"

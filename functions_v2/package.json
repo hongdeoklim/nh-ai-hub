@@ -1,0 +1,17 @@
+{
+  "name": "nh-ai-hub-knowledge-gateway",
+  "version": "2.0.0",
+  "description": "NH AI Hub Gen 2 시맨틱 지식 그래프 게이트웨이",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["nh-ai-hub", "knowledge-graph", "pgvector", "embedding"],
+  "license": "UNLICENSED",
+  "private": true
+}

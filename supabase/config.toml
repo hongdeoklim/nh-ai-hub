@@ -1,0 +1,92 @@
+[functions.integration-google-start]
+verify_jwt = true
+
+[functions.integration-google-exchange]
+verify_jwt = true
+
+[functions.integration-google-status]
+verify_jwt = true
+
+[functions.integration-google-disconnect]
+verify_jwt = true
+
+[functions.google-workspace-api]
+verify_jwt = true
+
+[functions.google-agent]
+verify_jwt = true
+
+[functions.read-google-sheet]
+verify_jwt = true
+
+[functions.integration-microsoft-start]
+verify_jwt = true
+
+[functions.integration-microsoft-exchange]
+verify_jwt = true
+
+[functions.integration-microsoft-status]
+verify_jwt = true
+
+[functions.integration-microsoft-disconnect]
+verify_jwt = true
+
+[functions.microsoft-graph-api]
+verify_jwt = true
+
+[functions.user-document-upload]
+verify_jwt = true
+
+
+[functions.admin-user-action]
+verify_jwt = true
+
+# -----------------------------------------------------------------------------
+# [22단계] generate-weekly-report — 매주 월요일 06:00 UTC 자동 실행 (Cron)
+# -----------------------------------------------------------------------------
+# Supabase Dashboard → Edge Functions → generate-weekly-report → Schedules
+#   Cron expression: 0 6 * * 1
+#   (UTC 06:00 = KST 15:00, 월요일)
+#
+# Secrets (Project Settings → Edge Functions):
+#   ANTHROPIC_API_KEY  — 권장 (WEEKLY_REPORT_MODEL 기본: claude-3-5-sonnet-20241022)
+#   OPENAI_API_KEY     — Anthropic 미설정 시 gpt-4o-mini 폴백
+#   CRON_SECRET        — 선택: x-cron-secret 헤더 검증
+#
+# 수동 트리거 (service_role):
+#   curl -X POST "$SUPABASE_URL/functions/v1/generate-weekly-report" \
+#     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+#     -H "Content-Type: application/json" \
+#     -d '{"force":true}'
+#
+# pg_cron 예시는 supabase/migrations/20260522100000_weekly_ai_reports.sql 하단 주석 참고.
+# -----------------------------------------------------------------------------
+
+[functions.generate-weekly-report]
+verify_jwt = false
+
+[functions.deep-research]
+verify_jwt = true
+
+# -----------------------------------------------------------------------------
+# [29단계] daily-dlp-masking — 7일 지연 DLP 마스킹 (Cron / service_role)
+# Secrets: SUPABASE_SERVICE_ROLE_KEY, CRON_SECRET (선택)
+# Schedule: 0 18 * * *  (UTC 18:00 = KST 03:00)
+# -----------------------------------------------------------------------------
+
+[functions.daily-dlp-masking]
+verify_jwt = false
+
+# ai-chat: OPTIONS 프리플라이트는 JWT 없이 오므로 게이트웨이 verify_jwt 를 끕니다.
+# POST 요청의 사용자 JWT 검증은 supabase/functions/ai-chat/index.ts 내부에서 수행합니다.
+[functions.ai-chat]
+verify_jwt = false
+
+
+[functions.creative-generate]
+verify_jwt = false
+
+
+
+[functions.list-gemini-models]
+verify_jwt = false

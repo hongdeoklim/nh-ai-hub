@@ -1,0 +1,967 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+}
+
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  --sans:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --heading:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 27px/145% var(--sans);
+  letter-spacing: 0.27px;
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 24px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --border: #2e303a;
+    --code-bg: #1f2028;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.15);
+    --accent-border: rgba(192, 132, 252, 0.5);
+    --social-bg: rgba(47, 48, 58, 0.5);
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  }
+
+  :root:not(.light) #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+}
+
+:root.dark {
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --border: #2e303a;
+  --code-bg: #1f2028;
+  --accent: #c084fc;
+  --accent-bg: rgba(192, 132, 252, 0.15);
+  --accent-border: rgba(192, 132, 252, 0.5);
+  --social-bg: rgba(47, 48, 58, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+}
+
+:root.dark #social .button-icon {
+  filter: invert(1) brightness(2);
+}
+
+#root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  border-inline: none;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* 사용자 포털 — :root(27px) rem·h1(84px) 상속 차단, 체감 60% 컴팩트 */
+.app-shell {
+  font-size: 16px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+.app-shell h1,
+.app-shell h2,
+.app-shell h3 {
+  margin: 0;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: inherit;
+  font-weight: 600;
+}
+
+.app-shell h1 {
+  font-size: 20px;
+}
+
+.app-shell h2 {
+  font-size: 18px;
+}
+
+.app-shell h3 {
+  font-size: 16px;
+}
+
+.app-shell p,
+.app-shell li,
+.app-shell td,
+.app-shell th,
+.app-shell label,
+.app-shell button,
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.app-shell code {
+  font-size: 14px;
+  line-height: 1.35;
+  padding: 2px 6px;
+}
+
+.app-shell .text-xs {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.app-shell .text-sm {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.app-shell .text-base {
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.app-shell .text-lg {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.app-shell .text-xl {
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.app-shell .text-2xl {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.app-shell .text-3xl {
+  font-size: 29px;
+  line-height: 1.25;
+}
+
+.app-shell .text-4xl {
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.app-shell .text-5xl {
+  font-size: 36px;
+  line-height: 1.2;
+}
+
+.app-shell .text-\[10px\] {
+  font-size: 8px;
+}
+
+.app-shell .text-\[11px\] {
+  font-size: 8px;
+}
+
+.app-shell .text-\[11\.5px\] {
+  font-size: 8px;
+}
+
+.app-shell .text-\[12px\] {
+  font-size: 8px;
+}
+
+.app-shell .text-\[13px\] {
+  font-size: 8px;
+}
+
+.app-shell .text-\[13\.5px\] {
+  font-size: 8px;
+}
+
+.app-shell .text-\[14px\] {
+  font-size: 8px;
+}
+
+.app-shell .text-\[15px\] {
+  font-size: 9px;
+}
+
+/* app-shell Tailwind text 보정 우회 — 실제 15px (바로가기 등) */
+.app-shell .text-actual-15 {
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* app-shell Tailwind text 보정 우회 — 실제 10px (첨부 메뉴 보조 문구 등) */
+.app-shell .text-actual-10 {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+/* app-shell Tailwind text 보정 우회 — 실제 11px (답변 더보기 메뉴 등) */
+.app-shell .text-actual-11 {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* app-shell Tailwind text 보정 우회 — 실제 13px (Gemini 사고 과정 토글 등) */
+.app-shell .text-actual-13 {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* app-shell Tailwind text 보정 우회 — 실제 14px (Gemini 채팅 본문) */
+.app-shell .text-actual-14 {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.app-shell .chat-markdown-gemini th,
+.app-shell .chat-markdown-gemini td {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.app-shell .gemini-prose p,
+.app-shell .gemini-prose .text-actual-14 {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.app-shell .chat-markdown-gemini > :first-child {
+  margin-top: 0;
+}
+
+.app-shell .chat-markdown-gemini > :last-child {
+  margin-bottom: 0;
+}
+
+.app-shell .chat-markdown-gemini img {
+  max-height: 18rem;
+  border-radius: 0.75rem;
+}
+
+@keyframes gemini-avatar-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gemini-avatar-sparkle-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(0.92);
+  }
+}
+
+.app-shell .gemini-avatar-ring {
+  background: conic-gradient(
+    from 0deg,
+    #4285f4,
+    #9b72cb,
+    #d96570,
+    #f9ab00,
+    #4285f4
+  );
+  animation: gemini-avatar-ring-spin 1.15s linear infinite;
+}
+
+.app-shell .gemini-avatar-sparkle-pulse {
+  animation: gemini-avatar-sparkle-pulse 1.4s ease-in-out infinite;
+}
+
+/* Gemini LM canvas — 검은 바탕 + 블루/인디고 그라데이션 메시 (ChatArea + composer) */
+@keyframes gemini-lm-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(4%, 3%, 0) scale(1.06);
+  }
+  66% {
+    transform: translate3d(-3%, 2%, 0) scale(0.96);
+  }
+}
+
+@keyframes gemini-lm-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  40% {
+    transform: translate3d(-5%, -2%, 0) scale(1.08);
+  }
+  70% {
+    transform: translate3d(3%, -4%, 0) scale(0.94);
+  }
+}
+
+@keyframes gemini-lm-drift-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.42;
+  }
+  50% {
+    transform: translate3d(2%, 5%, 0) scale(1.1);
+    opacity: 0.62;
+  }
+}
+
+@keyframes gemini-lm-mesh-shift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(-2%, 1%, 0) rotate(2deg);
+    opacity: 0.55;
+  }
+}
+
+.gemini-lm-background {
+  background: #050508;
+}
+
+.gemini-lm-background__base {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 88% 52% at 50% -12%, rgba(66, 133, 244, 0.22) 0%, transparent 58%),
+    radial-gradient(ellipse 62% 48% at 100% 8%, rgba(99, 102, 241, 0.14) 0%, transparent 52%),
+    radial-gradient(ellipse 54% 44% at 0% 14%, rgba(52, 168, 183, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse 76% 56% at 50% 108%, rgba(66, 133, 244, 0.12) 0%, transparent 56%),
+    linear-gradient(180deg, #050508 0%, #08080f 42%, #050508 100%);
+}
+
+.gemini-lm-background__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  will-change: transform, opacity;
+}
+
+.gemini-lm-background__orb--blue {
+  top: -14%;
+  left: 18%;
+  width: min(58vw, 520px);
+  height: min(42vh, 380px);
+  background: radial-gradient(circle, rgba(66, 133, 244, 0.72) 0%, rgba(66, 133, 244, 0.08) 52%, transparent 72%);
+  animation: gemini-lm-drift-a 20s ease-in-out infinite;
+}
+
+.gemini-lm-background__orb--indigo {
+  top: 8%;
+  right: -8%;
+  width: min(46vw, 420px);
+  height: min(36vh, 320px);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.55) 0%, rgba(99, 102, 241, 0.06) 55%, transparent 72%);
+  animation: gemini-lm-drift-b 24s ease-in-out infinite;
+}
+
+.gemini-lm-background__orb--violet {
+  bottom: 18%;
+  left: -6%;
+  width: min(44vw, 400px);
+  height: min(34vh, 300px);
+  background: radial-gradient(circle, rgba(155, 114, 203, 0.48) 0%, rgba(155, 114, 203, 0.05) 54%, transparent 72%);
+  animation: gemini-lm-drift-c 26s ease-in-out infinite;
+}
+
+.gemini-lm-background__orb--cyan {
+  bottom: -10%;
+  left: 28%;
+  width: min(64vw, 560px);
+  height: min(38vh, 340px);
+  background: radial-gradient(circle, rgba(52, 168, 183, 0.42) 0%, rgba(66, 133, 244, 0.08) 48%, transparent 70%);
+  animation: gemini-lm-drift-b 22s ease-in-out infinite reverse;
+}
+
+.gemini-lm-background__mesh {
+  position: absolute;
+  inset: -8%;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 40%, rgba(66, 133, 244, 0.08) 0%, transparent 62%),
+    radial-gradient(ellipse 90% 60% at 20% 70%, rgba(99, 102, 241, 0.06) 0%, transparent 58%);
+  animation: gemini-lm-mesh-shift 16s ease-in-out infinite;
+}
+
+.gemini-lm-background--generating .gemini-lm-background__orb {
+  filter: blur(64px);
+  animation-duration: 9s;
+}
+
+.gemini-lm-background--generating .gemini-lm-background__orb--blue {
+  opacity: 0.95;
+}
+
+.gemini-lm-background--generating .gemini-lm-background__mesh {
+  animation-duration: 6s;
+  opacity: 0.72;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gemini-lm-background__orb,
+  .gemini-lm-background__mesh {
+    animation: none !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .gemini-lm-background {
+    background: #f8f7f4;
+  }
+
+  .gemini-lm-background__base {
+    background:
+      radial-gradient(ellipse 88% 52% at 50% -12%, rgba(66, 133, 244, 0.12) 0%, transparent 58%),
+      radial-gradient(ellipse 62% 48% at 100% 8%, rgba(99, 102, 241, 0.08) 0%, transparent 52%),
+      radial-gradient(ellipse 54% 44% at 0% 14%, rgba(52, 168, 183, 0.06) 0%, transparent 50%),
+      linear-gradient(180deg, #faf9f6 0%, #f3f1ec 48%, #faf9f6 100%);
+  }
+
+  .gemini-lm-background__orb {
+    filter: blur(88px);
+    opacity: 0.55;
+  }
+
+  .gemini-lm-background__orb--blue {
+    background: radial-gradient(circle, rgba(66, 133, 244, 0.38) 0%, rgba(66, 133, 244, 0.04) 52%, transparent 72%);
+  }
+
+  .gemini-lm-background__orb--indigo {
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, rgba(99, 102, 241, 0.04) 55%, transparent 72%);
+  }
+
+  .gemini-lm-background__orb--violet {
+    background: radial-gradient(circle, rgba(155, 114, 203, 0.22) 0%, rgba(155, 114, 203, 0.03) 54%, transparent 72%);
+  }
+
+  .gemini-lm-background__orb--cyan {
+    background: radial-gradient(circle, rgba(52, 168, 183, 0.2) 0%, rgba(66, 133, 244, 0.04) 48%, transparent 70%);
+  }
+}
+
+.dark .gemini-lm-background {
+  background: #050508;
+}
+
+.dark .gemini-lm-background__base {
+  background:
+    radial-gradient(ellipse 88% 52% at 50% -12%, rgba(66, 133, 244, 0.22) 0%, transparent 58%),
+    radial-gradient(ellipse 62% 48% at 100% 8%, rgba(99, 102, 241, 0.14) 0%, transparent 52%),
+    radial-gradient(ellipse 54% 44% at 0% 14%, rgba(52, 168, 183, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse 76% 56% at 50% 108%, rgba(66, 133, 244, 0.12) 0%, transparent 56%),
+    linear-gradient(180deg, #050508 0%, #08080f 42%, #050508 100%);
+}
+
+.dark .gemini-lm-background__orb {
+  opacity: 1;
+}
+
+.gemini-zero-dark-bg {
+  background: transparent !important;
+}
+
+.gemini-zero-dark-composer {
+  background-color: rgb(5 5 8 / 0.72) !important;
+  background-image:
+    radial-gradient(ellipse 110% 70% at 50% 130%, rgba(66, 133, 244, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 72% 44% at 88% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 48%),
+    radial-gradient(ellipse 60% 38% at 12% 8%, rgba(52, 168, 183, 0.07) 0%, transparent 45%) !important;
+  backdrop-filter: blur(12px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gemini-zero-dark-composer {
+    background-color: rgb(5 5 8 / 0.72) !important;
+    background-image:
+      radial-gradient(ellipse 110% 70% at 50% 130%, rgba(66, 133, 244, 0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 72% 44% at 88% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 48%),
+      radial-gradient(ellipse 60% 38% at 12% 8%, rgba(52, 168, 183, 0.07) 0%, transparent 45%) !important;
+    backdrop-filter: blur(12px);
+  }
+}
+
+.gemini-zero-dark-composer.gemini-zero-dark-composer--generating {
+  background-color: rgb(5 5 8 / 0.78) !important;
+  box-shadow: inset 0 1px 0 rgba(66, 133, 244, 0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  .gemini-zero-dark-composer {
+    background-color: rgb(250 249 246 / 0.82) !important;
+    background-image:
+      radial-gradient(ellipse 110% 70% at 50% 130%, rgba(66, 133, 244, 0.08) 0%, transparent 55%),
+      radial-gradient(ellipse 72% 44% at 88% 0%, rgba(99, 102, 241, 0.06) 0%, transparent 48%) !important;
+    backdrop-filter: blur(10px);
+  }
+}
+
+.dark .gemini-zero-dark-composer {
+  background-color: rgb(5 5 8 / 0.72) !important;
+  background-image:
+    radial-gradient(ellipse 110% 70% at 50% 130%, rgba(66, 133, 244, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 72% 44% at 88% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 48%),
+    radial-gradient(ellipse 60% 38% at 12% 8%, rgba(52, 168, 183, 0.07) 0%, transparent 45%) !important;
+  backdrop-filter: blur(12px);
+}
+
+.dark .gemini-zero-dark-composer.gemini-zero-dark-composer--generating {
+  background-color: rgb(5 5 8 / 0.78) !important;
+  box-shadow: inset 0 1px 0 rgba(66, 133, 244, 0.12);
+}
+
+
+/* 사이드바 스레드 ⋮ 메뉴 — body 포털(:root 27px rem 상속 차단) */
+.private-chat-thread-menu,
+.private-chat-thread-menu button {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.composer-meta-rail {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.composer-meta-rail p,
+.composer-meta-rail span {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.chat-composer-popup-menu {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.app-shell .org-prompt-gallery-card h3.org-prompt-gallery-card-title {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.app-shell .org-prompt-gallery-card p.org-prompt-gallery-card-desc {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.app-shell .org-prompt-gallery-apply-btn {
+  font-size: 12px;
+  line-height: 1.2;
+  gap: 0.375rem;
+}
+
+.app-shell .org-prompt-gallery-apply-btn svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .app-shell .org-prompt-gallery-card h3.org-prompt-gallery-card-title {
+    font-size: 15px;
+  }
+
+  .app-shell .org-prompt-gallery-card p.org-prompt-gallery-card-desc {
+    font-size: 13px;
+  }
+}
+
+.app-shell .text-\[17px\] {
+  font-size: 10px;
+}
+
+.app-shell .text-\[18px\] {
+  font-size: 11px;
+}
+
+.app-shell .text-\[20px\] {
+  font-size: 12px;
+}
+
+@media (min-width: 640px) {
+  .app-shell .sm\:text-\[12px\] {
+    font-size: 8px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-shell .md\:text-\[13\.5px\] {
+    font-size: 8px;
+  }
+
+  .app-shell .md\:text-\[20px\] {
+    font-size: 12px;
+  }
+}
+
+.app-shell .h-1\.5 {
+  height: 6px;
+}
+
+.app-shell .w-1\.5 {
+  width: 6px;
+}
+
+.app-shell .h-3 {
+  height: 12px;
+}
+
+.app-shell .w-3 {
+  width: 12px;
+}
+
+.app-shell .h-4 {
+  height: 16px;
+}
+
+.app-shell .w-4 {
+  width: 16px;
+}
+
+.app-shell .h-5 {
+  height: 20px;
+}
+
+.app-shell .w-5 {
+  width: 20px;
+}
+
+.app-shell .h-6 {
+  height: 24px;
+}
+
+.app-shell .w-6 {
+  width: 24px;
+}
+
+.app-shell .h-8 {
+  height: 32px;
+}
+
+.app-shell .w-8 {
+  width: 32px;
+}
+
+.app-shell .h-10 {
+  height: 40px;
+}
+
+.app-shell .w-10 {
+  width: 40px;
+}
+
+.app-shell .h-11 {
+  height: 44px;
+}
+
+.app-shell .w-11 {
+  width: 44px;
+}
+
+.app-shell .h-12 {
+  height: 48px;
+}
+
+.app-shell .w-12 {
+  width: 48px;
+}
+
+.app-shell .size-4 {
+  width: 16px;
+  height: 16px;
+}
+
+.app-shell .size-5 {
+  width: 20px;
+  height: 20px;
+}
+
+.app-shell .size-6 {
+  width: 24px;
+  height: 24px;
+}
+
+/* Admin Control Tower — 전역 :root(27px)·h1(84px) 상속 차단 */
+.admin-shell,
+.admin-sidebar {
+  font-size: 15px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  color: rgb(15 23 42);
+}
+
+.dark .admin-shell,
+.dark .admin-sidebar,
+.admin-shell.dark,
+.admin-sidebar.dark {
+  color: rgb(241 245 249);
+}
+
+.admin-shell h1,
+.admin-sidebar h1 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.35;
+  color: inherit;
+}
+
+.admin-shell h2,
+.admin-sidebar h2 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin: 0;
+  line-height: 1.35;
+  color: inherit;
+}
+
+.admin-shell h3,
+.admin-sidebar h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.35;
+  color: inherit;
+}
+
+.admin-shell p,
+.admin-sidebar p,
+.admin-shell li,
+.admin-sidebar li,
+.admin-shell td,
+.admin-sidebar td,
+.admin-shell th,
+.admin-sidebar th,
+.admin-shell label,
+.admin-sidebar label,
+.admin-shell button,
+.admin-sidebar button,
+.admin-shell input,
+.admin-sidebar input,
+.admin-shell select,
+.admin-sidebar select,
+.admin-shell textarea,
+.admin-sidebar textarea {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.admin-shell code,
+.admin-sidebar code {
+  font-size: 12px;
+  padding: 1px 4px;
+  line-height: 1.35;
+  background: rgb(248 250 252);
+}
+
+.dark .admin-shell code,
+.dark .admin-sidebar code {
+  background: rgb(15 23 42);
+}
+
+/* :root(27px) rem 기준 Tailwind text-* → admin px 보정 */
+.admin-shell .text-xs,
+.admin-sidebar .text-xs {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.admin-shell .text-sm,
+.admin-sidebar .text-sm {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.admin-shell .text-base,
+.admin-sidebar .text-base {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.admin-shell .text-lg,
+.admin-sidebar .text-lg {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.admin-shell .text-xl,
+.admin-sidebar .text-xl {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.admin-shell .text-2xl,
+.admin-sidebar .text-2xl {
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.admin-shell .text-3xl,
+.admin-sidebar .text-3xl {
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.admin-shell .text-4xl,
+.admin-sidebar .text-4xl {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.admin-shell .text-5xl,
+.admin-sidebar .text-5xl {
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-shell,
+  .admin-sidebar {
+    color: rgb(241 245 249);
+  }
+}
+
+/* 노트북 워크스페이스 — app-shell 축소 없이 text-lg / text-sm 체감 유지 */
+.notebook-workspace {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notebook-workspace .text-lg {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.notebook-workspace .text-sm {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notebook-workspace .text-xs {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 84px;
+  letter-spacing: -2.52px;
+  margin: 48px 0;
+  @media (max-width: 1024px) {
+    font-size: 54px;
+    margin: 30px 0;
+  }
+}
+h2 {
+  font-size: 36px;
+  line-height: 118%;
+  letter-spacing: -0.36px;
+  margin: 0 0 12px;
+  @media (max-width: 1024px) {
+    font-size: 30px;
+  }
+}
+p {
+  margin: 0;
+}
+
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 22.5px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+/* Google OGB 스타일 — 데스크톱 헤더 좌측 정렬 버퍼 */
+.desktop-ogb-buffer {
+  display: none;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: 0;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .desktop-ogb-buffer {
+    display: block;
+    width: 3rem;
+    min-width: 3rem;
+    max-width: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-ogb-buffer {
+    width: 4.5rem;
+    min-width: 4.5rem;
+    max-width: 4.5rem;
+  }
+}
+
+
+/* Force Pretendard globally */
+body, .app-shell, .admin-shell, .admin-sidebar, #root {
+  font-family: 'Pretendard', sans-serif !important;
+}
