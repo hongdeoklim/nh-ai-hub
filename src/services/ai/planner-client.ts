@@ -10,12 +10,28 @@ export interface PlannerFullResult {
   wireframeHtml: string
 }
 
+function isCompletePlannerResult(value: unknown): value is PlannerFullResult {
+  if (!value || typeof value !== 'object') return false
+  const row = value as Partial<Record<keyof PlannerFullResult, unknown>>
+  return (
+    typeof row.prdMarkdown === 'string' && Boolean(row.prdMarkdown.trim()) &&
+    typeof row.specMarkdown === 'string' && Boolean(row.specMarkdown.trim()) &&
+    typeof row.mermaidFlow === 'string' && Boolean(row.mermaidFlow.trim()) &&
+    typeof row.wireframeHtml === 'string' && Boolean(row.wireframeHtml.trim())
+  )
+}
+
+export interface PlannerChatResult {
+  text: string
+  truncated: boolean
+}
+
 async function invokePlanner(params: {
   mode: 'chat' | 'generate'
   messages: CoreMessage[]
   preferredModel?: string
 }): Promise<
-  | { ok: true; text?: string; result?: PlannerFullResult }
+  | { ok: true; text?: string; truncated?: boolean; result?: PlannerFullResult }
   | { ok: false; message: string }
 > {
   const {
@@ -49,6 +65,7 @@ async function invokePlanner(params: {
     ok?: boolean
     error?: string
     text?: string
+    truncated?: boolean
     result?: PlannerFullResult
   } = {}
 
@@ -68,13 +85,13 @@ async function invokePlanner(params: {
     }
   }
 
-  return { ok: true, text: body.text, result: body.result }
+  return { ok: true, text: body.text, truncated: body.truncated, result: body.result }
 }
 
 export async function chatWithPlanner(
   messages: CoreMessage[],
   preferredModel: string = 'auto',
-): Promise<string> {
+): Promise<PlannerChatResult> {
   const result = await invokePlanner({
     mode: 'chat',
     messages,
@@ -85,7 +102,11 @@ export async function chatWithPlanner(
     throw new Error(result.message)
   }
 
-  return result.text ?? ''
+  const text = result.text?.trim()
+  if (!text) {
+    throw new Error('AI Planner가 빈 답변을 반환했습니다. 다시 시도해 주세요.')
+  }
+  return { text, truncated: Boolean(result.truncated) }
 }
 
 export async function generateProductPlan(
@@ -102,12 +123,11 @@ export async function generateProductPlan(
     throw new Error(result.message)
   }
 
-  return (
-    result.result ?? {
-      prdMarkdown: '',
-      specMarkdown: '',
-      mermaidFlow: '',
-      wireframeHtml: '',
-    }
-  )
+  if (!isCompletePlannerResult(result.result)) {
+    throw new Error(
+      'AI Planner 응답에 PRD, 기능 명세, 유저 플로우 또는 와이어프레임이 누락됐습니다. 다시 생성해 주세요.',
+    )
+  }
+
+  return result.result
 }

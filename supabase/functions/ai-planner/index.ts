@@ -30,7 +30,7 @@ const PLANNER_GENERATION_SYSTEM_PROMPT = `당신은 실리콘밸리 최고의 PM
 1. PRD (제품 요구사항 정의서): 마크다운 형식. 배경, 목적, 타겟, 기대효과.
 2. 기능 명세서 (Feature Specs): 마크다운 형식. 기능별 우선순위, 상세 설명.
 3. 유저 플로우 (Mermaid.js): 사용자가 서비스를 이용하는 핵심 흐름을 Mermaid.js 형식의 flowchart TD 로 작성.
-4. 와이어프레임 (HTML/CSS): 핵심 화면의 UI를 보여주는 독립 실행 가능한 HTML/CSS 목업 (Tailwind CDN 사용).
+4. 와이어프레임 (HTML/CSS): 핵심 화면의 UI를 보여주는 독립 실행 가능한 HTML/CSS 목업. 외부 리소스와 script 없이 inline CSS만 사용.
 
 출력은 반드시 다음 XML 구조를 엄격히 준수하세요.
 
@@ -134,9 +134,10 @@ async function generatePlannerText(params: {
   preferredAi: string
   system: string
   messages: CoreMessage[]
-  maxTokens: number
+  maxOutputTokens: number
   temperature: number
-}): Promise<{ text: string; modelId: string; provider: string }> {
+  mode: PlannerMode
+}): Promise<{ text: string; modelId: string; provider: string; truncated: boolean }> {
   const candidates = listPlannerModelCandidates(params.preferredAi)
   const errors: string[] = []
 
@@ -147,20 +148,45 @@ async function generatePlannerText(params: {
       continue
     }
 
+    const providerMetadata =
+      candidate.kind === "google"
+        ? {
+          google: {
+            thinkingConfig: {
+              // Gemini 2.5 Flash 기본 thinking(최대 ~8192)이 maxOutputTokens 예산을 잡아먹지 않도록 비활성화
+              thinkingBudget: 0,
+            },
+          },
+        }
+        : undefined
+
     try {
-      const { text } = await generateText({
+      const { text, finishReason } = await generateText({
         model: resolved.model,
         system: params.system,
         messages: params.messages,
         temperature: params.temperature,
-        maxTokens: params.maxTokens,
+        maxOutputTokens: params.maxOutputTokens,
         maxRetries: 0,
+        ...(providerMetadata ? { providerMetadata } : {}),
       })
+
+      if (finishReason === "length") {
+        console.warn(
+          `[ai-planner] ${params.mode} 응답이 출력 토큰 한도(${params.maxOutputTokens})에서 잘렸습니다.`,
+          { modelId: resolved.modelId, provider: resolved.provider },
+        )
+      }
+
+      if (!text.trim()) {
+        throw new Error("모델이 빈 응답을 반환했습니다.")
+      }
 
       return {
         text,
         modelId: resolved.modelId,
         provider: resolved.provider,
+        truncated: finishReason === "length",
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -175,9 +201,45 @@ async function generatePlannerText(params: {
 }
 
 function matchTag(str: string, tag: string): string {
-  const regex = new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`)
+  const regex = new RegExp(
+    `<\\s*${tag}\\b[^>]*>([\\s\\S]*?)<\\/\\s*${tag}\\s*>`,
+    "i",
+  )
   const match = str.match(regex)
   return match ? match[1].trim() : ""
+}
+
+type PlannerFullResult = {
+  prdMarkdown: string
+  specMarkdown: string
+  mermaidFlow: string
+  wireframeHtml: string
+}
+
+function stripCodeFence(value: string): string {
+  return value
+    .trim()
+    .replace(/^```(?:mermaid|html)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim()
+}
+
+function parsePlannerResult(text: string): PlannerFullResult {
+  return {
+    prdMarkdown: matchTag(text, "PRD"),
+    specMarkdown: matchTag(text, "SPEC"),
+    mermaidFlow: stripCodeFence(matchTag(text, "MERMAID")),
+    wireframeHtml: stripCodeFence(matchTag(text, "WIREFRAME")),
+  }
+}
+
+function missingPlannerSections(result: PlannerFullResult): string[] {
+  const missing: string[] = []
+  if (!result.prdMarkdown) missing.push("PRD")
+  if (!result.specMarkdown) missing.push("SPEC")
+  if (!result.mermaidFlow) missing.push("MERMAID")
+  if (!result.wireframeHtml) missing.push("WIREFRAME")
+  return missing
 }
 
 function normalizeMessages(raw: unknown): CoreMessage[] {
@@ -267,39 +329,56 @@ Deno.serve(async (req) => {
 
   const system =
     mode === "generate" ? PLANNER_GENERATION_SYSTEM_PROMPT : PLANNER_CHAT_SYSTEM_PROMPT
-  const maxTokens = mode === "generate" ? 4000 : 1000
+  const maxOutputTokens = mode === "generate" ? 8000 : 2048
   const temperature = mode === "generate" ? 0.5 : 0.7
 
   try {
-    const generated = await generatePlannerText({
+    let generated = await generatePlannerText({
       preferredAi,
       system,
       messages,
-      maxTokens,
+      maxOutputTokens,
       temperature,
+      mode,
     })
 
     if (mode === "chat") {
       return jsonResponse({
         ok: true,
         text: generated.text,
+        truncated: generated.truncated,
         model: generated.modelId,
         provider: generated.provider,
       })
     }
 
-    let prdMarkdown = matchTag(generated.text, "PRD")
-    let specMarkdown = matchTag(generated.text, "SPEC")
-    let mermaidFlow = matchTag(generated.text, "MERMAID")
-    let wireframeHtml = matchTag(generated.text, "WIREFRAME")
+    let result = parsePlannerResult(generated.text)
+    let missing = missingPlannerSections(result)
 
-    if (!prdMarkdown && !specMarkdown && !mermaidFlow && !wireframeHtml) {
-      prdMarkdown = generated.text
+    if (missing.length > 0) {
+      generated = await generatePlannerText({
+        preferredAi,
+        system:
+          `${PLANNER_GENERATION_SYSTEM_PROMPT}\n\n` +
+          "네 XML 블록을 모두 빠짐없이 작성하세요. 빈 블록을 반환하지 마세요.",
+        messages,
+        maxOutputTokens,
+        temperature: 0.3,
+        mode: "generate",
+      })
+      result = parsePlannerResult(generated.text)
+      missing = missingPlannerSections(result)
+    }
+
+    if (missing.length > 0) {
+      throw new Error(
+        `AI가 완전한 기획안을 반환하지 않았습니다. 누락: ${missing.join(", ")}. 다시 생성해 주세요.`,
+      )
     }
 
     return jsonResponse({
       ok: true,
-      result: { prdMarkdown, specMarkdown, mermaidFlow, wireframeHtml },
+      result,
       model: generated.modelId,
       provider: generated.provider,
     })

@@ -392,6 +392,15 @@ const sidebarIconDockEmptyClass =
 const sidebarNewChatClass =
   'flex h-[1.8rem] min-h-[1.8rem] w-full shrink-0 items-center rounded-full text-left transition-colors hover:bg-stone-200/60 active:bg-stone-200/80 dark:hover:bg-stone-800/45 dark:active:bg-stone-800/60'
 
+const sidebarPlannerShellClass =
+  'mx-1.5 mb-2 overflow-hidden rounded-xl border border-indigo-200/70 bg-gradient-to-b from-indigo-50/90 to-indigo-50/35 dark:border-indigo-900/55 dark:from-indigo-950/40 dark:to-indigo-950/15'
+
+const sidebarPlannerNewClass =
+  'flex h-[1.8rem] min-h-[1.8rem] w-full shrink-0 items-center rounded-full text-left transition-colors hover:bg-indigo-100/80 active:bg-indigo-100 dark:hover:bg-indigo-950/45 dark:active:bg-indigo-950/55'
+
+const sidebarPlannerHeaderClass =
+  'mb-1 flex shrink-0 items-center gap-1.5 px-3 text-left text-xs font-bold tracking-wide text-indigo-700 dark:text-indigo-300'
+
 export function MainLayout() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -946,110 +955,138 @@ export function MainLayout() {
             ) : null}
           </Link>
 
-          <button
-            type="button"
-            title={plannerActive ? '새 기획' : '새 채팅'}
-            aria-label={plannerActive ? '새 기획' : '새 채팅'}
-            className={`${sidebarNewChatClass} sticky top-0 z-20 bg-[#F4F1EA] dark:bg-stone-900 ${
-              showExpandedSidebarContent
-                ? 'justify-start gap-3 pl-3 pr-2 text-sm font-normal leading-5 text-stone-800 dark:text-stone-100'
-                : 'justify-center px-0'
-            }`}
-            onClick={() => {
-              if (plannerActive) {
-                void handleNewPlannerSession()
-              } else {
-                requestNewChat()
-                setIsMobileMenuOpen(false)
-              }
-            }}
-          >
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center text-stone-700 dark:text-stone-300"
-              aria-hidden="true"
-            >
-              {plannerActive ? (
-                <IconPlanner className="h-6 w-6" />
-              ) : (
-                <IconGeminiNewChat className="h-6 w-6" />
-              )}
-            </span>
-            {showExpandedSidebarContent ? (
-              <span className="min-w-0 truncate text-left">
-                {plannerActive ? '새 기획' : '새 채팅'}
-              </span>
-            ) : null}
-          </button>
-
           {plannerActive ? (
-            <section
-              aria-label="기획 세션 목록"
-              className={`pb-1 ${sidebarCollapsed ? 'hidden' : ''}`}
-            >
-              {showExpandedSidebarContent ? (
-                <p className="mb-1 shrink-0 pl-3 text-left text-sm font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-                  기획 세션
-                </p>
-              ) : null}
-              {plannerSessions.length === 0 ? (
-                showExpandedSidebarContent ? (
-                  <p className="py-2 pl-3 text-sm leading-snug text-stone-500 dark:text-stone-400">
-                    저장된 기획 대화가 여기에 표시됩니다.
-                  </p>
-                ) : null
-              ) : (
-                <ul className="flex flex-col gap-0 pb-1">
-                  {plannerSessions.map((session) => {
-                    const isActive = activePlannerSessionId === session.id
-                    return (
-                      <li key={session.id}>
-                        <div className="group relative flex items-center">
-                          <Link
-                            to={`/ai-planner/${session.id}`}
-                            title={session.title}
-                            aria-current={isActive ? 'page' : undefined}
-                            className={`flex min-w-0 flex-1 items-center gap-2 rounded-full py-2 pl-3 pr-10 text-left text-sm leading-snug transition-colors ${
-                              isActive
-                                ? 'bg-stone-200/80 font-medium text-stone-900 dark:bg-stone-800/70 dark:text-stone-50'
-                                : 'text-stone-700 hover:bg-stone-200/50 dark:text-stone-300 dark:hover:bg-stone-800/45'
-                            }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <span className="min-w-0 flex-1 truncate">{session.title}</span>
-                            {session.has_plan ? (
-                              <span className="shrink-0 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
-                                PRD
+            <div className={sidebarPlannerShellClass}>
+              <button
+                type="button"
+                title="새 기획"
+                aria-label="새 기획"
+                className={`${sidebarPlannerNewClass} sticky top-0 z-20 bg-indigo-50/95 dark:bg-indigo-950/35 ${
+                  showExpandedSidebarContent
+                    ? 'justify-start gap-3 pl-3 pr-2 text-sm font-semibold leading-5 text-indigo-900 dark:text-indigo-100'
+                    : 'justify-center px-0'
+                }`}
+                onClick={() => {
+                  void handleNewPlannerSession()
+                }}
+              >
+                <span
+                  className="flex h-6 w-6 shrink-0 items-center justify-center text-indigo-600 dark:text-indigo-400"
+                  aria-hidden="true"
+                >
+                  <IconPlanner className="h-6 w-6" />
+                </span>
+                {showExpandedSidebarContent ? (
+                  <span className="min-w-0 truncate text-left">새 기획</span>
+                ) : null}
+              </button>
+
+              <section
+                aria-label="기획 세션 목록"
+                className={`pb-1.5 ${sidebarCollapsed ? 'hidden' : ''}`}
+              >
+                {showExpandedSidebarContent ? (
+                  <div className={sidebarPlannerHeaderClass}>
+                    <IconPlanner className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>AI Planner · 기획 세션</span>
+                  </div>
+                ) : null}
+                {plannerSessions.length === 0 ? (
+                  showExpandedSidebarContent ? (
+                    <p className="px-3 py-2 text-sm leading-snug text-indigo-700/70 dark:text-indigo-300/70">
+                      저장된 기획 대화가 여기에 표시됩니다.
+                    </p>
+                  ) : null
+                ) : (
+                  <ul className="flex flex-col gap-0.5 px-1.5 pb-1">
+                    {plannerSessions.map((session) => {
+                      const isActive = activePlannerSessionId === session.id
+                      return (
+                        <li key={session.id}>
+                          <div className="group relative flex items-center">
+                            <Link
+                              to={`/ai-planner/${session.id}`}
+                              title={session.title}
+                              aria-current={isActive ? 'page' : undefined}
+                              className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg py-2 pl-2.5 pr-10 text-left text-sm leading-snug transition-colors ${
+                                isActive
+                                  ? 'bg-indigo-100/90 font-medium text-indigo-950 ring-1 ring-inset ring-indigo-200/80 dark:bg-indigo-950/55 dark:text-indigo-50 dark:ring-indigo-800/60'
+                                  : 'text-stone-700 hover:bg-indigo-50/90 dark:text-stone-300 dark:hover:bg-indigo-950/30'
+                              }`}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              <span
+                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
+                                  isActive
+                                    ? 'bg-indigo-200/70 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-200'
+                                    : 'bg-indigo-100/60 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400'
+                                }`}
+                                aria-hidden="true"
+                              >
+                                <IconPlanner className="h-3.5 w-3.5" />
                               </span>
-                            ) : null}
-                          </Link>
-                          <div className="absolute right-1 flex items-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                            <button
-                              type="button"
-                              className="rounded-full p-1.5 text-stone-500 hover:bg-stone-200/80 hover:text-stone-800 dark:hover:bg-stone-700 dark:hover:text-stone-100"
-                              title="이름 변경"
-                              aria-label="기획 세션 이름 변경"
-                              onClick={() => handleRenamePlannerSession(session.id, session.title)}
-                            >
-                              ✎
-                            </button>
-                            <button
-                              type="button"
-                              className="rounded-full p-1.5 text-stone-500 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950/50 dark:hover:text-red-300"
-                              title="삭제"
-                              aria-label="기획 세션 삭제"
-                              onClick={() => handleDeletePlannerSession(session.id)}
-                            >
-                              ×
-                            </button>
+                              <span className="min-w-0 flex-1 truncate">{session.title}</span>
+                              {session.has_plan ? (
+                                <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                  PRD
+                                </span>
+                              ) : null}
+                            </Link>
+                            <div className="absolute right-1 flex items-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                              <button
+                                type="button"
+                                className="rounded-full p-1.5 text-indigo-500 hover:bg-indigo-100/90 hover:text-indigo-900 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-100"
+                                title="이름 변경"
+                                aria-label="기획 세션 이름 변경"
+                                onClick={() => handleRenamePlannerSession(session.id, session.title)}
+                              >
+                                ✎
+                              </button>
+                              <button
+                                type="button"
+                                className="rounded-full p-1.5 text-indigo-500 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                                title="삭제"
+                                aria-label="기획 세션 삭제"
+                                onClick={() => handleDeletePlannerSession(session.id)}
+                              >
+                                ×
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </section>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </section>
+            </div>
           ) : (
+            <>
+              <button
+                type="button"
+                title="새 채팅"
+                aria-label="새 채팅"
+                className={`${sidebarNewChatClass} sticky top-0 z-20 bg-[#F4F1EA] dark:bg-stone-900 ${
+                  showExpandedSidebarContent
+                    ? 'justify-start gap-3 pl-3 pr-2 text-sm font-normal leading-5 text-stone-800 dark:text-stone-100'
+                    : 'justify-center px-0'
+                }`}
+                onClick={() => {
+                  requestNewChat()
+                  setIsMobileMenuOpen(false)
+                }}
+              >
+                <span
+                  className="flex h-6 w-6 shrink-0 items-center justify-center text-stone-700 dark:text-stone-300"
+                  aria-hidden="true"
+                >
+                  <IconGeminiNewChat className="h-6 w-6" />
+                </span>
+                {showExpandedSidebarContent ? (
+                  <span className="min-w-0 truncate text-left">새 채팅</span>
+                ) : null}
+              </button>
+
           <section
             aria-label="개인 채팅 목록"
             className={`pb-1 ${sidebarCollapsed ? 'hidden' : ''}`}
@@ -1095,6 +1132,7 @@ export function MainLayout() {
                 </ul>
               )}
           </section>
+            </>
           )}
           </div>
 
@@ -1290,7 +1328,12 @@ export function MainLayout() {
                   to="/ai-planner"
                   title="AI Planner"
                   aria-label="AI Planner"
-                  className={sidebarIconDockClass}
+                  aria-current={plannerActive ? 'page' : undefined}
+                  className={`${sidebarIconDockClass} ${
+                    plannerActive
+                      ? 'bg-indigo-100/90 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+                      : ''
+                  }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <IconPlanner className="h-3.5 w-3.5 shrink-0" />

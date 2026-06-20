@@ -133,3 +133,4 @@ export async function fetchEdgeFunction(
 
 export const AI_CHAT_FUNCTION = 'ai-chat'
 export const DEEP_RESEARCH_FUNCTION = 'deep-research'
+export const AI_PLANNER_FUNCTION = 'ai-planner'
