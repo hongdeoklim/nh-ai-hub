@@ -16,6 +16,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.49.8"
 import { uploadChatImagesToGCS } from "../_shared/gcs.ts"
 import { routePromptToModelId } from "../_shared/auto-route.ts"
 import { NHSmartRoutingController } from "../_shared/nh-smart-routing.ts"
+import { scheduleAssistantRouterShadowLog } from "../_shared/assistant-router-shadow-log.ts"
 import { decryptCredential } from "../_shared/integration-auth.ts"
 import { normalizePreferredAiToResolvedModel } from "../_shared/normalize-preferred-ai-model.ts"
 import {
@@ -1378,10 +1379,12 @@ async function handleRequest(req: Request) {
       providerPreference,
     )
 
+    const assistantDecisionStartedAt = Date.now()
     const assistantPlan = await smartRouter.selectAssistantCandidates({
       prompt: routingPrompt,
       route: routeRes,
     })
+    const assistantDecisionLatencyMs = Date.now() - assistantDecisionStartedAt
     if (assistantPlan) {
       if (smartRouter.isAssistantRouterShadowMode()) {
         console.info(
@@ -1389,6 +1392,12 @@ async function handleRequest(req: Request) {
           assistantPlan.selectedAssistants.map((assistant) => assistant.assistantId),
           `(${assistantPlan.requestComplexity})`,
         )
+        scheduleAssistantRouterShadowLog({
+          admin: adminClient,
+          requestType: routeRes.taskType,
+          plan: assistantPlan,
+          decisionLatencyMs: assistantDecisionLatencyMs,
+        })
       } else {
         routeRes.assistantPlan = assistantPlan
       }

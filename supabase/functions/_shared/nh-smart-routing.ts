@@ -32,6 +32,15 @@ export type NHProviderPreference = "auto" | NHRouteProvider | "openrouter"
 
 export type NHAssistantCostLevel = "low" | "medium" | "high"
 
+export type NHAssistantFallbackReasonCode =
+  | "no_explicit_assistant_intent"
+  | "no_eligible_candidate"
+  | "registry_unavailable"
+  | "permission_unverified"
+  | "required_extension_unavailable"
+  | "cost_policy_blocked"
+  | "router_exception"
+
 export interface NHSelectedAssistant {
   assistantId: string
   name: string
@@ -62,6 +71,7 @@ export interface NHAssistantPlan {
   estimatedCostLevel: NHAssistantCostLevel
   reason: string
   fallback: "model_only"
+  fallbackReasonCode?: NHAssistantFallbackReasonCode
 }
 
 export interface NHRouteResult {
@@ -187,6 +197,7 @@ function highestCostLevel(levels: NHAssistantCostLevel[]): NHAssistantCostLevel 
 
 function modelOnlyAssistantPlan(
   reason: string,
+  fallbackReasonCode: NHAssistantFallbackReasonCode,
   complexity: NHAssistantPlan["requestComplexity"] = "simple",
 ): NHAssistantPlan {
   return {
@@ -198,6 +209,7 @@ function modelOnlyAssistantPlan(
     estimatedCostLevel: "low",
     reason,
     fallback: "model_only",
+    fallbackReasonCode,
   }
 }
 
@@ -233,6 +245,7 @@ export class NHSmartRoutingController {
     if (intents.length === 0) {
       return modelOnlyAssistantPlan(
         "외부 서비스 작업이 명시되지 않아 기존 모델 직접 호출 경로를 유지합니다.",
+        "no_explicit_assistant_intent",
         complexity,
       )
     }
@@ -248,7 +261,11 @@ export class NHSmartRoutingController {
 
       if (error) {
         console.warn("[Assistant-Router] Registry 조회 실패; model_only로 복귀합니다.", error.code)
-        return modelOnlyAssistantPlan("Assistant Registry를 사용할 수 없어 기존 모델 경로를 유지합니다.", complexity)
+        return modelOnlyAssistantPlan(
+          "Assistant Registry를 사용할 수 없어 기존 모델 경로를 유지합니다.",
+          "registry_unavailable",
+          complexity,
+        )
       }
 
       const rows = (data ?? []) as AssistantRegistryRouteRow[]
@@ -301,6 +318,7 @@ export class NHSmartRoutingController {
       if (selectedAssistants.length === 0) {
         return modelOnlyAssistantPlan(
           "활성 상태와 요청 적합도를 충족하는 Assistant 후보가 없습니다.",
+          "no_eligible_candidate",
           complexity,
         )
       }
@@ -322,7 +340,11 @@ export class NHSmartRoutingController {
         "[Assistant-Router] 후보 선택 예외; model_only로 복귀합니다.",
         error instanceof Error ? error.message : "unknown_error",
       )
-      return modelOnlyAssistantPlan("Assistant 후보를 확인할 수 없어 기존 모델 경로를 유지합니다.", complexity)
+      return modelOnlyAssistantPlan(
+        "Assistant 후보를 확인할 수 없어 기존 모델 경로를 유지합니다.",
+        "router_exception",
+        complexity,
+      )
     }
   }
 
