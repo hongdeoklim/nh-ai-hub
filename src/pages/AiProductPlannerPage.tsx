@@ -322,6 +322,17 @@ export function AiProductPlannerPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#fafafa] dark:bg-[#09090b] font-sans selection:bg-indigo-500/30">
       <header className="flex shrink-0 items-center gap-2 border-b border-stone-200/50 bg-white/60 px-4 py-3 backdrop-blur-xl dark:border-stone-800/40 dark:bg-black/60 z-20">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          aria-label="기본 페이지로 돌아가기"
+          title="기본 페이지로 돌아가기"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-indigo-300 dark:focus-visible:ring-offset-slate-950"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 11.5 12 4l9 7.5M5.5 10v9h13v-9M9.5 19v-5h5v5" />
+          </svg>
+        </button>
         <h1 className="min-w-0">
           <button
             type="button"
