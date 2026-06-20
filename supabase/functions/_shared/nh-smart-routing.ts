@@ -1,7 +1,7 @@
 /**
  * (주)농협네트웍스 사내 업무 자동화 및 AI 어시스턴트 인프라
  * 중앙 스마트 라우팅 컨트롤러 (NHSmartRoutingController) - 2026 최신 프론티어 리팩토링
- * 
+ *
  * 파일 경로: supabase/functions/_shared/nh-smart-routing.ts
  */
 
@@ -18,9 +18,21 @@ export type NHTaskType =
   | "GENERAL_CHAT" // 일반적인 질의응답
 
 // 2. 모델 라우팅 결과 정의
+export type NHExtendedTaskType = NHTaskType
+  | "COMPANY_DOCUMENT_RAG"
+  | "LONG_FORM_WRITING"
+  | "CODE_SYSTEM_DESIGN"
+  | "GOOGLE_WORKSPACE"
+  | "BATCH_LOW_COST"
+  | "INTERNAL_SPECIALIZED"
+  | "PUBLIC_DATA_QUERY"
+
+export type NHRouteProvider = "google" | "anthropic" | "openai" | "deepseek" | "hermes"
+export type NHProviderPreference = "auto" | NHRouteProvider | "openrouter"
+
 export interface NHRouteResult {
-  taskType: NHTaskType
-  provider: "google" | "anthropic" | "openai"
+  taskType: NHExtendedTaskType
+  provider: NHRouteProvider
   modelId: string
   estimatedCostUsd: number
   // Context Caching 적용 여부 (Gemini 3.1 Pro 대용량 RAG 조회 용)
@@ -57,7 +69,7 @@ export class NHSmartRoutingController {
   /**
    * 1단계: 사용자 프롬프트와 이미지 데이터 유무를 분석하여 태스크 인텐트 분류 (Intent Classification)
    */
-  public classifyTask(prompt: string, hasImages: boolean): NHTaskType {
+  public classifyTask(prompt: string, hasImages: boolean): NHExtendedTaskType {
     const text = prompt.trim()
 
     // 4) 이미지 분석 및 OCR 판단 (우선순위 높음) - 외부 네이버 OCR 제거 후 통합
@@ -85,6 +97,14 @@ export class NHSmartRoutingController {
       return "TRAVEL_CONSULTING"
     }
 
+    if (/공공데이터|공공기관\s*자료|지역별\s*인구|농업\s*통계|data\.go\.kr/i.test(text)) return "PUBLIC_DATA_QUERY"
+    if (/회사\s*문서|사내\s*문서|내부\s*규정|지식베이스|RAG|Dify/i.test(text)) return "COMPANY_DOCUMENT_RAG"
+    if (/코드\s*작성|리팩토링|시스템\s*설계|아키텍처|디버깅|프로그래밍/i.test(text)) return "CODE_SYSTEM_DESIGN"
+    if (/Google\s*(Workspace|Drive|Docs|Sheets|Calendar)|구글\s*(드라이브|문서|시트|캘린더)/i.test(text)) return "GOOGLE_WORKSPACE"
+    if (/보고서|기획서|제안서|장문|초안\s*작성/i.test(text) || text.length > 4000) return "LONG_FORM_WRITING"
+    if (/대량|일괄|배치|반복\s*처리|여러\s*건|저비용\s*요약/i.test(text)) return "BATCH_LOW_COST"
+    if (/회사\s*내부\s*특화|사내\s*특화|Hermes/i.test(text)) return "INTERNAL_SPECIALIZED"
+
     return "GENERAL_CHAT"
   }
 
@@ -94,12 +114,13 @@ export class NHSmartRoutingController {
   public async determineRoute(
     prompt: string,
     hasImages: boolean,
-    department: string | null
+    department: string | null,
+    preferredProvider: NHProviderPreference = "auto",
   ): Promise<NHRouteResult> {
     const taskType = this.classifyTask(prompt, hasImages)
     const dept = normalizeBudgetDepartment(department)
 
-    let provider: "google" | "anthropic" | "openai" = "google"
+    let provider: NHRouteProvider = "google"
     let modelId = "gemini-2.5-flash"
     let useContextCaching = false
     let estimatedCostUsd = 0.001
@@ -107,11 +128,54 @@ export class NHSmartRoutingController {
     let externalApiRequirements: NHRouteResult["externalApiRequirements"] = undefined
 
     switch (taskType) {
+      case "COMPANY_DOCUMENT_RAG":
+        provider = "google"
+        modelId = "gemini-2.5-pro"
+        useContextCaching = true
+        estimatedCostUsd = 0.004
+        break
+
+      case "LONG_FORM_WRITING":
+        provider = "anthropic"
+        modelId = "claude-sonnet-4-6"
+        estimatedCostUsd = 0.012
+        break
+
+      case "CODE_SYSTEM_DESIGN":
+        provider = "openai"
+        modelId = "gpt-5.4"
+        estimatedCostUsd = 0.012
+        break
+
+      case "GOOGLE_WORKSPACE":
+        provider = "google"
+        modelId = "gemini-2.5-flash"
+        estimatedCostUsd = 0.002
+        break
+
+      case "BATCH_LOW_COST":
+        provider = "deepseek"
+        modelId = "deepseek-chat"
+        estimatedCostUsd = 0.001
+        break
+
+      case "INTERNAL_SPECIALIZED":
+        provider = "hermes"
+        modelId = safeGetEnv("HERMES_MODEL_ID") ?? "hermes-default"
+        estimatedCostUsd = 0.001
+        break
+
+      case "PUBLIC_DATA_QUERY":
+        provider = "google"
+        modelId = "gemini-2.5-flash"
+        estimatedCostUsd = 0.002
+        break
+
       case "COMPANY_REGULATION_SEARCH":
         // [규정 RAG 조회] Gemini 3.1 Pro 활용 (API 상에서는 대용량 2.5-pro / 1.5-pro 대응 매핑)
         // 입력 비용 75% 절감을 위해 Context Caching 구조 강제 적용 유지
         provider = "google"
-        modelId = "gemini-2.5-pro" 
+        modelId = "gemini-2.5-pro"
         useContextCaching = true
         estimatedCostUsd = 0.004 // 캐싱 할인 적용가 반영
         break
@@ -119,7 +183,7 @@ export class NHSmartRoutingController {
       case "IMAGE_ANALYSIS_OCR":
         // [비전 OCR 및 현장 분석] 외부 CLOVA OCR을 완전히 삭제하고, Gemini 3.5 Flash 전담 일원화
         provider = "google"
-        modelId = "gemini-2.5-flash" 
+        modelId = "gemini-2.5-flash"
         useContextCaching = false
         estimatedCostUsd = 0.0015 // 초저비용 고가성비 단가 매칭
 
@@ -149,14 +213,14 @@ export class NHSmartRoutingController {
       case "MATHEMATICAL_ESTIMATION":
         // [수리 연산 및 가변 견적] 정확한 대용량 수학/견적 연산은 DeepSeek-R1(메인)로 분기
         // 다단계 복잡 예외 처리가 가미된 지능형 추론은 o3-mini(백업)로 분기 및 스케줄링
-        
+
         const isComplexException = prompt.length > 2500 || /추정실적|공사기간|품목\s*삭제\s*연동/i.test(prompt)
-        
+
         if (isComplexException) {
           // OpenAI o3-mini 백업 라우팅 및 스케줄러 제어
           provider = "openai"
           modelId = "o3-mini"
-          
+
           let reasoningEffort: "low" | "medium" | "high" = "medium"
           if (prompt.length > 4000) {
             reasoningEffort = "high"
@@ -174,14 +238,15 @@ export class NHSmartRoutingController {
             maxThinkingTokens: reasoningEffort === "high" ? 4000 : reasoningEffort === "medium" ? 2000 : 1000
           }
         } else {
-          // DeepSeek-R1 메인 라우팅 (추론 버젯 조절)
-          provider = "openai" // Deno 에지 SDK 및 API 라우팅 상에서 OpenAI 호환 앤드포인트 또는 custom provider 매핑
-          modelId = "deepseek-reasoner" // DeepSeek-R1 API ID
-          estimatedCostUsd = 0.008
+          // DeepSeek-R1 API 키가 없으므로 o3-mini 로 대체 라우팅
+          provider = "openai"
+          modelId = "o3-mini"
+          estimatedCostUsd = 0.012
 
           thinkingBudget = {
             enabled: true,
-            maxThinkingTokens: 3000
+            reasoningEffort: "medium",
+            maxThinkingTokens: 2000
           }
         }
         break
@@ -193,6 +258,19 @@ export class NHSmartRoutingController {
         modelId = "gemini-2.5-flash"
         estimatedCostUsd = 0.0008
         break
+    }
+
+    if (preferredProvider !== "auto" && preferredProvider !== "openrouter") {
+      provider = preferredProvider
+      const complex = taskType === "LONG_FORM_WRITING" ||
+        taskType === "CODE_SYSTEM_DESIGN" ||
+        taskType === "MATHEMATICAL_ESTIMATION" ||
+        taskType === "COMPANY_DOCUMENT_RAG"
+      if (preferredProvider === "google") modelId = complex ? "gemini-2.5-pro" : "gemini-2.5-flash"
+      if (preferredProvider === "openai") modelId = complex ? "gpt-5.4" : "gpt-5.4-mini"
+      if (preferredProvider === "anthropic") modelId = complex ? "claude-sonnet-4-6" : "claude-haiku-4-5"
+      if (preferredProvider === "deepseek") modelId = complex ? "deepseek-reasoner" : "deepseek-chat"
+      if (preferredProvider === "hermes") modelId = safeGetEnv("HERMES_MODEL_ID") ?? "hermes-default"
     }
 
     return {
@@ -224,7 +302,7 @@ export class NHSmartRoutingController {
     // 1) [완전 대체] 네이버 CLOVA OCR 을 삭제하고, Gemini 3.5 Flash Strict JSON Schema OCR 파이프라인 주입
     if (route.externalApiRequirements?.triggerGeminiStructuredOcr) {
       console.log("[NH-Smart-Router] Gemini 3.5 Flash Strict JSON Schema OCR 가이드라인 주입 시작...");
-      
+
       // Strict JSON Schema를 강제하기 위한 Structured Prompt 가이드 빌딩
       ocrResult = `
 [Strict Structured JSON Schema Required]
@@ -248,15 +326,15 @@ export class NHSmartRoutingController {
     // 2) 공공데이터포털 Open API 연동 파이프라인 작동 (조달청 나라장터) - CORP 접두사 격리
     if (route.externalApiRequirements?.triggerProcurementCrawler) {
       console.log("[NH-Smart-Router] 공공데이터포털 조달청 나라장터 입찰 정보 조회 시작...");
-      
+
       // CORP 접두사 격리 환경변수 사용
       const portalKey = safeGetEnv("CORP_DATA_PORTAL_API_KEY") || safeGetEnv("DATA_PORTAL_API_KEY");
-      
+
       if (portalKey) {
         try {
           // 나라장터 시설공사 입찰공고 정보조회 Open API URL (Deno fetch)
           const apiEndpoint = `http://apis.data.go.kr/1230000/BidPublicInfoService04/getBidPblancListInfoCnstcPPSSrch01?serviceKey=${encodeURIComponent(portalKey)}&numOfRows=3&pageNo=1&inqryDiv=1&type=json`;
-          
+
           const response = await fetch(apiEndpoint, {
             method: "GET",
             headers: {

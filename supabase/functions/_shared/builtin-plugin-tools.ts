@@ -1,4 +1,4 @@
-import { tool, zodSchema } from "npm:ai@6.0.184"
+import { tool, zodSchema, type Tool } from "npm:ai@6.0.184"
 import { z } from "npm:zod@4.4.3"
 
 import {
@@ -102,7 +102,7 @@ const getExchangeRateTool = tool({
 
 const registry: Record<
   Exclude<BuiltinPluginToolName, typeof WEB_SEARCH_TOOL_NAME>,
-  ReturnType<typeof tool>
+  Tool<any, any>
 > = {
   get_weather: getWeatherTool,
   get_exchange_rate: getExchangeRateTool,
@@ -111,7 +111,7 @@ const registry: Record<
 export function resolveBuiltinPluginTool(
   toolFunctionName: string,
   exaApiKey?: string,
-): ReturnType<typeof tool> | null {
+): Tool<any, any> | null {
   const key = toolFunctionName.trim()
   if (key === WEB_SEARCH_TOOL_NAME) {
     const apiKey = exaApiKey?.trim()

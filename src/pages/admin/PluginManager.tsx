@@ -17,6 +17,11 @@ type PluginRow = {
   is_active: boolean
   created_at: string
   updated_at: string
+  auth_type: 'none' | 'bearer' | 'api_key'
+  auth_header_name: string
+  connection_mode: 'per_user' | 'workspace_install' | 'admin_shared' | 'hybrid'
+  setup_url: string | null
+  docs_url: string | null
 }
 
 type ToggleSwitchProps = {
@@ -44,7 +49,7 @@ function ToggleSwitch({
       disabled={disabled || busy}
       onClick={() => onToggle(!checked)}
       className={[
-        'relative inline-flex h-8 w-[3.25rem] shrink-0 cursor-pointer items-center rounded-full border border-transparent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
+        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-transparent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
         checked
           ? 'bg-emerald-500 shadow-inner shadow-emerald-900/20'
           : 'bg-slate-300 dark:bg-slate-600',
@@ -53,8 +58,8 @@ function ToggleSwitch({
     >
       <span
         className={[
-          'pointer-events-none inline-block h-7 w-7 rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ease-out',
-          checked ? 'translate-x-[1.35rem]' : 'translate-x-0.5',
+          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ease-out',
+          checked ? 'translate-x-5' : 'translate-x-0.5',
         ].join(' ')}
       />
       <span className="sr-only">{checked ? '활성' : '비활성'}</span>
@@ -71,6 +76,11 @@ export function PluginManager() {
   const [formDesc, setFormDesc] = useState('')
   const [formToolFn, setFormToolFn] = useState('')
   const [formUrl, setFormUrl] = useState('')
+  const [formAuthType, setFormAuthType] = useState<PluginRow['auth_type']>('none')
+  const [formAuthHeader, setFormAuthHeader] = useState('Authorization')
+  const [formConnectionMode, setFormConnectionMode] = useState<PluginRow['connection_mode']>('admin_shared')
+  const [formSetupUrl, setFormSetupUrl] = useState('')
+  const [formDocsUrl, setFormDocsUrl] = useState('')
   const [formBusy, setFormBusy] = useState(false)
 
   const load = useCallback(async () => {
@@ -79,7 +89,7 @@ export function PluginManager() {
     const { data, error: qErr } = await supabase
       .from('plugins')
       .select(
-        'id, name, description, endpoint_url, tool_function_name, is_active, created_at, updated_at',
+        'id, name, description, endpoint_url, tool_function_name, is_active, created_at, updated_at, auth_type, auth_header_name, connection_mode, setup_url, docs_url',
       )
       .order('updated_at', { ascending: false })
 
@@ -97,6 +107,11 @@ export function PluginManager() {
   }, [load])
 
   async function setPluginActive(row: PluginRow, next: boolean) {
+    const builtinNames = new Set(['get_weather', 'get_exchange_rate', 'search_web_news'])
+    if (next && !(row.endpoint_url ?? '').trim() && !builtinNames.has(row.tool_function_name)) {
+      window.alert('외부 플러그인을 활성화하려면 HTTPS 호출 URL이 필요합니다.')
+      return
+    }
     setSavingId(row.id)
     try {
       const { error: uErr } = await supabase
@@ -122,6 +137,10 @@ export function PluginManager() {
       window.alert('이름과 도구 함수명(tool_function_name)은 필수입니다.')
       return
     }
+    if (endpoint_url && !endpoint_url.startsWith('https://')) {
+      window.alert('플러그인 호출 URL은 HTTPS 주소만 사용할 수 있습니다.')
+      return
+    }
 
     setFormBusy(true)
     try {
@@ -130,6 +149,11 @@ export function PluginManager() {
         description: formDesc.trim(),
         tool_function_name,
         endpoint_url,
+        auth_type: formAuthType,
+        auth_header_name: formAuthHeader.trim() || 'Authorization',
+        connection_mode: formConnectionMode,
+        setup_url: formSetupUrl.trim() || null,
+        docs_url: formDocsUrl.trim() || null,
         is_active: false,
       })
       if (insErr) {
@@ -140,6 +164,11 @@ export function PluginManager() {
       setFormDesc('')
       setFormToolFn('')
       setFormUrl('')
+      setFormAuthType('none')
+      setFormAuthHeader('Authorization')
+      setFormConnectionMode('admin_shared')
+      setFormSetupUrl('')
+      setFormDocsUrl('')
       await load()
     } finally {
       setFormBusy(false)
@@ -217,6 +246,16 @@ export function PluginManager() {
                 placeholder="https://… 비우면 Edge 에서 호출 스킵"
               />
             </label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+              인증 방식
+              <select value={formAuthType} onChange={(e) => setFormAuthType(e.target.value as PluginRow['auth_type'])} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950">
+                <option value="none">인증 없음</option><option value="bearer">Bearer Token</option><option value="api_key">API Key Header</option>
+              </select>
+            </label>
+            {formAuthType !== 'none' && <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">인증 헤더 이름<input value={formAuthHeader} onChange={(e) => setFormAuthHeader(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-950" placeholder={formAuthType === 'bearer' ? 'Authorization' : 'X-API-Key'} /></label>}
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">연결 방식<select value={formConnectionMode} onChange={(e) => setFormConnectionMode(e.target.value as PluginRow['connection_mode'])} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"><option value="admin_shared">관리자 공용</option><option value="per_user">사용자별</option><option value="workspace_install">관리자 설치형</option><option value="hybrid">개인/공용 선택</option></select></label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">키 발급 URL<input type="url" value={formSetupUrl} onChange={(e) => setFormSetupUrl(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" /></label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">공식 문서 URL<input type="url" value={formDocsUrl} onChange={(e) => setFormDocsUrl(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" /></label>
           </div>
           <button
             type="submit"
@@ -289,7 +328,7 @@ export function PluginManager() {
                             : '— (미설정)'}
                         </p>
                         <p className="mt-1 text-[15px] text-slate-400">
-                          수정: 목록만 표시 · 향후 행 편집 UI 확장 가능
+                          {p.auth_type === 'none' ? '인증 없음' : `${p.auth_type} · ${p.connection_mode}`}
                         </p>
                       </td>
                       <td className="px-6 py-4 align-middle">
@@ -303,7 +342,7 @@ export function PluginManager() {
                           />
                           <span
                             className={[
-                              'text-[15px] font-bold uppercase tracking-wide',
+                              'text-xs font-semibold uppercase tracking-wide',
                               p.is_active
                                 ? 'text-emerald-600 dark:text-emerald-400'
                                 : 'text-slate-400',

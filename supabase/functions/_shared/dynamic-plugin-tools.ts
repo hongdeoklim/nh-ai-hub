@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.49.8"
-import { tool, zodSchema } from "npm:ai@6.0.184"
+import { tool, zodSchema, type Tool } from "npm:ai@6.0.184"
 import { z } from "npm:zod@4.4.3"
 
 import { resolveBuiltinPluginTool } from "./builtin-plugin-tools.ts"
@@ -7,6 +7,7 @@ import {
   createSearchWebNewsTool,
   WEB_SEARCH_TOOL_NAME,
 } from "./web-search-tool.ts"
+import { decryptPluginCredential, pluginAuthHeaders } from "./plugin-credentials.ts"
 
 export type ActivePluginRow = {
   id: string
@@ -14,6 +15,9 @@ export type ActivePluginRow = {
   description: string | null
   endpoint_url: string | null
   tool_function_name: string
+  auth_type: "none" | "bearer" | "api_key"
+  auth_header_name: string
+  connection_mode: string
 }
 
 async function logHealth(
@@ -39,12 +43,40 @@ async function logHealth(
   }
 }
 
+async function logToolExecution(
+  admin: SupabaseClient,
+  row: {
+    userId: string
+    department?: string | null
+    pluginId: string
+    toolName: string
+    status: "succeeded" | "failed"
+    latencyMs: number
+    errorCode?: string
+  },
+): Promise<void> {
+  const { error } = await admin.from("tool_execution_logs").insert({
+    user_id: row.userId,
+    department: row.department ?? null,
+    extension_id: row.pluginId,
+    tool_name: row.toolName,
+    status: row.status,
+    latency_ms: row.latencyMs,
+    error_code: row.errorCode ?? null,
+  })
+  if (error && error.code !== "42P01") {
+    console.error("[dynamic-plugin-tools] tool execution log failed", error.message)
+  }
+}
+
 function createHttpProxyTool(
   row: ActivePluginRow,
   endpointUrl: string,
   admin: SupabaseClient,
   userId: string,
-): ReturnType<typeof tool> {
+  department: string | null | undefined,
+  credential?: string,
+): Tool<any, any> {
   const desc =
     (row.description?.trim()?.length ? row.description.trim() : row.name) +
     ` (외부 플러그인 · POST ${endpointUrl})`
@@ -74,6 +106,7 @@ function createHttpProxyTool(
             "Content-Type": "application/json",
             "X-NH-AI-Plugin": row.id,
             "X-NH-AI-User": userId,
+            ...pluginAuthHeaders(row, credential),
           },
           body: JSON.stringify({
             plugin_id: row.id,
@@ -92,6 +125,15 @@ function createHttpProxyTool(
           status_code: res.status,
           latency_ms: latency,
           detail: text.slice(0, 2000),
+        })
+        await logToolExecution(admin, {
+          userId,
+          department,
+          pluginId: row.id,
+          toolName: row.tool_function_name,
+          status: res.ok ? "succeeded" : "failed",
+          latencyMs: latency,
+          errorCode: res.ok ? undefined : `http_${res.status}`,
         })
         let parsed: unknown = text
         try {
@@ -115,6 +157,15 @@ function createHttpProxyTool(
           latency_ms: latency,
           detail: msg.slice(0, 2000),
         })
+        await logToolExecution(admin, {
+          userId,
+          department,
+          pluginId: row.id,
+          toolName: row.tool_function_name,
+          status: "failed",
+          latencyMs: latency,
+          errorCode: e instanceof Error && e.name === "AbortError" ? "timeout" : "request_failed",
+        })
         return { ok: false, error: msg }
       } finally {
         clearTimeout(timer)
@@ -131,24 +182,77 @@ function createHttpProxyTool(
 export async function createDynamicPluginTools(deps: {
   admin: SupabaseClient
   userId: string
-}): Promise<Record<string, ReturnType<typeof tool>>> {
-  const { admin, userId } = deps
+  department?: string | null
+}): Promise<Record<string, Tool<any, any>>> {
+  const { admin, userId, department } = deps
 
   const { data, error } = await admin
     .from("plugins")
     .select(
-      "id, name, description, endpoint_url, tool_function_name",
+      "id, name, description, endpoint_url, tool_function_name, auth_type, auth_header_name, connection_mode",
     )
     .eq("is_active", true)
+    .eq("approval_status", "approved")
 
   if (error) {
     console.error("[dynamic-plugin-tools] plugins 조회 실패", error)
     return {}
   }
 
-  const rows = (data ?? []) as ActivePluginRow[]
-  const out: Record<string, ReturnType<typeof tool>> = {}
+  let rows = (data ?? []) as ActivePluginRow[]
+  const pluginIds = rows.map((row) => row.id)
+  if (pluginIds.length > 0) {
+    const [{ data: installations, error: installationError }, { data: permissions, error: permissionError }] =
+      await Promise.all([
+        admin
+          .from("extension_installations")
+          .select("extension_id, scope_type, scope_id, enabled")
+          .in("extension_id", pluginIds),
+        admin
+          .from("extension_permissions")
+          .select("extension_id, subject_type, subject_id, can_use")
+          .in("extension_id", pluginIds),
+      ])
+
+    if (!installationError && !permissionError) {
+      rows = rows.filter((row) => {
+        const pluginInstallations = (installations ?? []).filter((item) => item.extension_id === row.id)
+        const installed = pluginInstallations.length === 0 || pluginInstallations.some((item) =>
+          item.enabled === true && (
+            item.scope_type === "workspace" ||
+            (item.scope_type === "user" && item.scope_id === userId) ||
+            (item.scope_type === "department" && department && item.scope_id === department)
+          )
+        )
+        if (!installed) return false
+
+        const matchingPermissions = (permissions ?? []).filter((item) =>
+          item.extension_id === row.id && (
+            (item.subject_type === "user" && item.subject_id === userId) ||
+            (item.subject_type === "department" && department && item.subject_id === department)
+          )
+        )
+        return !matchingPermissions.some((item) => item.can_use === false)
+      })
+    }
+  }
+  const out: Record<string, Tool<any, any>> = {}
   const exaApiKey = Deno.env.get("EXA_API_KEY")?.trim() || undefined
+  const authPluginIds = rows.filter((row) => row.auth_type !== "none").map((row) => row.id)
+  const { data: connections, error: connectionError } = authPluginIds.length
+    ? await admin
+      .from("plugin_connections")
+      .select("plugin_id, credential_ciphertext, status")
+      .eq("user_id", userId)
+      .eq("status", "connected")
+      .in("plugin_id", authPluginIds)
+    : { data: [], error: null }
+  if (connectionError) {
+    console.error("[dynamic-plugin-tools] 사용자 플러그인 연결 조회 실패", connectionError)
+  }
+  const connectionByPlugin = new Map(
+    (connections ?? []).map((connection) => [connection.plugin_id, connection]),
+  )
 
   for (const row of rows) {
     const fnName = typeof row.tool_function_name === "string"
@@ -178,7 +282,18 @@ export async function createDynamicPluginTools(deps: {
 
     const endpoint = String(row.endpoint_url ?? "").trim()
     if (endpoint.length > 0) {
-      out[fnName] = createHttpProxyTool(row, endpoint, admin, userId)
+      let credential: string | undefined
+      if (row.auth_type !== "none") {
+        const connection = connectionByPlugin.get(row.id)
+        if (!connection) continue
+        try {
+          credential = await decryptPluginCredential(connection.credential_ciphertext)
+        } catch (error) {
+          console.error("[dynamic-plugin-tools] 플러그인 credential 복호화 실패", row.id, error)
+          continue
+        }
+      }
+      out[fnName] = createHttpProxyTool(row, endpoint, admin, userId, department, credential)
     }
   }
 

@@ -13,10 +13,7 @@ import { createOpenAI } from "npm:@ai-sdk/openai@3.0.64"
 import { generateText, streamText, stepCountIs, type LanguageModel } from "npm:ai@6.0.184"
 import { createClient } from "npm:@supabase/supabase-js@2.49.8"
 
-import {
-  uploadChatImagesToDrive,
-  uploadChatImagesToDriveUser,
-} from "../_shared/gdrive.ts"
+import { uploadChatImagesToGCS } from "../_shared/gcs.ts"
 import { routePromptToModelId } from "../_shared/auto-route.ts"
 import { NHSmartRoutingController } from "../_shared/nh-smart-routing.ts"
 import { decryptCredential } from "../_shared/integration-auth.ts"
@@ -26,10 +23,7 @@ import {
   resolveRequestedChatModel,
 } from "../_shared/ai-models-registry.ts"
 import { embedWorkCaseText } from "../_shared/embeddings.ts"
-import {
-  augmentSystemPromptWithCompanyRag,
-  retrieveCompanyDocumentMatches,
-} from "../_shared/company-documents-rag.ts"
+// Removed old company-documents-rag
 import {
   GUARDRAIL_SYSTEM_PROMPT,
   parseGuardrailVerdict,
@@ -99,7 +93,28 @@ const GUARDRAIL_BLOCK_MESSAGE =
 const TOKEN_EXHAUSTED_MESSAGE =
   "월간 토큰 한도를 초과하여 AI 요청을 처리할 수 없습니다. 관리자에게 문의하세요."
 
-type ProviderKind = "openai" | "anthropic" | "google"
+type ProviderKind =
+  | "openai"
+  | "anthropic"
+  | "google"
+  | "deepseek"
+  | "hermes"
+  | "openrouter"
+
+type ProviderPreference = "auto" | ProviderKind
+
+function normalizeProviderPreference(value: unknown): ProviderPreference {
+  const provider = typeof value === "string" ? value.trim().toLowerCase() : "auto"
+  if (
+    provider === "openai" ||
+    provider === "anthropic" ||
+    provider === "google" ||
+    provider === "deepseek" ||
+    provider === "hermes" ||
+    provider === "openrouter"
+  ) return provider
+  return "auto"
+}
 
 type ResolvedModelResult =
   | { ok: true; modelId: string; model: LanguageModel; kind: ProviderKind }
@@ -111,12 +126,20 @@ function missingKeyMessage(kind: ProviderKind): string {
       ? "GEMINI_API_KEY 또는 GOOGLE_GENERATIVE_AI_API_KEY"
       : kind === "anthropic"
       ? "ANTHROPIC_API_KEY"
+      : kind === "deepseek"
+      ? "DEEPSEEK_API_KEY"
+      : kind === "hermes"
+      ? "HERMES_API_KEY 및 HERMES_API_BASE_URL"
       : "OPENAI_API_KEY"
   const label =
     kind === "google"
       ? "Google Gemini"
       : kind === "anthropic"
       ? "Anthropic Claude"
+      : kind === "deepseek"
+      ? "DeepSeek"
+      : kind === "hermes"
+      ? "Hermes"
       : "OpenAI"
   return (
     `${label} 모델을 사용하려면 Supabase Edge Secrets에 ${envNames} 를 설정하세요. ` +
@@ -261,6 +284,7 @@ type ParseResult =
     ok: true
     trimmedPrompt: string
     preferredAiBody: string
+    providerPreference: ProviderPreference
     richImages: RichImage[]
     jsonAttachmentAttemptCount: number
     /** JSON 요청에서만; multipart 는 미지정 */
@@ -270,6 +294,7 @@ type ParseResult =
     composer_tool?: string
     /** 프론트 [인터넷 검색] 토글 */
     internet_search_enabled?: boolean
+    company_knowledge_enabled?: boolean
     conversationMessages: ChatHistoryMessage[]
   }
   | { ok: false; status: number; message: string }
@@ -385,6 +410,9 @@ function mapMessagesForProvider(
 ): OpenAiChatMessage[] | AnthropicChatMessage[] | GeminiContent[] {
   switch (kind) {
     case "openai":
+    case "openrouter":
+    case "deepseek":
+    case "hermes":
       return mapToOpenAiMessages(messages)
     case "anthropic":
       return mapToAnthropicMessages(messages)
@@ -466,8 +494,8 @@ async function parseAiChatRequest(req: Request): Promise<ParseResult> {
     const internet_search_enabled = parseInternetSearchEnabled(
       form.get("internet_search_enabled"),
     )
-    const company_knowledge_enabled = form.has("company_knowledge_enabled") 
-      ? form.get("company_knowledge_enabled") === "true" 
+    const company_knowledge_enabled = form.has("company_knowledge_enabled")
+      ? form.get("company_knowledge_enabled") === "true"
       : undefined
     const richImages: RichImage[] = []
     const entries = form.getAll("images")
@@ -499,6 +527,7 @@ async function parseAiChatRequest(req: Request): Promise<ParseResult> {
       ok: true,
       trimmedPrompt: extractLastUserMessageText(conversationMessages),
       preferredAiBody,
+      providerPreference: normalizeProviderPreference(form.get("providerPreference")),
       richImages,
       jsonAttachmentAttemptCount: 0,
       conversationId: undefined,
@@ -533,6 +562,7 @@ async function parseAiChatRequest(req: Request): Promise<ParseResult> {
     /** 프론트 [인터넷 검색] 토글 */
     internet_search_enabled?: unknown
     company_knowledge_enabled?: boolean
+    providerPreference?: unknown
   }
   try {
     body = await req.json()
@@ -596,14 +626,15 @@ async function parseAiChatRequest(req: Request): Promise<ParseResult> {
   const internet_search_enabled = parseInternetSearchEnabled(
     body.internet_search_enabled,
   )
-  const company_knowledge_enabled = typeof body.company_knowledge_enabled === "boolean" 
-    ? body.company_knowledge_enabled 
+  const company_knowledge_enabled = typeof body.company_knowledge_enabled === "boolean"
+    ? body.company_knowledge_enabled
     : undefined
 
   return {
     ok: true,
     trimmedPrompt: lastUserText || trimmedPrompt,
     preferredAiBody,
+    providerPreference: normalizeProviderPreference(body.providerPreference),
     richImages,
     jsonAttachmentAttemptCount,
     conversationId,
@@ -628,6 +659,12 @@ function envKeyForProvider(kind: ProviderKind): string | undefined {
       return readEnv("ANTHROPIC_API_KEY")
     case "openai":
       return readEnv("OPENAI_API_KEY")
+    case "openrouter":
+      return readEnv("OPENROUTER_API_KEY")
+    case "deepseek":
+      return readEnv("DEEPSEEK_API_KEY")
+    case "hermes":
+      return readEnv("HERMES_API_KEY")
   }
 }
 
@@ -660,6 +697,38 @@ function createLanguageModelForKind(
       }
       const provider = createOpenAI({ apiKey })
       return { ok: true, kind, modelId, model: provider(modelId) }
+    }
+    case "openrouter": {
+      const apiKey = envKeyForProvider("openrouter")
+      if (!apiKey) {
+        return { ok: false, error: "OpenRouter API Key 가 없습니다." }
+      }
+      const provider = createOpenAI({
+        apiKey,
+        baseURL: "https://openrouter.ai/api/v1"
+      })
+      return { ok: true, kind, modelId, model: provider(modelId) }
+    }
+    case "deepseek": {
+      const apiKey = envKeyForProvider("deepseek")
+      if (!apiKey) return { ok: false, error: missingKeyMessage("deepseek") }
+      const provider = createOpenAI({
+        apiKey,
+        baseURL: readEnv("DEEPSEEK_API_BASE_URL") ?? "https://api.deepseek.com",
+      })
+      return { ok: true, kind, modelId, model: provider(modelId) }
+    }
+    case "hermes": {
+      const apiKey = envKeyForProvider("hermes")
+      const baseURL = readEnv("HERMES_API_BASE_URL")
+      if (!apiKey || !baseURL) {
+        return { ok: false, error: missingKeyMessage("hermes") }
+      }
+      const resolvedModelId = modelId === "hermes-default"
+        ? readEnv("HERMES_MODEL_ID") ?? modelId
+        : modelId
+      const provider = createOpenAI({ apiKey, baseURL })
+      return { ok: true, kind, modelId: resolvedModelId, model: provider(resolvedModelId) }
     }
   }
 }
@@ -859,9 +928,9 @@ async function evaluatePromptGuardrail(prompt: string): Promise<"PASS" | "BLOCK"
   }
 
   const guardrailModelId = guardrailKind === "google"
-    ? "gemini-2.5-flash-lite"
+    ? "gemini-2.5-flash"
     : guardrailKind === "anthropic"
-    ? "claude-haiku-4-5"
+    ? "claude-3-5-haiku"
     : "gpt-4o-mini"
 
   const guardrailModel = createLanguageModelForKind(
@@ -872,6 +941,9 @@ async function evaluatePromptGuardrail(prompt: string): Promise<"PASS" | "BLOCK"
     return "PASS"
   }
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 5000)
+
   try {
     const { text } = await generateText({
       model: guardrailModel.model,
@@ -879,6 +951,7 @@ async function evaluatePromptGuardrail(prompt: string): Promise<"PASS" | "BLOCK"
       prompt: trimmed,
       temperature: 0,
       maxOutputTokens: 16,
+      abortSignal: controller.signal,
     })
     const parsed = parseGuardrailVerdict(text)
     if (!parsed) {
@@ -892,6 +965,8 @@ async function evaluatePromptGuardrail(prompt: string): Promise<"PASS" | "BLOCK"
   } catch (err) {
     console.warn("[ai-chat] 가드레일 LLM 호출 실패 → PASS 폴백", err)
     return "PASS"
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 
@@ -976,7 +1051,7 @@ async function loadUserProfileContextForPrompt(
     .limit(30)
 
   let raw = String(profileData?.context_markdown ?? "").trim()
-  
+
   if (memoryData && memoryData.length > 0) {
     raw += "\n\n### AI 자동 수집 기억 (헤르메스)\n"
     for (const m of memoryData) {
@@ -985,7 +1060,7 @@ async function loadUserProfileContextForPrompt(
   }
 
   if (!raw.length) return { text: "", wasTruncated: false }
-  
+
   if (raw.length <= USER_PROFILE_MARKDOWN_CAP) {
     return { text: raw, wasTruncated: false }
   }
@@ -1039,7 +1114,7 @@ async function loadUserGoogleRefreshToken(
   }
 }
 
-Deno.serve(async (req) => {
+async function handleRequest(req: Request) {
   const preflight = handleCorsPreflight(req)
   if (preflight) return preflight
 
@@ -1067,19 +1142,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "유효하지 않은 세션입니다." }, 401)
   }
 
-  const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
-  const { data: profile } = await adminClient
-    .from("users")
-    .select("token_limit, current_token_usage")
-    .eq("id", user.id)
-    .single()
-
-  if (profile && profile.current_token_usage >= profile.token_limit) {
-    return jsonResponse(
-      { error: "월간 토큰 한도를 초과하여 AI 요청을 처리할 수 없습니다. 관리자에게 문의하세요." },
-      403
-    )
-  }
 
   const reqContentType = req.headers.get("content-type") ?? ""
   if (reqContentType.includes("application/json")) {
@@ -1120,6 +1182,7 @@ Deno.serve(async (req) => {
   const {
     trimmedPrompt,
     preferredAiBody,
+    providerPreference,
     richImages,
     jsonAttachmentAttemptCount,
     conversationId,
@@ -1152,11 +1215,11 @@ Deno.serve(async (req) => {
 
   // [Phase 1] DLP(데이터 유출 방지) 검사
   const { checkDlpViolation } = await import("../_shared/dlp-filter.ts");
-  
+
   // 현재 프롬프트 및 대화 내역(conversationMessages) 전체에 대해 DLP 검사
   const fullContextToCheck = trimmedPrompt + "\n" + conversationMessages.map(m => m.content).join("\n");
   const dlpResult = checkDlpViolation(fullContextToCheck);
-  
+
   if (dlpResult.isViolated) {
     return jsonResponse(
       { error: `보안 규정 위반: ${dlpResult.reason} (데이터가 외부 모델로 전송되지 않았습니다.)` },
@@ -1238,7 +1301,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "OPENAI_API_KEY가 설정되지 않았습니다." }, 500)
     }
     const finalUserPrompt = trimmedPrompt || "아름다운 풍경"
-    
+
     // Create a stream that will emit the image URL once the API returns
     const stream = new ReadableStream({
       async start(controller) {
@@ -1308,7 +1371,12 @@ Deno.serve(async (req) => {
 
   if (preferredAiChosen.trim().toLowerCase() === "auto") {
     // NH Smart Router 연동
-    const routeRes = await smartRouter.determineRoute(routingPrompt, hasVisionImages, profile.department)
+    const routeRes = await smartRouter.determineRoute(
+      routingPrompt,
+      hasVisionImages,
+      profile.department,
+      providerPreference,
+    )
     nhRouteResult = routeRes
     preferredAiForModel = routeRes.modelId
     console.log("[NH-Smart-Router] 자동 모델 결정:", routeRes.modelId, `(태스크: ${routeRes.taskType})`)
@@ -1338,6 +1406,7 @@ Deno.serve(async (req) => {
 
   let resolvedLanguageModel: LanguageModel
   let modelIdUsed: string
+  let providerKindUsed: ProviderKind
   {
     const lowCostMode =
       !isExplicitManualModel &&
@@ -1356,6 +1425,7 @@ Deno.serve(async (req) => {
     }
     resolvedLanguageModel = resolved.model
     modelIdUsed = resolved.modelId
+    providerKindUsed = resolved.kind
     console.log(
       "[ai-chat] 모델 선택:",
       preferredAiChosen,
@@ -1365,11 +1435,7 @@ Deno.serve(async (req) => {
     )
   }
 
-  const providerKind: ProviderKind = modelIdUsed.toLowerCase().includes("gemini")
-    ? "google"
-    : modelIdUsed.toLowerCase().includes("claude")
-    ? "anthropic"
-    : "openai"
+  const providerKind: ProviderKind = providerKindUsed
 
   const providerMappedMessages = mapMessagesForProvider(
     providerKind,
@@ -1425,35 +1491,17 @@ Deno.serve(async (req) => {
   }
 
   if (richImages.length > 0) {
-    const userDriveRt = await loadUserGoogleRefreshToken(user.id)
     try {
-      if (userDriveRt) {
-        await uploadChatImagesToDriveUser({
-          refreshToken: userDriveRt,
-          userEmail: user.email ?? user.id,
-          images: richImages,
-        })
-      } else if (isOrgDriveConfigured()) {
-        await uploadChatImagesToDrive({
-          userEmail: user.email ?? user.id,
-          images: richImages,
-        })
-      } else {
-        return jsonResponse(
-          {
-            error:
-              "이미지 영구 저장을 위해 설정에서 Google 계정을 연동하거나, 관리자용 공용 Drive(GDRIVE_ROOT_FOLDER_ID 등) 설정이 필요합니다.",
-          },
-          503,
-        )
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      console.error("[ai-chat] Google Drive 업로드 실패:", msg)
+      // Upload images directly to Google Cloud Storage (GCS)
+      await uploadChatImagesToGCS({
+        userEmail: user.email ?? user.id,
+        images: richImages,
+      })
+    } catch (e: any) {
+      console.error("[ai-chat] uploadChatImagesToGCS 실패", e.message)
       return jsonResponse(
         {
-          error:
-            `Google Drive 저장에 실패했습니다. OAuth 클라이언트·리프레시 토큰 및 폴더 공유 권한을 확인해 주세요: ${msg}`,
+          error: `이미지 저장에 실패했습니다: ${e.message}`,
         },
         502,
       )
@@ -1478,6 +1526,7 @@ Deno.serve(async (req) => {
       ? await createDynamicPluginTools({
         admin: adminSvc,
         userId: user.id,
+        department: profile.department,
       })
       : {}
 
@@ -1511,8 +1560,7 @@ Deno.serve(async (req) => {
     // ── MCP 코어 도구 레지스트리 (Exa · RAG · 징검다리) ─────────────────────
     const mcpToolFlags: McpToolEnableFlags = {
       webSearch: includeExaSearchTool,
-      companyRag: isCompanyKnowledgeUserEnabled && !skipCompanyRagForPrompt &&
-        Boolean(geminiKeyForRag && adminSvc),
+      companyRag: isCompanyKnowledgeUserEnabled && !skipCompanyRagForPrompt && Boolean(adminSvc && geminiKeyForRag),
       workCaseKnowledge: isCompanyKnowledgeUserEnabled && Boolean(adminSvc && openaiEmbedKey),
       googleSpreadsheetRead: Boolean(readEnv("GOOGLE_SERVICE_ACCOUNT_KEY")),
       univerOffice: true,
@@ -1522,6 +1570,8 @@ Deno.serve(async (req) => {
       ),
       readMyEmail: true,
       readWebPage: true,
+      // Assistant demo executors must never be exposed on the production chat path.
+      allMcpMocks: false,
     }
 
     const mcpToolCtx: McpToolExecutionContext = {
@@ -1620,36 +1670,6 @@ Deno.serve(async (req) => {
     let ragAugmentedStreamBase = textStreamSystemPrompt
     let ragAugmentedVisionBase = systemPrompt
 
-    if (isCompanyKnowledgeUserEnabled && !skipCompanyRagForPrompt && trimmedPrompt.length > 0) {
-      if (geminiKeyForRag) {
-        try {
-          const companyMatches = await retrieveCompanyDocumentMatches({
-            admin: adminClient,
-            userClient: supabaseUser,
-            geminiKey: geminiKeyForRag,
-            openaiKey: Deno.env.get("OPENAI_API_KEY"),
-            query: trimmedPrompt,
-          })
-          ragAugmentedStreamBase = augmentSystemPromptWithCompanyRag(
-            textStreamSystemPrompt,
-            companyMatches,
-          )
-          ragAugmentedVisionBase = augmentSystemPromptWithCompanyRag(
-            systemPrompt,
-            companyMatches,
-          )
-          if (companyMatches.length > 0) {
-            console.log(
-              "[ai-chat] company_documents RAG:",
-              companyMatches.length,
-              "chunks",
-            )
-          }
-        } catch (ragErr) {
-          console.warn("[ai-chat] company_documents RAG skipped", ragErr)
-        }
-      }
-    }
 
     const textSystemPrompt =
       `${ragAugmentedStreamBase}` +
@@ -1695,7 +1715,7 @@ Deno.serve(async (req) => {
             .select("prompt_weight, completion_weight")
             .eq("api_id", modelIdUsed)
             .maybeSingle()
-            
+
           if (modelData) {
             promptWeight = Number(modelData.prompt_weight) || promptWeight
             completionWeight = Number(modelData.completion_weight) || completionWeight
@@ -1798,7 +1818,7 @@ Deno.serve(async (req) => {
         if (messages.length > 2) {
           const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, '') || ''
           const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ''
-          
+
           if (baseUrl && serviceKey) {
             // fire-and-forget (await 하지 않음)
             fetch(`${baseUrl}/functions/v1/memory-extractor`, {
@@ -1997,5 +2017,23 @@ Deno.serve(async (req) => {
       )
     }
     return jsonResponse({ error: message }, 500)
+  }
+}
+
+Deno.serve(async (req) => {
+  try {
+    return await handleRequest(req)
+  } catch (error) {
+    console.error("[ai-chat] Unhandled Exception:", error)
+    const msg = error instanceof Error ? error.message : String(error)
+    return new Response(JSON.stringify({ error: `서버 내부 오류가 발생했습니다: ${msg}` }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
+      }
+    })
   }
 })
