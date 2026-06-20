@@ -3,13 +3,21 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../auth/useAuth'
 import { AccountHeaderActions, IconSettings, IconLogout } from './AccountHeaderActions'
-import { SettingsDialog } from '../settings/SettingsDialog'
+import { SettingsDialog, type SettingsTab } from '../settings/SettingsDialog'
 import { TokenRequestModal } from '../settings/TokenRequestModal'
 import { PrivateChatThreadRow } from './PrivateChatThreadRow'
 import { useAppUi } from '../../contexts/AppUiContext'
 import { isAdminProfile } from '../../lib/admin-access'
 import { supabase } from '../../lib/supabase'
 import { deleteRemotePrivateChatSession } from '../../services/chat/private-chat-remote'
+import {
+  createPlannerSession,
+  deletePlannerSession,
+  fetchPlannerSessionSummaries,
+  PLANNER_SESSIONS_UPDATED_EVENT,
+  renamePlannerSession,
+  type PlannerSessionSummary,
+} from '../../services/ai/planner-sessions'
 import {
   deletePrivateChatThread,
   listPrivateChatThreads,
@@ -148,6 +156,24 @@ function IconWorkflows(props: { className?: string }) {
         strokeLinejoin="round"
         strokeWidth={2}
         d="M10 9h4M12 12v5"
+      />
+    </svg>
+  )
+}
+function IconPlanner(props: { className?: string }) {
+  return (
+    <svg
+      className={props.className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
       />
     </svg>
   )
@@ -304,6 +330,26 @@ function IconSearch(props: { className?: string }) {
   )
 }
 
+function IconLibrary(props: { className?: string }) {
+  return (
+    <svg
+      className={props.className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.75}
+        d="M4 6h16M4 10h16M4 14h10M4 18h14"
+      />
+      <rect x="15" y="14" width="5" height="5" rx="1" strokeWidth={1.75} />
+    </svg>
+  )
+}
+
 function IconGeminiNewChat(props: { className?: string }) {
   return (
     <svg
@@ -352,8 +398,11 @@ export function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('mypage')
   const [tokenRequestOpen, setTokenRequestOpen] = useState(false)
   const [privateThreadsTick, setPrivateThreadsTick] = useState(0)
+  const [plannerSessions, setPlannerSessions] = useState<PlannerSessionSummary[]>([])
+  const [plannerSessionsTick, setPlannerSessionsTick] = useState(0)
   const [openThreadMenuId, setOpenThreadMenuId] = useState<string | null>(null)
   const [threadSearchOpen, setThreadSearchOpen] = useState(false)
   const [threadSearchQuery, setThreadSearchQuery] = useState('')
@@ -361,6 +410,7 @@ export function MainLayout() {
   const [isAppFolderOpen, setIsAppFolderOpen] = useState(false)
   const threadSearchInputRef = useRef<HTMLInputElement>(null)
   const showExpandedSidebarContent = !sidebarCollapsed || isMobileMenuOpen
+  const showExpandedSidebarDock = !sidebarCollapsed
   const { profile, profileError, signOut } = useAuth()
   const {
     requestNewChat,
@@ -370,7 +420,10 @@ export function MainLayout() {
   } = useAppUi()
 
   useEffect(() => {
-    registerOpenSettingsHandler(() => setSettingsOpen(true))
+    registerOpenSettingsHandler((tab) => {
+      if (tab) setSettingsTab(tab as SettingsTab)
+      setSettingsOpen(true)
+    })
     return () => registerOpenSettingsHandler(null)
   }, [registerOpenSettingsHandler])
 
@@ -399,6 +452,30 @@ export function MainLayout() {
       )
     }
   }, [])
+
+  useEffect(() => {
+    function onPlannerSessionsUpdated() {
+      setPlannerSessionsTick((n) => n + 1)
+    }
+    window.addEventListener(PLANNER_SESSIONS_UPDATED_EVENT, onPlannerSessionsUpdated)
+    return () => {
+      window.removeEventListener(PLANNER_SESSIONS_UPDATED_EVENT, onPlannerSessionsUpdated)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!profile?.id) {
+      setPlannerSessions([])
+      return
+    }
+    let cancelled = false
+    void fetchPlannerSessionSummaries(supabase).then((rows) => {
+      if (!cancelled) setPlannerSessions(rows)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [profile?.id, plannerSessionsTick, location.pathname])
 
   useEffect(() => {
     if (!isMobileMenuOpen) return
@@ -457,6 +534,12 @@ export function MainLayout() {
     setThreadSearchOpen(false)
     setThreadSearchQuery('')
   }
+
+  const libraryActive = location.pathname === '/library'
+  const plannerActive = location.pathname.startsWith('/ai-planner')
+  const activePlannerSessionId = plannerActive
+    ? location.pathname.match(/^\/ai-planner\/([^/]+)/)?.[1] ?? null
+    : null
 
   const displayName =
     profile?.display_name?.trim() ||
@@ -556,6 +639,47 @@ export function MainLayout() {
     }
   }
 
+  function handleDeletePlannerSession(sessionId: string) {
+    if (
+      typeof window !== 'undefined' &&
+      !window.confirm('이 기획 세션을 삭제할까요? 되돌릴 수 없습니다.')
+    ) {
+      return
+    }
+    void deletePlannerSession(supabase, sessionId).then((res) => {
+      if (!res.ok) {
+        window.alert(`삭제하지 못했습니다: ${res.message}`)
+        return
+      }
+      setPlannerSessionsTick((n) => n + 1)
+      if (activePlannerSessionId === sessionId) {
+        navigate('/ai-planner')
+      }
+    })
+  }
+
+  function handleRenamePlannerSession(sessionId: string, currentTitle: string) {
+    const next = window.prompt('기획 세션 이름', currentTitle)
+    if (next === null) return
+    void renamePlannerSession(supabase, sessionId, next).then((res) => {
+      if (!res.ok) {
+        window.alert(`이름을 저장하지 못했습니다: ${res.message}`)
+        return
+      }
+      setPlannerSessionsTick((n) => n + 1)
+    })
+  }
+
+  async function handleNewPlannerSession() {
+    const created = await createPlannerSession(supabase)
+    if (!created.ok) {
+      window.alert(created.message)
+      return
+    }
+    setIsMobileMenuOpen(false)
+    navigate(`/ai-planner/${created.id}`)
+  }
+
   return (
     <div className="app-shell flex h-dvh w-full bg-[#EBE9E4] text-stone-900 dark:bg-stone-950 dark:text-stone-100">
       {/* 모바일 오버레이 백드롭 */}
@@ -572,7 +696,7 @@ export function MainLayout() {
       <aside
         id="app-sidebar"
         aria-label="앱 메뉴"
-        className={`fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col border-r border-stone-300/80 bg-[#F4F1EA] shadow-xl transition-all duration-300 ease-out dark:border-stone-700 dark:bg-stone-900 ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-dvh shrink-0 flex-col border-r border-stone-300/80 bg-[#F4F1EA] shadow-xl transition-all duration-300 ease-out dark:border-stone-700 dark:bg-stone-900 ${
           isMobileMenuOpen ? 'translate-x-0' : 'max-md:-translate-x-full'
         } ${
           sidebarCollapsed ? 'w-[72px]' : 'w-[72px] md:w-[308px] max-md:w-[min(308px,100vw)]'
@@ -653,7 +777,12 @@ export function MainLayout() {
                   aria-controls={promptPanel.regionId}
                   aria-label={promptPanel.expanded ? '프롬프트 보관함 닫기' : '프롬프트 보관함 열기'}
                   title="프롬프트 보관함"
-                  onClick={() => promptPanel.toggle()}
+                  onClick={() => {
+                    if (!promptPanel.expanded) {
+                      setIsMobileMenuOpen(false)
+                    }
+                    promptPanel.toggle()
+                  }}
                 >
                   {promptPanel.expanded ? (
                     <IconPromptChevronsLeft className="h-6 w-6" />
@@ -790,31 +919,137 @@ export function MainLayout() {
             ) : null}
           </div>
 
+          <Link
+            to="/library"
+            title="라이브러리"
+            aria-label="라이브러리"
+            aria-current={libraryActive ? 'page' : undefined}
+            className={`${sidebarNewChatClass} ${
+              libraryActive
+                ? 'bg-stone-200/80 dark:bg-stone-800/60'
+                : ''
+            } ${
+              showExpandedSidebarContent
+                ? 'justify-start gap-3 pl-3 pr-2 text-sm font-normal leading-5 text-stone-800 dark:text-stone-100'
+                : 'justify-center px-0'
+            }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span
+              className="flex h-6 w-6 shrink-0 items-center justify-center text-stone-700 dark:text-stone-300"
+              aria-hidden="true"
+            >
+              <IconLibrary className="h-6 w-6" />
+            </span>
+            {showExpandedSidebarContent ? (
+              <span className="min-w-0 truncate text-left">라이브러리</span>
+            ) : null}
+          </Link>
+
           <button
             type="button"
-            title="새 채팅"
-            aria-label="새 채팅"
+            title={plannerActive ? '새 기획' : '새 채팅'}
+            aria-label={plannerActive ? '새 기획' : '새 채팅'}
             className={`${sidebarNewChatClass} sticky top-0 z-20 bg-[#F4F1EA] dark:bg-stone-900 ${
               showExpandedSidebarContent
                 ? 'justify-start gap-3 pl-3 pr-2 text-sm font-normal leading-5 text-stone-800 dark:text-stone-100'
                 : 'justify-center px-0'
             }`}
             onClick={() => {
-              requestNewChat()
-              setIsMobileMenuOpen(false)
+              if (plannerActive) {
+                void handleNewPlannerSession()
+              } else {
+                requestNewChat()
+                setIsMobileMenuOpen(false)
+              }
             }}
           >
             <span
               className="flex h-6 w-6 shrink-0 items-center justify-center text-stone-700 dark:text-stone-300"
               aria-hidden="true"
             >
-              <IconGeminiNewChat className="h-6 w-6" />
+              {plannerActive ? (
+                <IconPlanner className="h-6 w-6" />
+              ) : (
+                <IconGeminiNewChat className="h-6 w-6" />
+              )}
             </span>
             {showExpandedSidebarContent ? (
-              <span className="min-w-0 truncate text-left">새 채팅</span>
+              <span className="min-w-0 truncate text-left">
+                {plannerActive ? '새 기획' : '새 채팅'}
+              </span>
             ) : null}
           </button>
 
+          {plannerActive ? (
+            <section
+              aria-label="기획 세션 목록"
+              className={`pb-1 ${sidebarCollapsed ? 'hidden' : ''}`}
+            >
+              {showExpandedSidebarContent ? (
+                <p className="mb-1 shrink-0 pl-3 text-left text-sm font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+                  기획 세션
+                </p>
+              ) : null}
+              {plannerSessions.length === 0 ? (
+                showExpandedSidebarContent ? (
+                  <p className="py-2 pl-3 text-sm leading-snug text-stone-500 dark:text-stone-400">
+                    저장된 기획 대화가 여기에 표시됩니다.
+                  </p>
+                ) : null
+              ) : (
+                <ul className="flex flex-col gap-0 pb-1">
+                  {plannerSessions.map((session) => {
+                    const isActive = activePlannerSessionId === session.id
+                    return (
+                      <li key={session.id}>
+                        <div className="group relative flex items-center">
+                          <Link
+                            to={`/ai-planner/${session.id}`}
+                            title={session.title}
+                            aria-current={isActive ? 'page' : undefined}
+                            className={`flex min-w-0 flex-1 items-center gap-2 rounded-full py-2 pl-3 pr-10 text-left text-sm leading-snug transition-colors ${
+                              isActive
+                                ? 'bg-stone-200/80 font-medium text-stone-900 dark:bg-stone-800/70 dark:text-stone-50'
+                                : 'text-stone-700 hover:bg-stone-200/50 dark:text-stone-300 dark:hover:bg-stone-800/45'
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <span className="min-w-0 flex-1 truncate">{session.title}</span>
+                            {session.has_plan ? (
+                              <span className="shrink-0 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
+                                PRD
+                              </span>
+                            ) : null}
+                          </Link>
+                          <div className="absolute right-1 flex items-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                            <button
+                              type="button"
+                              className="rounded-full p-1.5 text-stone-500 hover:bg-stone-200/80 hover:text-stone-800 dark:hover:bg-stone-700 dark:hover:text-stone-100"
+                              title="이름 변경"
+                              aria-label="기획 세션 이름 변경"
+                              onClick={() => handleRenamePlannerSession(session.id, session.title)}
+                            >
+                              ✎
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-full p-1.5 text-stone-500 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                              title="삭제"
+                              aria-label="기획 세션 삭제"
+                              onClick={() => handleDeletePlannerSession(session.id)}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </section>
+          ) : (
           <section
             aria-label="개인 채팅 목록"
             className={`pb-1 ${sidebarCollapsed ? 'hidden' : ''}`}
@@ -860,17 +1095,22 @@ export function MainLayout() {
                 </ul>
               )}
           </section>
+          )}
           </div>
 
           <div
-            className={`shrink-0 border-t border-stone-300/70 px-0 pt-1.5 dark:border-stone-700 ${sidebarCollapsed ? 'pb-[max(0.35rem,env(safe-area-inset-bottom))]' : 'pb-[max(0.5rem,env(safe-area-inset-bottom))]'}`}
+            className={`mt-auto shrink-0 border-t border-stone-300/70 px-0 pt-1.5 dark:border-stone-700 ${
+              sidebarCollapsed
+                ? 'pb-[max(0.35rem,env(safe-area-inset-bottom))]'
+                : 'pb-[max(0.5rem,env(safe-area-inset-bottom))]'
+            }`}
           >
             <div
               className="relative w-full overflow-visible rounded-none border-x-0 border-stone-400/50 bg-white/70 shadow-none dark:border-stone-600 dark:bg-stone-900/55"
               role="toolbar"
               aria-label="바로가기 및 계정"
             >
-              {isAppFolderOpen && !showExpandedSidebarContent ? (
+              {isAppFolderOpen && sidebarCollapsed ? (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsAppFolderOpen(false)} />
                   <div className="absolute bottom-0 left-[76px] z-50 w-[240px] rounded-xl border border-stone-200 bg-[#F4F1EA] p-2 shadow-2xl dark:border-stone-700 dark:bg-stone-900">
@@ -988,34 +1228,52 @@ export function MainLayout() {
 
               <div
                 className={`grid w-full divide-stone-300/65 dark:divide-stone-700/80 ${
-                  showExpandedSidebarContent
+                  showExpandedSidebarDock
                     ? 'grid-cols-3 grid-rows-4 divide-x divide-y'
-                    : 'grid-cols-1 grid-rows-1 divide-y'
+                    : 'grid-cols-1 grid-rows-2 divide-y'
                 }`}
               >
-                {!showExpandedSidebarContent ? (
-                  <button
-                    type="button"
-                    title="기타 앱 메뉴"
-                    aria-label="기타 앱 메뉴"
-                    className="flex flex-col items-center justify-center py-4 text-stone-500 hover:bg-stone-200/50 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
-                    onClick={() => setIsAppFolderOpen(!isAppFolderOpen)}
-                  >
-                    <svg
-                      className="h-6 w-6 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
+                {sidebarCollapsed ? (
+                  <>
+                    <Link
+                      to="/ai-planner"
+                      title="AI Planner"
+                      aria-label="AI Planner"
+                      className={`flex items-center justify-center py-3 transition ${
+                        plannerActive
+                          ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+                          : 'text-stone-500 hover:bg-stone-200/50 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100'
+                      }`}
+                      onClick={() => {
+                        setIsAppFolderOpen(false)
+                        setIsMobileMenuOpen(false)
+                      }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.586a2 2 0 012 2v2M4 6v12a2 2 0 002 2h12a2 2 0 002-2v-4M4 10h16"
-                      />
-                    </svg>
-                  </button>
+                      <IconPlanner className="h-5 w-5" />
+                    </Link>
+                    <button
+                      type="button"
+                      title="기타 앱 메뉴"
+                      aria-label="기타 앱 메뉴"
+                      className="flex items-center justify-center py-3 text-stone-500 transition hover:bg-stone-200/50 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                      onClick={() => setIsAppFolderOpen(!isAppFolderOpen)}
+                    >
+                      <svg
+                        className="h-5 w-5 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 6a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.586a2 2 0 012 2v2M4 6v12a2 2 0 002 2h12a2 2 0 002-2v-4M4 10h16"
+                        />
+                      </svg>
+                    </button>
+                  </>
                 ) : (
                   <>
                 <Link
@@ -1027,6 +1285,16 @@ export function MainLayout() {
                 >
                   <IconWorkflows className="h-3.5 w-3.5 shrink-0" />
                   <span className={sidebarIconDockLabelClass}>Workflows</span>
+                </Link>
+                <Link
+                  to="/ai-planner"
+                  title="AI Planner"
+                  aria-label="AI Planner"
+                  className={sidebarIconDockClass}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <IconPlanner className="h-3.5 w-3.5 shrink-0" />
+                  <span className={sidebarIconDockLabelClass}>AI Planner</span>
                 </Link>
                 <Link
                   to="/ai-designer"
@@ -1211,8 +1479,12 @@ export function MainLayout() {
 
       <SettingsDialog
         open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
+        onClose={() => {
+          setSettingsOpen(false)
+          setSettingsTab('mypage')
+        }}
         userId={profile?.id}
+        initialTab={settingsTab}
       />
 
       <TokenRequestModal

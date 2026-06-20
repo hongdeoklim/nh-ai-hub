@@ -553,8 +553,19 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       if (!el) return
 
       const syncHeight = () => {
-        el.style.height = '0px'
-        el.style.height = `${el.scrollHeight}px`
+        el.style.height = 'auto'
+        const computed = window.getComputedStyle(el)
+        const lineHeight = Number.parseFloat(computed.lineHeight) || 20
+        const verticalPadding =
+          (Number.parseFloat(computed.paddingTop) || 0) +
+          (Number.parseFloat(computed.paddingBottom) || 0)
+        const verticalBorder =
+          (Number.parseFloat(computed.borderTopWidth) || 0) +
+          (Number.parseFloat(computed.borderBottomWidth) || 0)
+        const maxHeight = lineHeight * 4 + verticalPadding + verticalBorder
+        const nextHeight = Math.min(el.scrollHeight, maxHeight)
+        el.style.height = `${nextHeight}px`
+        el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden'
       }
 
       syncHeight()
@@ -1178,7 +1189,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             className={
               embeddedInSlidesShell
                 ? 'px-0 pb-0 pt-0'
-                : 'px-3 pt-3 pb-2 md:px-4 md:pt-3.5 md:pb-2.5'
+                : 'px-3 py-2 md:px-4 md:py-2'
             }
           >
             <div className="flex min-w-0 flex-col">
@@ -1192,7 +1203,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
                 style={{ fontSize: '14px' }}
-                className={`box-border min-h-[2.5rem] w-full min-w-0 resize-none bg-transparent py-0.5 leading-snug outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 max-h-[min(40vh,14rem)] ${
+                className={`box-border min-h-[1.5rem] max-h-[5.25rem] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 leading-snug outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
                   isSoftShell
                     ? 'text-stone-900 placeholder:text-stone-400 dark:text-stone-100 dark:placeholder:text-stone-500'
                     : 'text-slate-900 placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500'
@@ -1202,7 +1213,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               />
 
               <div
-                className={`relative z-10 flex w-full items-center gap-2 pt-1 md:pt-1.5 ${
+                className={`relative z-10 flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-1 md:pt-1.5 ${
                   slidesMinimal ? 'justify-end' : 'justify-between'
                 }`}
               >
@@ -1536,9 +1547,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                         </button>
                       ) : null}
 
-                      <button 
-                        type="button" 
-                        role="menuitem" 
+                      <button
+                        type="button"
+                        role="menuitem"
                         className={toolboxMenuItemClass}
                         onClick={() => {
                           closeMenus()
@@ -1557,9 +1568,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                         </span>
                       </button>
 
-                      <button 
-                        type="button" 
-                        role="menuitem" 
+                      <button
+                        type="button"
+                        role="menuitem"
                         className={toolboxMenuItemClass}
                         onClick={() => {
                           closeMenus()
@@ -1659,7 +1670,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             </div>
             ) : null}
 
-            <div className="flex shrink-0 items-center gap-0.5 md:gap-1">
+            <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-0.5 md:gap-1">
               {!slidesMinimal ? belowInputRow : null}
 
               {!slidesMinimal && speechSupported ? (

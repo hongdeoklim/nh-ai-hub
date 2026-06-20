@@ -20,7 +20,7 @@ import {
   type ChatInputHandle,
   type ChatSendPayload,
 } from '../components/chat/ChatInput'
-import { ChatStartHub, ModelSelectRow, modelCostBadgeClass } from '../components/chat/ChatStartHub'
+import { ChatStartHub, ModelSelectRow } from '../components/chat/ChatStartHub'
 import {
   PromptLibraryPanel,
   type ApplyPromptMeta,
@@ -30,11 +30,6 @@ import { TokenRequestModal } from '../components/settings/TokenRequestModal'
 import { AccountHeaderActions } from '../components/layout/AccountHeaderActions'
 import { useAppUi } from '../contexts/AppUiContext'
 import {
-  estimateRoughInputTokens,
-  estimateDeepResearchInputTokens,
-  getDeepResearchTypicalCompletionRange,
-  getTypicalCompletionRange,
-  MODEL_ID_LABEL,
   routePromptToModelId,
   seedOrgPromptRoutesFromCatalog,
   upsertOrgPromptRoute,
@@ -87,7 +82,11 @@ import {
   promptTemplateRowToOrgItem,
 } from '../services/prompts/prompt-templates'
 import type { PromptTemplateRow } from '../types/prompt-templates'
-import type { AiModelRow } from '../types/ai-models'
+import type {
+  AiModelProvider,
+  AiModelRow,
+  AiProviderPreference,
+} from '../types/ai-models'
 import { extractGoogleDriveFileId } from '../lib/google-drive-url'
 import {
   clearAiSlidesBootstrap,
@@ -127,12 +126,14 @@ import {
 import { exportDriveFileForChat } from '../services/reference-room/export-drive-for-chat'
 import type { SavedPromptRow } from '../types/prompts'
 
-type AiManualProviderId = 'anthropic' | 'openai' | 'google'
+type AiManualProviderId = Exclude<AiModelProvider, 'openrouter'>
 
 const MANUAL_PROVIDER_ORDER: AiManualProviderId[] = [
   'google',
   'openai',
   'anthropic',
+  'deepseek',
+  'hermes',
 ]
 
 type FallbackModelEntry = {
@@ -147,6 +148,31 @@ const AI_MODELS_BY_PROVIDER: Record<
   AiManualProviderId,
   readonly FallbackModelEntry[]
 > = {
+  deepseek: [
+    {
+      id: 'deepseek-chat',
+      label: 'DeepSeek Chat',
+      hint: '반복 처리, 요약 및 비용 효율적인 일반 업무',
+      costInfo: '낮음',
+      description: '반복 처리, 요약 및 비용 효율적인 일반 업무에 적합합니다.',
+    },
+    {
+      id: 'deepseek-reasoner',
+      label: 'DeepSeek Reasoner',
+      hint: '수학, 분석 및 단계적 추론',
+      costInfo: '보통',
+      description: '복잡한 계산과 단계적 추론 작업에 적합합니다.',
+    },
+  ],
+  hermes: [
+    {
+      id: 'hermes-default',
+      label: 'Hermes',
+      hint: '회사 내부 특화 업무 및 배치 처리',
+      costInfo: '낮음',
+      description: '관리자가 구성한 Hermes API의 기본 모델을 사용합니다.',
+    },
+  ],
   anthropic: [
     {
       id: 'claude-opus-4-7',
@@ -312,6 +338,8 @@ const AI_MODELS_BY_PROVIDER: Record<
 function providerForModelId(modelId: string): AiManualProviderId {
   if (modelId.startsWith('claude-')) return 'anthropic'
   if (modelId.startsWith('gemini-')) return 'google'
+  if (modelId.startsWith('deepseek-')) return 'deepseek'
+  if (modelId.startsWith('hermes-')) return 'hermes'
   return 'openai'
 }
 
@@ -321,12 +349,19 @@ function chatInputPlaceholderForModelId(modelId: string): string {
       return 'Gemini에게 업무 관련 질문을 입력하세요.'
     case 'anthropic':
       return 'Claude에게 업무 관련 질문을 입력하세요.'
+    case 'deepseek':
+      return 'DeepSeek에게 업무 관련 질문을 입력하세요.'
+    case 'hermes':
+      return 'Hermes에게 내부 업무 관련 질문을 입력하세요.'
     default:
       return '챗GPT에게 업무 관련 질문을 입력하세요.'
   }
 }
 
-function buildAllModelRows(selectedModel: string) {
+function buildAllModelRows(
+  selectedModel: string,
+  selectedProvider: AiProviderPreference = 'auto',
+) {
   const rows: {
     id: string
     label: string
@@ -346,6 +381,7 @@ function buildAllModelRows(selectedModel: string) {
   ]
 
   for (const provider of MANUAL_PROVIDER_ORDER) {
+    if (selectedProvider !== 'auto' && provider !== selectedProvider) continue
     for (const model of AI_MODELS_BY_PROVIDER[provider]) {
       rows.push({
         id: model.id,
@@ -480,7 +516,9 @@ export function Dashboard() {
     openSettings,
     requestNewChat,
   } = useAppUi()
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-2.5-flash')
+  const [selectedModel, setSelectedModel] = useState<string>('auto')
+  const [selectedProvider, setSelectedProvider] =
+    useState<AiProviderPreference>('auto')
   const [registryModels, setRegistryModels] = useState<AiModelRow[]>([])
   const [registryModelsLoading, setRegistryModelsLoading] = useState(true)
   const [mediaImageModels, setMediaImageModels] = useState<AiModelRow[]>([])
@@ -538,6 +576,8 @@ export function Dashboard() {
   profileRef.current = profile
   const selectedModelRef = useRef(selectedModel)
   selectedModelRef.current = selectedModel
+  const selectedProviderRef = useRef(selectedProvider)
+  selectedProviderRef.current = selectedProvider
   const messagesRef = useRef(messages)
   messagesRef.current = messages
   /** 프로필 refresh 시 사용자가 드롭다운에서 고른 모델을 덮어쓰지 않음 */
@@ -680,39 +720,22 @@ export function Dashboard() {
     : []
 
   const versionRows = useMemo(() => {
+    const providerModels = selectedProvider === 'auto'
+      ? textRegistryModels
+      : textRegistryModels.filter((model) => model.provider === selectedProvider)
     if (textRegistryModels.length > 0) {
-      return buildModelSelectOptions(textRegistryModels, selectedModel)
+      return buildModelSelectOptions(providerModels, selectedModel)
     }
-    return buildAllModelRows(selectedModel)
-  }, [textRegistryModels, selectedModel])
+    return buildAllModelRows(selectedModel, selectedProvider)
+  }, [textRegistryModels, selectedModel, selectedProvider])
 
   const safeVersionRows = Array.isArray(versionRows) ? versionRows : []
-
-  const selectedModelMeta = useMemo(() => {
-    const row = safeVersionRows.find((m) => m.id === selectedModel)
-    return {
-      costInfo: row?.costInfo?.trim() || '보통',
-      description:
-        row?.description?.trim() ||
-        row?.hint?.trim() ||
-        '',
-      hint: row?.hint?.trim() || '',
-    }
-  }, [safeVersionRows, selectedModel])
 
   const draftTrimmed = draft.trim()
   const effectiveModelForTokens =
     selectedModel === 'auto'
       ? routePromptToModelId(draftTrimmed, false)
       : selectedModel
-  const inputTokEst = deepResearchEnabled
-    ? estimateDeepResearchInputTokens(draftTrimmed)
-    : estimateRoughInputTokens(draftTrimmed)
-  const [completionLo, completionHi] = deepResearchEnabled
-    ? getDeepResearchTypicalCompletionRange()
-    : getTypicalCompletionRange(effectiveModelForTokens)
-  const totalLo = inputTokEst + completionLo
-  const totalHi = inputTokEst + completionHi
 
   const chatInputPlaceholder = useMemo(() => {
     const toolMeta = getComposerToolMeta(composerTool)
@@ -877,14 +900,16 @@ export function Dashboard() {
 
   // Workflow Bootstrap
   const [activeWorkflowSystemPrompt, setActiveWorkflowSystemPrompt] = useState<string | null>(null)
+  const [activeWorkflowTitle, setActiveWorkflowTitle] = useState<string | null>(null)
 
   useEffect(() => {
     if (!threadId || !isValidPrivateChatThreadId(threadId)) return
     const workflowPayload = readWorkflowBootstrap(threadId)
     if (!workflowPayload) return
-    
+
     clearWorkflowBootstrap(threadId)
     setActiveWorkflowSystemPrompt(workflowPayload.systemPrompt)
+    setActiveWorkflowTitle(workflowPayload.title || '사용자 지정')
   }, [threadId])
 
   useEffect(() => {
@@ -1284,7 +1309,7 @@ export function Dashboard() {
     function startNewChat() {
       const nid = crypto.randomUUID()
       rememberLastPrivateThread(nid)
-      setSelectedModel('gemini-2.5-flash')
+      setSelectedModel('auto')
       navigate(`/chat/${nid}`)
       queueMicrotask(() => {
         scrollChatArea(chatAreaRef.current, 'top', 'smooth')
@@ -1484,7 +1509,7 @@ export function Dashboard() {
     const rawModel =
       selectedModelRef.current.trim() ||
       profileNow?.preferred_ai?.trim() ||
-      'gemini-2.5-flash'
+      'auto'
     const modelNow =
       rawModel.toLowerCase() === 'auto' ? 'auto' : rawModel
     if (!profileNow?.id) return
@@ -1707,6 +1732,7 @@ export function Dashboard() {
         supabase,
         messages: apiMessages,
         activeModel: modelNow,
+        providerPreference: selectedProviderRef.current,
         composerTool: composerToolMode === 'canvas' ? 'canvas' : null,
         internetSearchEnabled: item.internetSearch,
         imageBase64: hasBase64Image ? imageBase64 : undefined,
@@ -2036,13 +2062,18 @@ export function Dashboard() {
     }
   }
 
+  function handleProviderChange(nextProvider: AiProviderPreference) {
+    setSelectedProvider(nextProvider)
+    if (selectedModel !== 'auto') void handleModelChange('auto')
+  }
+
   return (
     <ChatArtifactProvider>
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#FAF9F6] dark:bg-transparent lg:flex-row">
       <div
         className={`hidden min-w-0 shrink-0 transition-[width] duration-200 ease-out lg:flex lg:h-full lg:max-h-none ${
           promptPanelExpanded
-            ? 'lg:w-24 lg:min-w-24 lg:max-w-24 lg:overflow-hidden'
+            ? 'lg:w-48 lg:min-w-48 lg:max-w-48 lg:overflow-hidden'
             : 'lg:hidden'
         }`}
       >
@@ -2084,6 +2115,27 @@ export function Dashboard() {
             onSignOut={signOut}
           />
         </header>
+
+        {activeWorkflowTitle && (
+          <div className="shrink-0 border-b border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200 flex flex-wrap items-center justify-between gap-2 md:px-6">
+            <div className="flex items-center gap-2">
+              <span className="text-base leading-none">✨</span>
+              <span>
+                <span className="font-bold">{activeWorkflowTitle}</span> 워크플로우가 적용된 채팅 세션입니다.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveWorkflowSystemPrompt(null)
+                setActiveWorkflowTitle(null)
+              }}
+              className="font-semibold underline underline-offset-2 opacity-80 hover:opacity-100"
+            >
+              해제하기
+            </button>
+          </div>
+        )}
 
         {profileError ? (
           <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100 md:px-6">
@@ -2274,82 +2326,37 @@ export function Dashboard() {
                   aria-hidden="true"
                 />
               ) : (
-                <ModelSelectRow
-                  selectedModel={selectedModel}
-                  modelVersionSelectId={modelVersionSelectId}
-                  versionRows={safeVersionRows}
-                  modelSaving={modelSaving}
-                  profileReady={Boolean(profile)}
-                  onModelChange={(id) => void handleModelChange(id)}
-                />
+                <div className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1">
+                  <label htmlFor="dashboard-ai-provider-select" className="sr-only">
+                    AI 공급자 선택
+                  </label>
+                  <select
+                    id="dashboard-ai-provider-select"
+                    name="ai-provider"
+                    value={selectedProvider}
+                    disabled={!profile || modelSaving}
+                    onChange={(event) =>
+                      handleProviderChange(event.target.value as AiProviderPreference)
+                    }
+                    className="h-8 w-[7.75rem] max-w-[40vw] min-w-0 shrink rounded-full border-0 bg-stone-100/95 px-2.5 text-[12.5px] font-medium text-stone-700 outline-none ring-orange-600/20 transition hover:bg-stone-200/90 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90"
+                  >
+                    <option value="auto">자동 추천</option>
+                    <option value="openai">ChatGPT/OpenAI</option>
+                    <option value="anthropic">Claude</option>
+                    <option value="google">Gemini</option>
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="hermes">Hermes</option>
+                  </select>
+                  <ModelSelectRow
+                    selectedModel={selectedModel}
+                    modelVersionSelectId={modelVersionSelectId}
+                    versionRows={safeVersionRows}
+                    modelSaving={modelSaving}
+                    profileReady={Boolean(profile)}
+                    onModelChange={(id) => void handleModelChange(id)}
+                  />
+                </div>
               )
-            }
-            composerMeta={
-              <>
-                {isSending ? (
-                  <p className="mb-1 font-semibold leading-tight text-orange-900 dark:text-orange-200">
-                    {queuedAheadCount > 0
-                      ? `이전 요청 처리 중 · 대기 ${queuedAheadCount}건`
-                      : deepResearchEnabled
-                        ? DEEP_RESEARCH_LOADING_MESSAGE
-                        : '답변 생성 중…'}
-                  </p>
-                ) : null}
-                {selectedModelMeta.description ? (
-                  <div className="mb-1">
-                    <span
-                      className={`inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none ${modelCostBadgeClass(selectedModelMeta.costInfo)}`}
-                    >
-                      {selectedModelMeta.costInfo}
-                    </span>
-                    <p className="mt-1 leading-snug text-stone-600 dark:text-stone-400">
-                      {selectedModelMeta.description}
-                    </p>
-                  </div>
-                ) : null}
-                {selectedModel === 'auto' ? (
-                  <p
-                    className={`font-medium leading-tight text-orange-900 dark:text-orange-200 ${selectedModelMeta.description ? 'mt-1' : ''}`}
-                  >
-                    예상:{' '}
-                    {MODEL_ID_LABEL[effectiveModelForTokens] ??
-                      effectiveModelForTokens}
-                  </p>
-                ) : null}
-                <p
-                  className={`mt-1 border-t border-stone-200/70 pt-1 leading-tight dark:border-stone-700 ${
-                    deepResearchEnabled
-                      ? 'text-violet-900 dark:text-violet-100'
-                      : 'text-stone-700 dark:text-stone-300'
-                  }`}
-                >
-                  <span
-                    className={`font-semibold ${
-                      deepResearchEnabled
-                        ? 'text-violet-950 dark:text-violet-50'
-                        : 'text-stone-900 dark:text-stone-100'
-                    }`}
-                  >
-                    {deepResearchEnabled ? '심층 연구 추정' : '추정 토큰'}
-                  </span>
-                  <br />
-                  입력 {inputTokEst.toLocaleString()} · 완성{' '}
-                  {completionLo.toLocaleString()}~
-                  {completionHi.toLocaleString()}
-                  <br />
-                  합계 {totalLo.toLocaleString()}~{totalHi.toLocaleString()}
-                </p>
-                <p className="mt-0.5 leading-tight text-stone-500 dark:text-stone-500">
-                  {deepResearchEnabled
-                    ? '3모델 교차 검증(참고용).'
-                    : '가드레일·시스템 메시지 미포함.'}
-                </p>
-                {modelSaving ? (
-                  <p className="mt-1 text-orange-800 dark:text-orange-300">
-                    모델 저장 중…
-                  </p>
-                ) : null}
-              </>
             }
           />
           </div>
