@@ -1377,6 +1377,23 @@ async function handleRequest(req: Request) {
       profile.department,
       providerPreference,
     )
+
+    const assistantPlan = await smartRouter.selectAssistantCandidates({
+      prompt: routingPrompt,
+      route: routeRes,
+    })
+    if (assistantPlan) {
+      if (smartRouter.isAssistantRouterShadowMode()) {
+        console.info(
+          "[Assistant-Router][shadow] 후보:",
+          assistantPlan.selectedAssistants.map((assistant) => assistant.assistantId),
+          `(${assistantPlan.requestComplexity})`,
+        )
+      } else {
+        routeRes.assistantPlan = assistantPlan
+      }
+    }
+
     nhRouteResult = routeRes
     preferredAiForModel = routeRes.modelId
     console.log("[NH-Smart-Router] 자동 모델 결정:", routeRes.modelId, `(태스크: ${routeRes.taskType})`)
