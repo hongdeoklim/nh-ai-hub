@@ -9,7 +9,7 @@ import {
 } from 'react'
 
 type NewChatHandler = () => void
-type OpenSettingsHandler = () => void
+type OpenSettingsHandler = (tab?: string) => void
 
 export type PromptPanelRegistration = {
   expanded: boolean
@@ -24,8 +24,8 @@ type AppUiContextValue = {
   registerNewChatFallback: (handler: NewChatHandler | null) => void
   /** 사이드바 등 어디서든 새 채팅을 요청합니다. */
   requestNewChat: () => void
-  /** MainLayout 설정 다이얼로그를 엽니다. */
-  openSettings: () => void
+  /** MainLayout 설정 다이얼로그를 엽니다. tab을 주면 해당 탭으로 엽니다. */
+  openSettings: (tab?: string) => void
   registerOpenSettingsHandler: (handler: OpenSettingsHandler | null) => void
   /** 대화(Dashboard)에서만 프롬프트 패널 토글을 사이드바 상단에 노출합니다. */
   promptPanel: PromptPanelRegistration | null
@@ -70,8 +70,8 @@ export function AppUiProvider({ children }: { children: ReactNode }) {
     else window.dispatchEvent(new CustomEvent('nh-ai:new-chat'))
   }, [])
 
-  const openSettings = useCallback(() => {
-    openSettingsRef.current?.()
+  const openSettings = useCallback((tab?: string) => {
+    openSettingsRef.current?.(tab)
   }, [])
 
   const value = useMemo(

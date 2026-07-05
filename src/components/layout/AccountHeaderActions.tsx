@@ -111,7 +111,7 @@ export function AccountHeaderActions({
           title="설정"
           aria-label="설정"
           className={btnClass}
-          onClick={onOpenSettings}
+          onClick={() => onOpenSettings()}
         >
           <IconSettings className={iconClass} style={iconStyle} />
         </button>
