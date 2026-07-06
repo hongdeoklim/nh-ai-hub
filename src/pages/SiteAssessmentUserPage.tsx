@@ -7,7 +7,6 @@ import { supabase } from '../lib/supabase'
 
 type Category    = 'safety' | 'quality'
 type ModelPref   = 'claude' | 'gemini' | 'hermes'
-type PrintTarget = 'report' | 'findings'
 
 interface SafetyMeta {
   workplace: string
@@ -173,32 +172,6 @@ function riskBg(score: number): string {
   if (score >= 10) return 'bg-orange-100 text-orange-800'
   if (score >= 5)  return 'bg-amber-100 text-amber-800'
   return 'bg-emerald-100 text-emerald-800'
-}
-
-/** 마크다운 → 간단 HTML (인쇄용) — 외부 라이브러리 없이 처리 */
-function mdToHtml(md: string): string {
-  return md
-    .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-slate-900 border-b pb-1">$1</h1>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-base font-bold mt-5 mb-2 text-slate-800">$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3 class="text-sm font-semibold mt-4 mb-1.5 text-slate-700">$1</h3>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^---$/gm, '<hr class="my-4 border-slate-200"/>')
-    .replace(/^\| (.+) \|$/gm, (line) => {
-      const cells = line.split('|').slice(1, -1).map(c => c.trim())
-      const isSep = cells.every(c => /^:?-+:?$/.test(c))
-      if (isSep) return ''
-      const tag = cells.length > 0 ? 'td' : 'td'
-      return '<tr>' + cells.map(c => `<${tag} class="border border-slate-200 px-2 py-1 text-xs">${c}</${tag}>`).join('') + '</tr>'
-    })
-    .replace(/(<tr>.*?<\/tr>)/gs, (block) => {
-      return `<table class="w-full border-collapse text-xs my-2">${block}</table>`
-    })
-    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-sm">$1</li>')
-    .replace(/(<li[\s\S]+?<\/li>)/g, '<ul class="my-1">$1</ul>')
-    .replace(/^\*(.+)$/gm, '<p class="text-xs text-slate-400 italic mt-2">$1</p>')
-    .replace(/\n\n/g, '</p><p class="text-sm my-1">')
-    .replace(/^(?!<[h|t|u|p|h|l])(.+)$/gm, '<p class="text-sm my-0.5">$1</p>')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -390,13 +363,13 @@ function ReportView({ record }: { record: AssessmentRecord }) {
         </div>
 
         {/* 개요 테이블 */}
-        {record.report_metadata && Object.keys(record.report_metadata).some(k => (record.report_metadata as Record<string,unknown>)[k]) && (
+        {record.report_metadata && Object.keys(record.report_metadata).some(k => (record.report_metadata as unknown as Record<string,unknown>)[k]) && (
           <div className="overflow-x-auto px-5 py-4">
             <table className="w-full text-sm">
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {isSafety ? (
                   <>
-                    {(['workplace','사업장명'],['project_name','공사명/작업명'],['work_type','작업 종류'],['work_stage','공사 단계'],['assessor_name','평가자'],['department','소속부서'],['assessment_date','평가일'],['worker_count','작업인원']).map(([k,l]) => {
+                    {([['workplace','사업장명'],['project_name','공사명/작업명'],['work_type','작업 종류'],['work_stage','공사 단계'],['assessor_name','평가자'],['department','소속부서'],['assessment_date','평가일'],['worker_count','작업인원']] as const).map(([k,l]) => {
                       const v = (meta as Record<string,unknown>)[k]
                       return v ? (
                         <tr key={k}>
@@ -408,7 +381,7 @@ function ReportView({ record }: { record: AssessmentRecord }) {
                   </>
                 ) : (
                   <>
-                    {(['facility_name','시설물명'],['inspection_area','검사 부위'],['inspector_name','검사자'],['department','소속부서'],['inspection_date','검사일'],['contractor','시공사'],['completion_year','준공연도'],['facility_age','경과연수'],['building_use','용도']).map(([k,l]) => {
+                    {([['facility_name','시설물명'],['inspection_area','검사 부위'],['inspector_name','검사자'],['department','소속부서'],['inspection_date','검사일'],['contractor','시공사'],['completion_year','준공연도'],['facility_age','경과연수'],['building_use','용도']] as const).map(([k,l]) => {
                       const v = (meta as Record<string,unknown>)[k]
                       return v ? (
                         <tr key={k}>
@@ -628,7 +601,7 @@ export function SiteAssessmentUserPage() {
     if (!imagePreview) { setError('사진을 먼저 업로드해주세요.'); return }
     const meta = category === 'safety' ? safetyMeta : qualityMeta
     const requiredKey = category === 'safety' ? 'workplace' : 'facility_name'
-    if (!(meta as Record<string,string>)[requiredKey]?.trim()) {
+    if (!(meta as unknown as Record<string,string>)[requiredKey]?.trim()) {
       setError(`${category === 'safety' ? '사업장명' : '시설물명'}은 필수 항목입니다.`); return
     }
     setBusy(true); setError(null); setResult(null)

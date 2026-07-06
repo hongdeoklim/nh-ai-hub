@@ -31,7 +31,7 @@ function nodeColor(n: GraphNode) {
 export const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({
   data, onNodeClick, selectedNodeId, matchingNodeIds,
 }) => {
-  const fgRef = useRef<any>()
+  const fgRef = useRef<any>(null)
   const [hoverNodeId, setHoverNodeId] = useState<string | null>(null)
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,

@@ -398,7 +398,7 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
 }) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [desc, setDesc] = useState(initial?.description ?? '')
-  const [category, setCategory] = useState(initial?.category ?? 'operation')
+  const category = initial?.category ?? 'operation'
   const [triggerType, setTriggerType] = useState<TriggerType>(initial?.trigger_type ?? 'manual')
   const [steps, setSteps] = useState<WorkflowStep[]>(initial?.steps ?? [])
   const [saving, setSaving] = useState(false)
