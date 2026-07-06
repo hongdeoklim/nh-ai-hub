@@ -35,6 +35,11 @@ const AiDesignerPage = lazy(() =>
 const WorkflowsPage = lazy(() =>
   import('./pages/WorkflowsPage').then((m) => ({ default: m.WorkflowsPage })),
 )
+const AiProductPlannerPage = lazy(() =>
+  import('./pages/AiProductPlannerPage').then((m) => ({
+    default: m.AiProductPlannerPage,
+  })),
+)
 const TeamsPage = lazy(() =>
   import('./pages/TeamsPage').then((m) => ({ default: m.TeamsPage })),
 )
@@ -177,6 +182,8 @@ function AppRoutes() {
             <Route path="scrapbook" element={<Scrapbook />} />
             <Route path="ai-slides" element={<AiSlidesPage />} />
             <Route path="workflows" element={<WorkflowsPage />} />
+            <Route path="ai-planner" element={<AiProductPlannerPage />} />
+            <Route path="ai-planner/:sessionId" element={<AiProductPlannerPage />} />
             <Route path="ai-designer" element={<AiDesignerPage />} />
             <Route path="ai-sheets" element={<AiSheetsPage />} />
             <Route path="ai-office" element={<UniverOfficePage />} />

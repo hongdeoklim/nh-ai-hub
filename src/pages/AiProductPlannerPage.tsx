@@ -24,6 +24,15 @@ import {
   messageContentToString,
 } from '../services/ai/planner-readiness'
 import { ModelSelectRow } from '../components/chat/ChatStartHub'
+import { ThinkingProcessPanel } from '../components/chat/ThinkingProcessPanel'
+import { parseThinkingContent } from '../utils/thinking-content'
+
+type PlannerMessage = CoreMessage & { truncated?: boolean }
+
+function plannerAssistantDisplay(content: CoreMessage['content']) {
+  const raw = stripPlannerReadyMarker(messageContentToString(content))
+  return parseThinkingContent(raw)
+}
 
 mermaid.initialize({ startOnLoad: false, theme: 'default' })
 
@@ -104,7 +113,7 @@ export function AiProductPlannerPage() {
   const hydratedSessionRef = useRef<string | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const [messages, setMessages] = useState<CoreMessage[]>([])
+  const [messages, setMessages] = useState<PlannerMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isChatting, setIsChatting] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -230,13 +239,16 @@ export function AiProductPlannerPage() {
     const userMsg = chatInput.trim()
     setChatInput('')
 
-    const newMessages: CoreMessage[] = [...messages, { role: 'user', content: userMsg }]
+    const newMessages: PlannerMessage[] = [...messages, { role: 'user', content: userMsg }]
     setMessages(newMessages)
     setIsChatting(true)
 
     try {
       const response = await chatWithPlanner(newMessages, selectedModel)
-      setMessages([...newMessages, { role: 'assistant', content: response }])
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: response.text, truncated: response.truncated },
+      ])
     } catch (err) {
       console.error(err)
       const message =
@@ -257,7 +269,11 @@ export function AiProductPlannerPage() {
       setResult(res)
     } catch (err) {
       console.error(err)
-      alert('기획서 생성 중 오류가 발생했습니다.')
+      alert(
+        err instanceof Error
+          ? err.message
+          : '기획서 생성 중 오류가 발생했습니다.',
+      )
     } finally {
       setIsGenerating(false)
     }
@@ -290,9 +306,31 @@ export function AiProductPlannerPage() {
     XLSX.writeFile(wb, 'feature_specs.xlsx')
   }
 
-  const exportToDesigner = () => {
-    alert("기획 데이터가 클립보드에 복사되었습니다. AI 디자이너로 이동합니다.")
-    navigate('/ai-designer')
+  const exportToDesigner = async () => {
+    if (!result) {
+      alert('전달할 기획 데이터가 없습니다. 먼저 기획안을 생성해 주세요.')
+      return
+    }
+
+    const plannerContext = [
+      '# PRD',
+      result.prdMarkdown,
+      '# 기능 명세',
+      result.specMarkdown,
+      '# 유저 플로우',
+      result.mermaidFlow,
+      '# 와이어프레임',
+      result.wireframeHtml,
+    ].join('\n\n')
+
+    try {
+      await navigator.clipboard.writeText(plannerContext)
+      alert('기획 데이터가 클립보드에 복사되었습니다. AI 디자이너로 이동합니다.')
+      navigate('/ai-designer')
+    } catch (error) {
+      console.error(error)
+      alert('기획 데이터를 클립보드에 복사하지 못했습니다. 브라우저 권한을 확인해 주세요.')
+    }
   }
 
   if (sessionLoading) {
@@ -410,7 +448,7 @@ export function AiProductPlannerPage() {
                     <svg className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     명세서 엑셀
                   </button>
-                  <button onClick={exportToDesigner} className="group relative rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95">
+                  <button type="button" onClick={() => void exportToDesigner()} disabled={!result} className="group relative rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 transition-all flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95">
                     <svg className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                     디자이너로 넘기기
                   </button>
@@ -452,6 +490,8 @@ export function AiProductPlannerPage() {
                       <div className="h-[800px] w-full bg-slate-100 dark:bg-black">
                         <iframe
                           srcDoc={result?.wireframeHtml || '<div style="padding:40px;font-family:sans-serif;text-align:center;color:#888;">와이어프레임 코드가 생성되지 않았습니다.</div>'}
+                          sandbox=""
+                          referrerPolicy="no-referrer"
                           className="w-full h-full border-0 bg-white"
                           title="Wireframe Preview"
                         />
@@ -523,7 +563,11 @@ export function AiProductPlannerPage() {
               </div>
             )}
 
-            {messages.map((msg, idx) => (
+            {messages.map((msg, idx) => {
+              const assistantDisplay =
+                msg.role === 'assistant' ? plannerAssistantDisplay(msg.content) : null
+
+              return (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[88%] rounded-2xl px-5 py-3.5 text-[15.5px] leading-relaxed shadow-sm ${
                   msg.role === 'user'
@@ -533,15 +577,30 @@ export function AiProductPlannerPage() {
                   {msg.role === 'user' ? (
                     <div className="whitespace-pre-wrap">{msg.content as string}</div>
                   ) : (
-                    <div className="prose dark:prose-invert max-w-none text-[15.5px] prose-p:my-0 prose-p:leading-relaxed prose-a:text-indigo-500">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {stripPlannerReadyMarker(messageContentToString(msg.content))}
-                      </ReactMarkdown>
-                    </div>
+                    <>
+                      {assistantDisplay?.hasThinking ? (
+                        <ThinkingProcessPanel
+                          thinking={assistantDisplay.thinking}
+                          streaming={false}
+                          thinkingOpen={false}
+                        />
+                      ) : null}
+                      <div className="prose dark:prose-invert max-w-none text-[15.5px] prose-p:my-0 prose-p:leading-relaxed prose-a:text-indigo-500">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {assistantDisplay?.answer ?? stripPlannerReadyMarker(messageContentToString(msg.content))}
+                        </ReactMarkdown>
+                      </div>
+                      {msg.truncated ? (
+                        <p className="mt-2 rounded-lg border border-amber-200/80 bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+                          답변이 출력 한도에서 잘렸을 수 있습니다. 같은 질문을 다시 보내거나 더 짧게 나눠 요청해 주세요.
+                        </p>
+                      ) : null}
+                    </>
                   )}
                 </div>
               </div>
-            ))}
+              )
+            })}
 
             {isChatting && (
                <div className="flex justify-start">
