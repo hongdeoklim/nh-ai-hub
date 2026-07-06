@@ -29,7 +29,7 @@ function NodeTypeBadge({ type }: { type: string }) {
   const color = meta?.color ?? '#94a3b8'
   return (
     <span
-      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase whitespace-nowrap"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[13px] font-bold tracking-wider uppercase whitespace-nowrap"
       style={{ background: `${color}1a`, color, border: `1px solid ${color}33` }}
     >
       <span className="w-1 h-1 rounded-full shrink-0" style={{ background: color }} />
@@ -157,7 +157,7 @@ export function KnowledgeGraphPage() {
           <div className="flex h-full items-center justify-center">
             <div className="text-center px-6">
               <p className="text-red-400 text-sm mb-1">데이터 로드 실패</p>
-              <p className="text-slate-600 text-xs mb-4 max-w-xs">{error}</p>
+              <p className="text-slate-600 text-sm mb-4 max-w-xs">{error}</p>
               <button
                 onClick={() => setRefreshKey(k => k + 1)}
                 className="px-4 py-1.5 rounded-lg text-sm text-slate-300 hover:text-white transition"
@@ -186,7 +186,7 @@ export function KnowledgeGraphPage() {
                     <div className="absolute inset-2 rounded-full border-2 border-cyan-500/20 border-b-cyan-400 animate-spin"
                       style={{ animationDirection: 'reverse', animationDuration: '0.75s' }} />
                   </div>
-                  <p className="text-xs text-slate-400 tracking-wide">지식 그래프 로딩 중…</p>
+                  <p className="text-sm text-slate-400 tracking-wide">지식 그래프 로딩 중…</p>
                 </div>
               </div>
             )}
@@ -209,7 +209,7 @@ export function KnowledgeGraphPage() {
             </button>
             <div className="flex-1">
               <p className="text-base font-bold text-white whitespace-nowrap">사내 지식 그래프</p>
-              <p className="text-xs text-slate-500 leading-none mt-0.5 whitespace-nowrap">3D Knowledge Network</p>
+              <p className="text-sm text-slate-500 leading-none mt-0.5 whitespace-nowrap">3D Knowledge Network</p>
             </div>
             <button onClick={() => setRefreshKey(k => k + 1)} disabled={loading}
               className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30" title="새로고침">
@@ -256,7 +256,7 @@ export function KnowledgeGraphPage() {
             />
           </div>
           {isSearchMode && (
-            <p className="text-xs text-slate-400 px-1">
+            <p className="text-sm text-slate-400 px-1">
               매칭 <strong className="text-fuchsia-300">{filteredData.matchingIds?.size ?? 0}</strong>개 +
               이웃 <strong className="text-cyan-300">{filteredData.nodes.length - (filteredData.matchingIds?.size ?? 0)}</strong>개 노드
             </p>
@@ -273,7 +273,7 @@ export function KnowledgeGraphPage() {
           </select>
           {isFiltering && (
             <button onClick={() => { setSearchInput(''); setSearchQuery(''); setSearchData(null); setDepartmentFilter('ALL'); setNodeTypeFilter('ALL') }}
-              className="text-xs text-slate-500 hover:text-fuchsia-400 transition text-center py-0.5">
+              className="text-sm text-slate-500 hover:text-fuchsia-400 transition text-center py-0.5">
               필터 전체 초기화
             </button>
           )}
@@ -282,7 +282,7 @@ export function KnowledgeGraphPage() {
         {/* 타입 범례 */}
         {nodeTypes.length > 0 && (
           <div className="rounded-2xl p-4 shadow-xl" style={PANEL_STYLE}>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">노드 타입</p>
+            <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2.5">노드 타입</p>
             <div className="flex flex-col gap-1.5">
               {nodeTypes.map(t => {
                 const color = NODE_TYPE_META[t]?.color ?? '#94a3b8'
@@ -294,7 +294,7 @@ export function KnowledgeGraphPage() {
                     className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-left transition-colors ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}>
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color, boxShadow: `0 0 6px ${color}99` }} />
                     <span className="flex-1 text-slate-300">{label}</span>
-                    <span className="text-slate-500 tabular-nums text-xs">{count}</span>
+                    <span className="text-slate-500 tabular-nums text-sm">{count}</span>
                   </button>
                 )
               })}
@@ -335,7 +335,7 @@ export function KnowledgeGraphPage() {
 
               {selectedNode.content && (
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">본문 미리보기</p>
+                  <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">본문 미리보기</p>
                   <div className="text-sm text-slate-300 rounded-xl p-4 max-h-48 overflow-y-auto leading-relaxed"
                     style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.05)' }}>
                     {selectedNode.content}
@@ -344,7 +344,7 @@ export function KnowledgeGraphPage() {
               )}
 
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
                   연결 관계 <span className="text-cyan-400 normal-case font-bold text-sm">{selectedNodeEdges.length}</span>
                 </p>
                 {selectedNodeEdges.length === 0 ? (

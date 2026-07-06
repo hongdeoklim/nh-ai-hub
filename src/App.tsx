@@ -155,6 +155,9 @@ const KnowledgeGraphPage = lazy(() =>
 const DevUiCheckPage = lazy(() =>
   import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevUiCheckPage })),
 )
+const DevSidebarDockCheckPage = lazy(() =>
+  import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevSidebarDockCheckPage })),
+)
 const KnowledgeHubPage = lazy(() =>
   import('./pages/KnowledgeHubPage').then((m) => ({ default: m.KnowledgeHubPage })),
 )
@@ -283,7 +286,10 @@ function AppRoutes() {
             path="__ui-check/knowledge-hub"
             element={
               <Suspense fallback={<RouteLoadingFallback />}>
-                <KnowledgeHubPage />
+                {/* 실제로는 MainLayout의 .app-shell 안에서 렌더링됨 — 폰트 크기 보정 규칙 재현을 위해 동일하게 감쌈 */}
+                <div className="app-shell">
+                  <KnowledgeHubPage />
+                </div>
               </Suspense>
             }
           />
@@ -291,7 +297,17 @@ function AppRoutes() {
             path="__ui-check/automation-studio"
             element={
               <Suspense fallback={<RouteLoadingFallback />}>
-                <AutomationStudioPage />
+                <div className="app-shell">
+                  <AutomationStudioPage />
+                </div>
+              </Suspense>
+            }
+          />
+          <Route
+            path="__ui-check/sidebar-dock"
+            element={
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <DevSidebarDockCheckPage />
               </Suspense>
             }
           />

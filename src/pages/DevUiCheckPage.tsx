@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { ChatArea, type ChatBubble } from '../components/chat/ChatArea'
 import { ChatInput } from '../components/chat/ChatInput'
+import { SidebarNavDock } from '../components/layout/SidebarNavDock'
 
 /**
  * DEV 전용 UI 검수 페이지 (/__ui-check) — 프로덕션 라우트에는 등록되지 않습니다.
@@ -158,6 +159,38 @@ export function DevUiCheckPage() {
               ) : null}
             </div>
           }
+        />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * DEV 전용 — SidebarNavDock 실측 검수용. 실제 사이드바와 동일하게
+ * "채팅 목록(flex-1, 필러)" + "독(mt-auto, shrink-0)" 구조로 감싸,
+ * 독이 전체 높이의 몇 %를 차지하는지 측정할 수 있게 한다.
+ */
+export function DevSidebarDockCheckPage() {
+  return (
+    <div className="flex h-dvh w-[308px] flex-col border-r border-stone-300 bg-[#F4F1EA] dark:border-stone-700 dark:bg-stone-900">
+      <div
+        id="ui-check-thread-filler"
+        className="min-h-0 flex-1 overflow-y-auto bg-white/40 p-2 text-[11px] text-stone-400 dark:bg-stone-800/20"
+      >
+        (채팅 목록 영역 — 실제로는 스레드 목록이 이 자리에 스크롤됩니다)
+      </div>
+      <div id="ui-check-dock-wrapper" className="shrink-0">
+        <SidebarNavDock
+          sidebarCollapsed={false}
+          isAppFolderOpen={false}
+          setIsAppFolderOpen={() => {}}
+          setIsMobileMenuOpen={() => {}}
+          plannerActive={false}
+          marketplaceActive={false}
+          isAdmin={false}
+          onOpenTokenRequest={() => {}}
+          onOpenSettings={() => {}}
+          onSignOut={() => {}}
         />
       </div>
     </div>

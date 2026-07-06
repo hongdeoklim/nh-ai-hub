@@ -19,7 +19,7 @@ import {
 } from './main-layout-icons'
 
 const sidebarIconDockClass =
-  'flex h-9 w-full items-center justify-center text-stone-700 transition hover:bg-stone-100/90 dark:text-stone-200 dark:hover:bg-stone-800/80'
+  'flex h-[30px] w-full items-center justify-center text-stone-700 transition hover:bg-stone-100/90 dark:text-stone-200 dark:hover:bg-stone-800/80'
 
 const sidebarIconDockLabelClass =
   'hidden text-sm font-medium leading-snug'
@@ -192,10 +192,10 @@ export function SidebarNavDock({
                 ) : (
                   <>
                 {/* 3단계 IA: 평면 나열 → 5개 영역 그룹 (기능 변경 없음, 재배치만) */}
-                <p className="px-3 pb-1 pt-2.5 text-[10px] font-semibold tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   지식
                 </p>
-                <div className="grid w-full grid-cols-3 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
+                <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
                 <Link
                   to="/reference-room"
                   title="사내 자료실"
@@ -238,10 +238,10 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-1 pt-2.5 text-[10px] font-semibold tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   자동화
                 </p>
-                <div className="grid w-full grid-cols-3 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
+                <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
                 <Link
                   to="/automation-studio"
                   title="자동화 스튜디오"
@@ -285,10 +285,10 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-1 pt-2.5 text-[10px] font-semibold tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   AI 앱
                 </p>
-                <div className="grid w-full grid-cols-3 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
+                <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
                 <Link
                   to="/ai-planner"
                   title="AI Planner"
@@ -336,10 +336,10 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-1 pt-2.5 text-[10px] font-semibold tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   팀 · 현장
                 </p>
-                <div className="grid w-full grid-cols-3 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
+                <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
                 <Link
                   to="/teams"
                   title="팀 · 공유 채팅"
@@ -362,10 +362,10 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-1 pt-2.5 text-[10px] font-semibold tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   계정
                 </p>
-                <div className="grid w-full grid-cols-3 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
+                <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
                 {isAdmin ? (
                   <Link
                     to="/admin/token-requests"
