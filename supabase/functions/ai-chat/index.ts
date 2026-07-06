@@ -71,7 +71,7 @@ const PLUGIN_TOOL_GUIDANCE = `
 
 ## 외부·내장 플러그인 (동적 도구)
 관리자가 **활성(ON)** 으로 둔 플러그인만 \`tool_function_name\` 키의 도구로 노출됩니다.
-- 예: \`get_weather\`, \`get_exchange_rate\`, \`search_web_news\` 등
+- 예: \`search_web_news\`, \`search_public_data\` 등
 - 필요 시 해당 도구를 호출하고, 결과 JSON 을 검증·요약하여 사용자에게 전달하라.
 - 비활성(OFF) 플러그인은 존재하지 않는 것처럼 행동하라.`
 

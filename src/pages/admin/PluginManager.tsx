@@ -110,7 +110,7 @@ export function PluginManager() {
   }, [load])
 
   async function setPluginActive(row: PluginRow, next: boolean) {
-    const builtinNames = new Set(['get_weather', 'get_exchange_rate', 'search_web_news', 'search_public_data'])
+    const builtinNames = new Set(['search_web_news', 'search_public_data'])
     if (next && !(row.endpoint_url ?? '').trim() && !builtinNames.has(row.tool_function_name)) {
       window.alert('외부 플러그인을 활성화하려면 HTTPS 호출 URL이 필요합니다.')
       return
@@ -119,7 +119,11 @@ export function PluginManager() {
     try {
       const { error: uErr } = await supabase
         .from('plugins')
-        .update({ is_active: next })
+        .update(
+          next
+            ? { is_active: true, approval_status: 'approved' }
+            : { is_active: false },
+        )
         .eq('id', row.id)
       if (uErr) {
         window.alert(uErr.message)
