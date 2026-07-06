@@ -398,7 +398,7 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
 }) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [desc, setDesc] = useState(initial?.description ?? '')
-  const category = initial?.category ?? 'operation'
+  const [category, setCategory] = useState(initial?.category ?? 'operation')
   const [triggerType, setTriggerType] = useState<TriggerType>(initial?.trigger_type ?? 'manual')
   const [steps, setSteps] = useState<WorkflowStep[]>(initial?.steps ?? [])
   const [saving, setSaving] = useState(false)
@@ -446,6 +446,15 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">설명</label>
               <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="어떤 업무를 자동화하나요?"
                 className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-400 text-slate-900 dark:text-slate-100" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">분류</label>
+              <select value={category} onChange={e => setCategory(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-400 text-slate-900 dark:text-slate-100">
+                {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+                  <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
