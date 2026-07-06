@@ -71,7 +71,8 @@ async function upsertTokenCache(
       id: userId,
       provider: PROVIDER,
       access_token: accessToken,
-      refresh_token: refreshToken,
+      // Canonical refresh token remains encrypted in user_integration_credentials.
+      refresh_token: "",
       expires_at: expiresAt.toISOString(),
       updated_at: new Date().toISOString(),
     },

@@ -21,6 +21,21 @@ export type ChatBubble = {
   thinkingContent?: string
   /** 심층 연구(AI 앙상블) 모드로 생성된 답변 */
   deepResearch?: boolean
+  /** 출력 토큰 한도·스트림 중단으로 답변이 잘린 상태 — 이어서 생성 버튼 노출 */
+  truncated?: boolean
+  /** 라우팅 투명성: 자동 분류 태스크·실제 호출 모델 (칩 표시) */
+  routeInfo?: {
+    auto: boolean
+    taskType: string | null
+    modelId: string
+  }
+  /** 생성 소요 시간 (밀리초) — 완료 후 footer 표시 */
+  elapsedMs?: number
+  /** 토큰 사용량 — 완료 후 footer 표시 */
+  usage?: {
+    inputTokens: number
+    outputTokens: number
+  }
 }
 
 function IconArrowDown(props: { className?: string }) {
@@ -65,6 +80,8 @@ type ChatAreaProps = {
   }) => void
   /** 어시스턴트 답변 재생성(다시 실행) */
   onRegenerateAssistant?: (assistantIndex: number) => void
+  /** 잘린 답변(truncated) 이어서 생성 */
+  onContinueAssistant?: (assistantIndex: number) => void
   regenerateDisabled?: boolean
   /** 현재 선택 모델 표시명 (더보기 메뉴) */
   activeModelLabel?: string
@@ -107,6 +124,7 @@ export const ChatArea = forwardRef<HTMLElement, ChatAreaProps>(
       onBookmarkAssistant,
       onCommitMessageEdit,
       onRegenerateAssistant,
+      onContinueAssistant,
       regenerateDisabled = false,
       activeModelLabel = '',
       threadShareUrl,
@@ -296,6 +314,15 @@ export const ChatArea = forwardRef<HTMLElement, ChatAreaProps>(
                   msg.role === 'assistant' &&
                   !msg.id.startsWith('welcome-assistant')
                     ? () => onRegenerateAssistant(index)
+                    : undefined
+                }
+                onContinue={
+                  onContinueAssistant &&
+                  msg.role === 'assistant' &&
+                  msg.truncated === true &&
+                  !msg.streaming &&
+                  !msg.id.startsWith('welcome-assistant')
+                    ? () => onContinueAssistant(index)
                     : undefined
                 }
                 regenerateDisabled={regenerateDisabled}

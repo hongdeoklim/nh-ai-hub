@@ -1,13 +1,12 @@
-export type AiModelProvider = 'anthropic' | 'openai' | 'google'
-
-/** 대화 화면 수동 공급자 선택 — 'auto' 는 자동 라우팅 */
-export type AiProviderPreference =
-  | 'auto'
+export type AiModelProvider =
   | 'anthropic'
   | 'openai'
   | 'google'
   | 'deepseek'
   | 'hermes'
+
+/** 채팅 UI — 공급자 드롭다운 + 라우팅 선호. 'auto' 는 자동 라우팅 */
+export type AiProviderPreference = AiModelProvider | 'auto'
 
 export type AiModelType = 'text' | 'image' | 'video'
 
@@ -30,13 +29,17 @@ export const AI_MODEL_PROVIDER_LABELS: Record<AiModelProvider, string> = {
   anthropic: 'Anthropic',
   openai: 'OpenAI',
   google: 'Google (Gemini)',
+  deepseek: 'DeepSeek',
+  hermes: 'Hermes',
 }
 
-/** 포털·관리자 공통: Gemini → GPT → Anthropic */
+/** 포털·관리자·모델 선택: Gemini → GPT → Claude → DeepSeek → Hermes */
 export const AI_MODEL_PROVIDER_ORDER: AiModelProvider[] = [
   'google',
   'openai',
   'anthropic',
+  'deepseek',
+  'hermes',
 ]
 
 export type ModelSelectOption = {

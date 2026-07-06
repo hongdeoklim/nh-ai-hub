@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { ChatUiVariant } from './ChatMessage'
+import { formatElapsedKo, type ChatUiVariant } from './ChatMessage'
 import {
   getMessageFeedback,
   saveFeedbackToDb,
   getDbFeedbackDetail,
   type MessageFeedbackRating,
 } from '../../lib/chat-message-feedback'
+import { saveGoodAnswerToKnowledge } from '../../lib/knowledge-from-chat'
 import {
   exportAssistantToGoogleDocs,
   openGmailDraft,
@@ -32,7 +33,16 @@ type AssistantMessageFooterProps = {
   onCopy: () => void
   onBookmark?: () => void
   onRegenerate?: () => void
+  /** 잘린 답변 이어서 생성 — 전달 시 이어쓰기 버튼 노출 */
+  onContinue?: () => void
   regenerateDisabled?: boolean
+  /** 생성 소요 시간 (밀리초) */
+  elapsedMs?: number
+  /** 토큰 사용량 */
+  usage?: {
+    inputTokens: number
+    outputTokens: number
+  }
 }
 
 function iconBtnClass(variant: ChatUiVariant): string {
@@ -141,7 +151,10 @@ export function AssistantMessageFooter({
   onCopy,
   onBookmark,
   onRegenerate,
+  onContinue,
   regenerateDisabled = false,
+  elapsedMs,
+  usage,
 }: AssistantMessageFooterProps) {
   const isGemini = variant === 'gemini'
   const [menuOpen, setMenuOpen] = useState(false)
@@ -171,6 +184,8 @@ export function AssistantMessageFooter({
         } else {
           setFeedback('up')
           await saveFeedbackToDb(messageId, messageType, 'up', null)
+          // 좋은 답변을 사내 지식으로 자동 저장 (백그라운드)
+          void saveGoodAnswerToKnowledge(userPrompt, answerText)
         }
       } else {
         // 'down'
@@ -277,6 +292,31 @@ export function AssistantMessageFooter({
       }`}
     >
       <div className="flex min-w-0 flex-wrap items-center justify-start gap-0.5">
+        {onContinue ? (
+          <button
+            type="button"
+            disabled={regenerateDisabled}
+            onClick={() => onContinue()}
+            className="mr-1 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[12px] font-medium text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+            title="답변이 중간에 끊겼습니다. 끊긴 지점부터 이어서 생성합니다."
+          >
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+              />
+            </svg>
+            이어서 생성
+          </button>
+        ) : null}
         {shareDone ? (
           <span className="px-1 text-[13px] font-medium text-[#0b57d0] dark:text-blue-400">
             공유됨!
@@ -489,7 +529,18 @@ export function AssistantMessageFooter({
         </div>
       </div>
 
-      <p className={`ml-auto shrink-0 text-[12px] tabular-nums ${timeCls}`}>{time}</p>
+      <p className={`ml-auto shrink-0 text-[12px] tabular-nums ${timeCls}`}>
+        {typeof elapsedMs === 'number' && elapsedMs > 0 ? (
+          <span title="생성 소요 시간">{formatElapsedKo(elapsedMs)} · </span>
+        ) : null}
+        {usage ? (
+          <span title="토큰 사용량 (입력 ↑ / 출력 ↓)">
+            ↑{usage.inputTokens.toLocaleString('ko-KR')} ↓
+            {usage.outputTokens.toLocaleString('ko-KR')} 토큰 ·{' '}
+          </span>
+        ) : null}
+        {time}
+      </p>
 
       {/* 싫어요(👎) 클릭 시 상세 피드백 입력 팝업 모달 */}
       {isModalOpen && (

@@ -85,9 +85,17 @@ export function buildPortalModelSelectRows(
     anthropic: 'Anthropic',
     openai: 'OpenAI',
     google: 'Google (Gemini)',
+    deepseek: 'DeepSeek',
+    hermes: 'Hermes',
   }
 
-  const providerOrder: AiModelProvider[] = ['anthropic', 'openai', 'google']
+  const providerOrder: AiModelProvider[] = [
+    'google',
+    'openai',
+    'anthropic',
+    'deepseek',
+    'hermes',
+  ]
   const grouped = new Map<AiModelProvider, PortalAiModelCatalogEntry[]>()
 
   for (const entry of PORTAL_AI_MODEL_CATALOG) {

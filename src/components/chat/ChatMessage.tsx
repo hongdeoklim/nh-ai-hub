@@ -379,11 +379,103 @@ export type ChatMessageProps = {
   onBookmark?: () => void
   showBookmark: boolean
   onRegenerate?: () => void
+  /** 잘린 답변 이어서 생성 */
+  onContinue?: () => void
   regenerateDisabled?: boolean
   /** 직전 사용자 질문 (공유·Gmail 등) */
   assistantUserPrompt?: string
   modelLabel?: string
   threadShareUrl?: string
+}
+
+/** NH 스마트 라우터 태스크 → 사용자 표시용 한글 라벨 */
+const ROUTE_TASK_LABELS: Record<string, string> = {
+  GENERAL_CHAT: '일반 대화',
+  COMPANY_REGULATION_SEARCH: '사내 규정 검색',
+  COMPANY_DOCUMENT_RAG: '사내 문서 참조',
+  DATA_CRAWLING_MATCHING: '조달·입찰 데이터',
+  MATHEMATICAL_ESTIMATION: '견적·수치 연산',
+  IMAGE_ANALYSIS_OCR: '이미지 분석·OCR',
+  TRAVEL_CONSULTING: '여행·관광 컨설팅',
+  LONG_FORM_WRITING: '장문 작성',
+  CODE_SYSTEM_DESIGN: '코드·시스템 설계',
+  GOOGLE_WORKSPACE: 'Google Workspace',
+  BATCH_LOW_COST: '대량·저비용 처리',
+  INTERNAL_SPECIALIZED: '사내 특화',
+  PUBLIC_DATA_QUERY: '공공데이터 조회',
+}
+
+function routeTaskLabel(taskType: string | null): string {
+  if (!taskType) return '자동'
+  return ROUTE_TASK_LABELS[taskType] ?? taskType
+}
+
+/** 밀리초 → "1시간 2분 3초" / "2분 3초" / "7초" */
+export function formatElapsedKo(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000))
+  const h = Math.floor(totalSec / 3600)
+  const m = Math.floor((totalSec % 3600) / 60)
+  const s = totalSec % 60
+  if (h > 0) return `${h}시간 ${m}분 ${s}초`
+  if (m > 0) return `${m}분 ${s}초`
+  return `${s}초`
+}
+
+/**
+ * 스트리밍 중 상태 라인 — NH 새싹 배지 + 3색(파랑·노랑·초록) 웨이브 점 + 경과시간(1초 갱신).
+ * 새싹·컬러는 농협 브랜드를 연상시키는 자체 그래픽(공식 로고 아님).
+ */
+function StreamingStatusLine({
+  sinceIso,
+  hasText,
+}: {
+  sinceIso?: string
+  hasText: boolean
+}) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const startMs = sinceIso ? new Date(sinceIso).getTime() : Number.NaN
+  const elapsed = Number.isFinite(startMs) ? Math.max(0, now - startMs) : 0
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span
+        className="relative flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-[#0056a4] dark:bg-[#2f7fd0]"
+        aria-hidden="true"
+      >
+        <span className="absolute inset-0 rounded-full bg-[#0056a4]/35 motion-safe:animate-ping dark:bg-[#2f7fd0]/35" />
+        <svg
+          className="relative h-[13px] w-[13px] text-white"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" d="M12 21v-8" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 13C12 9 9.5 6 5.5 6c0 4 2.5 7 6.5 7z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6z"
+          />
+        </svg>
+      </span>
+      <span className="text-[12px] font-medium text-stone-600 dark:text-stone-300">
+        {hasText ? '작성하는 중' : '생각하는 중'} · {formatElapsedKo(elapsed)}
+      </span>
+      <span className="flex items-center gap-[3px]" aria-hidden="true">
+        <span className="h-[6px] w-[6px] rounded-full bg-[#0056a4] motion-safe:animate-bounce [animation-delay:0ms] dark:bg-[#5aa0e0]" />
+        <span className="h-[6px] w-[6px] rounded-full bg-amber-400 motion-safe:animate-bounce [animation-delay:140ms]" />
+        <span className="h-[6px] w-[6px] rounded-full bg-emerald-500 motion-safe:animate-bounce [animation-delay:280ms]" />
+      </span>
+    </div>
+  )
 }
 
 export function ChatMessage({
@@ -404,6 +496,7 @@ export function ChatMessage({
   onBookmark,
   showBookmark,
   onRegenerate,
+  onContinue,
   regenerateDisabled = false,
   assistantUserPrompt = '',
   modelLabel = '',
@@ -496,13 +589,13 @@ export function ChatMessage({
   const userBubbleClass = isGemini
     ? 'max-w-[min(100%,32rem)] rounded-[24px] bg-[#f0f4f9] px-5 py-3 text-[15px] leading-relaxed text-[#1f1f1f] shadow-none dark:bg-stone-800 dark:text-stone-100 md:max-w-xl'
     : isClaude
-    ? 'max-w-[min(100%,28rem)] rounded-3xl rounded-br-lg bg-[#E7DDD6] px-4 py-3 leading-relaxed text-stone-900 shadow-none dark:bg-stone-800 dark:text-stone-100 md:max-w-xl'
+    ? 'max-w-[min(100%,28rem)] rounded-3xl rounded-br-lg bg-[#E7DDD6] px-4 py-3 text-[15px] leading-relaxed text-stone-900 shadow-none dark:bg-stone-800 dark:text-stone-100 md:max-w-xl md:text-[16px]'
     : 'max-w-[min(100%,28rem)] rounded-2xl rounded-br-md bg-emerald-600 px-4 py-2.5 leading-relaxed text-white shadow-sm md:max-w-xl md:py-3'
 
   const assistantShellClass = isGemini
     ? 'min-w-0 flex-1 py-0.5 text-actual-14 text-[#1f1f1f] dark:text-stone-100'
     : isClaude
-    ? 'w-full max-w-none px-0 py-1 text-[17px] leading-relaxed text-stone-900 md:text-[18px] dark:text-stone-100'
+    ? 'w-full max-w-none px-0 py-1 text-[15px] leading-relaxed text-stone-900 md:text-[16px] dark:text-stone-100'
     : 'w-full max-w-none px-0 py-1 text-sm leading-relaxed text-slate-800 md:text-[17px] dark:text-slate-100'
 
   if (isAssistant) {
@@ -551,13 +644,39 @@ export function ChatMessage({
             </>
           ) : (
             <div>
-              {isGemini &&
-              !isEditing &&
+              {msg.routeInfo ? (
+                <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-[11px] font-medium text-stone-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
+                    title={
+                      msg.routeInfo.auto
+                        ? 'NH 스마트 라우터가 요청을 분류해 자동으로 모델을 선택했습니다.'
+                        : '사용자가 직접 선택한 모델로 처리했습니다.'
+                    }
+                  >
+                    {msg.routeInfo.auto
+                      ? `자동 · ${routeTaskLabel(msg.routeInfo.taskType)}`
+                      : '수동 선택'}
+                    <span aria-hidden="true" className="text-stone-400 dark:text-stone-500">
+                      →
+                    </span>
+                    {msg.routeInfo.modelId}
+                  </span>
+                </div>
+              ) : null}
+              {!isEditing &&
               (assistantDisplay.showThinkingPanel || msg.streaming) ? (
                 <ThinkingProcessPanel
                   thinking={assistantDisplay.thinking}
                   streaming={Boolean(msg.streaming)}
                   thinkingOpen={assistantDisplay.thinkingOpen}
+                />
+              ) : null}
+
+              {msg.streaming ? (
+                <StreamingStatusLine
+                  sinceIso={msg.createdAt}
+                  hasText={assistantDisplay.answer.trim().length > 0}
                 />
               ) : null}
 
@@ -639,7 +758,10 @@ export function ChatMessage({
               onCopy={onCopy}
               onBookmark={onBookmark}
               onRegenerate={onRegenerate}
+              onContinue={onContinue}
               regenerateDisabled={regenerateDisabled}
+              elapsedMs={msg.elapsedMs}
+              usage={msg.usage}
             />
           ) : !msg.streaming && msg.content.trim().length === 0 ? (
             <p

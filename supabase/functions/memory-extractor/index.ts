@@ -2,11 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "npm:@supabase/supabase-js@2.49.8"
 import { createGoogleGenerativeAI } from "npm:@ai-sdk/google@3.0.75"
 import { generateText } from "npm:ai@6.0.184"
-
-const corsHeaders: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+import { handleCorsPreflight, jsonResponse } from "../_shared/cors.ts"
 
 function readEnv(name: string): string | undefined {
   const v = Deno.env.get(name)
@@ -14,14 +10,13 @@ function readEnv(name: string): string | undefined {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
-  }
+  const preflight = handleCorsPreflight(req)
+  if (preflight) return preflight
 
   // 이 함수는 백엔드 내부(혹은 인증된 요청)로만 호출되어야 하므로 서비스키로 검증하거나 내부 로직으로 보호
   const authHeader = req.headers.get("Authorization")
   if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Missing Auth" }), { status: 401, headers: corsHeaders })
+    return jsonResponse({ error: "Missing Auth" }, 401)
   }
 
   const supabaseUrl = readEnv("SUPABASE_URL")
@@ -29,19 +24,19 @@ Deno.serve(async (req) => {
   const geminiKey = readEnv("GEMINI_API_KEY")
 
   if (!supabaseUrl || !serviceKey || !geminiKey) {
-    return new Response(JSON.stringify({ error: "Server config missing" }), { status: 500, headers: corsHeaders })
+    return jsonResponse({ error: "Server config missing" }, 500)
   }
 
   let body
   try {
     body = await req.json()
   } catch (e) {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: corsHeaders })
+    return jsonResponse({ error: "Invalid JSON" }, 400)
   }
 
   const { userId, messages } = body
   if (!userId || !Array.isArray(messages) || messages.length === 0) {
-    return new Response(JSON.stringify({ error: "Missing userId or messages" }), { status: 400, headers: corsHeaders })
+    return jsonResponse({ error: "Missing userId or messages" }, 400)
   }
 
   const admin = createClient(supabaseUrl, serviceKey)
@@ -54,7 +49,7 @@ Deno.serve(async (req) => {
 
   // 2. Gemini를 통한 기억 추출
   const google = createGoogleGenerativeAI({ apiKey: geminiKey })
-  const model = google("gemini-1.5-flash")
+  const model = google("gemini-2.5-flash")
 
   const prompt = `다음은 사용자와 AI의 최근 대화 내역입니다. 
 당신은 AI 시스템의 '장기 기억 관리자(Long-term Memory Extractor)'입니다.
@@ -97,10 +92,10 @@ ${chatLog}
       }
     }
     
-    return new Response(JSON.stringify({ ok: true, extracted_count: extracted.length }), { headers: corsHeaders })
+    return jsonResponse({ ok: true, extracted_count: extracted.length })
 
   } catch (e: any) {
     console.error("[memory-extractor] Error:", e)
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders })
+    return jsonResponse({ error: e.message }, 500)
   }
 })

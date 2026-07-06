@@ -18,6 +18,10 @@ const NAV_ITEMS: {
   { to: '/admin/lab', label: 'AI 실험실' },
   { to: '/admin/audit', label: '대화 감사' },
   { to: '/admin/reference', label: '자료실' },
+  { to: '/admin/ax', label: 'AX 현황' },
+  { to: '/admin/knowledge-graph', label: '지식 그래프' },
+  { to: '/admin/feedback', label: '피드백 관리' },
+  { to: '/admin/site-assessment', label: '현장 AI 평가' },
 ]
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {

@@ -1,11 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { createClient } from "npm:@supabase/supabase-js@2.107.0"
+import { createClient } from "npm:@supabase/supabase-js@2.49.8"
 import {
   credentialHint,
   decryptPluginCredential,
   encryptPluginCredential,
   pluginAuthHeaders,
 } from "../_shared/plugin-credentials.ts"
+import { testMcpConnection } from '../_shared/mcp-client.ts'
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
 
   if (req.method === "GET") {
     const [{ data: plugins, error: pluginError }, { data: connections, error: connectionError }] = await Promise.all([
-      admin.from("plugins").select("id,name,description,endpoint_url,tool_function_name,auth_type,auth_header_name,connection_mode,setup_url,docs_url,is_active").eq("is_active", true).order("name"),
+      admin.from("plugins").select("id,name,description,endpoint_url,tool_function_name,auth_type,auth_header_name,connection_mode,setup_url,docs_url,is_active,extension_type").eq("is_active", true).order("name"),
       admin.from("plugin_connections").select("plugin_id,credential_hint,status,last_tested_at,last_error,updated_at").eq("user_id", auth.user.id),
     ])
     if (pluginError || connectionError) return json({ error: pluginError?.message ?? connectionError?.message }, 500)
@@ -79,20 +80,27 @@ Deno.serve(async (req) => {
     let statusCode: number | null = null
     try {
       if (!plugin.endpoint_url) throw new Error("Plugin endpoint is missing")
-      const response = await fetch(plugin.endpoint_url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...pluginAuthHeaders(plugin, credential) },
-        body: JSON.stringify({ health_check: true, plugin_id: plugin.id, user_id: auth.user.id }),
-        signal: AbortSignal.timeout(15_000),
-      })
-      statusCode = response.status
-      ok = response.ok
-      if (!ok) errorMessage = (await response.text()).slice(0, 500) || `HTTP ${response.status}`
+      if (plugin.extension_type === 'mcp') {
+        const tested = await testMcpConnection({ endpoint: plugin.endpoint_url, authType: plugin.auth_type, headerName: plugin.auth_header_name, credential })
+        ok = true
+        statusCode = 200
+        await admin.from('api_health_logs').insert({ plugin_id: plugin.id, ok: true, status_code: 200, latency_ms: Date.now() - started, detail: `MCP tools/list 성공 (${tested.toolCount} tools)` })
+      } else {
+        const response = await fetch(plugin.endpoint_url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...pluginAuthHeaders(plugin, credential) },
+          body: JSON.stringify({ health_check: true, plugin_id: plugin.id, user_id: auth.user.id }),
+          signal: AbortSignal.timeout(15_000),
+        })
+        statusCode = response.status
+        ok = response.ok
+        if (!ok) errorMessage = (await response.text()).slice(0, 500) || `HTTP ${response.status}`
+      }
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : String(error)
     }
     await admin.from("plugin_connections").update({ status: ok ? "connected" : "failed", last_tested_at: new Date().toISOString(), last_error: errorMessage, updated_at: new Date().toISOString() }).eq("plugin_id", plugin.id).eq("user_id", auth.user.id)
-    await admin.from("api_health_logs").insert({ plugin_id: plugin.id, ok, status_code: statusCode, latency_ms: Date.now() - started, detail: errorMessage ?? "User connection test passed" })
+    if (plugin.extension_type !== 'mcp') await admin.from("api_health_logs").insert({ plugin_id: plugin.id, ok, status_code: statusCode, latency_ms: Date.now() - started, detail: errorMessage ?? "User connection test passed" })
     return json({ ok, status_code: statusCode, error: errorMessage }, ok ? 200 : 502)
   }
 

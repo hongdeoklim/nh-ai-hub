@@ -562,7 +562,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         const verticalBorder =
           (Number.parseFloat(computed.borderTopWidth) || 0) +
           (Number.parseFloat(computed.borderBottomWidth) || 0)
-        const maxHeight = lineHeight * 4 + verticalPadding + verticalBorder
+        const maxHeight = lineHeight * 6 + verticalPadding + verticalBorder
         const nextHeight = Math.min(el.scrollHeight, maxHeight)
         el.style.height = `${nextHeight}px`
         el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden'
@@ -1175,10 +1175,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           className={`overflow-visible ${
             embeddedInSlidesShell
               ? 'rounded-none border-0 bg-transparent shadow-none'
-              : `rounded-[1.75rem] border shadow-sm ${
+              : `rounded-2xl border shadow-sm transition-shadow ${
                   isSoftShell
-                    ? 'border-stone-200/90 bg-white dark:border-stone-700 dark:bg-stone-900'
-                    : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800'
+                    ? 'border-stone-200/90 bg-white focus-within:border-stone-300 focus-within:shadow-md dark:border-stone-700 dark:bg-stone-900 dark:focus-within:border-stone-500'
+                    : 'border-slate-200 bg-white focus-within:border-slate-300 focus-within:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-slate-500'
                 }`
           }`}
         >
@@ -1189,7 +1189,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             className={
               embeddedInSlidesShell
                 ? 'px-0 pb-0 pt-0'
-                : 'px-3 py-2 md:px-4 md:py-2'
+                : 'px-3 py-1.5 md:px-3.5 md:py-2'
             }
           >
             <div className="flex min-w-0 flex-col">
@@ -1202,8 +1202,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 disabled={disabled}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                style={{ fontSize: '14px' }}
-                className={`box-border min-h-[1.5rem] max-h-[5.25rem] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 leading-snug outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`box-border min-h-[24px] max-h-[168px] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 text-[16px] leading-relaxed outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
                   isSoftShell
                     ? 'text-stone-900 placeholder:text-stone-400 dark:text-stone-100 dark:placeholder:text-stone-500'
                     : 'text-slate-900 placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500'
@@ -1213,7 +1212,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               />
 
               <div
-                className={`relative z-10 flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-1 md:pt-1.5 ${
+                className={`relative z-10 flex w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 pt-1 ${
                   slidesMinimal ? 'justify-end' : 'justify-between'
                 }`}
               >
@@ -1280,7 +1279,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   }}
                   aria-expanded={toolsMenuOpen}
                   aria-haspopup="menu"
-                  className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-2.5 transition disabled:opacity-40 md:px-3 ${
+                  className={`inline-flex h-[30px] shrink-0 items-center gap-1 rounded-full px-2.5 transition disabled:opacity-40 md:px-3 ${
                     activeToolMeta || deepResearchEnabled || internetSearchEnabled
                       ? 'bg-violet-200/90 text-violet-950 dark:bg-violet-900/50 dark:text-violet-50'
                       : toolboxPillClass
@@ -1653,7 +1652,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     }}
                     aria-expanded={metaMenuOpen}
                     aria-haspopup="dialog"
-                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${toolboxPillClass}`}
+                    className={`inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${toolboxPillClass}`}
                     aria-label="토큰·비용 추정"
                     title="토큰·비용 추정"
                   >
@@ -1678,7 +1677,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   type="button"
                   disabled={disabled}
                   onClick={handleMicToggle}
-                  className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 md:h-9 md:w-9 ${
+                  className={`relative flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${
                     isListening
                       ? 'animate-pulse bg-red-100 text-red-600 ring-2 ring-red-500/60 dark:bg-red-950/50 dark:text-red-300 dark:ring-red-400/50'
                       : `${toolbarIdleBtn} rounded-full`
@@ -1726,7 +1725,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   onClick={onStopGenerating}
                   aria-label="생성 중지"
                   title="생성 중지"
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm transition md:h-9 md:w-9 ${
+                  className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full text-white shadow-sm transition ${
                     isGemini
                       ? 'bg-[#0b57d0] hover:bg-[#0842a0] active:bg-[#063078]'
                       : isSoftShell
@@ -1742,7 +1741,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   disabled={!canSend}
                   aria-label="전송"
                   title="전송 (Enter)"
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 md:h-9 md:w-9 ${
+                  className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
                     isGemini
                       ? 'bg-[#0b57d0] hover:bg-[#0842a0] active:bg-[#063078]'
                       : isSoftShell

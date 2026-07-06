@@ -3,7 +3,13 @@
  * 브라우저(`src/lib/normalize-preferred-ai-model.ts`)와 동기화하세요.
  */
 
-export type ResolvedChatModelKind = "openai" | "anthropic" | "google"
+export type ResolvedChatModelKind =
+  | "openai"
+  | "anthropic"
+  | "google"
+  | "deepseek"
+  | "hermes"
+  | "openrouter"
 
 export type ResolvedChatModel = {
   kind: ResolvedChatModelKind
@@ -40,21 +46,28 @@ const GOOGLE_KNOWN = new Set([
   "gemini-2.5-flash-lite",
 ])
 
+/**
+ * 카탈로그의 가상 모델 ID(미출시 표기) → 실제 API 모델 ID.
+ * 실존하는 ID(claude-*-4-5, gpt-4o, gemini-2.5-* 등)는 그대로 통과시켜
+ * 사용자가 선택한 모델·버전이 조용히 다른 모델로 바뀌지 않게 한다.
+ */
 export function mapVirtualToRealModelId(kind: string, modelId: string): string {
   const m = modelId.toLowerCase();
   if (kind === 'openai') {
-    if (m.startsWith('gpt-5.5')) return 'o1';
-    if (m.startsWith('gpt-5.4-mini') || m.startsWith('gpt-5-mini')) return 'gpt-4o-mini';
-    if (m.startsWith('gpt-5.4') || m.startsWith('gpt-5')) return 'gpt-4o';
+    if (m.startsWith('gpt-5.5')) return 'gpt-5';
+    if (m.startsWith('gpt-5.4-nano')) return 'gpt-5-nano';
+    if (m.startsWith('gpt-5.4-mini')) return 'gpt-5-mini';
+    if (m.startsWith('gpt-5.4')) return 'gpt-5';
   }
   if (kind === 'anthropic') {
-    if (m.includes('opus')) return 'claude-3-opus-20240229';
-    if (m.includes('sonnet')) return 'claude-3-5-sonnet-20241022';
-    if (m.includes('haiku')) return 'claude-3-5-haiku-20241022';
+    // 가상 4.6/4.7 세대만 실존 4.5 세대로 강하 — 실존 ID는 통과
+    if (m.includes('4-7') || m.includes('4.7')) return 'claude-opus-4-5';
+    if (m.includes('4-6') || m.includes('4.6')) return 'claude-sonnet-4-5';
   }
   if (kind === 'google') {
     if (m.includes('3.5-flash') || m.includes('3-flash')) return 'gemini-2.5-flash';
-    if (m.includes('3.1-pro') || m.includes('pro')) return 'gemini-2.5-pro';
+    if (m.includes('3.1-pro')) return 'gemini-2.5-pro';
+    if (m.includes('3.1') && m.includes('lite')) return 'gemini-2.5-flash-lite';
   }
   return modelId;
 }
@@ -83,8 +96,20 @@ function _normalizePreferredAiToResolvedModel(
     return { kind: "google", modelId: "gemini-2.5-flash" }
   }
 
+  // OpenRouter 네임스페이스 ID(예: meta-llama/llama-3.3-70b-instruct)는 그대로 통과
   if (raw.includes("/")) {
-    return _normalizePreferredAiToResolvedModel(raw.split("/").pop() ?? raw)
+    return { kind: "openrouter", modelId: trimmed }
+  }
+
+  if (raw.startsWith("deepseek")) {
+    return {
+      kind: "deepseek",
+      modelId: raw.includes("reason") ? "deepseek-reasoner" : "deepseek-chat",
+    }
+  }
+
+  if (raw.startsWith("hermes")) {
+    return { kind: "hermes", modelId: trimmed }
   }
 
   if (OPENAI_KNOWN.has(raw)) {

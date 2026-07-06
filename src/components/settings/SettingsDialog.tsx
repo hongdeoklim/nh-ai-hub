@@ -27,7 +27,7 @@ type SettingsDialogProps = {
   open: boolean
   onClose: () => void
   userId?: string
-  /** 열릴 때 표시할 탭 (아직 미적용 — 시그니처 호환용) */
+  /** 열릴 때 표시할 탭 (예: 'mypage' — 테마/다크모드 설정 위치) */
   initialTab?: SettingsTab
 }
 
@@ -35,8 +35,13 @@ export function SettingsDialog({
   open,
   onClose,
   userId,
+  initialTab = 'mypage',
 }: SettingsDialogProps) {
-  const [tab, setTab] = useState<SettingsTab>('mypage')
+  const [tab, setTab] = useState<SettingsTab>(initialTab)
+
+  useEffect(() => {
+    if (open) setTab(initialTab)
+  }, [open, initialTab])
 
   useEffect(() => {
     if (!open) return

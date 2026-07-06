@@ -35,6 +35,9 @@ const AiDesignerPage = lazy(() =>
 const WorkflowsPage = lazy(() =>
   import('./pages/WorkflowsPage').then((m) => ({ default: m.WorkflowsPage })),
 )
+const MarketplacePage = lazy(() =>
+  import('./pages/MarketplacePage').then((m) => ({ default: m.MarketplacePage })),
+)
 const AiProductPlannerPage = lazy(() =>
   import('./pages/AiProductPlannerPage').then((m) => ({
     default: m.AiProductPlannerPage,
@@ -131,6 +134,33 @@ const ModelManagement = lazy(() =>
     default: m.ModelManagement,
   })),
 )
+const LibraryPage = lazy(() =>
+  import('./pages/LibraryPage').then((m) => ({ default: m.LibraryPage })),
+)
+const AxDashboard = lazy(() =>
+  import('./pages/admin/AxDashboard').then((m) => ({ default: m.AxDashboard })),
+)
+const FeedbackDashboard = lazy(() =>
+  import('./pages/admin/FeedbackDashboard').then((m) => ({ default: m.FeedbackDashboard })),
+)
+const SiteAssessmentPage = lazy(() =>
+  import('./pages/admin/SiteAssessmentPage').then((m) => ({ default: m.SiteAssessmentPage })),
+)
+const SiteAssessmentUserPage = lazy(() =>
+  import('./pages/SiteAssessmentUserPage').then((m) => ({ default: m.SiteAssessmentUserPage })),
+)
+const KnowledgeGraphPage = lazy(() =>
+  import('./pages/KnowledgeGraphPage').then((m) => ({ default: m.KnowledgeGraphPage })),
+)
+const DevUiCheckPage = lazy(() =>
+  import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevUiCheckPage })),
+)
+const KnowledgeHubPage = lazy(() =>
+  import('./pages/KnowledgeHubPage').then((m) => ({ default: m.KnowledgeHubPage })),
+)
+const AutomationStudioPage = lazy(() =>
+  import('./pages/AutomationStudioPage').then((m) => ({ default: m.AutomationStudioPage })),
+)
 
 function AuthSpinner() {
   return (
@@ -182,12 +212,15 @@ function AppRoutes() {
             <Route path="scrapbook" element={<Scrapbook />} />
             <Route path="ai-slides" element={<AiSlidesPage />} />
             <Route path="workflows" element={<WorkflowsPage />} />
+            <Route path="marketplace" element={<MarketplacePage />} />
             <Route path="ai-planner" element={<AiProductPlannerPage />} />
             <Route path="ai-planner/:sessionId" element={<AiProductPlannerPage />} />
             <Route path="ai-designer" element={<AiDesignerPage />} />
             <Route path="ai-sheets" element={<AiSheetsPage />} />
             <Route path="ai-office" element={<UniverOfficePage />} />
             <Route path="reference-room" element={<ReferenceRoom />} />
+            <Route path="knowledge-hub" element={<KnowledgeHubPage />} />
+            <Route path="automation-studio" element={<AutomationStudioPage />} />
             <Route path="teams" element={<TeamsPage />} />
             <Route path="teams/:teamId" element={<TeamDetailPage />} />
             <Route
@@ -203,6 +236,8 @@ function AppRoutes() {
               element={<WorkspaceIntegrationsPage />}
             />
             <Route path="notebook" element={<NotebookWorkspace />} />
+            <Route path="site-assessment" element={<SiteAssessmentUserPage />} />
+            <Route path="library" element={<LibraryPage />} />
             <Route
               path="oauth/microsoft-integration"
               element={<MicrosoftIntegrationCallback />}
@@ -226,10 +261,42 @@ function AppRoutes() {
               <Route path="reference" element={<KnowledgeAdmin />} />
               <Route path="templates" element={<TemplateManager />} />
               <Route path="models" element={<ModelManagement />} />
+              <Route path="ax" element={<AxDashboard />} />
+              <Route path="feedback" element={<FeedbackDashboard />} />
+              <Route path="site-assessment" element={<SiteAssessmentPage />} />
             </Route>
           </Route>
+          <Route path="knowledge-graph" element={<KnowledgeGraphPage />} />
         </Route>
       </Route>
+      {import.meta.env.DEV ? (
+        <>
+          <Route
+            path="__ui-check"
+            element={
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <DevUiCheckPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="__ui-check/knowledge-hub"
+            element={
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <KnowledgeHubPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="__ui-check/automation-studio"
+            element={
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <AutomationStudioPage />
+              </Suspense>
+            }
+          />
+        </>
+      ) : null}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

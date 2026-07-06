@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import type { AiProviderPreference } from '../../types/ai-models'
 import type { ChatExperimentalAttachment } from '../../types/chat'
 import type { ComposerToolMode } from '../../types/composer-tools'
 import type { ChatCitationSource } from '../../types/chat-citations'
@@ -63,6 +62,16 @@ export type UniverOfficeStreamPayload = {
   aiDataSignal: UniverAiDataSignal
 }
 
+/** NDJSON `{ type: "route" }` — 자동 라우팅 태스크·실제 호출 모델 정보 */
+export type ChatRouteInfo = {
+  /** true 면 스마트 라우터가 자동 결정, false 면 사용자가 수동 선택한 모델 */
+  auto: boolean
+  /** NH 스마트 라우터 태스크 분류 (수동 선택 시 null) */
+  taskType: string | null
+  provider?: string
+  modelId: string
+}
+
 /** Dashboard → /ai-office 라우터 state 전달용 */
 export type UniverOfficeNavigationState = {
   activeTab?: UniverOfficeActiveTab
@@ -87,14 +96,28 @@ export type InvokeAiChatFailure = {
   aborted?: boolean
 }
 
+export type InvokeAiChatSuccess = {
+  ok: true
+  /**
+   * 서버 NDJSON done 이벤트의 종료 사유.
+   * - 'length': 출력 토큰 한도에서 잘림 → 이어쓰기 대상
+   * - 'interrupted': done 이벤트 없이 스트림 종료(엣지 함수 시간 초과 등) → 이어쓰기 대상
+   * - undefined: 종료 사유를 전달하지 않는 레거시/텍스트 스트림 경로
+   */
+  finishReason?: string
+  /** done 이벤트의 토큰 사용량 (에이전트 루프 전체 합산) */
+  usage?: {
+    inputTokens: number
+    outputTokens: number
+  }
+}
+
 export type InvokeAiChatParams = {
   supabase: SupabaseClient
   /** Edge 요청 본문 `messages` — 멀티턴 대화 전체(현재 user 턴 포함) */
   messages: ChatApiHistoryMessage[]
   /** Edge 요청 본문 `activeModel` */
   activeModel: string
-  /** 대화 화면 공급자 선택 — 아직 Edge 로 전달하지 않음 */
-  providerPreference?: AiProviderPreference
   /** @deprecated `messages` 사용. direct 모드 전용 단일 턴 */
   prompt?: string
   /** @deprecated `activeModel` 사용 */
@@ -121,8 +144,12 @@ export type InvokeAiChatParams = {
   onCitationSources?: (sources: ChatCitationSource[]) => void
   /** inject_univer_office_data NDJSON `{ type: "univer_office" }` 이벤트 */
   onUniverOffice?: (payload: UniverOfficeStreamPayload) => void
+  /** NDJSON `{ type: "route" }` — 라우팅 투명성 칩 표시용 */
+  onRouteInfo?: (info: ChatRouteInfo) => void
   /** 실제 호출에 사용된 모델 ID (Edge 응답 헤더) */
   onModelUsed?: (modelId: string) => void
+  /** 스마트 라우터 공급자 선호(auto/openai/anthropic/google/deepseek/hermes/openrouter). Edge body.providerPreference */
+  providerPreference?: string
   signal?: AbortSignal
   /** Canvas 모드 — Edge `ai-chat` 시스템 프롬프트 오버레이 */
   composerTool?: ComposerToolMode | null
@@ -147,7 +174,7 @@ function isAbortError(error: unknown, signal?: AbortSignal): boolean {
 
 async function invokeViaEdge(
   params: InvokeAiChatParams,
-): Promise<{ ok: true } | InvokeAiChatFailure> {
+): Promise<InvokeAiChatSuccess | InvokeAiChatFailure> {
   const {
     data: { session },
   } = await params.supabase.auth.getSession()
@@ -254,6 +281,12 @@ async function invokeViaEdge(
       if (params.conversationId?.trim()) {
         body.conversationId = params.conversationId.trim()
       }
+      if (
+        params.providerPreference &&
+        params.providerPreference !== 'auto'
+      ) {
+        body.providerPreference = params.providerPreference
+      }
       if (params.billingUserId?.trim()) {
         body.billingUserId = params.billingUserId.trim()
       }
@@ -323,6 +356,10 @@ async function invokeViaEdge(
     const decoder = new TextDecoder()
     let buffer = ''
     let collectedCitations: ChatCitationSource[] = []
+    let doneFinishReason: string | undefined
+    let doneUsage: InvokeAiChatSuccess['usage']
+    let sawDoneEvent = false
+    let receivedAnyText = false
     while (true) {
       if (params.signal?.aborted) {
         await reader.cancel().catch(() => undefined)
@@ -339,6 +376,7 @@ async function invokeViaEdge(
         try {
           const evt = JSON.parse(trimmed) as Record<string, unknown>
           if (evt.type === 'text' && typeof evt.delta === 'string') {
+            receivedAnyText = true
             params.onTextDelta(evt.delta)
           } else if (evt.type === 'citations' && Array.isArray(evt.sources)) {
             const incoming = evt.sources as ChatCitationSource[]
@@ -382,6 +420,17 @@ async function invokeViaEdge(
               model: typeof evt.model === 'string' ? evt.model : undefined,
             })
           } else if (evt.type === 'done') {
+            sawDoneEvent = true
+            if (typeof evt.finishReason === 'string') {
+              doneFinishReason = evt.finishReason
+            }
+            if (evt.usage && typeof evt.usage === 'object') {
+              const u = evt.usage as Record<string, unknown>
+              doneUsage = {
+                inputTokens: Number(u.inputTokens ?? 0),
+                outputTokens: Number(u.outputTokens ?? 0),
+              }
+            }
             params.onToolTrace?.({
               at: new Date().toISOString(),
               phase: 'done',
@@ -399,6 +448,17 @@ async function invokeViaEdge(
                   ? evt.message
                   : '스트림 오류',
             })
+          } else if (evt.type === 'route') {
+            if (typeof evt.modelId === 'string') {
+              params.onRouteInfo?.({
+                auto: evt.auto === true,
+                taskType:
+                  typeof evt.taskType === 'string' ? evt.taskType : null,
+                provider:
+                  typeof evt.provider === 'string' ? evt.provider : undefined,
+                modelId: evt.modelId,
+              })
+            }
           } else if (evt.type === 'univer_office') {
             const aiDataSignal = evt.aiDataSignal
             if (aiDataSignal && typeof aiDataSignal === 'object') {
@@ -416,7 +476,12 @@ async function invokeViaEdge(
     if (collectedCitations.length > 0) {
       params.onCitationSources?.(collectedCitations)
     }
-    return { ok: true }
+    // done 이벤트 없이 스트림이 닫힘 = 엣지 함수 시간 초과 등 비정상 종료.
+    // 텍스트를 일부라도 받았으면 이어쓰기 대상(interrupted)으로 알린다.
+    if (!sawDoneEvent && receivedAnyText) {
+      return { ok: true, finishReason: 'interrupted' }
+    }
+    return { ok: true, finishReason: doneFinishReason, usage: doneUsage }
   }
 
   const reader = res.body?.getReader()
@@ -447,7 +512,7 @@ async function invokeViaEdge(
  */
 async function invokeViaRouteAiRequest(
   params: InvokeAiChatParams,
-): Promise<{ ok: true } | InvokeAiChatFailure> {
+): Promise<InvokeAiChatSuccess | InvokeAiChatFailure> {
   if (params.experimental_lab) {
     return {
       ok: false,
@@ -510,7 +575,7 @@ async function invokeViaRouteAiRequest(
  */
 export async function invokeAiChat(
   params: InvokeAiChatParams,
-): Promise<{ ok: true } | InvokeAiChatFailure> {
+): Promise<InvokeAiChatSuccess | InvokeAiChatFailure> {
   if (resolveAiTransport() === 'direct') {
     return invokeViaRouteAiRequest(params)
   }

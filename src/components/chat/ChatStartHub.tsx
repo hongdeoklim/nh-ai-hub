@@ -221,8 +221,7 @@ function ModelSelectDropdown({
         onClick={onOpenToggle}
         onMouseEnter={() => onHover(selectedModel)}
         onMouseLeave={() => onHover(null)}
-        className="inline-flex h-8 max-w-[min(52vw,14rem)] min-w-0 shrink items-center gap-1.5 rounded-full border-0 bg-stone-100/95 py-0 pl-3 pr-2 font-medium leading-none text-stone-700 outline-none ring-orange-600/20 transition hover:bg-stone-200/90 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90"
-        style={{ fontSize: '12.5px' }}
+        className="inline-flex h-[28px] max-w-[min(48vw,13rem)] min-w-0 shrink items-center gap-1 rounded-full border-0 bg-stone-100/95 py-0 pl-2.5 pr-1.5 text-[12px]! font-medium leading-none text-stone-700 outline-none ring-orange-600/20 transition hover:bg-stone-200/90 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90"
       >
         <span className="min-w-0 truncate">{selected?.label ?? '모델 선택'}</span>
         <span

@@ -14,6 +14,7 @@ export interface ConnectablePlugin {
   setup_url: string | null
   docs_url: string | null
   is_active: boolean
+  extension_type: 'plugin' | 'mcp' | 'skill' | 'public_data'
   connection: {
     plugin_id: string
     credential_hint: string | null

@@ -12,7 +12,13 @@ export type AiModelRegistryEntry = {
   is_active: boolean
 }
 
-export type ProviderKind = "openai" | "anthropic" | "google"
+export type ProviderKind =
+  | "openai"
+  | "anthropic"
+  | "google"
+  | "deepseek"
+  | "hermes"
+  | "openrouter"
 
 const REGISTRY_TTL_MS = 60_000
 

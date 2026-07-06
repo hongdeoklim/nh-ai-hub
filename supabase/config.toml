@@ -90,3 +90,7 @@ verify_jwt = false
 
 [functions.list-gemini-models]
 verify_jwt = false
+
+[functions.dify-sync-webhook]
+verify_jwt = false
+

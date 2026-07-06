@@ -22,11 +22,11 @@ serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '').trim()
     let user_id = ''
-    let body: any = {}
+    let body: { user_id?: string; max_results?: number } = {}
 
     try {
       body = await req.json()
-    } catch (e) {
+    } catch {
       // ignore
     }
 
@@ -46,14 +46,44 @@ serve(async (req) => {
     const accessToken = await getGoogleAccessTokenForUser(user_id)
     if (!accessToken) throw new Error('Google OAuth 연동이 필요합니다.')
 
-    const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?labelIds=UNREAD&maxResults=5', {
+    const maxResults = Math.min(10, Math.max(1, Number(body.max_results ?? 5)))
+    const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?labelIds=UNREAD&maxResults=${maxResults}`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
     if (!res.ok) throw new Error('Gmail API 호출 실패')
-    const data = await res.json()
+    const data = await res.json() as { messages?: Array<{ id: string; threadId?: string }> }
 
-    const count = data.messages ? data.messages.length : 0
-    const resultText = count > 0 ? `총 ${count}개의 안 읽은 메일이 있습니다.` : '새로운 메일이 없습니다.'
+    const messages = await Promise.all((data.messages ?? []).map(async (message) => {
+      const detailRes = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(message.id)}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      )
+      if (!detailRes.ok) return null
+      const detail = await detailRes.json() as {
+        id?: string
+        threadId?: string
+        snippet?: string
+        payload?: { headers?: Array<{ name?: string; value?: string }> }
+      }
+      const headers = detail.payload?.headers ?? []
+      const header = (name: string) =>
+        headers.find((item) => item.name?.toLowerCase() === name.toLowerCase())?.value ?? ''
+      return {
+        id: detail.id ?? message.id,
+        threadId: detail.threadId ?? message.threadId ?? null,
+        from: header('From'),
+        subject: header('Subject') || '(제목 없음)',
+        date: header('Date'),
+        snippet: detail.snippet ?? '',
+      }
+    }))
+
+    const items = messages.filter((item): item is NonNullable<typeof item> => Boolean(item))
+
+    const count = items.length
+    const resultText = count > 0
+      ? [`안 읽은 메일 ${count}건입니다.`, ...items.map((item, index) => `${index + 1}. ${item.subject} — ${item.from || '발신자 미상'}`)].join('\n')
+      : '새로운 메일이 없습니다.'
 
     // Log to DB
     const { error: logError } = await supabase
@@ -61,13 +91,13 @@ serve(async (req) => {
       .insert({
         user_id: user_id,
         assistant_name: '01_gmail_assistant',
-        task_description: '안 읽은 메일 요약 및 답장 초안 작성',
+        task_description: '안 읽은 메일 제목 및 발신자 요약',
         result_text: resultText
       })
 
     if (logError) throw logError
 
-    return jsonResponse({ success: true, message: resultText })
+    return jsonResponse({ success: true, message: resultText, count, items })
   } catch (error) {
     return jsonResponse({ success: false, error: error instanceof Error ? error.message : String(error) }, 200)
   }

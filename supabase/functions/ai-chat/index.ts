@@ -17,6 +17,7 @@ import { uploadChatImagesToGCS } from "../_shared/gcs.ts"
 import { routePromptToModelId } from "../_shared/auto-route.ts"
 import { NHSmartRoutingController } from "../_shared/nh-smart-routing.ts"
 import { scheduleAssistantRouterShadowLog } from "../_shared/assistant-router-shadow-log.ts"
+import { executeSingleAssistant } from '../_shared/assistant-orchestrator.ts'
 import { decryptCredential } from "../_shared/integration-auth.ts"
 import { normalizePreferredAiToResolvedModel } from "../_shared/normalize-preferred-ai-model.ts"
 import {
@@ -83,10 +84,8 @@ const GOOGLE_WORKSPACE_TOOL_GUIDANCE = `
 - 도구 실행 후 결과(성공/실패)를 사용자에게 명확히 알려라.
 - 연동되지 않았다면 설정 → 연동에서 Google Workspace 연결을 안내하라.`
 
-const GOOGLE_THINKING_FORMAT_GUIDANCE = `
-
-## 사고 과정 표시 (필수)
-최종 답변 전에 \`<thinking>\` 과 \`</thinking>\` 사이에 2~6문장 한국어로 핵심 추론·확인 사항을 먼저 작성하라. 태그 밖에는 사용자에게 보여줄 최종 답변만 출력하라. \`<thinking>\` 태그는 최종 답변 본문에 포함하지 마라.`
+// NOTE: 과거 `<thinking>` 사고 과정 강제 지시(GOOGLE_THINKING_FORMAT_GUIDANCE)는 제거됨 —
+// 매 응답마다 출력 토큰을 소모해 잘림을 유발하므로 다시 추가하지 말 것.
 
 const GUARDRAIL_BLOCK_MESSAGE =
   "업무와 직접 관련되지 않은 요청으로, 사내 정책에 따라 응답할 수 없습니다."
@@ -1413,6 +1412,20 @@ async function handleRequest(req: Request) {
       imageBase64: richImages.length > 0 ? bytesToBase64(richImages[0].bytes) : undefined
     })
     finalPrompt = preflightRes.verifiedPrompt
+    if (routeRes.assistantPlan?.selectionMode === 'single') {
+      const orchestration = await executeSingleAssistant({
+        admin: adminClient,
+        supabaseUrl,
+        serviceKey: svcKey,
+        userId: user.id,
+        plan: routeRes.assistantPlan,
+      })
+      if (orchestration.ok) {
+        finalPrompt = `${finalPrompt}\n\n[Assistant 실행 결과: ${orchestration.assistantId}]\n${orchestration.context}`
+      } else {
+        console.warn('[Assistant-Orchestrator] model-only fallback', orchestration.reason)
+      }
+    }
     console.log("[NH-Smart-Router] 사전 전처리/교차검증 레이어 실행 완료.")
   } else {
     preferredAiForModel = preferredAiChosen
@@ -1518,11 +1531,27 @@ async function handleRequest(req: Request) {
 
   if (richImages.length > 0) {
     try {
-      // Upload images directly to Google Cloud Storage (GCS)
-      await uploadChatImagesToGCS({
+      // Upload images to GCS and save URLs to Supabase DB (ai_generated_assets)
+      const gcsUrls = await uploadChatImagesToGCS({
         userEmail: user.email ?? user.id,
         images: richImages,
       })
+      // fire-and-forget: GCS URL → Supabase DB
+      if (gcsUrls.length > 0) {
+        const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+        if (svcKey) {
+          const assetRows = gcsUrls.map(url => ({
+            user_id: user.id,
+            asset_type: "image",
+            gcs_url: url,
+            metadata: { source: "chat_upload", provider: providerKindUsed, thread_id: conversationId ?? null },
+          }))
+          createClient(supabaseUrl, svcKey, { auth: { persistSession: false } })
+            .from("ai_generated_assets")
+            .insert(assetRows)
+            .then(({ error }) => { if (error) console.error("[ai-chat] GCS URL DB 저장 실패:", error.message) })
+        }
+      }
     } catch (e: any) {
       console.error("[ai-chat] uploadChatImagesToGCS 실패", e.message)
       return jsonResponse(
@@ -1790,12 +1819,9 @@ async function handleRequest(req: Request) {
       }
     }
 
-    const labToolDebug =
-      Boolean(labPayload?.tool_debug) && richImages.length === 0
-    const useNdjsonStream =
-      richImages.length === 0 &&
-      (labToolDebug ||
-        mergedTools !== null)
+    // 텍스트 채팅은 항상 NDJSON 스트림 사용:
+    // done 이벤트에 finishReason(length 잘림 여부)을 실어 클라이언트가 이어쓰기를 판단한다.
+    const useNdjsonStream = richImages.length === 0
 
     if (mcpToolDefinitions.length > 0) {
       console.log(
@@ -1835,6 +1861,10 @@ async function handleRequest(req: Request) {
 
     const streamCommon = {
       model: resolvedLanguageModel,
+      // Anthropic 은 SDK 기본 출력 한도(4096)에서 조기 잘림 → 명시 상향.
+      // 다른 프로바이더는 모델별 최대 한도가 제각각이라(낮은 모델에 8192를 주면 호출 자체가 실패)
+      // 모델 기본 한도를 그대로 사용하고, 잘림은 finishReason=length 이어쓰기로 처리한다.
+      ...(providerKindUsed === "anthropic" ? { maxOutputTokens: 8192 } : {}),
       onFinish: async (event: {
         totalUsage: { inputTokens?: number; outputTokens?: number }
       }) => {
@@ -1858,6 +1888,21 @@ async function handleRequest(req: Request) {
                 messages: messages
               })
             }).catch(e => console.error('[ai-chat] memory-extractor trigger failed:', e))
+
+            // 대화 내용 → Dify + 지식 그래프 아카이브 (AX 고도화 파이프라인)
+            fetch(`${baseUrl}/functions/v1/conversation-archiver`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${serviceKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                messages: messages,
+                provider: providerKindUsed,
+                threadId: conversationId ?? undefined
+              })
+            }).catch(e => console.error('[ai-chat] conversation-archiver trigger failed:', e))
           }
         }
       },
@@ -1904,6 +1949,15 @@ async function handleRequest(req: Request) {
             )
           }
           try {
+            // 라우팅 투명성: 어떤 경로(자동 분류 태스크·실제 호출 모델)로 처리되는지 스트림 첫 이벤트로 전달
+            writeLine({
+              type: "route",
+              auto: nhRouteResult !== null,
+              taskType: nhRouteResult?.taskType ?? null,
+              provider: providerKindUsed,
+              modelId: modelIdUsed,
+            })
+
             const result = streamText({
               ...streamCommon,
               system: textSystemPrompt,
@@ -1986,9 +2040,23 @@ async function handleRequest(req: Request) {
               }
             }
 
+            // finishReason === "length" 이면 출력 토큰 한도에서 잘린 응답 —
+            // 클라이언트가 이어쓰기(계속 생성)를 제안/자동 수행할 수 있도록 전달
+            const finishReason = await result.finishReason.catch(() => "unknown")
+            const totalUsage = await result.totalUsage.catch(() => null)
+
             writeLine({
               type: "done",
               model: modelIdUsed,
+              finishReason,
+              ...(totalUsage
+                ? {
+                  usage: {
+                    inputTokens: totalUsage.inputTokens ?? 0,
+                    outputTokens: totalUsage.outputTokens ?? 0,
+                  },
+                }
+                : {}),
               activeToolNames: Object.keys(mergedTools ?? {}),
               mcpCoreToolDefinitions: mcpToolDefinitions,
             })

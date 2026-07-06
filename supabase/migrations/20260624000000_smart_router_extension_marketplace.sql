@@ -210,6 +210,12 @@ alter table public.smart_router_policies enable row level security;
 alter table public.ai_usage_limits enable row level security;
 alter table public.tool_execution_logs enable row level security;
 
+drop policy if exists extension_installations_admin_all on public.extension_installations;
+drop policy if exists extension_installations_user_select on public.extension_installations;
+drop policy if exists extension_installations_user_insert on public.extension_installations;
+drop policy if exists extension_installations_user_update on public.extension_installations;
+drop policy if exists extension_installations_user_delete on public.extension_installations;
+
 create policy extension_installations_admin_all on public.extension_installations
   for all to authenticated
   using (public.current_user_is_admin())
@@ -217,6 +223,24 @@ create policy extension_installations_admin_all on public.extension_installation
 create policy extension_installations_user_select on public.extension_installations
   for select to authenticated
   using (scope_type = 'user' and scope_id = auth.uid()::text);
+create policy extension_installations_user_insert on public.extension_installations
+  for insert to authenticated
+  with check (
+    scope_type = 'user'
+    and scope_id = auth.uid()::text
+    and installed_by = auth.uid()
+    and approved_by is null
+  );
+create policy extension_installations_user_update on public.extension_installations
+  for update to authenticated
+  using (scope_type = 'user' and scope_id = auth.uid()::text)
+  with check (scope_type = 'user' and scope_id = auth.uid()::text);
+create policy extension_installations_user_delete on public.extension_installations
+  for delete to authenticated
+  using (scope_type = 'user' and scope_id = auth.uid()::text);
+
+drop policy if exists extension_permissions_admin_all on public.extension_permissions;
+drop policy if exists extension_permissions_user_select on public.extension_permissions;
 
 create policy extension_permissions_admin_all on public.extension_permissions
   for all to authenticated
@@ -226,12 +250,18 @@ create policy extension_permissions_user_select on public.extension_permissions
   for select to authenticated
   using (subject_type = 'user' and subject_id = auth.uid()::text);
 
+drop policy if exists smart_router_policies_admin_all on public.smart_router_policies;
+drop policy if exists smart_router_policies_authenticated_select on public.smart_router_policies;
+
 create policy smart_router_policies_admin_all on public.smart_router_policies
   for all to authenticated
   using (public.current_user_is_admin())
   with check (public.current_user_is_admin());
 create policy smart_router_policies_authenticated_select on public.smart_router_policies
   for select to authenticated using (enabled = true);
+
+drop policy if exists ai_usage_limits_admin_all on public.ai_usage_limits;
+drop policy if exists ai_usage_limits_user_select on public.ai_usage_limits;
 
 create policy ai_usage_limits_admin_all on public.ai_usage_limits
   for all to authenticated
@@ -240,6 +270,9 @@ create policy ai_usage_limits_admin_all on public.ai_usage_limits
 create policy ai_usage_limits_user_select on public.ai_usage_limits
   for select to authenticated
   using (scope_type = 'user' and scope_id = auth.uid()::text);
+
+drop policy if exists tool_execution_logs_admin_select on public.tool_execution_logs;
+drop policy if exists tool_execution_logs_user_select on public.tool_execution_logs;
 
 create policy tool_execution_logs_admin_select on public.tool_execution_logs
   for select to authenticated using (public.current_user_is_admin());
@@ -253,6 +286,13 @@ grant select on public.extension_installations, public.extension_permissions,
   public.smart_router_policies, public.ai_usage_limits, public.tool_execution_logs
   to authenticated;
 
+drop policy if exists plugins_select_marketplace on public.plugins;
+create policy plugins_select_marketplace on public.plugins
+  for select to authenticated
+  using (approval_status = 'approved' and enabled = true);
+
+grant insert, update, delete on public.extension_installations to authenticated;
+
 insert into public.plugins (
   plugin_id, name, description, provider, category, extension_type,
   required_scopes, auth_type, auth_header_name, connection_mode,
@@ -262,21 +302,33 @@ insert into public.plugins (
 values (
   'kr.go.data.public-api',
   '공공데이터 API',
-  '공공데이터포털 API를 표준 도구 형태로 연결하는 비활성 기본 커넥터',
+  '공공데이터포털의 조달청 나라장터 시설공사 입찰공고를 조회합니다.',
   'data.go.kr',
   'public_data',
   'public_data',
   '["public_data.read"]'::jsonb,
-  'api_key',
-  'serviceKey',
-  'hybrid',
-  '{"type":"object","properties":{"api_key":{"type":"string","secret":true},"endpoint_url":{"type":"string","format":"uri"}},"required":["api_key","endpoint_url"]}'::jsonb,
-  '{"tools":[{"name":"search_public_data","description":"승인된 공공데이터 API에서 통계와 공공기관 자료를 조회합니다."}]}'::jsonb,
+  'none',
+  'Authorization',
+  'per_user',
+  '{"type":"object","properties":{"keyword":{"type":"string"},"rows":{"type":"integer","minimum":1,"maximum":10}}}'::jsonb,
+  '{"tools":[{"name":"search_public_data","description":"조달청 나라장터 시설공사 입찰공고를 조회합니다."}],"server_secret":"CORP_DATA_PORTAL_API_KEY"}'::jsonb,
   'search_public_data',
-  '',
-  false,
-  false,
-  'pending',
+  'builtin://public-data',
+  true,
+  true,
+  'approved',
   '1.0.0'
 )
-on conflict (plugin_id) do nothing;
+on conflict (plugin_id) do update set
+  description = excluded.description,
+  auth_type = excluded.auth_type,
+  auth_header_name = excluded.auth_header_name,
+  connection_mode = excluded.connection_mode,
+  config_schema = excluded.config_schema,
+  manifest = excluded.manifest,
+  tool_function_name = excluded.tool_function_name,
+  endpoint_url = excluded.endpoint_url,
+  is_active = excluded.is_active,
+  enabled = excluded.enabled,
+  approval_status = excluded.approval_status,
+  version = excluded.version;

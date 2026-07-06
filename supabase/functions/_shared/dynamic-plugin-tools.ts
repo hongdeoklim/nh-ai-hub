@@ -3,11 +3,8 @@ import { tool, zodSchema, type Tool } from "npm:ai@6.0.184"
 import { z } from "npm:zod@4.4.3"
 
 import { resolveBuiltinPluginTool } from "./builtin-plugin-tools.ts"
-import {
-  createSearchWebNewsTool,
-  WEB_SEARCH_TOOL_NAME,
-} from "./web-search-tool.ts"
 import { decryptPluginCredential, pluginAuthHeaders } from "./plugin-credentials.ts"
+import { createMcpAiTools } from './mcp-client.ts'
 
 export type ActivePluginRow = {
   id: string
@@ -18,6 +15,7 @@ export type ActivePluginRow = {
   auth_type: "none" | "bearer" | "api_key"
   auth_header_name: string
   connection_mode: string
+  extension_type: "plugin" | "mcp" | "skill" | "public_data"
 }
 
 async function logHealth(
@@ -189,7 +187,7 @@ export async function createDynamicPluginTools(deps: {
   const { data, error } = await admin
     .from("plugins")
     .select(
-      "id, name, description, endpoint_url, tool_function_name, auth_type, auth_header_name, connection_mode",
+      "id, name, description, endpoint_url, tool_function_name, auth_type, auth_header_name, connection_mode, extension_type",
     )
     .eq("is_active", true)
     .eq("approval_status", "approved")
@@ -217,7 +215,8 @@ export async function createDynamicPluginTools(deps: {
     if (!installationError && !permissionError) {
       rows = rows.filter((row) => {
         const pluginInstallations = (installations ?? []).filter((item) => item.extension_id === row.id)
-        const installed = pluginInstallations.length === 0 || pluginInstallations.some((item) =>
+        const requiresInstallation = row.extension_type !== 'plugin'
+        const installed = (!requiresInstallation && pluginInstallations.length === 0) || pluginInstallations.some((item) =>
           item.enabled === true && (
             item.scope_type === "workspace" ||
             (item.scope_type === "user" && item.scope_id === userId) ||
@@ -274,25 +273,35 @@ export async function createDynamicPluginTools(deps: {
       continue
     }
 
+    const endpoint = String(row.endpoint_url ?? "").trim()
+    let credential: string | undefined
+    if (row.auth_type !== "none") {
+      const connection = connectionByPlugin.get(row.id)
+      if (!connection) continue
+      try {
+        credential = await decryptPluginCredential(connection.credential_ciphertext)
+      } catch (error) {
+        console.error("[dynamic-plugin-tools] 플러그인 credential 복호화 실패", row.id, error)
+        continue
+      }
+    }
+
+    if (row.extension_type === 'mcp') {
+      try {
+        Object.assign(out, await createMcpAiTools({ prefix: fnName, endpoint, authType: row.auth_type, headerName: row.auth_header_name, credential }))
+      } catch (error) {
+        console.error('[dynamic-plugin-tools] MCP tools/list 실패', row.id, error)
+      }
+      continue
+    }
+
     const builtin = resolveBuiltinPluginTool(fnName, exaApiKey)
     if (builtin) {
       out[fnName] = builtin
       continue
     }
 
-    const endpoint = String(row.endpoint_url ?? "").trim()
     if (endpoint.length > 0) {
-      let credential: string | undefined
-      if (row.auth_type !== "none") {
-        const connection = connectionByPlugin.get(row.id)
-        if (!connection) continue
-        try {
-          credential = await decryptPluginCredential(connection.credential_ciphertext)
-        } catch (error) {
-          console.error("[dynamic-plugin-tools] 플러그인 credential 복호화 실패", row.id, error)
-          continue
-        }
-      }
       out[fnName] = createHttpProxyTool(row, endpoint, admin, userId, department, credential)
     }
   }

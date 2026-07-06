@@ -8,6 +8,7 @@ export type ManageCalendarInput = {
   startTime: string
   endTime: string
   calendarId?: string
+  requestId?: string
 }
 
 export type UpdateSpreadsheetInput = {
@@ -55,11 +56,36 @@ export async function manageCalendarEvent(
   const summary = input.summary.trim()
   const startTime = input.startTime.trim()
   const endTime = input.endTime.trim()
+  const requestId = input.requestId?.trim()
 
   if (!summary.length || !startTime.length || !endTime.length) {
     return {
       ok: false,
       error: "summary, startTime, endTime 은 필수입니다.",
+    }
+  }
+
+  const startMs = Date.parse(startTime)
+  const endMs = Date.parse(endTime)
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+    return {
+      ok: false,
+      error: 'startTime과 endTime은 timezone을 포함한 올바른 시간이어야 하며, 종료 시각이 더 늦어야 합니다.',
+    }
+  }
+
+  if (requestId) {
+    const lookupUrl =
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?` +
+      new URLSearchParams({
+        privateExtendedProperty: `nhRequestId=${requestId}`,
+        maxResults: '1',
+        singleEvents: 'true',
+      }).toString()
+    const existing = await googleAgentFetch(accessToken, lookupUrl)
+    if (existing.ok) {
+      const rows = (existing.body as { items?: unknown[] } | null)?.items ?? []
+      if (rows.length > 0) return { ok: true, data: { event: rows[0], deduplicated: true } }
     }
   }
 
@@ -74,6 +100,9 @@ export async function manageCalendarEvent(
       description: input.description?.trim() || undefined,
       start: { dateTime: startTime },
       end: { dateTime: endTime },
+      extendedProperties: requestId
+        ? { private: { nhRequestId: requestId } }
+        : undefined,
     }),
   })
 
@@ -85,7 +114,7 @@ export async function manageCalendarEvent(
     }
   }
 
-  return { ok: true, data: r.body }
+  return { ok: true, data: { event: r.body, deduplicated: false } }
 }
 
 function normalizeSheetValues(raw: unknown[]): unknown[][] {

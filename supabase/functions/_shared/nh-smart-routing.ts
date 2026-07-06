@@ -43,6 +43,7 @@ export type NHAssistantFallbackReasonCode =
 
 export interface NHSelectedAssistant {
   assistantId: string
+  functionName: string
   name: string
   category: string
   reasonCode:
@@ -55,6 +56,7 @@ export interface NHSelectedAssistant {
   confidence: number
   costLevel: NHAssistantCostLevel
   requiredTools: string[]
+  permissionScopes: string[]
   modelPolicy: {
     preferredModel: string | null
     fallbackModel: string | null
@@ -98,6 +100,7 @@ export interface NHRouteResult {
 
 interface AssistantRegistryRouteRow {
   assistant_id: string
+  function_name: string
   name: string
   category: string
   status: "partial" | "ready"
@@ -254,7 +257,7 @@ export class NHSmartRoutingController {
       const { data, error } = await this.adminClient
         .from("assistant_registry")
         .select(
-          "assistant_id, name, category, status, default_model, fallback_model, cost_level, permission_scopes, task_types, sort_order, metadata",
+          "assistant_id, function_name, name, category, status, default_model, fallback_model, cost_level, permission_scopes, task_types, sort_order, metadata",
         )
         .eq("enabled", true)
         .in("status", ["partial", "ready"])
@@ -294,6 +297,7 @@ export class NHSmartRoutingController {
 
         const selected: NHSelectedAssistant = {
           assistantId: row.assistant_id,
+          functionName: row.function_name,
           name: row.name,
           category: row.category,
           reasonCode: intents.length > 1 ? "compound_request" : "explicit_service_intent",
@@ -301,6 +305,7 @@ export class NHSmartRoutingController {
           confidence: Math.min(0.99, score / 100),
           costLevel: row.cost_level,
           requiredTools: requiredToolsFromMetadata(row.metadata),
+          permissionScopes: row.permission_scopes ?? [],
           modelPolicy: {
             preferredModel: row.default_model,
             fallbackModel: row.fallback_model,
@@ -360,22 +365,26 @@ export class NHSmartRoutingController {
     }
 
     // 1) 데이터 수집 및 짜집기 판단
-    if (/나라장터|입찰|조달청|쇼핑몰|단가|종합쇼핑몰|크롤링|수집|짜집기/i.test(text)) {
+    // (오분류 방지: "수집"·"단가"·"쇼핑몰" 등 일반 단어 단독 매칭 제거 — 조달 도메인 신호가 있을 때만)
+    if (/나라장터|입찰|조달청|종합쇼핑몰|조달\s*단가|크롤링/i.test(text)) {
       return "DATA_CRAWLING_MATCHING"
     }
 
     // 2) 법인 규정 검색 판단
-    if (/규정집|중앙회\s*규정|네트웍스\s*규정|사규|내규|정관|규정\s*검색|조회/i.test(text)) {
+    // (오분류 방지: 기존 "|조회" 단독 매칭이 모든 '~조회' 요청을 규정 검색으로 보냈음 — 규정 문맥 필수)
+    if (/규정집|중앙회\s*규정|네트웍스\s*규정|사규|내규|정관|규정\s*(검색|조회|문의|확인)/i.test(text)) {
       return "COMPANY_REGULATION_SEARCH"
     }
 
     // 3) 수리 연산 및 가변 견적 판단
-    if (/견적|비교견적|추정실적|공사기간|가변\s*견적|수리|연산|실적\s*산출|엑셀\s*정리|품목\s*추가|품목\s*삭제/i.test(text)) {
+    // (오분류 방지: "수리"·"연산"·"엑셀 정리" 등 일반 단어 단독 매칭 제거 — 견적 문맥 필수)
+    if (/견적|비교견적|추정실적|공사기간|실적\s*산출|품목\s*(추가|삭제)/i.test(text)) {
       return "MATHEMATICAL_ESTIMATION"
     }
 
     // 5) 여행/관광 컨설팅 판단
-    if (/여행|관광|일정\s*추천|관광료|호텔비|제안서|NH여행|항공|일정표/i.test(text)) {
+    // (오분류 방지: "제안서"·"일정표"·"일정 추천"은 장문 작성·캘린더와 충돌하므로 제거)
+    if (/여행|관광|관광료|호텔비|NH여행|항공/i.test(text)) {
       return "TRAVEL_CONSULTING"
     }
 
@@ -481,7 +490,7 @@ export class NHSmartRoutingController {
         // [데이터 수집 짜집기 / 대외 제안 및 일정 보고서]
         // 비즈니스 완성도와 가독성이 가장 정교하고 문장력이 뛰어난 Claude Sonnet 4.6 매칭
         provider = "anthropic"
-        modelId = "claude-3-5-sonnet"
+        modelId = "claude-sonnet-4-6"
         estimatedCostUsd = 0.012
 
         if (taskType === "DATA_CRAWLING_MATCHING") {

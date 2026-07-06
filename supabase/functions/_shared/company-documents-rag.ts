@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.49.8"
 
-import { embedTextWithGemini } from "./gemini-embeddings.ts"
+import {
+  embedTextWithGemini,
+  embedTextWithGeminiDim,
+  GEMINI_KG_EMBEDDING_DIM,
+} from "./gemini-embeddings.ts"
 import { embedWorkCaseText } from "./embeddings.ts"
 
 export type CompanyDocumentMatch = {
@@ -89,9 +93,22 @@ export async function retrieveCompanyDocumentMatches(params: {
   }
 
   // 3. 신규 nh_knowledge_nodes 검색 (RLS 적용을 위해 userClient 사용)
-  if (params.userClient && params.openaiKey) {
+  // 임베딩 일원화: 기본은 Gemini@1536 (신규 표준). 레거시 OpenAI 행은 재임베딩 전까지
+  // 교차 모델 유사도가 임계값에 못 미쳐 자연 제외됨. 롤백: NH_KG_EMBEDDING_PROVIDER=openai
+  const kgProvider =
+    (Deno.env.get("NH_KG_EMBEDDING_PROVIDER") ?? "gemini").trim().toLowerCase()
+  const kgKeyAvailable = kgProvider === "openai"
+    ? Boolean(params.openaiKey)
+    : Boolean(params.geminiKey)
+  if (params.userClient && kgKeyAvailable) {
     try {
-      const query_embedding_1536 = await embedWorkCaseText(params.openaiKey, q)
+      const query_embedding_1536 = kgProvider === "openai"
+        ? await embedWorkCaseText(params.openaiKey!, q)
+        : await embedTextWithGeminiDim(
+          params.geminiKey!,
+          q,
+          GEMINI_KG_EMBEDDING_DIM,
+        )
       const { data: kgData, error: kgError } = await params.userClient.rpc("nh_search_similar_nodes", {
         query_embedding: query_embedding_1536,
         match_threshold: params.similarityThreshold ?? DEFAULT_SIMILARITY_THRESHOLD,

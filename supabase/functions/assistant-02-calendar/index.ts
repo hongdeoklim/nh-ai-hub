@@ -22,11 +22,11 @@ serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '').trim()
     let user_id = ''
-    let body: any = {}
+    let body: { user_id?: string; max_results?: number; time_min?: string; time_max?: string } = {}
 
     try {
       body = await req.json()
-    } catch (e) {
+    } catch {
       // ignore
     }
 
@@ -46,15 +46,44 @@ serve(async (req) => {
     const accessToken = await getGoogleAccessTokenForUser(user_id)
     if (!accessToken) throw new Error('Google OAuth 연동이 필요합니다.')
 
-    const now = new Date().toISOString()
-    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=3&singleEvents=true&orderBy=startTime`, {
+    const timeMin = body.time_min?.trim() || new Date().toISOString()
+    const timeMax = body.time_max?.trim()
+    if (!Number.isFinite(Date.parse(timeMin)) || (timeMax && !Number.isFinite(Date.parse(timeMax)))) {
+      throw new Error('일정 조회 시간 형식이 올바르지 않습니다.')
+    }
+    const maxResults = Math.min(10, Math.max(1, Number(body.max_results ?? 3)))
+    const params = new URLSearchParams({
+      timeMin,
+      maxResults: String(maxResults),
+      singleEvents: 'true',
+      orderBy: 'startTime',
+    })
+    if (timeMax) params.set('timeMax', timeMax)
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
     if (!res.ok) throw new Error('Calendar API 호출 실패')
-    const data = await res.json()
+    const data = await res.json() as {
+      items?: Array<{
+        id?: string
+        summary?: string
+        start?: { dateTime?: string; date?: string }
+        end?: { dateTime?: string; date?: string }
+        htmlLink?: string
+      }>
+    }
 
-    const count = data.items ? data.items.length : 0
-    const resultText = count > 0 ? `오늘 예정된 일정이 ${count}개 있습니다.` : '오늘 예정된 일정이 없습니다.'
+    const items = (data.items ?? []).map((item) => ({
+      id: item.id ?? null,
+      summary: item.summary?.trim() || '(제목 없음)',
+      start: item.start?.dateTime ?? item.start?.date ?? null,
+      end: item.end?.dateTime ?? item.end?.date ?? null,
+      url: item.htmlLink ?? null,
+    }))
+    const count = items.length
+    const resultText = count > 0
+      ? [`다가오는 일정 ${count}건입니다.`, ...items.map((item, index) => `${index + 1}. ${item.summary} — ${item.start ?? '시간 미정'}`)].join('\n')
+      : '다가오는 일정이 없습니다.'
 
     // Log to DB
     const { error: logError } = await supabase
@@ -62,13 +91,13 @@ serve(async (req) => {
       .insert({
         user_id: user_id,
         assistant_name: '02_calendar_assistant',
-        task_description: '오늘 일정 확인 및 브리핑',
+        task_description: '다가오는 일정 확인 및 브리핑',
         result_text: resultText
       })
 
     if (logError) throw logError
 
-    return jsonResponse({ success: true, message: resultText })
+    return jsonResponse({ success: true, message: resultText, count, items, range: { timeMin, timeMax: timeMax ?? null } })
   } catch (error) {
     return jsonResponse({ success: false, error: error instanceof Error ? error.message : String(error) }, 200)
   }

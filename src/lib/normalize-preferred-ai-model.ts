@@ -3,7 +3,13 @@
  * 브라우저와 Supabase Edge(`_shared/normalize-preferred-ai-model.ts`) 내용을 동기화하세요.
  */
 
-export type ResolvedChatModelKind = 'openai' | 'anthropic' | 'google'
+export type ResolvedChatModelKind =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'deepseek'
+  | 'hermes'
+  | 'openrouter'
 
 export type ResolvedChatModel = {
   kind: ResolvedChatModelKind
@@ -55,8 +61,20 @@ export function normalizePreferredAiToResolvedModel(
     return { kind: 'google', modelId: 'gemini-2.5-flash' }
   }
 
+  // OpenRouter 네임스페이스 ID(예: meta-llama/llama-3.3-70b-instruct)는 그대로 통과
   if (raw.includes('/')) {
-    return normalizePreferredAiToResolvedModel(raw.split('/').pop() ?? raw)
+    return { kind: 'openrouter', modelId: trimmed }
+  }
+
+  if (raw.startsWith('deepseek')) {
+    return {
+      kind: 'deepseek',
+      modelId: raw.includes('reason') ? 'deepseek-reasoner' : 'deepseek-chat',
+    }
+  }
+
+  if (raw.startsWith('hermes')) {
+    return { kind: 'hermes', modelId: trimmed }
   }
 
   if (OPENAI_KNOWN.has(raw)) {

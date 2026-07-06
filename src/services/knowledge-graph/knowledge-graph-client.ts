@@ -23,27 +23,71 @@ export interface GraphData {
   edges: GraphEdge[]
 }
 
-// DB 비었거나 권한 문제 시 레이아웃 깨짐을 예방하기 위해 안전한 빈 객체 선언
-const EMPTY_GRAPH_DATA: GraphData = {
-  nodes: [],
-  edges: []
-}
+const EMPTY_GRAPH_DATA: GraphData = { nodes: [], edges: [] }
 
 /**
- * 지식 그래프의 노드와 엣지(백링크 관계)를 조회합니다.
- * 최적화를 위해 최근 생성된 노드 위주로 limit 개수만큼만 가져옵니다.
- * 데이터가 없거나 로딩 중 에러가 날 경우 실제 상황을 그대로 반영하여 빈 데이터를 리턴합니다.
+ * 키워드로 DB에서 직접 검색 → 매칭 노드 + 1-hop 이웃 + 연결 엣지 반환
+ * 클라이언트 필터링과 달리 전체 DB를 대상으로 검색함
  */
+export async function searchKnowledgeNodes(query: string): Promise<GraphData> {
+  if (!query.trim()) return EMPTY_GRAPH_DATA
+
+  const q = `%${query.trim()}%`
+
+  // title OR content OR department ilike 검색
+  const { data: matchedNodes, error: searchErr } = await supabase
+    .from('nh_knowledge_nodes')
+    .select('id, title, node_type, department, content, source_drive_id, created_at')
+    .or(`title.ilike.${q},content.ilike.${q},department.ilike.${q}`)
+    .limit(200)
+
+  if (searchErr || !matchedNodes?.length) return EMPTY_GRAPH_DATA
+
+  const matchedIds = matchedNodes.map(n => n.id)
+
+  // 매칭 노드와 연결된 엣지 (source 또는 target 방향 모두)
+  const { data: relatedEdges } = await supabase
+    .from('nh_knowledge_edges')
+    .select('id, source_node_id, target_node_id, edge_type, weight')
+    .or(`source_node_id.in.(${matchedIds.join(',')}),target_node_id.in.(${matchedIds.join(',')})`)
+    .limit(2000)
+
+  const edges = (relatedEdges ?? []) as GraphEdge[]
+
+  // 1-hop 이웃 노드 ID 수집
+  const neighborIds = new Set<string>()
+  for (const e of edges) {
+    if (!matchedIds.includes(e.source_node_id)) neighborIds.add(e.source_node_id)
+    if (!matchedIds.includes(e.target_node_id)) neighborIds.add(e.target_node_id)
+  }
+
+  // 이웃 노드 데이터 조회
+  let neighborNodes: GraphNode[] = []
+  if (neighborIds.size > 0) {
+    const neighborIdArr = Array.from(neighborIds).slice(0, 300)
+    const { data: nbData } = await supabase
+      .from('nh_knowledge_nodes')
+      .select('id, title, node_type, department, content, source_drive_id, created_at')
+      .in('id', neighborIdArr)
+    neighborNodes = (nbData ?? []) as GraphNode[]
+  }
+
+  const allNodeIds = new Set([...matchedIds, ...neighborNodes.map(n => n.id)])
+  const filteredEdges = edges.filter(
+    e => allNodeIds.has(e.source_node_id) && allNodeIds.has(e.target_node_id)
+  )
+
+  return {
+    nodes: [...(matchedNodes as GraphNode[]), ...neighborNodes],
+    edges: filteredEdges,
+  }
+}
+
 export async function fetchKnowledgeGraphData(limit: number = 200): Promise<GraphData> {
-  // [진단] 현재 인증 세션 확인.
-  // RLS 정책(authenticated)상 로그인 세션이 없으면 Supabase가 "에러 없이" 행을 0건으로
-  // 필터링하므로, 콘솔에 에러가 안 잡힌 채 빈 그래프만 보이는 증상의 1순위 원인.
   const { data: sessionData } = await supabase.auth.getSession()
   const uid = sessionData.session?.user?.id
   if (!uid) {
-    console.warn(
-      '[knowledge-graph] 인증 세션이 없습니다(anon). RLS 정책상 노드가 0건으로 조회될 수 있습니다. 로그인 상태를 확인하세요.',
-    )
+    console.warn('[knowledge-graph] 미인증 세션 — RLS 정책으로 빈 결과가 반환될 수 있습니다.')
   }
 
   const { data: nodesData, error: nodesError } = await supabase
@@ -52,52 +96,39 @@ export async function fetchKnowledgeGraphData(limit: number = 200): Promise<Grap
     .order('created_at', { ascending: false })
     .limit(limit)
 
-  // [변경] 과거에는 warn 후 빈 배열을 반환해 UI가 "데이터 없음"으로만 보였고 원인을 알 수 없었음.
-  // 이제 실제 에러를 콘솔에 남기고 throw 하여, 호출부(KnowledgeGraphPage)의 에러 UI에 원인이 표시되도록 함.
   if (nodesError) {
-    console.error('[knowledge-graph] nh_knowledge_nodes 조회 실패:', nodesError)
-    throw new Error(
-      `지식 그래프 노드 조회 실패: ${nodesError.message} (code: ${nodesError.code ?? 'N/A'}, hint: ${nodesError.hint ?? '없음'})`,
-    )
+    console.error('[knowledge-graph] 노드 조회 실패:', nodesError)
+    throw new Error(`노드 조회 실패: ${nodesError.message}`)
   }
 
-  const nodes = (nodesData || []) as GraphNode[]
+  const nodes = (nodesData ?? []) as GraphNode[]
   if (nodes.length === 0) {
-    // [진단] 에러는 아니지만 행이 0건. "RLS 차단(미인증/가시성)" vs "실제 빈 테이블"을 구분하기 위한 명시적 로그.
-    console.info(
-      `[knowledge-graph] 노드 0건 조회됨 (uid: ${uid ?? '미인증'}). ` +
-        '테이블이 비었거나(아직 적재 안 됨) RLS 정책으로 행이 필터링되었을 수 있습니다.',
-    )
+    console.info(`[knowledge-graph] 노드 0건 (uid: ${uid ?? '미인증'})`)
     return EMPTY_GRAPH_DATA
   }
 
-  console.info(`[knowledge-graph] 노드 ${nodes.length}건 로드 완료 (uid: ${uid ?? '미인증'}).`)
+  console.info(`[knowledge-graph] 노드 ${nodes.length}건 로드`)
 
-  const nodeIds = nodes.map((n) => n.id)
+  const nodeIdSet = new Set(nodes.map((n) => n.id))
 
-  // 추출된 노드들 사이의 엣지들만 가져옴
-  const { data: edgesData, error: edgesError } = await supabase
+  // 노드 수가 많으면 .in() URL이 너무 길어져 Supabase가 차단함
+  // → 전체 엣지를 limit 없이 가져온 뒤 클라이언트에서 필터링
+  const { data: allEdges, error: edgesError } = await supabase
     .from('nh_knowledge_edges')
-    .select('id, source_node_id, target_node_id, edge_type')
-    .in('source_node_id', nodeIds)
+    .select('id, source_node_id, target_node_id, edge_type, weight')
+    .limit(20000)
 
-  // 엣지 실패는 치명적이지 않음: 노드만이라도 그리도록 빈 엣지로 진행하되, 콘솔엔 명확히 남김.
   if (edgesError) {
-    console.warn('[knowledge-graph] nh_knowledge_edges 조회 실패 — 노드만 렌더링합니다:', edgesError)
+    console.warn('[knowledge-graph] 엣지 조회 실패 — 노드만 렌더링:', edgesError)
     return { nodes, edges: [] }
   }
 
-  // 양방향 렌더링 최적화를 위해 target_node_id 필터링도 추가할 수 있지만,
-  // 여기서는 로드된 노드들 간의 관계를 클라이언트에서 한 번 더 필터링.
-  const validEdges = (edgesData || []).filter((e) =>
-    nodeIds.includes(e.target_node_id)
-  )
+  // 양쪽 노드가 모두 로드된 엣지만 남김 (중복 없음)
+  const edges = (allEdges ?? []).filter(
+    e => nodeIdSet.has(e.source_node_id) && nodeIdSet.has(e.target_node_id)
+  ) as GraphEdge[]
 
-  console.info(`[knowledge-graph] 엣지 ${validEdges.length}건 로드 완료.`)
+  console.info(`[knowledge-graph] 엣지 ${edges.length}건 로드`)
 
-  return {
-    nodes,
-    edges: validEdges as GraphEdge[],
-  }
+  return { nodes, edges }
 }
-

@@ -128,46 +128,52 @@ export function AiLab() {
             AI 실험실
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            운영 채팅과 분리된 샌드박스 · Edge `ai-chat` 경로 · 플러그인 ON/OFF 반영 · Tool
-            Calling 디버그
+            운영 채팅과 분리된 샌드박스 · 플러그인 · Tool Calling 디버그
           </p>
         </div>
         <button
           type="button"
           onClick={() => void loadActivePlugins()}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
         >
-          플러그인 상태 새로고침
+          새로고침
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {activePlugins.length === 0 ? (
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            등록된 플러그인 없음
-          </span>
-        ) : (
-          activePlugins.map((p) => (
-            <span
-              key={p.tool_function_name}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-                p.is_active
-                  ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200'
-                  : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-              }`}
-            >
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  p.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                }`}
-              />
-              {p.name}{' '}
-              <code className="font-mono text-[15px] opacity-80">
-                {p.tool_function_name}
-              </code>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            플러그인 현황
+            <span className="ml-2 font-normal normal-case text-slate-400">
+              ({activePlugins.filter(p => p.is_active).length}개 활성 / 전체 {activePlugins.length}개)
             </span>
-          ))
-        )}
+          </p>
+        </div>
+        <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+          {activePlugins.length === 0 ? (
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              등록된 플러그인 없음
+            </span>
+          ) : (
+            activePlugins.map((p) => (
+              <span
+                key={p.tool_function_name}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                  p.is_active
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                    p.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                  }`}
+                />
+                {p.name}
+              </span>
+            ))
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-12">
@@ -247,11 +253,11 @@ export function AiLab() {
             {busy ? '스트리밍 중…' : '실험 실행'}
           </button>
 
-          <p className="text-[17px] leading-relaxed text-slate-500 dark:text-slate-400">
-            현재 Edge 에 노출 중인 활성 도구:{' '}
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            활성 도구:{' '}
             {enabledToolNames.length > 0
               ? enabledToolNames.join(', ')
-              : '(없음 — 플러그인 관리에서 ON 하세요)'}
+              : '없음'}
           </p>
         </div>
 
@@ -278,10 +284,7 @@ export function AiLab() {
               비우기
             </button>
           </div>
-          <p className="mt-1 text-[17px] text-slate-500 dark:text-slate-400">
-            `call` → 모델이 도구를 호출할 때 · `result` → execute 결과 · NDJSON 실시간 수신
-          </p>
-          <pre className="mt-3 max-h-[420px] overflow-auto rounded-xl border border-slate-200 bg-slate-950 p-3 font-mono text-[17px] leading-relaxed text-emerald-300 dark:border-slate-700">
+          <pre className="mt-3 max-h-[420px] overflow-auto rounded-xl border border-slate-200 bg-slate-950 p-3 font-mono text-xs leading-relaxed text-emerald-300 dark:border-slate-700">
             {toolTraces.length > 0
               ? debugJson
               : '{\n  "info": "도구 호출 이벤트가 여기에 JSON 으로 쌓입니다."\n}'}

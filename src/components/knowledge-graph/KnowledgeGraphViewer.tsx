@@ -1,425 +1,214 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import type { GraphNode, GraphData } from '../../services/knowledge-graph/knowledge-graph-client'
-
-interface SimulationNode extends GraphNode {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  radius: number
-  mass: number
-  color: string
-}
-
-interface SimulationEdge {
-  source: SimulationNode
-  target: SimulationNode
-  weight: number
-}
+import ForceGraph3D from 'react-force-graph-3d'
+import SpriteText from 'three-spritetext'
 
 interface KnowledgeGraphViewerProps {
   data: GraphData
-  onNodeClick?: (node: GraphNode) => void
+  onNodeClick?: (node: GraphNode | null) => void
   selectedNodeId?: string | null
+  matchingNodeIds?: Set<string> | null
 }
 
-const COLORS = {
-  document: '#ec4899', // 옵시디언 네온 핑크
-  raw_chunk: '#06b6d4', // 옵시디언 네온 사이언
-  wiki: '#a855f7', // 신비로운 퍼플
-  default: '#3b82f6', // 세련된 블루
+const NODE_TYPE_COLORS: Record<string, string> = {
+  faq:       '#f472b6',
+  concept:   '#34d399',
+  document:  '#60a5fa',
+  wiki:      '#a78bfa',
+  raw_chunk: '#22d3ee',
+}
+const FALLBACK = ['#f59e0b','#ef4444','#10b981','#3b82f6','#8b5cf6','#ec4899','#06b6d4']
+
+function hashStr(s: string) {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h)
+  return Math.abs(h)
+}
+function nodeColor(n: GraphNode) {
+  return NODE_TYPE_COLORS[n.node_type] ?? FALLBACK[hashStr(n.node_type) % FALLBACK.length]!
 }
 
 export const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({
-  data,
-  onNodeClick,
-  selectedNodeId,
+  data, onNodeClick, selectedNodeId, matchingNodeIds,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fgRef = useRef<any>()
+  const [hoverNodeId, setHoverNodeId] = useState<string | null>(null)
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  })
 
-  // Simulation state refs
-  const nodesRef = useRef<SimulationNode[]>([])
-  const edgesRef = useRef<SimulationEdge[]>([])
-  const animationRef = useRef<number | undefined>(undefined)
-  
-  // Interaction state
-  const isDragging = useRef(false)
-  const draggedNode = useRef<SimulationNode | null>(null)
-  const [hoveredNode, setHoveredNode] = useState<SimulationNode | null>(null)
-  
-  // Viewport transforms
-  const transform = useRef({ x: 0, y: 0, k: 1 })
-  const isPanning = useRef(false)
-  const panStart = useRef({ x: 0, y: 0 })
-
-  // Initialize nodes and edges
   useEffect(() => {
-    if (!containerRef.current) return
-    const width = containerRef.current.clientWidth
-    const height = containerRef.current.clientHeight
-
-    const nodeMap = new Map<string, SimulationNode>()
-
-    nodesRef.current = data.nodes.map((n) => {
-      // Find existing state to preserve positions across updates
-      const existing = nodesRef.current.find((en) => en.id === n.id)
-      
-      let baseRadius = 8
-      if (n.node_type === 'document') baseRadius = 12
-      else if (n.node_type === 'raw_chunk') baseRadius = 6
-
-      const simNode: SimulationNode = {
-        ...n,
-        x: existing?.x ?? width / 2 + (Math.random() - 0.5) * 100,
-        y: existing?.y ?? height / 2 + (Math.random() - 0.5) * 100,
-        vx: existing?.vx ?? 0,
-        vy: existing?.vy ?? 0,
-        radius: baseRadius,
-        mass: baseRadius * 0.5,
-        color: COLORS[n.node_type as keyof typeof COLORS] || COLORS.default,
-      }
-      nodeMap.set(n.id, simNode)
-      return simNode
-    })
-
-    edgesRef.current = data.edges
-      .map((e) => {
-        const source = nodeMap.get(e.source_node_id)
-        const target = nodeMap.get(e.target_node_id)
-        if (!source || !target) return null
-        return { source, target, weight: e.weight ?? 1 }
-      })
-      .filter(Boolean) as SimulationEdge[]
-
-  }, [data])
-
-  // Resize observer
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current && canvasRef.current) {
-        const { clientWidth, clientHeight } = containerRef.current
-        canvasRef.current.width = clientWidth * window.devicePixelRatio
-        canvasRef.current.height = clientHeight * window.devicePixelRatio
-        const ctx = canvasRef.current.getContext('2d')
-        if (ctx) ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-      }
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    const onResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight })
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  // Physics Simulation Loop
+  const graphData = useMemo(() => ({
+    nodes: data.nodes.map(n => ({
+      ...n,
+      color: nodeColor(n),
+      val: n.node_type === 'document' ? 3 : n.node_type === 'faq' ? 2 : 1,
+    })),
+    links: data.edges.map(e => ({
+      source: e.source_node_id,
+      target: e.target_node_id,
+      weight: e.weight ?? 1,
+    })),
+  }), [data])
+
   useEffect(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
+    const fg = fgRef.current
+    if (!fg) return
+    fg.d3Force('charge')?.strength(-80)
+    fg.d3Force('link')?.distance(50)
+  }, [graphData])
 
-    let isActive = true
+  // 자동 천천히 회전 — 마우스 조작 중엔 멈추고 2.5초 후 재개
+  useEffect(() => {
+    const fg = fgRef.current
+    if (!fg || !graphData.nodes.length) return
+    const controls = fg.controls()
+    if (!controls) return
 
-    const tick = () => {
-      if (!isActive) return
-      
-      const width = containerRef.current?.clientWidth || 800
-      const height = containerRef.current?.clientHeight || 600
-      
-      const nodes = nodesRef.current
-      const edges = edgesRef.current
+    controls.autoRotate = true
+    controls.autoRotateSpeed = 0.3
 
-      // Physics constants
-      const K = 0.04 // Spring constant (부드러운 스프링 효과)
-      const R = 1500  // Repulsion constant (더 강력하고 우아하게 밀어냄)
-      const DAMPING = 0.92 // Friction (옵시디언 특유의 스르륵 정주하는 쫀득한 관성)
-      const CENTER_GRAVITY = 0.008 // 과도하게 수축하지 않고 넓고 쾌적하게 퍼지도록 조정
-
-      // 1. Calculate Repulsion (Coulomb)
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const n1 = nodes[i]
-          const n2 = nodes[j]
-          const dx = n1.x - n2.x
-          const dy = n1.y - n2.y
-          const distSq = dx * dx + dy * dy
-          if (distSq === 0) continue
-          
-          const force = R / distSq
-          const fx = (dx / Math.sqrt(distSq)) * force
-          const fy = (dy / Math.sqrt(distSq)) * force
-          
-          n1.vx += fx / n1.mass
-          n1.vy += fy / n1.mass
-          n2.vx -= fx / n2.mass
-          n2.vy -= fy / n2.mass
-        }
-      }
-
-      // 2. Calculate Attraction (Hooke)
-      edges.forEach((edge) => {
-        const dx = edge.target.x - edge.source.x
-        const dy = edge.target.y - edge.source.y
-        const dist = Math.sqrt(dx * dx + dy * dy)
-        const optimalDist = 85
-        
-        const force = (dist - optimalDist) * K * edge.weight
-        const fx = (dx / dist) * force
-        const fy = (dy / dist) * force
-
-        edge.source.vx += fx / edge.source.mass
-        edge.source.vy += fy / edge.source.mass
-        edge.target.vx -= fx / edge.target.mass
-        edge.target.vy -= fy / edge.target.mass
-      })
-
-      // 3. Apply Center Gravity and Update Positions
-      nodes.forEach((n) => {
-        // Center gravity
-        n.vx += (width / 2 - n.x) * CENTER_GRAVITY
-        n.vy += (height / 2 - n.y) * CENTER_GRAVITY
-
-        if (n !== draggedNode.current) {
-          n.vx *= DAMPING
-          n.vy *= DAMPING
-          n.x += n.vx
-          n.y += n.vy
-        } else {
-          n.vx = 0
-          n.vy = 0
-        }
-      })
-
-      // 4. Render Phase
-      ctx.clearRect(0, 0, width, height)
-      
-      const t = transform.current
-
-      // 4a. Draw Dot Grid in background (Obsidian style - synchronized with zoom and pan!)
-      ctx.save()
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.08)' // 매우 희미한 차콜/블루 도트
-      
-      const gridSpacing = 40
-      const startX = Math.floor((-t.x) / t.k / gridSpacing) * gridSpacing - gridSpacing
-      const endX = startX + (width / t.k) + gridSpacing * 2
-      const startY = Math.floor((-t.y) / t.k / gridSpacing) * gridSpacing - gridSpacing
-      const endY = startY + (height / t.k) + gridSpacing * 2
-
-      ctx.translate(t.x, t.y)
-      ctx.scale(t.k, t.k)
-
-      for (let gx = startX; gx < endX; gx += gridSpacing) {
-        for (let gy = startY; gy < endY; gy += gridSpacing) {
-          ctx.beginPath()
-          ctx.arc(gx, gy, 1, 0, 2 * Math.PI)
-          ctx.fill()
-        }
-      }
-      ctx.restore()
-
-      // 4b. Draw Graph Elements
-      ctx.save()
-      ctx.translate(t.x, t.y)
-      ctx.scale(t.k, t.k)
-
-      // Draw Edges
-      edges.forEach((edge) => {
-        const isSelected = selectedNodeId === edge.source.id || selectedNodeId === edge.target.id
-        const isHovered = hoveredNode?.id === edge.source.id || hoveredNode?.id === edge.target.id
-        const isDimmed = (selectedNodeId || hoveredNode) && !isSelected && !isHovered
-
-        ctx.beginPath()
-        ctx.moveTo(edge.source.x, edge.source.y)
-        ctx.lineTo(edge.target.x, edge.target.y)
-        
-        // Edge styling
-        ctx.lineWidth = isHovered || isSelected ? 1.5 : 0.6
-        ctx.strokeStyle = isDimmed 
-          ? 'rgba(30, 41, 59, 0.04)' 
-          : isHovered || isSelected
-            ? 'rgba(236, 72, 153, 0.8)' // 네온 핑크 하이라이트
-            : `rgba(148, 163, 184, ${0.08 + edge.weight * 0.12})` // 평소에는 아주 얇고 투명한 거미줄
-        
-        ctx.stroke()
-      })
-
-      // Draw Nodes
-      nodes.forEach((n) => {
-        const isSelected = selectedNodeId === n.id
-        const isHovered = hoveredNode?.id === n.id
-        
-        // Check connectivity for dimming
-        const isConnectedToHover = hoveredNode && edges.some(e => 
-          (e.source.id === n.id && e.target.id === hoveredNode.id) ||
-          (e.target.id === n.id && e.source.id === hoveredNode.id)
-        )
-        const isConnectedToSelected = selectedNodeId && edges.some(e => 
-          (e.source.id === n.id && e.target.id === selectedNodeId) ||
-          (e.target.id === n.id && e.source.id === selectedNodeId)
-        )
-        
-        const isDimmed = (selectedNodeId || hoveredNode) && 
-                        !isSelected && !isHovered && 
-                        !isConnectedToHover && !isConnectedToSelected
-
-        const activeScale = (isSelected || isHovered) ? 1.35 : 1
-        
-        // Node shadow/glow
-        ctx.shadowBlur = isSelected ? 22 : isHovered ? 16 : 4
-        ctx.shadowColor = n.color
-
-        ctx.beginPath()
-        ctx.arc(n.x, n.y, n.radius * activeScale, 0, 2 * Math.PI)
-        ctx.fillStyle = isDimmed ? 'rgba(71, 85, 105, 0.25)' : n.color
-        ctx.fill()
-        
-        ctx.shadowBlur = 0 // reset
-
-        // Selected outline ring for Obsidian
-        if (isSelected) {
-          ctx.strokeStyle = '#ffffff'
-          ctx.lineWidth = 1.8
-          ctx.stroke()
-        }
-
-        // Draw node title if hovered, selected or document type (important node)
-        if (isSelected || isHovered || n.node_type === 'document') {
-          ctx.font = `${(isSelected || isHovered) ? 'bold 11px' : '9px'} Inter, sans-serif`
-          ctx.fillStyle = isDimmed 
-            ? 'rgba(100, 116, 139, 0.2)' 
-            : (isSelected || isHovered) ? '#ffffff' : 'rgba(241, 245, 249, 0.7)'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'top'
-          // Draw text shadow for better readability
-          ctx.shadowColor = 'rgba(0,0,0,0.9)'
-          ctx.shadowBlur = 4
-          ctx.fillText(n.title.length > 18 ? n.title.substring(0, 18) + '...' : n.title, n.x, n.y + n.radius * activeScale + 6)
-          ctx.shadowBlur = 0
-        }
-      })
-
-      ctx.restore()
-
-      animationRef.current = requestAnimationFrame(tick)
+    let resumeTimer: ReturnType<typeof setTimeout> | null = null
+    const onStart = () => {
+      controls.autoRotate = false
+      if (resumeTimer) clearTimeout(resumeTimer)
+    }
+    const onEnd = () => {
+      resumeTimer = setTimeout(() => {
+        const c = fgRef.current?.controls()
+        if (c) c.autoRotate = true
+      }, 2500)
     }
 
-    tick()
-
+    controls.addEventListener('start', onStart)
+    controls.addEventListener('end', onEnd)
     return () => {
-      isActive = false
-      if (animationRef.current) cancelAnimationFrame(animationRef.current)
+      controls.removeEventListener('start', onStart)
+      controls.removeEventListener('end', onEnd)
+      if (resumeTimer) clearTimeout(resumeTimer)
     }
-  }, [selectedNodeId, hoveredNode])
+  }, [graphData.nodes.length])
 
-  // Event Handlers for Canvas (Drag, Pan, Zoom)
-  const getPointerPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const rect = canvasRef.current!.getBoundingClientRect()
-    const t = transform.current
-    return {
-      x: (e.clientX - rect.left - t.x) / t.k,
-      y: (e.clientY - rect.top - t.y) / t.k,
-      rawX: e.clientX,
-      rawY: e.clientY
-    }
-  }
+  const renderLabel = useCallback((node: any) => {
+    const isSelected = selectedNodeId === node.id
+    const isHovered  = hoverNodeId === node.id
+    const searchActive = !!(matchingNodeIds?.size)
+    const isMatch = searchActive ? matchingNodeIds!.has(node.id) : false
+    const show = isSelected || isHovered || isMatch
+    if (!show || !node.title) return null as any
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const { x, y, rawX, rawY } = getPointerPos(e)
-    
-    // Find node under pointer
-    let clickedNode = null
-    for (const n of nodesRef.current) {
-      const dx = n.x - x
-      const dy = n.y - y
-      if (dx * dx + dy * dy < n.radius * n.radius * 2) { // Hit box multiplier
-        clickedNode = n
-        break
-      }
-    }
+    const sp = new SpriteText(
+      node.title.length > 30 ? node.title.slice(0, 30) + '…' : node.title
+    )
+    sp.color = '#ffffff'
+    sp.textHeight = isSelected ? 5 : 3.5
+    sp.strokeWidth = 0.8
+    sp.strokeColor = 'rgba(0,0,0,0.9)'
+    sp.backgroundColor = 'rgba(0,0,0,0.55)'
+    sp.padding = 2
+    sp.borderRadius = 3
+    return sp
+  }, [selectedNodeId, hoverNodeId, matchingNodeIds])
 
-    if (clickedNode) {
-      isDragging.current = true
-      draggedNode.current = clickedNode
-      if (onNodeClick) onNodeClick(clickedNode)
-      canvasRef.current?.setPointerCapture(e.pointerId)
+  const handleNodeClick = useCallback((node: any) => {
+    onNodeClick?.(node as GraphNode)
+    const fg = fgRef.current
+    if (!fg || node.x == null) return
+    const dist = 120
+    fg.cameraPosition(
+      { x: node.x + dist, y: node.y + dist / 2, z: node.z + dist },
+      { x: node.x, y: node.y, z: node.z },
+      1000,
+    )
+  }, [onNodeClick])
+
+  const handleZoom = useCallback((dir: 'in' | 'out' | 'reset') => {
+    const fg = fgRef.current
+    if (!fg) return
+    if (dir === 'reset') {
+      fg.cameraPosition({ x: 0, y: 0, z: 500 }, { x: 0, y: 0, z: 0 }, 800)
     } else {
-      isPanning.current = true
-      panStart.current = { x: rawX - transform.current.x, y: rawY - transform.current.y }
-      canvasRef.current?.setPointerCapture(e.pointerId)
+      const p = fg.cameraPosition()
+      const s = dir === 'in' ? 0.7 : 1.4
+      fg.cameraPosition({ x: p.x * s, y: p.y * s, z: p.z * s }, null, 400)
     }
-  }
+  }, [])
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const { x, y, rawX, rawY } = getPointerPos(e)
+  const getNodeSize = useCallback((node: any) => {
+    if (node.id === selectedNodeId) return 8
+    if (node.id === hoverNodeId)    return 6
+    if (matchingNodeIds?.has(node.id)) return 5
+    return 4
+  }, [selectedNodeId, hoverNodeId, matchingNodeIds])
 
-    if (isDragging.current && draggedNode.current) {
-      draggedNode.current.x = x
-      draggedNode.current.y = y
-      return
-    }
-
-    if (isPanning.current) {
-      transform.current.x = rawX - panStart.current.x
-      transform.current.y = rawY - panStart.current.y
-      return
-    }
-
-    // Hover effect
-    let hover = null
-    for (const n of nodesRef.current) {
-      const dx = n.x - x
-      const dy = n.y - y
-      if (dx * dx + dy * dy < n.radius * n.radius * 2) {
-        hover = n
-        break
-      }
-    }
-    
-    if (hover?.id !== hoveredNode?.id) {
-      setHoveredNode(hover)
-      if (containerRef.current) {
-        containerRef.current.style.cursor = hover ? 'pointer' : 'default'
-      }
-    }
-  }
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    isDragging.current = false
-    draggedNode.current = null
-    isPanning.current = false
-    canvasRef.current?.releasePointerCapture(e.pointerId)
-  }
-
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault()
-    const scaleAdjust = e.deltaY > 0 ? 0.9 : 1.1
-    const t = transform.current
-    
-    const rect = canvasRef.current!.getBoundingClientRect()
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
-
-    // Zoom towards mouse pointer
-    t.x = mouseX - (mouseX - t.x) * scaleAdjust
-    t.y = mouseY - (mouseY - t.y) * scaleAdjust
-    t.k = Math.max(0.1, Math.min(5, t.k * scaleAdjust))
+  if (data.nodes.length === 0) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <p className="text-slate-500 text-sm">그래프 데이터가 없습니다.</p>
+      </div>
+    )
   }
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#05070a] rounded-xl shadow-inner shadow-black/80 ring-1 ring-white/5">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,_rgba(15,23,42,0)_0%,_rgba(3,7,18,0.92)_100%)]" />
-      <canvas
-        ref={canvasRef}
-        className="block w-full h-full touch-none"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onWheel={handleWheel}
+    <div className="absolute inset-0">
+      <ForceGraph3D
+        ref={fgRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        graphData={graphData}
+        nodeColor={(node: any) => node.color}
+        nodeVal={getNodeSize}
+        nodeLabel={() => ''}
+        nodeThreeObjectExtend={true}
+        nodeThreeObject={renderLabel}
+        onNodeClick={handleNodeClick}
+        onBackgroundClick={() => onNodeClick?.(null)}
+        onNodeHover={(node: any) => setHoverNodeId(node?.id ?? null)}
+        onNodeDragEnd={(node: any) => { node.fx = node.x; node.fy = node.y; node.fz = node.z }}
+        backgroundColor="#050813"
+        showNavInfo={false}
+        linkColor={(link: any) => {
+          const active = selectedNodeId ?? hoverNodeId
+          const src = link.source?.id ?? link.source
+          const tgt = link.target?.id ?? link.target
+          if (active && (src === active || tgt === active)) return '#22d3ee'
+          if (matchingNodeIds?.size && (matchingNodeIds.has(src) || matchingNodeIds.has(tgt))) return '#a78bfa'
+          return 'rgba(100,120,200,0.25)'
+        }}
+        linkWidth={(link: any) => {
+          const active = selectedNodeId ?? hoverNodeId
+          const src = link.source?.id ?? link.source
+          const tgt = link.target?.id ?? link.target
+          return active && (src === active || tgt === active) ? 2 : 0.5
+        }}
+        linkOpacity={0.6}
+        nodeResolution={12}
       />
-      {data.nodes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-medium">
-          로딩 중이거나 그래프 데이터가 없습니다.
-        </div>
-      )}
+
+      {/* 줌 컨트롤 */}
+      <div className="absolute bottom-8 right-6 flex flex-col gap-2 z-10">
+        {([
+          { dir: 'in'    as const, title: '확대', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /> },
+          { dir: 'reset' as const, title: '초기화', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /> },
+          { dir: 'out'   as const, title: '축소', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /> },
+        ]).map(({ dir, title, icon }) => (
+          <button
+            key={dir}
+            onClick={() => handleZoom(dir)}
+            title={title}
+            className="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 text-slate-300 hover:text-white hover:border-cyan-400/50 transition-all shadow-lg"
+            style={{ background: 'rgba(6,10,24,0.8)', backdropFilter: 'blur(12px)' }}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">{icon}</svg>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

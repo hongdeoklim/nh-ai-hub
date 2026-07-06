@@ -45,6 +45,12 @@ type GoogleAgentBody = {
   payload?: Record<string, unknown>
 }
 
+async function calendarRequestId(userId: string, values: string[]): Promise<string> {
+  const bytes = new TextEncoder().encode([userId, ...values].join('|'))
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest)).slice(0, 16).map((value) => value.toString(16).padStart(2, '0')).join('')
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
@@ -123,6 +129,9 @@ Deno.serve(async (req) => {
           : ""
     const calendarId =
       typeof payload.calendarId === "string" ? payload.calendarId : undefined
+    const requestId = typeof payload.requestId === 'string' && payload.requestId.trim()
+      ? payload.requestId.trim()
+      : await calendarRequestId(userId, [calendarId ?? 'primary', summary, startTime, endTime])
 
     const result = await manageCalendarEvent(accessToken, {
       summary,
@@ -130,6 +139,7 @@ Deno.serve(async (req) => {
       startTime,
       endTime,
       calendarId,
+      requestId,
     })
 
     if (!result.ok) {

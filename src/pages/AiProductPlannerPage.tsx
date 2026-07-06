@@ -19,7 +19,9 @@ import {
 } from '../services/ai/planner-sessions'
 import { fetchActiveTextAiModels, filterActiveTextModels, buildModelSelectOptions } from '../services/ai/ai-models-client'
 import {
-  isPlannerReadyToGenerate,
+  canGeneratePlannerPlan,
+  hasPlannerReadySignal,
+  messagesForPlannerGeneration,
   stripPlannerReadyMarker,
   messageContentToString,
 } from '../services/ai/planner-readiness'
@@ -31,22 +33,101 @@ type PlannerMessage = ModelMessage & { truncated?: boolean }
 
 function plannerAssistantDisplay(content: ModelMessage['content']) {
   const raw = stripPlannerReadyMarker(messageContentToString(content))
-  return parseThinkingContent(raw)
+  const parsed = parseThinkingContent(raw)
+  if (!parsed.answer.trim() && raw.trim()) {
+    return { ...parsed, answer: raw }
+  }
+  return parsed
 }
 
-mermaid.initialize({ startOnLoad: false, theme: 'default' })
+mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' })
 
 function stripMermaidMarkdown(text: string) {
-  let cleaned = text.trim()
-  if (cleaned.startsWith('```mermaid')) {
-    cleaned = cleaned.replace(/^```mermaid\n/, '')
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```\n/, '')
+  let cleaned = text.replace(/^\uFEFF/, '').trim()
+  const fenced = cleaned.match(/```(?:mermaid)?\s*([\s\S]*?)```/i)
+  if (fenced?.[1]) cleaned = fenced[1]
+
+  cleaned = cleaned
+    .replace(/<\/?\s*MERMAID\b[^>]*>/gi, '')
+    .replace(/^```(?:mermaid)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim()
+
+  const lines = cleaned.split(/\r?\n/)
+  const declarationIndex = lines.findIndex((line) =>
+    /^(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|journey|gantt|pie|mindmap|timeline|quadrantChart|xychart-beta)\b/i.test(
+      line.trim(),
+    ),
+  )
+
+  return (declarationIndex >= 0 ? lines.slice(declarationIndex).join('\n') : cleaned).trim()
+}
+
+function quoteNodeLabel(open: string, label: string, close: string): string {
+  // Already quoted
+  if (label.startsWith('"') && label.endsWith('"')) return `${open}${label}${close}`
+  // Contains characters that break Mermaid parsing: comma, colon, parens
+  if (/[,:()/]/.test(label)) return `${open}"${label}"${close}`
+  return `${open}${label}${close}`
+}
+
+function sanitizeMermaidContent(text: string): string {
+  const lines = text.split(/\r?\n/)
+  const result: string[] = []
+  for (const line of lines) {
+    // Quote node labels that contain special characters (comma, colon, parens).
+    // Handles [], (), {} shapes — skips already-quoted labels.
+    let sanitized = line
+      .replace(/(\[)([^\]"]+?)(\])/g, (_, o, label, c) => quoteNodeLabel(o, label, c))
+      .replace(/(?<!\[)\(([^)"]+?)\)(?!-->)/g, (_, label) => quoteNodeLabel('(', label, ')'))
+      .replace(/(\{)([^}"]+?)(\})/g, (_, o, label, c) => quoteNodeLabel(o, label, c))
+
+    // Normalize edge labels: strip inner quotes, then re-wrap if label contains special chars.
+    const fixEdgeLabel = (prefix: string, label: string, suffix: string) => {
+      const stripped = label.replace(/"/g, '').trim()
+      if (!stripped) return `${prefix}${label}${suffix}`
+      return /[,:()/]/.test(stripped)
+        ? `${prefix}"${stripped}"${suffix}`
+        : `${prefix}${stripped}${suffix}`
+    }
+    sanitized = sanitized
+      .replace(/(--\s*)([^|>\n]*)(\s*-->)/g, (_, p, l, s) => fixEdgeLabel(p, l, s))
+      .replace(/(--\|)([^|>\n]*)(\|-->)/g, (_, p, l, s) => fixEdgeLabel(p, l, s))
+
+    result.push(sanitized)
   }
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.replace(/\n```$/, '')
+
+  // Drop trailing lines that have unclosed node brackets (truncated content)
+  while (result.length > 0) {
+    const last = result[result.length - 1].trim()
+    if (last && /[\[({]/.test(last) && !/[\])}]/.test(last.replace(/^[^[\](){}]*/, ''))) {
+      result.pop()
+    } else {
+      break
+    }
   }
-  return cleaned.trim()
+
+  return result.join('\n').trim()
+}
+
+const INVALID_WIREFRAME_HTML = `<!doctype html>
+<html lang="ko">
+  <body style="margin:0;padding:40px;font-family:sans-serif;text-align:center;color:#64748b;background:#fff;">
+    <p style="margin:0;">와이어프레임 형식이 올바르지 않습니다. 기획안을 다시 생성해 주세요.</p>
+  </body>
+</html>`
+
+function getWireframePreview(html?: string) {
+  const trimmed = html?.trim() ?? ''
+  if (!trimmed) return INVALID_WIREFRAME_HTML
+
+  const isHtml = /<(?:!doctype\s+html|html|body|main|section|div)\b/i.test(trimmed)
+  const isMermaidError = /syntax error in text|mermaid version/i.test(trimmed)
+  const isMermaidSource = /^\s*(?:flowchart|graph)\s+(?:TD|TB|BT|RL|LR)\b/i.test(trimmed)
+
+  return isHtml && !isMermaidError && !isMermaidSource
+    ? trimmed
+    : INVALID_WIREFRAME_HTML
 }
 
 function splitMarkdownTableRow(line: string): string[] {
@@ -119,6 +200,7 @@ export function AiProductPlannerPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
   const [result, setResult] = useState<PlannerFullResult | null>(null)
   const [activeTab, setActiveTab] = useState<'prd' | 'spec' | 'mermaid' | 'wireframe'>('prd')
 
@@ -211,7 +293,7 @@ export function AiProductPlannerPage() {
   useEffect(() => {
     let isMounted = true
     if (activeTab === 'mermaid' && result?.mermaidFlow && mermaidRef.current) {
-      const cleanMermaid = stripMermaidMarkdown(result.mermaidFlow)
+      const cleanMermaid = sanitizeMermaidContent(stripMermaidMarkdown(result.mermaidFlow))
 
       const renderGraph = async () => {
         try {
@@ -222,7 +304,19 @@ export function AiProductPlannerPage() {
         } catch (err) {
           console.error('Mermaid render error:', err)
           if (isMounted && mermaidRef.current) {
-            mermaidRef.current.innerHTML = '<div class="text-red-500 p-4 bg-red-50 rounded-lg">다이어그램 렌더링에 실패했습니다. AI가 생성한 문법에 오류가 있을 수 있습니다.</div>'
+            const errorBox = document.createElement('div')
+            errorBox.className = 'w-full rounded-lg bg-red-50 p-4 text-left text-red-700 dark:bg-red-950/30 dark:text-red-300'
+
+            const message = document.createElement('p')
+            message.className = 'font-medium'
+            message.textContent = '다이어그램 렌더링에 실패했습니다. 아래 Mermaid 원본을 확인해 주세요.'
+
+            const source = document.createElement('pre')
+            source.className = 'mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-md bg-white/80 p-3 text-xs text-slate-700 dark:bg-slate-950/70 dark:text-slate-300'
+            source.textContent = cleanMermaid
+
+            errorBox.append(message, source)
+            mermaidRef.current.replaceChildren(errorBox)
           }
         }
       }
@@ -232,7 +326,8 @@ export function AiProductPlannerPage() {
   }, [activeTab, result?.mermaidFlow])
 
   const versionRows = useMemo(() => buildModelSelectOptions(registryModels, selectedModel), [registryModels, selectedModel])
-  const readyToGenerate = useMemo(() => isPlannerReadyToGenerate(messages), [messages])
+  const canGenerate = useMemo(() => canGeneratePlannerPlan(messages), [messages])
+  const pmReadySignal = useMemo(() => hasPlannerReadySignal(messages), [messages])
 
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isChatting || sessionLoading) return
@@ -260,20 +355,24 @@ export function AiProductPlannerPage() {
   }
 
   const handleGeneratePlan = async () => {
-    if (messages.length === 0 || isGenerating || sessionLoading || !readyToGenerate) return
+    if (messages.length === 0 || isGenerating || sessionLoading || !canGenerate) return
     setIsGenerating(true)
+    setGenerateError(null)
     setActiveTab('prd')
 
     try {
-      const res = await generateProductPlan(messages, selectedModel)
+      const res = await generateProductPlan(
+        messagesForPlannerGeneration(messages),
+        selectedModel,
+      )
       setResult(res)
     } catch (err) {
       console.error(err)
-      alert(
+      const message =
         err instanceof Error
           ? err.message
-          : '기획서 생성 중 오류가 발생했습니다.',
-      )
+          : '기획서 생성 중 오류가 발생했습니다.'
+      setGenerateError(message)
     } finally {
       setIsGenerating(false)
     }
@@ -395,13 +494,43 @@ export function AiProductPlannerPage() {
       <div className="flex flex-1 overflow-hidden relative">
         <div className="flex-1 flex flex-col bg-transparent z-0 relative">
 
-          {(!result && !isGenerating) && (
+          {(!result && !isGenerating && !generateError) && (
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
                <div className="w-[800px] h-[800px] bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '4s' }} />
             </div>
           )}
 
-          {(!result && !isGenerating) ? (
+          {isGenerating ? (
+            <div className="flex h-full flex-col items-center justify-center space-y-6 z-10">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-indigo-500/20" />
+                <div className="h-16 w-16 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600 dark:border-indigo-900 dark:border-t-indigo-400" />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent animate-pulse">
+                  AI 에이전트들이 기획안을 작성 중입니다
+                </p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  PRD·기능명세·플로우·와이어프레임을 생성합니다. 1~2분 걸릴 수 있습니다.
+                </p>
+              </div>
+            </div>
+          ) : generateError && !result ? (
+            <div className="flex h-full items-center justify-center p-8 z-10">
+              <div className="max-w-lg rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm dark:border-red-900/60 dark:bg-slate-900">
+                <p className="text-base font-semibold text-red-700 dark:text-red-300">기획안 생성에 실패했습니다</p>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{generateError}</p>
+                <button
+                  type="button"
+                  onClick={() => void handleGeneratePlan()}
+                  disabled={!canGenerate || isChatting}
+                  className="mt-6 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  다시 생성하기
+                </button>
+              </div>
+            </div>
+          ) : !result ? (
             <div className="flex h-full items-center justify-center text-slate-400 dark:text-slate-500 p-8 z-10">
               <div className="text-center max-w-lg space-y-6">
                 <div className="inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 transform rotate-3 transition-transform hover:rotate-0">
@@ -456,49 +585,52 @@ export function AiProductPlannerPage() {
               </div>
 
               <div className="flex-1 overflow-auto p-8 relative z-0 bg-slate-50/50 dark:bg-black/20">
-                {isGenerating ? (
-                  <div className="flex h-full flex-col items-center justify-center space-y-6">
-                     <div className="relative flex items-center justify-center">
-                       <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-indigo-500/20" />
-                       <div className="h-16 w-16 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600 dark:border-indigo-900 dark:border-t-indigo-400" />
-                     </div>
-                     <div className="text-center">
-                       <p className="text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent animate-pulse">
-                         AI 에이전트들이 기획안을 작성 중입니다
-                       </p>
-                       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">잠시만 기다려주세요...</p>
-                     </div>
-                  </div>
-                ) : (
                   <div className="mx-auto max-w-5xl bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-800/50 min-h-full overflow-hidden">
                     {activeTab === 'prd' && (
                       <div className="prose prose-slate dark:prose-invert max-w-none p-10 prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-a:text-indigo-600">
+                        <div className="not-prose mb-6 flex items-start gap-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3 text-sm text-indigo-700 dark:text-indigo-300">
+                          <span className="mt-0.5 shrink-0 text-base">📝</span>
+                          <span><strong className="font-semibold">PRD (제품 요구사항 문서)</strong> — 기획 배경, 목표, 핵심 기능, 비기능 요구사항 등을 담은 문서입니다. AI Copilot과의 대화를 바탕으로 자동 작성됩니다.</span>
+                        </div>
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{result?.prdMarkdown || '내용이 없습니다.'}</ReactMarkdown>
                       </div>
                     )}
                     {activeTab === 'spec' && (
                       <div className="prose prose-slate dark:prose-invert max-w-none p-10 prose-headings:font-bold prose-table:w-full prose-th:bg-slate-100 dark:prose-th:bg-slate-800">
+                        <div className="not-prose mb-6 flex items-start gap-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
+                          <span className="mt-0.5 shrink-0 text-base">⚙️</span>
+                          <span><strong className="font-semibold">기능 명세서</strong> — 각 기능의 입력·출력·예외 처리 등을 표 형식으로 정리한 문서입니다. 우측 상단의 <strong className="font-semibold">명세서 엑셀</strong> 버튼으로 다운로드할 수 있습니다.</span>
+                        </div>
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{result?.specMarkdown || '내용이 없습니다.'}</ReactMarkdown>
                       </div>
                     )}
                     {activeTab === 'mermaid' && (
-                      <div className="flex justify-center p-10 min-h-[500px] overflow-x-auto items-center bg-slate-50/50 dark:bg-slate-950/50">
-                        <div ref={mermaidRef} className="mermaid flex justify-center w-full" />
+                      <div className="flex flex-col p-10 min-h-[500px] bg-slate-50/50 dark:bg-slate-950/50">
+                        <div className="mb-6 flex items-start gap-3 rounded-lg bg-sky-50 dark:bg-sky-950/30 px-4 py-3 text-sm text-sky-700 dark:text-sky-300">
+                          <span className="mt-0.5 shrink-0 text-base">🌊</span>
+                          <span><strong className="font-semibold">유저 플로우</strong> — 사용자가 서비스를 이용하는 흐름을 Mermaid 다이어그램으로 시각화합니다. 노드(도형)와 화살표로 주요 분기와 단계를 나타냅니다.</span>
+                        </div>
+                        <div ref={mermaidRef} className="flex justify-center w-full" />
                       </div>
                     )}
                     {activeTab === 'wireframe' && (
-                      <div className="h-[800px] w-full bg-slate-100 dark:bg-black">
-                        <iframe
-                          srcDoc={result?.wireframeHtml || '<div style="padding:40px;font-family:sans-serif;text-align:center;color:#888;">와이어프레임 코드가 생성되지 않았습니다.</div>'}
-                          sandbox=""
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full border-0 bg-white"
-                          title="Wireframe Preview"
-                        />
+                      <div className="flex flex-col">
+                        <div className="flex items-start gap-3 rounded-lg bg-violet-50 dark:bg-violet-950/30 px-4 py-3 text-sm text-violet-700 dark:text-violet-300 m-6 mb-0">
+                          <span className="mt-0.5 shrink-0 text-base">🎨</span>
+                          <span><strong className="font-semibold">와이어프레임</strong> — AI가 생성한 HTML 기반 화면 시안입니다. 실제 구현 전 레이아웃·구성요소 배치를 빠르게 확인하는 용도이며, 디자인 완성도보다 구조 파악에 초점을 맞춥니다.</span>
+                        </div>
+                        <div className="h-[800px] w-full bg-slate-100 dark:bg-black mt-6">
+                          <iframe
+                            srcDoc={getWireframePreview(result?.wireframeHtml)}
+                            sandbox="allow-scripts"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full border-0 bg-white"
+                            title="Wireframe Preview"
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
-                )}
               </div>
             </>
           )}
@@ -522,28 +654,36 @@ export function AiProductPlannerPage() {
               <div className="flex flex-col items-end gap-1.5">
                 <button
                   onClick={handleGeneratePlan}
-                  disabled={messages.length === 0 || isGenerating || isChatting || !readyToGenerate}
+                  disabled={!canGenerate || isGenerating || isChatting}
                   className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed group/btn ${
-                    readyToGenerate
+                    pmReadySignal
                       ? 'bg-emerald-600 text-white ring-2 ring-emerald-400/40 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600'
-                      : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                      : canGenerate
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
+                        : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                   }`}
                   title={
-                    readyToGenerate
+                    pmReadySignal
                       ? 'PM이 준비 완료를 확인했습니다. 지금 기획안을 생성할 수 있습니다.'
-                      : 'PM이 질문을 마치고 「기획안 생성」을 안내할 때까지 오른쪽 채팅을 이어주세요.'
+                      : canGenerate
+                        ? '지금까지의 대화를 바탕으로 기획안을 생성합니다. 생성 후에도 PM과 대화를 이어갈 수 있습니다.'
+                        : 'PM과 한 번 이상 대화한 뒤 기획안을 생성할 수 있습니다.'
                   }
                 >
                   <span className="text-sm group-hover/btn:scale-110 transition-transform">🚀</span>
                   기획안 생성
                 </button>
-                {readyToGenerate ? (
+                {pmReadySignal ? (
                   <p className="max-w-[11rem] text-right text-[10px] font-medium leading-snug text-emerald-600 dark:text-emerald-400">
-                    생성 가능 — PM 안내를 확인했습니다
+                    PM 준비 완료 — 생성을 권장합니다
+                  </p>
+                ) : canGenerate ? (
+                  <p className="max-w-[11rem] text-right text-[10px] leading-snug text-indigo-600 dark:text-indigo-400">
+                    대화 내용으로 생성 가능 · 이어서 수정·질문도 OK
                   </p>
                 ) : messages.length > 0 ? (
                   <p className="max-w-[11rem] text-right text-[10px] leading-snug text-slate-400 dark:text-slate-500">
-                    PM과 대화를 이어가면 버튼이 활성화됩니다
+                    PM 답변을 받으면 버튼이 활성화됩니다
                   </p>
                 ) : null}
               </div>

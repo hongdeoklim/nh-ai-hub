@@ -82,10 +82,7 @@ import {
   promptTemplateRowToOrgItem,
 } from '../services/prompts/prompt-templates'
 import type { PromptTemplateRow } from '../types/prompt-templates'
-import type {
-  AiModelRow,
-  AiProviderPreference,
-} from '../types/ai-models'
+import type { AiModelRow } from '../types/ai-models'
 import { extractGoogleDriveFileId } from '../lib/google-drive-url'
 import {
   clearAiSlidesBootstrap,
@@ -124,268 +121,13 @@ import {
 } from '../services/ai/google-sheets-preview'
 import { exportDriveFileForChat } from '../services/reference-room/export-drive-for-chat'
 import type { SavedPromptRow } from '../types/prompts'
-
-type AiManualProviderId = Exclude<AiProviderPreference, 'auto'>
-
-const MANUAL_PROVIDER_ORDER: AiManualProviderId[] = [
-  'google',
-  'openai',
-  'anthropic',
-  'deepseek',
-  'hermes',
-]
-
-type FallbackModelEntry = {
-  id: string
-  label: string
-  hint: string
-  costInfo: string
-  description: string
-}
-
-const AI_MODELS_BY_PROVIDER: Record<
-  AiManualProviderId,
-  readonly FallbackModelEntry[]
-> = {
-  deepseek: [
-    {
-      id: 'deepseek-chat',
-      label: 'DeepSeek Chat',
-      hint: '반복 처리, 요약 및 비용 효율적인 일반 업무',
-      costInfo: '낮음',
-      description: '반복 처리, 요약 및 비용 효율적인 일반 업무에 적합합니다.',
-    },
-    {
-      id: 'deepseek-reasoner',
-      label: 'DeepSeek Reasoner',
-      hint: '수학, 분석 및 단계적 추론',
-      costInfo: '보통',
-      description: '복잡한 계산과 단계적 추론 작업에 적합합니다.',
-    },
-  ],
-  hermes: [
-    {
-      id: 'hermes-default',
-      label: 'Hermes',
-      hint: '회사 내부 특화 업무 및 배치 처리',
-      costInfo: '낮음',
-      description: '관리자가 구성한 Hermes API의 기본 모델을 사용합니다.',
-    },
-  ],
-  anthropic: [
-    {
-      id: 'claude-opus-4-7',
-      label: 'Opus 4.7',
-      hint: '최상급 추론·에이전트·장문 분석(공식 최신 Opus)',
-      costInfo: '높음',
-      description: '최상급 추론·에이전트·장문 분석(공식 최신 Opus)',
-    },
-    {
-      id: 'claude-sonnet-4-6',
-      label: 'Sonnet 4.6',
-      hint: '속도·품질 균형 · 시방·계약·코드 보조에 적합',
-      costInfo: '보통',
-      description: '속도·품질 균형 · 시방·계약·코드 보조에 적합',
-    },
-    {
-      id: 'claude-haiku-4-5',
-      label: 'Haiku 4.5',
-      hint: '초저지연·요약·단답형',
-      costInfo: '저렴',
-      description: '초저지연·요약·단답형',
-    },
-    {
-      id: 'claude-opus-4-5',
-      label: 'Opus 4.5 (레거시)',
-      hint: '이전 스냅샷 호환 · 필요 시 유지보수용',
-      costInfo: '높음',
-      description: '이전 스냅샷 호환 · 필요 시 유지보수용',
-    },
-    {
-      id: 'claude-sonnet-4-5',
-      label: 'Sonnet 4.5 (레거시)',
-      hint: '이전 저장 프로필과 동일 문자열 호환',
-      costInfo: '보통',
-      description: '이전 저장 프로필과 동일 문자열 호환',
-    },
-  ],
-  openai: [
-    {
-      id: 'gpt-5.5',
-      label: 'GPT-5.5',
-      hint: '최신 프론티어 · 복잡 추론·코드(공식 플래그십 가이드)',
-      costInfo: '높음',
-      description: '최신 프론티어 · 복잡 추론·코드(공식 플래그십 가이드)',
-    },
-    {
-      id: 'gpt-5.4',
-      label: 'GPT-5.4',
-      hint: '전문 업무 균형 · 멀티모달 텍스트/이미지 입력',
-      costInfo: '보통',
-      description: '전문 업무 균형 · 멀티모달 텍스트/이미지 입력',
-    },
-    {
-      id: 'gpt-5.4-mini',
-      label: 'GPT-5.4 mini',
-      hint: '고성능 소형 · 대량·빠른 응답',
-      costInfo: '저렴',
-      description: '고성능 소형 · 대량·빠른 응답',
-    },
-    {
-      id: 'gpt-5.4-nano',
-      label: 'GPT-5.4 nano',
-      hint: '최저비용 근거·추출·분류 작업에 적합',
-      costInfo: '저렴',
-      description: '최저비용 근거·추출·분류 작업에 적합',
-    },
-    {
-      id: 'gpt-4o',
-      label: 'GPT-4o',
-      hint: '기존 워크로드·구 API 티어 호환',
-      costInfo: '보통',
-      description: '기존 워크로드·구 API 티어 호환',
-    },
-    {
-      id: 'gpt-4o-mini',
-      label: 'GPT-4o mini',
-      hint: '경량 레거시 대안 · 저지연 요약',
-      costInfo: '저렴',
-      description: '경량 레거시 대안 · 저지연 요약',
-    },
-    {
-      id: 'dall-e-3',
-      label: 'DALL-E 3 (이미지 생성)',
-      hint: '텍스트 프롬프트를 기반으로 고품질 이미지를 생성합니다.',
-      costInfo: '높음',
-      description: '텍스트 프롬프트를 기반으로 고품질 이미지를 생성합니다.',
-    },
-  ],
-  google: [
-      {
-        id: 'dify-ax',
-        label: 'Dify Chat (RAG)',
-        hint: '사내 RAG 시스템을 통해 문서를 기반으로 정확한 답변을 제공합니다.',
-        costInfo: '보통',
-        description: '사내 RAG 시스템을 통해 문서를 기반으로 정확한 답변을 제공합니다.',
-      },
-    {
-      id: 'gemini-3.1-pro-preview',
-      label: 'Gemini 3.1 Pro Preview',
-      hint: 'Gemini 3 최상급(프리뷰)·도구·멀티모달',
-      costInfo: '높음',
-      description: 'Gemini 3 최상급(프리뷰)·도구·멀티모달',
-    },
-    {
-      id: 'gemini-3-flash-preview',
-      label: 'Gemini 3 Flash Preview',
-      hint: '3세대 속도형(프리뷰)·비용 대비 성능',
-      costInfo: '보통',
-      description: '3세대 속도형(프리뷰)·비용 대비 성능',
-    },
-    {
-      id: 'gemini-3.1-flash-lite',
-      label: 'Gemini 3.1 Flash‑Lite',
-      hint: '3.x 안정·초경량·고빈도 호출용',
-      costInfo: '저렴',
-      description: '3.x 안정·초경량·고빈도 호출용',
-    },
-    {
-      id: 'gemini-2.5-pro',
-      label: 'Gemini 2.5 Pro',
-      hint: '2.5 최상급 추론(안정)',
-      costInfo: '보통',
-      description: '2.5 최상급 추론(안정)',
-    },
-    {
-      id: 'gemini-2.5-flash',
-      label: 'Gemini 2.5 Flash',
-      hint: '이미지·표 포함 일반 업무(안정)',
-      costInfo: '보통',
-      description: '이미지·표 포함 일반 업무(안정)',
-    },
-    {
-      id: 'gemini-2.5-flash-lite',
-      label: 'Gemini 2.5 Flash‑Lite',
-      hint: '최저지연 요약·간단 질의',
-      costInfo: '저렴',
-      description: '최저지연 요약·간단 질의',
-    },
-  ],
-}
-
-function providerForModelId(modelId: string): AiManualProviderId {
-  if (modelId.startsWith('claude-')) return 'anthropic'
-  if (modelId.startsWith('gemini-')) return 'google'
-  if (modelId.startsWith('deepseek-')) return 'deepseek'
-  if (modelId.startsWith('hermes-')) return 'hermes'
-  return 'openai'
-}
-
-function chatInputPlaceholderForModelId(modelId: string): string {
-  switch (providerForModelId(modelId)) {
-    case 'google':
-      return 'Gemini에게 업무 관련 질문을 입력하세요.'
-    case 'anthropic':
-      return 'Claude에게 업무 관련 질문을 입력하세요.'
-    case 'deepseek':
-      return 'DeepSeek에게 업무 관련 질문을 입력하세요.'
-    case 'hermes':
-      return 'Hermes에게 내부 업무 관련 질문을 입력하세요.'
-    default:
-      return '챗GPT에게 업무 관련 질문을 입력하세요.'
-  }
-}
-
-function buildAllModelRows(
-  selectedModel: string,
-  selectedProvider: AiProviderPreference = 'auto',
-) {
-  const rows: {
-    id: string
-    label: string
-    hint: string
-    costInfo: string
-    description: string
-  }[] = [
-    {
-      id: 'auto',
-      label: '자동 · Gemini 2.5 Flash 기본',
-      hint:
-        '기본은 Gemini 2.5 Flash입니다. 프롬프트·첨부·길이에 따라 다른 모델로 전환될 수 있습니다.',
-      costInfo: '저렴',
-      description:
-        '기본은 Gemini 2.5 Flash입니다. 프롬프트·첨부·길이에 따라 다른 모델로 전환될 수 있습니다.',
-    },
-  ]
-
-  for (const provider of MANUAL_PROVIDER_ORDER) {
-    if (selectedProvider !== 'auto' && provider !== selectedProvider) continue
-    for (const model of AI_MODELS_BY_PROVIDER[provider]) {
-      rows.push({
-        id: model.id,
-        label: model.label,
-        hint: model.hint,
-        costInfo: model.costInfo,
-        description: model.description,
-      })
-    }
-  }
-
-  if (
-    selectedModel !== 'auto' &&
-    !rows.some((row) => row.id === selectedModel)
-  ) {
-    rows.splice(1, 0, {
-      id: selectedModel,
-      label: selectedModel,
-      hint: '프로필에 저장된 모델입니다.',
-      costInfo: '보통',
-      description: '프로필에 저장된 모델입니다.',
-    })
-  }
-
-  return rows
-}
+import {
+  AI_MODELS_BY_PROVIDER,
+  buildAllModelRows,
+  chatInputPlaceholderForModelId,
+  manualProviderChoiceForModelId,
+  type DashboardProviderPreference,
+} from '../constants/dashboard-model-catalog'
 
 type ReferenceSnippet =
   | { key: string; kind: 'text'; title: string; sourceUrl: string; body: string }
@@ -496,7 +238,7 @@ export function Dashboard() {
   } = useAppUi()
   const [selectedModel, setSelectedModel] = useState<string>('auto')
   const [selectedProvider, setSelectedProvider] =
-    useState<AiProviderPreference>('auto')
+    useState<DashboardProviderPreference>('auto')
   const [registryModels, setRegistryModels] = useState<AiModelRow[]>([])
   const [registryModelsLoading, setRegistryModelsLoading] = useState(true)
   const [mediaImageModels, setMediaImageModels] = useState<AiModelRow[]>([])
@@ -574,6 +316,7 @@ export function Dashboard() {
   const sendQueueRef = useRef<PendingChatTurn[]>([])
   const drainRunnerRef = useRef(false)
   const chatAbortRef = useRef<AbortController | null>(null)
+  // 대기열 길이는 아직 UI 미표시 — setter만 유지(전송 큐 로직이 갱신)
   const [, setQueuedAheadCount] = useState(0)
   /** 스레드 전환 직전 상태 — useLayoutEffect에서 이전 스레드를 sessionStorage에 먼저 저장 */
   const threadStateSnapshotRef = useRef<{
@@ -698,11 +441,19 @@ export function Dashboard() {
     : []
 
   const versionRows = useMemo(() => {
-    const providerModels = selectedProvider === 'auto'
-      ? textRegistryModels
-      : textRegistryModels.filter((model) => model.provider === selectedProvider)
-    if (textRegistryModels.length > 0) {
-      return buildModelSelectOptions(providerModels, selectedModel)
+    if (selectedProvider === 'auto') {
+      return []
+    }
+
+    const providerModels = textRegistryModels.filter(
+      (model) => model.provider === selectedProvider,
+    )
+    // 레지스트리에 해당 공급자 모델이 없으면(Dify·OpenRouter·DeepSeek·Hermes 등)
+    // 내장 폴백 목록을 사용 — 공급자와 버전 목록이 항상 매칭되도록 보장
+    if (textRegistryModels.length > 0 && providerModels.length > 0) {
+      return buildModelSelectOptions(providerModels, selectedModel, {
+        includeAuto: false,
+      })
     }
     return buildAllModelRows(selectedModel, selectedProvider)
   }, [textRegistryModels, selectedModel, selectedProvider])
@@ -1479,6 +1230,12 @@ export function Dashboard() {
     )
   }, [])
 
+  /** 잘린 답변 이어쓰기: 모델에게 끊긴 지점부터 계속 쓰도록 지시하는 user 턴 */
+  const CONTINUE_INSTRUCTION =
+    '직전 답변이 출력 한도 때문에 중간에 끊겼습니다. 인사말·요약·이미 작성한 내용의 반복 없이, 끊긴 지점부터 곧바로 이어서 작성하세요.'
+  /** finishReason length/interrupted 시 같은 턴에서 자동으로 이어쓰는 최대 횟수 */
+  const MAX_AUTO_CONTINUES = 2
+
   async function executeChatTurn(
     item: PendingChatTurn,
     turnThreadId: string,
@@ -1706,9 +1463,10 @@ export function Dashboard() {
       const apiMessages = buildMessagesForApi(historySnapshot, apiPrompt, {
         excludeLastUser: item.regenerate === true,
       })
-      const outcome = await invokeAiChat({
+      const callAiChat = (messagesForApi: typeof apiMessages) =>
+        invokeAiChat({
         supabase,
-        messages: apiMessages,
+        messages: messagesForApi,
         activeModel: modelNow,
         providerPreference: selectedProviderRef.current,
         composerTool: composerToolMode === 'canvas' ? 'canvas' : null,
@@ -1757,6 +1515,23 @@ export function Dashboard() {
             ),
           )
         },
+        onRouteInfo: (info) => {
+          if (threadIdRef.current !== turnThreadId) return
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.id === assistantId
+                ? {
+                    ...message,
+                    routeInfo: {
+                      auto: info.auto,
+                      taskType: info.taskType,
+                      modelId: info.modelId,
+                    },
+                  }
+                : message,
+            ),
+          )
+        },
         onUniverOffice: ({ activeTab, aiDataSignal }) => {
           if (threadIdRef.current !== turnThreadId) return
           navigateRef.current('/ai-office', {
@@ -1769,10 +1544,65 @@ export function Dashboard() {
         },
       })
 
+      const genStartMs = Date.now()
+      const usageTotal = { inputTokens: 0, outputTokens: 0 }
+
+      let outcome = await callAiChat(apiMessages)
+      if (outcome.ok && outcome.usage) {
+        usageTotal.inputTokens += outcome.usage.inputTokens
+        usageTotal.outputTokens += outcome.usage.outputTokens
+      }
+
+      // 출력 한도(length)·비정상 스트림 종료(interrupted) 시 같은 말풍선에 자동 이어쓰기
+      let autoContinues = 0
+      while (
+        outcome.ok &&
+        (outcome.finishReason === 'length' ||
+          outcome.finishReason === 'interrupted') &&
+        autoContinues < MAX_AUTO_CONTINUES &&
+        !isTurnAborted() &&
+        threadIdRef.current === turnThreadId &&
+        streamRawText.trim().length > 0
+      ) {
+        autoContinues += 1
+        outcome = await callAiChat([
+          ...apiMessages,
+          { role: 'assistant', content: streamRawText },
+          { role: 'user', content: CONTINUE_INSTRUCTION },
+        ])
+        if (outcome.ok && outcome.usage) {
+          usageTotal.inputTokens += outcome.usage.inputTokens
+          usageTotal.outputTokens += outcome.usage.outputTokens
+        }
+      }
+
+      const endedTruncated =
+        outcome.ok &&
+        (outcome.finishReason === 'length' ||
+          outcome.finishReason === 'interrupted') &&
+        streamRawText.trim().length > 0
+
       if (threadIdRef.current !== turnThreadId) return
       if (isTurnAborted()) return
 
       finalizeAssistantStreaming()
+
+      {
+        const generationElapsedMs = Date.now() - genStartMs
+        const hasUsage = usageTotal.inputTokens + usageTotal.outputTokens > 0
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantId
+              ? {
+                  ...message,
+                  ...(endedTruncated ? { truncated: true } : {}),
+                  elapsedMs: generationElapsedMs,
+                  ...(hasUsage ? { usage: { ...usageTotal } } : {}),
+                }
+              : message,
+          ),
+        )
+      }
 
       if (!outcome.ok) {
         if (outcome.aborted) return
@@ -1903,6 +1733,132 @@ export function Dashboard() {
     })
     setQueuedAheadCount(sendQueueRef.current.length)
     void runDrain()
+  }
+
+  /** 잘린 답변을 같은 말풍선에 이어서 생성 (footer '이어서 생성' 버튼) */
+  async function handleContinueAssistant(assistantIndex: number) {
+    const assistant = messages[assistantIndex]
+    if (!assistant || assistant.role !== 'assistant') return
+    if (assistant.streaming || assistant.id.startsWith('welcome-assistant')) return
+    if (!assistant.content.trim()) return
+    if (isSending) return
+    const profileNow = profileRef.current
+    if (!profileNow?.id) return
+    if (!threadId || !isValidPrivateChatThreadId(threadId)) return
+
+    const turnThreadId = threadId
+    const assistantId = assistant.id
+    const rawModel =
+      selectedModelRef.current.trim() ||
+      profileNow.preferred_ai?.trim() ||
+      'auto'
+    const modelNow = rawModel.toLowerCase() === 'auto' ? 'auto' : rawModel
+
+    // 끊긴 말풍선까지의 대화 + 이어쓰기 지시
+    const historyThroughAssistant = messages.slice(0, assistantIndex + 1)
+    const apiMessages = [
+      ...buildMessagesForApi(historyThroughAssistant),
+      { role: 'user' as const, content: CONTINUE_INSTRUCTION },
+    ]
+
+    chatAbortRef.current?.abort()
+    const turnAbort = new AbortController()
+    chatAbortRef.current = turnAbort
+    const { signal } = turnAbort
+
+    let streamRawText = assistant.content
+    const contStartMs = Date.now()
+    setIsSending(true)
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === assistantId
+          ? { ...m, streaming: true, truncated: false }
+          : m,
+      ),
+    )
+
+    try {
+      const outcome = await invokeAiChat({
+        supabase,
+        messages: apiMessages,
+        activeModel: modelNow,
+        providerPreference: selectedProviderRef.current,
+        composerTool: null,
+        experimental_lab: activeWorkflowSystemPrompt
+          ? {
+              system_prompt: activeWorkflowSystemPrompt,
+              system_prompt_mode: 'replace',
+            }
+          : undefined,
+        tokenLimit: profileNow.token_limit ?? 0,
+        currentTokenUsage: profileNow.current_token_usage ?? 0,
+        signal,
+        onTextDelta: (delta) => {
+          if (threadIdRef.current !== turnThreadId) return
+          streamRawText += delta
+          const { thinkingContent, content } = splitThinkingStream(streamRawText)
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? {
+                    ...m,
+                    content,
+                    thinkingContent: thinkingContent ?? m.thinkingContent,
+                  }
+                : m,
+            ),
+          )
+        },
+      })
+
+      if (threadIdRef.current !== turnThreadId) return
+      if (signal.aborted) return
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? {
+                ...m,
+                streaming: false,
+                truncated:
+                  outcome.ok &&
+                  (outcome.finishReason === 'length' ||
+                    outcome.finishReason === 'interrupted'),
+                elapsedMs: (m.elapsedMs ?? 0) + (Date.now() - contStartMs),
+                ...(outcome.ok && outcome.usage
+                  ? {
+                      usage: {
+                        inputTokens:
+                          (m.usage?.inputTokens ?? 0) +
+                          outcome.usage.inputTokens,
+                        outputTokens:
+                          (m.usage?.outputTokens ?? 0) +
+                          outcome.usage.outputTokens,
+                      },
+                    }
+                  : {}),
+                ...(outcome.ok || outcome.aborted
+                  ? {}
+                  : {
+                      content: m.content.trim()
+                        ? `${m.content}\n\n[오류] ${outcome.message}`
+                        : outcome.message,
+                    }),
+              }
+            : m,
+        ),
+      )
+    } finally {
+      if (chatAbortRef.current === turnAbort) {
+        chatAbortRef.current = null
+      }
+      setIsSending(false)
+      try {
+        await refreshProfile()
+      } catch (err) {
+        console.error('[Dashboard] 이어쓰기 후 프로필 새로고침 실패', err)
+      }
+    }
   }
 
   async function handleMediaGenerate(
@@ -2040,9 +1996,25 @@ export function Dashboard() {
     }
   }
 
-  function handleProviderChange(nextProvider: AiProviderPreference) {
+  function handleProviderChange(nextProvider: DashboardProviderPreference) {
     setSelectedProvider(nextProvider)
-    if (selectedModel !== 'auto') void handleModelChange('auto')
+    if (nextProvider === 'auto') {
+      if (selectedModel !== 'auto') void handleModelChange('auto')
+      return
+    }
+
+    const registryMatch = textRegistryModels.find(
+      (model) => model.provider === nextProvider,
+    )
+    const fallbackMatch = AI_MODELS_BY_PROVIDER[nextProvider][0]
+    const fallbackModelId = registryMatch?.api_id ?? fallbackMatch?.id ?? 'auto'
+
+    if (
+      selectedModel === 'auto' ||
+      manualProviderChoiceForModelId(selectedModel) !== nextProvider
+    ) {
+      void handleModelChange(fallbackModelId)
+    }
   }
 
   return (
@@ -2173,7 +2145,7 @@ export function Dashboard() {
                   <ChatArea
                     ref={chatAreaRef}
                     messages={messages}
-                    variant="gemini"
+                    variant="claude"
                     messageType="session"
                     className="min-h-0 flex-1"
                     activeModelLabel={formatModelDisplayName(selectedModel)}
@@ -2184,6 +2156,7 @@ export function Dashboard() {
                     }
                     onBookmarkAssistant={handleBookmarkAssistant}
                     onRegenerateAssistant={handleRegenerateAssistant}
+                    onContinueAssistant={(index) => void handleContinueAssistant(index)}
                     regenerateDisabled={isSending}
                     onCommitMessageEdit={handleCommitMessageEdit}
                     topPanel={null}
@@ -2197,7 +2170,7 @@ export function Dashboard() {
               <ChatArea
                 ref={chatAreaRef}
                 messages={messages}
-                variant="gemini"
+                variant="claude"
                 messageType="session"
                 className="min-h-0 flex-1"
                 activeModelLabel={formatModelDisplayName(selectedModel)}
@@ -2208,6 +2181,7 @@ export function Dashboard() {
                 }
                 onBookmarkAssistant={handleBookmarkAssistant}
                 onRegenerateAssistant={handleRegenerateAssistant}
+                onContinueAssistant={(index) => void handleContinueAssistant(index)}
                 regenerateDisabled={isSending}
                 onCommitMessageEdit={handleCommitMessageEdit}
                 topPanel={
@@ -2276,7 +2250,7 @@ export function Dashboard() {
             allowSend={Boolean(profile)}
             generating={isSending}
             onStopGenerating={handleStopGeneration}
-            variant="gemini"
+            variant="claude"
             placeholder={chatInputPlaceholder}
             deepResearchEnabled={deepResearchEnabled}
             onDeepResearchChange={setDeepResearchEnabled}
@@ -2300,7 +2274,7 @@ export function Dashboard() {
             belowInputRow={
               registryModelsLoading ? (
                 <div
-                  className="inline-flex h-8 min-w-[8.5rem] max-w-[min(52vw,14rem)] animate-pulse items-center rounded-full bg-stone-200/90 px-3 dark:bg-stone-700/80"
+                  className="inline-flex h-[28px] min-w-[136px] max-w-[min(52vw,14rem)] animate-pulse items-center rounded-full bg-stone-200/90 px-3 dark:bg-stone-700/80"
                   aria-hidden="true"
                 />
               ) : (
@@ -2314,9 +2288,11 @@ export function Dashboard() {
                     value={selectedProvider}
                     disabled={!profile || modelSaving}
                     onChange={(event) =>
-                      handleProviderChange(event.target.value as AiProviderPreference)
+                      handleProviderChange(
+                        event.target.value as DashboardProviderPreference,
+                      )
                     }
-                    className="h-8 w-[7.75rem] max-w-[40vw] min-w-0 shrink rounded-full border-0 bg-stone-100/95 px-2.5 text-[12.5px] font-medium text-stone-700 outline-none ring-orange-600/20 transition hover:bg-stone-200/90 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90"
+                    className="h-[28px] w-[120px] max-w-[38vw] min-w-0 shrink rounded-full border-0 bg-stone-100/95 px-2 text-[12px]! font-medium text-stone-700 outline-none ring-orange-600/20 transition hover:bg-stone-200/90 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90"
                   >
                     <option value="auto">자동 추천</option>
                     <option value="openai">ChatGPT/OpenAI</option>
@@ -2324,15 +2300,19 @@ export function Dashboard() {
                     <option value="google">Gemini</option>
                     <option value="deepseek">DeepSeek</option>
                     <option value="hermes">Hermes</option>
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="dify">Dify (사내 RAG)</option>
                   </select>
-                  <ModelSelectRow
-                    selectedModel={selectedModel}
-                    modelVersionSelectId={modelVersionSelectId}
-                    versionRows={safeVersionRows}
-                    modelSaving={modelSaving}
-                    profileReady={Boolean(profile)}
-                    onModelChange={(id) => void handleModelChange(id)}
-                  />
+                  {selectedProvider !== 'auto' ? (
+                    <ModelSelectRow
+                      selectedModel={selectedModel}
+                      modelVersionSelectId={modelVersionSelectId}
+                      versionRows={safeVersionRows}
+                      modelSaving={modelSaving}
+                      profileReady={Boolean(profile)}
+                      onModelChange={(id) => void handleModelChange(id)}
+                    />
+                  ) : null}
                 </div>
               )
             }

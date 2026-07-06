@@ -22,6 +22,8 @@ type PluginRow = {
   connection_mode: 'per_user' | 'workspace_install' | 'admin_shared' | 'hybrid'
   setup_url: string | null
   docs_url: string | null
+  extension_type: 'plugin' | 'mcp' | 'skill' | 'public_data'
+  approval_status: 'draft' | 'pending' | 'approved' | 'rejected'
 }
 
 type ToggleSwitchProps = {
@@ -82,6 +84,7 @@ export function PluginManager() {
   const [formSetupUrl, setFormSetupUrl] = useState('')
   const [formDocsUrl, setFormDocsUrl] = useState('')
   const [formBusy, setFormBusy] = useState(false)
+  const [formExtensionType, setFormExtensionType] = useState<PluginRow['extension_type']>('plugin')
 
   const load = useCallback(async () => {
     setError(null)
@@ -89,7 +92,7 @@ export function PluginManager() {
     const { data, error: qErr } = await supabase
       .from('plugins')
       .select(
-        'id, name, description, endpoint_url, tool_function_name, is_active, created_at, updated_at, auth_type, auth_header_name, connection_mode, setup_url, docs_url',
+        'id, name, description, endpoint_url, tool_function_name, is_active, created_at, updated_at, auth_type, auth_header_name, connection_mode, setup_url, docs_url, extension_type, approval_status',
       )
       .order('updated_at', { ascending: false })
 
@@ -107,7 +110,7 @@ export function PluginManager() {
   }, [load])
 
   async function setPluginActive(row: PluginRow, next: boolean) {
-    const builtinNames = new Set(['get_weather', 'get_exchange_rate', 'search_web_news'])
+    const builtinNames = new Set(['get_weather', 'get_exchange_rate', 'search_web_news', 'search_public_data'])
     if (next && !(row.endpoint_url ?? '').trim() && !builtinNames.has(row.tool_function_name)) {
       window.alert('외부 플러그인을 활성화하려면 HTTPS 호출 URL이 필요합니다.')
       return
@@ -145,8 +148,18 @@ export function PluginManager() {
     setFormBusy(true)
     try {
       const { error: insErr } = await supabase.from('plugins').insert({
+        plugin_id: `${formExtensionType}.${crypto.randomUUID()}`,
         name,
         description: formDesc.trim(),
+        provider: formExtensionType === 'mcp' ? 'mcp' : 'internal',
+        category: formExtensionType,
+        extension_type: formExtensionType,
+        required_scopes: [],
+        config_schema: {},
+        manifest: {},
+        enabled: false,
+        approval_status: 'approved',
+        version: '1.0.0',
         tool_function_name,
         endpoint_url,
         auth_type: formAuthType,
@@ -169,6 +182,7 @@ export function PluginManager() {
       setFormConnectionMode('admin_shared')
       setFormSetupUrl('')
       setFormDocsUrl('')
+      setFormExtensionType('plugin')
       await load()
     } finally {
       setFormBusy(false)
@@ -205,6 +219,12 @@ export function PluginManager() {
             등록 직후에는 비활성 상태입니다. 호출 URL 을 연결한 뒤 목록에서 ON 할 수 있습니다.
           </p>
           <div className="mt-5 space-y-4">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+              확장 유형
+              <select value={formExtensionType} onChange={(e) => setFormExtensionType(e.target.value as PluginRow['extension_type'])} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950">
+                <option value="plugin">Plugin</option><option value="mcp">MCP Server</option><option value="skill">Skill</option><option value="public_data">Public Data</option>
+              </select>
+            </label>
             <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               표시 이름
               <input

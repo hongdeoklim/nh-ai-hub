@@ -1,10 +1,12 @@
 import type { AiModelProvider, AiModelRow, AiModelType } from '../../types/ai-models'
 
-/** 관리자 테이블: Gemini → GPT → Anthropic */
+/** 관리자 테이블: Gemini → GPT → Anthropic → DeepSeek → Hermes */
 export const ADMIN_MODEL_PROVIDER_ORDER: AiModelProvider[] = [
   'google',
   'openai',
   'anthropic',
+  'deepseek',
+  'hermes',
 ]
 
 function providerRank(provider: AiModelProvider): number {
@@ -149,7 +151,15 @@ export function adminSortOrderForCatalogEntry(
   apiId: string,
 ): number {
   const providerBase =
-    provider === 'google' ? 1000 : provider === 'openai' ? 2000 : 3000
+    provider === 'google'
+      ? 1000
+      : provider === 'openai'
+        ? 2000
+        : provider === 'anthropic'
+          ? 3000
+          : provider === 'deepseek'
+            ? 4000
+            : 5000
   const typeBase =
     modelType === 'text' ? 0 : modelType === 'image' ? 100 : 200
   const versionPart = Math.min(

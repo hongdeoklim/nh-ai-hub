@@ -42,10 +42,71 @@ function persistExtendedColumnStatus(status: 'available' | 'missing'): void {
 /** 현재 세션의 extended 컬럼 상태 — 대입만 하고 아직 소비처 없음(디버깅용 노출) */
 export let extendedColumnStatus: ExtendedColumnStatus = readExtendedColumnStatus()
 
-function asProvider(value: unknown): AiModelProvider {
-  const raw = typeof value === 'string' ? value.trim().toLowerCase() : ''
-  if (raw === 'anthropic' || raw === 'openai' || raw === 'google') return raw
-  return 'google'
+function inferProviderFromApiId(apiId: string): AiModelProvider | null {
+  const id = apiId.trim().toLowerCase()
+  if (id.startsWith('deepseek') || id.includes('deepseek')) return 'deepseek'
+  if (
+    id.startsWith('hermes') ||
+    /(?:^|[/_.-])hermes(?:[/_.-]|$|\d)/.test(id) ||
+    id.includes('nous-hermes') ||
+    id.includes('nous_hermes')
+  ) {
+    return 'hermes'
+  }
+  if (id.startsWith('claude-')) return 'anthropic'
+  if (
+    id.startsWith('gemini-') ||
+    id.startsWith('imagen') ||
+    id.startsWith('veo')
+  ) {
+    return 'google'
+  }
+  if (id.startsWith('gpt-') || id.startsWith('dall-e') || id.startsWith('dify-')) {
+    return 'openai'
+  }
+  return null
+}
+
+function inferProviderFromLabel(
+  displayName: string,
+  hint: string | null,
+): AiModelProvider | null {
+  const label = `${displayName} ${hint ?? ''}`.toLowerCase()
+  if (/\bdeepseek\b/.test(label)) return 'deepseek'
+  if (/\bhermes\b/.test(label) || /nous[\s_-]?hermes/.test(label)) return 'hermes'
+  if (/\bclaude\b/.test(label)) return 'anthropic'
+  if (/\bgemini\b/.test(label)) return 'google'
+  if (/\bgpt-?\d|chatgpt\b|\bopenai\b/.test(label)) return 'openai'
+  return null
+}
+
+/** api_id·표시명·hint로 공급자 결정 — DB provider 오분류 보정 */
+export function resolveAiModelProvider(
+  rawProvider: unknown,
+  apiId: string,
+  displayName = '',
+  hint: string | null = null,
+): AiModelProvider {
+  const fromMetadata =
+    inferProviderFromApiId(apiId) ?? inferProviderFromLabel(displayName, hint)
+
+  if (fromMetadata === 'hermes' || fromMetadata === 'deepseek') {
+    return fromMetadata
+  }
+
+  const raw = typeof rawProvider === 'string' ? rawProvider.trim().toLowerCase() : ''
+  if (
+    raw === 'anthropic' ||
+    raw === 'openai' ||
+    raw === 'google' ||
+    raw === 'deepseek' ||
+    raw === 'hermes'
+  ) {
+    return raw
+  }
+
+  if (fromMetadata) return fromMetadata
+  return 'openai'
 }
 
 function asModelType(value: unknown): AiModelRow['model_type'] {
@@ -111,7 +172,7 @@ export function normalizeAiModelRow(row: Record<string, unknown>): AiModelRow | 
 
   return {
     id,
-    provider: asProvider(row.provider),
+    provider: resolveAiModelProvider(row.provider, apiIdRaw, displayNameRaw, hint),
     display_name: displayNameRaw,
     api_id: apiIdRaw,
     model_type: asModelType(row.model_type),
@@ -423,24 +484,33 @@ export async function fetchAllAiModelsAdmin(): Promise<AiModelRow[]> {
   }
 }
 
+export type BuildModelSelectOptionsConfig = {
+  /** @default true */
+  includeAuto?: boolean
+}
+
 export function buildModelSelectOptions(
   models: readonly AiModelRow[] | null | undefined,
   selectedModel: string,
+  config?: BuildModelSelectOptionsConfig,
 ): ModelSelectOption[] {
+  const includeAuto = config?.includeAuto !== false
   const safeModels = sortAiModelRowsForAdmin(
     Array.isArray(models) ? models.filter((m) => m?.model_type === 'text') : [],
   )
-  const rows: ModelSelectOption[] = [
-    {
-      id: 'auto',
-      label: '자동 · Gemini 2.5 Flash 기본',
-      hint:
-        '기본은 Gemini 2.5 Flash입니다. 프롬프트·첨부·길이에 따라 다른 모델로 전환될 수 있습니다.',
-      costInfo: '저렴',
-      description:
-        '기본은 Gemini 2.5 Flash입니다. 프롬프트·첨부·길이에 따라 다른 모델로 전환될 수 있습니다.',
-    },
-  ]
+  const rows: ModelSelectOption[] = includeAuto
+    ? [
+        {
+          id: 'auto',
+          label: '자동 · Gemini 2.5 Flash 기본',
+          hint:
+            '기본은 Gemini 2.5 Flash입니다. 프롬프트·첨부·길이에 따라 다른 모델로 전환될 수 있습니다.',
+          costInfo: '저렴',
+          description:
+            '기본은 Gemini 2.5 Flash입니다. 프롬프트·첨부·길이에 따라 다른 모델로 전환될 수 있습니다.',
+        },
+      ]
+    : []
 
   const grouped = new Map<string, AiModelRow[]>()
   for (const model of safeModels) {
