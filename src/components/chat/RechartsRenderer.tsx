@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell
@@ -67,7 +66,7 @@ export function RechartsRenderer({ dataString }: RechartsRendererProps) {
               fill="#8884d8"
               label
             >
-              {data.map((entry: any, index: number) => (
+              {data.map((_entry: any, index: number) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

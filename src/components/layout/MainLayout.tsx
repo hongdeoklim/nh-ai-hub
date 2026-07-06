@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../auth/useAuth'
-import { AccountHeaderActions, IconSettings, IconLogout } from './AccountHeaderActions'
+import { IconSettings, IconLogout } from './AccountHeaderActions'
 import { SettingsDialog, type SettingsTab } from '../settings/SettingsDialog'
 import { TokenRequestModal } from '../settings/TokenRequestModal'
 import { PrivateChatThreadRow } from './PrivateChatThreadRow'
@@ -375,8 +375,6 @@ function IconGeminiNewChat(props: { className?: string }) {
   )
 }
 
-const SIDEBAR_WIDTH_MOBILE = 'min(308px, 100vw)'
-
 const sidebarIconDockClass =
   'flex h-9 w-full items-center justify-center text-stone-700 transition hover:bg-stone-100/90 dark:text-stone-200 dark:hover:bg-stone-800/80'
 
@@ -385,9 +383,6 @@ const sidebarIconDockLabelClass =
 
 const sidebarIconDockAdminClass =
   `${sidebarIconDockClass} font-bold text-amber-950 hover:bg-amber-50/90 dark:text-amber-100 dark:hover:bg-amber-950/40`
-
-const sidebarIconDockEmptyClass =
-  'block h-9 w-full bg-stone-50/40 dark:bg-stone-950/20'
 
 const sidebarNewChatClass =
   'flex h-[1.8rem] min-h-[1.8rem] w-full shrink-0 items-center rounded-full text-left transition-colors hover:bg-stone-200/60 active:bg-stone-200/80 dark:hover:bg-stone-800/45 dark:active:bg-stone-800/60'

@@ -1,4 +1,4 @@
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { supabase } from '../../lib/supabase'
@@ -11,7 +11,7 @@ export interface PlannerSessionRow {
   user_id: string
   title: string
   preferred_model: string
-  messages: CoreMessage[]
+  messages: ModelMessage[]
   plan_result: PlannerFullResult | null
   created_at: string
   updated_at: string
@@ -31,7 +31,7 @@ function notifyPlannerSessionsUpdated() {
   }
 }
 
-function normalizeMessages(raw: unknown): CoreMessage[] {
+function normalizeMessages(raw: unknown): ModelMessage[] {
   if (!Array.isArray(raw)) return []
   return raw
     .map((item) => {
@@ -40,9 +40,9 @@ function normalizeMessages(raw: unknown): CoreMessage[] {
       const content = (item as { content?: unknown }).content
       if (role !== 'user' && role !== 'assistant' && role !== 'system') return null
       if (typeof content !== 'string' || !content.trim()) return null
-      return { role, content: content.trim() } as CoreMessage
+      return { role, content: content.trim() } as ModelMessage
     })
-    .filter(Boolean) as CoreMessage[]
+    .filter(Boolean) as ModelMessage[]
 }
 
 function normalizePlanResult(raw: unknown): PlannerFullResult | null {
@@ -64,7 +64,7 @@ function normalizePlanResult(raw: unknown): PlannerFullResult | null {
   }
 }
 
-export function derivePlannerSessionTitle(messages: CoreMessage[]): string {
+export function derivePlannerSessionTitle(messages: ModelMessage[]): string {
   const firstUser = messages.find((m) => m.role === 'user')
   if (!firstUser || typeof firstUser.content !== 'string') return '새 기획'
   const trimmed = firstUser.content.trim().replace(/\s+/g, ' ')
@@ -165,7 +165,7 @@ export async function savePlannerSession(
   client: SupabaseClient,
   sessionId: string,
   payload: {
-    messages: CoreMessage[]
+    messages: ModelMessage[]
     preferredModel?: string
     planResult?: PlannerFullResult | null
     title?: string
@@ -181,7 +181,7 @@ export async function savePlannerSession(
   const title =
     payload.title?.trim() ||
     (messages.some((m) => m.role === 'user')
-      ? derivePlannerSessionTitle(messages as CoreMessage[])
+      ? derivePlannerSessionTitle(messages as ModelMessage[])
       : '새 기획')
 
   const update: Record<string, unknown> = {

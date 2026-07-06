@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import mermaid from 'mermaid'
 import * as XLSX from 'xlsx'
-import { type CoreMessage } from 'ai'
+import { type ModelMessage } from 'ai'
 
 import { useAuth } from '../components/auth/useAuth'
 import { AccountHeaderActions } from '../components/layout/AccountHeaderActions'
@@ -27,9 +27,9 @@ import { ModelSelectRow } from '../components/chat/ChatStartHub'
 import { ThinkingProcessPanel } from '../components/chat/ThinkingProcessPanel'
 import { parseThinkingContent } from '../utils/thinking-content'
 
-type PlannerMessage = CoreMessage & { truncated?: boolean }
+type PlannerMessage = ModelMessage & { truncated?: boolean }
 
-function plannerAssistantDisplay(content: CoreMessage['content']) {
+function plannerAssistantDisplay(content: ModelMessage['content']) {
   const raw = stripPlannerReadyMarker(messageContentToString(content))
   return parseThinkingContent(raw)
 }

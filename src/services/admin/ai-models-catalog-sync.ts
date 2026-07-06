@@ -196,12 +196,11 @@ function enrichVerifiedCatalogMetadata(
   const seedByApiId = new Map(seed.map((entry) => [entry.api_id, { ...entry }]))
 
   for (const raw of aiRows) {
-    const apiIdRaw =
-      raw &&
-      typeof raw === 'object' &&
-      typeof (raw as Record<string, unknown>).api_id === 'string'
-        ? (raw as Record<string, unknown>).api_id.trim()
-        : ''
+    const apiIdField =
+      raw && typeof raw === 'object'
+        ? (raw as Record<string, unknown>).api_id
+        : undefined
+    const apiIdRaw = typeof apiIdField === 'string' ? apiIdField.trim() : ''
     if (!apiIdRaw || !seedByApiId.has(apiIdRaw)) continue
 
     const fallback = seedByApiId.get(apiIdRaw)

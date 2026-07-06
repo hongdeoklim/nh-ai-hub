@@ -266,7 +266,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       onInternetSearchChange,
       composerTool = null,
       onComposerToolChange,
-      activeModel,
+      onActiveModelChange,
       onMediaGenerate,
       mediaImageEngines = [],
       mediaVideoEngines = [],
@@ -1142,7 +1142,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             className="sr-only"
             tabIndex={-1}
             aria-hidden="true"
-            onChange={(e) => {
+            onChange={() => {
               window.alert('일반 파일 업로드 기능은 서버 연동 준비 중입니다.')
               if (documentInputRef.current) documentInputRef.current.value = ''
             }}

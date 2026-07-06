@@ -9,7 +9,7 @@ import {
 } from 'react'
 
 type NewChatHandler = () => void
-type OpenSettingsHandler = () => void
+type OpenSettingsHandler = (tab?: string) => void
 
 export type PromptPanelRegistration = {
   expanded: boolean

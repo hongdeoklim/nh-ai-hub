@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import type { AiProviderPreference } from '../../types/ai-models'
 import type { ChatExperimentalAttachment } from '../../types/chat'
 import type { ComposerToolMode } from '../../types/composer-tools'
 import type { ChatCitationSource } from '../../types/chat-citations'
@@ -92,6 +93,8 @@ export type InvokeAiChatParams = {
   messages: ChatApiHistoryMessage[]
   /** Edge 요청 본문 `activeModel` */
   activeModel: string
+  /** 대화 화면 공급자 선택 — 아직 Edge 로 전달하지 않음 */
+  providerPreference?: AiProviderPreference
   /** @deprecated `messages` 사용. direct 모드 전용 단일 턴 */
   prompt?: string
   /** @deprecated `activeModel` 사용 */

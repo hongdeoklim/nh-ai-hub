@@ -61,7 +61,7 @@ export function AiDesignerPage() {
     [registryModels, selectedModel],
   )
 
-  const userGreetingName = profile?.name?.trim() || profile?.email?.split('@')[0] || '사용자'
+  const userGreetingName = profile?.display_name?.trim() || profile?.email?.split('@')[0] || '사용자'
 
   const launchDesigner = useCallback(
     (rawTopic: string, categoryId: AiDesignerCategoryId, autoSend: boolean) => {

@@ -152,7 +152,6 @@ export async function uploadKnowledgeBaseDocument(
   { ok: true; row: KnowledgeBaseRow } | { ok: false; message: string }
 > {
   const category = (params.category ?? '미분류').trim() || '미분류'
-  const safeName = params.file.name.trim() || 'document.bin'
 
   const {
     data: { session },

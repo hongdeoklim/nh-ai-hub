@@ -39,7 +39,8 @@ function persistExtendedColumnStatus(status: 'available' | 'missing'): void {
   }
 }
 
-let extendedColumnStatus: ExtendedColumnStatus = readExtendedColumnStatus()
+/** 현재 세션의 extended 컬럼 상태 — 대입만 하고 아직 소비처 없음(디버깅용 노출) */
+export let extendedColumnStatus: ExtendedColumnStatus = readExtendedColumnStatus()
 
 function asProvider(value: unknown): AiModelProvider {
   const raw = typeof value === 'string' ? value.trim().toLowerCase() : ''

@@ -4,7 +4,7 @@ import { IntegrationsPanel } from './IntegrationsPanel'
 import { MyPagePanel } from './MyPagePanel'
 import { UserAiProfilePanel } from './UserAiProfilePanel'
 
-type SettingsTab =
+export type SettingsTab =
   | 'mypage'
   | 'history'
   | 'memory'
@@ -27,6 +27,8 @@ type SettingsDialogProps = {
   open: boolean
   onClose: () => void
   userId?: string
+  /** 열릴 때 표시할 탭 (아직 미적용 — 시그니처 호환용) */
+  initialTab?: SettingsTab
 }
 
 export function SettingsDialog({

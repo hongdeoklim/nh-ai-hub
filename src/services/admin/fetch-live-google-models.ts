@@ -6,7 +6,7 @@ export async function fetchLiveGoogleModelIds(
   accessToken: string,
 ): Promise<Set<string> | null> {
   try {
-    const { url } = readSupabaseEnv()
+    readSupabaseEnv()
     const res = await fetchEdgeFunction('list-gemini-models', {
       method: 'POST',
       accessToken,

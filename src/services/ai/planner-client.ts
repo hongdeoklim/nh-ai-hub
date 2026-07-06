@@ -1,4 +1,4 @@
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 
 import { supabase } from '../../lib/supabase'
 import { AI_PLANNER_FUNCTION, fetchEdgeFunction } from './api'
@@ -28,7 +28,7 @@ export interface PlannerChatResult {
 
 async function invokePlanner(params: {
   mode: 'chat' | 'generate'
-  messages: CoreMessage[]
+  messages: ModelMessage[]
   preferredModel?: string
 }): Promise<
   | { ok: true; text?: string; truncated?: boolean; result?: PlannerFullResult }
@@ -89,7 +89,7 @@ async function invokePlanner(params: {
 }
 
 export async function chatWithPlanner(
-  messages: CoreMessage[],
+  messages: ModelMessage[],
   preferredModel: string = 'auto',
 ): Promise<PlannerChatResult> {
   const result = await invokePlanner({
@@ -110,7 +110,7 @@ export async function chatWithPlanner(
 }
 
 export async function generateProductPlan(
-  messages: CoreMessage[],
+  messages: ModelMessage[],
   preferredModel: string = 'auto',
 ): Promise<PlannerFullResult> {
   const result = await invokePlanner({

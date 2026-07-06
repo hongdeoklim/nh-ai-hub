@@ -83,7 +83,6 @@ import {
 } from '../services/prompts/prompt-templates'
 import type { PromptTemplateRow } from '../types/prompt-templates'
 import type {
-  AiModelProvider,
   AiModelRow,
   AiProviderPreference,
 } from '../types/ai-models'
@@ -126,7 +125,7 @@ import {
 import { exportDriveFileForChat } from '../services/reference-room/export-drive-for-chat'
 import type { SavedPromptRow } from '../types/prompts'
 
-type AiManualProviderId = Exclude<AiModelProvider, 'openrouter'>
+type AiManualProviderId = Exclude<AiProviderPreference, 'auto'>
 
 const MANUAL_PROVIDER_ORDER: AiManualProviderId[] = [
   'google',
@@ -201,27 +200,6 @@ const AI_MODELS_BY_PROVIDER: Record<
       hint: '이전 스냅샷 호환 · 필요 시 유지보수용',
       costInfo: '높음',
       description: '이전 스냅샷 호환 · 필요 시 유지보수용',
-    },
-    {
-      id: 'claude-sonnet-4-5',
-      label: 'Sonnet 4.5 (레거시)',
-      hint: '이전 저장 프로필과 동일 문자열 호환',
-      costInfo: '보통',
-      description: '이전 저장 프로필과 동일 문자열 호환',
-    },
-  ],
-  openai: [
-    {
-      id: 'gpt-5.5',
-      label: 'GPT-5.5',
-      hint: '최신 프론티어 · 복잡 추론·코드(공식 플래그십 가이드)',
-      costInfo: '높음',
-      description: '최신 프론티어 · 복잡 추론·코드(공식 플래그십 가이드)',
-    },
-    {
-      id: 'gpt-5.4',
-      label: 'GPT-5.4',
-      hint: '전문 업무 균형 · 멀틜 유지보수용',
     },
     {
       id: 'claude-sonnet-4-5',
@@ -596,7 +574,7 @@ export function Dashboard() {
   const sendQueueRef = useRef<PendingChatTurn[]>([])
   const drainRunnerRef = useRef(false)
   const chatAbortRef = useRef<AbortController | null>(null)
-  const [queuedAheadCount, setQueuedAheadCount] = useState(0)
+  const [, setQueuedAheadCount] = useState(0)
   /** 스레드 전환 직전 상태 — useLayoutEffect에서 이전 스레드를 sessionStorage에 먼저 저장 */
   const threadStateSnapshotRef = useRef<{
     threadId: string | undefined

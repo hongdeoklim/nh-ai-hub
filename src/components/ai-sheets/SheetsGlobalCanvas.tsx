@@ -18,7 +18,6 @@ import {
   formatDisplayValue,
   getCellStyle,
   styleKey,
-  type CellStyle,
   type CellStyleMap,
 } from '../../lib/sheet-cell-styles'
 import { cellIdFromCoords, parseCellId, parseClipboardGrid } from '../../lib/sheet-formula'
@@ -203,8 +202,8 @@ export function SheetsGlobalCanvas({
   const [selection, setSelection] = useState<SelectionRange>(INITIAL_SELECTION)
   const [rawGrid, setRawGrid] = useState<string[][]>(() => createEmptyGrid())
   const [cellStyles, setCellStyles] = useState<CellStyleMap>({})
-  const [undoStack, setUndoStack] = useState<string[][][]>([])
-  const [redoStack, setRedoStack] = useState<string[][][]>([])
+  const [, setUndoStack] = useState<string[][][]>([])
+  const [, setRedoStack] = useState<string[][][]>([])
   const [formulaDraft, setFormulaDraft] = useState('')
   const [inlineEditCell, setInlineEditCell] = useState<string | null>(null)
   const [inlineDraft, setInlineDraft] = useState('')
@@ -425,7 +424,7 @@ export function SheetsGlobalCanvas({
   const handleRibbonAction = useCallback(
     (action: RibbonActionId) => {
       const { row, col } = selectionRef.current.focus
-      const { r0, c0, r1, c1 } = getNormalizedSelection()
+      const { r0, r1 } = getNormalizedSelection()
 
       const insertFormula = (formula: string) => {
         setFormulaDraft(formula)
@@ -450,7 +449,6 @@ export function SheetsGlobalCanvas({
         case 'cut':
           void handleCutRange()
           break
-        case 'clear':
         case 'clear-content':
         case 'clear-all':
           handleClearRange()
@@ -597,7 +595,7 @@ export function SheetsGlobalCanvas({
 
   const handleContextMenuAction = useCallback(
     (action: ContextMenuActionId) => {
-      const { r0, c0, r1, c1 } = getNormalizedSelection()
+      const { r0, r1 } = getNormalizedSelection()
       const { row, col } = selectionRef.current.focus
       switch (action) {
         case 'send-to-chat': {

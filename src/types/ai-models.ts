@@ -1,5 +1,14 @@
 export type AiModelProvider = 'anthropic' | 'openai' | 'google'
 
+/** 대화 화면 수동 공급자 선택 — 'auto' 는 자동 라우팅 */
+export type AiProviderPreference =
+  | 'auto'
+  | 'anthropic'
+  | 'openai'
+  | 'google'
+  | 'deepseek'
+  | 'hermes'
+
 export type AiModelType = 'text' | 'image' | 'video'
 
 export type AiModelRow = {

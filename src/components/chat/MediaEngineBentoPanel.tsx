@@ -29,7 +29,9 @@ export function MediaEngineBentoPanel({
   onSelect,
   className = '',
 }: MediaEngineBentoPanelProps) {
-  const safeEngines = Array.isArray(engines) ? engines : []
+  const safeEngines: readonly AiModelRow[] = Array.isArray(engines)
+    ? engines
+    : []
 
   if (loading) {
     return (
@@ -121,7 +123,9 @@ export function mediaEngineLabel(
   engines: readonly AiModelRow[] | null | undefined,
   selectedModelId: string,
 ): string {
-  const safeEngines = Array.isArray(engines) ? engines : []
+  const safeEngines: readonly AiModelRow[] = Array.isArray(engines)
+    ? engines
+    : []
   const match = safeEngines.find((engine) => engine?.api_id === selectedModelId)
   return match?.display_name ?? selectedModelId
 }

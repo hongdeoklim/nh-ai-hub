@@ -80,6 +80,7 @@ export type RibbonStylePatch = Partial<
     | 'numberFormat'
     | 'textAlign'
     | 'verticalAlign'
+    | 'wrapText'
   >
 >
 

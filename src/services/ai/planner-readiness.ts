@@ -1,4 +1,4 @@
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
 
 /** AI PM이 기획안 생성 준비 완료 시 마지막 줄에 출력 (UI에서 숨김) */
 export const PLANNER_READY_MARKER = '[PLANNER_READY]'
@@ -9,7 +9,7 @@ const LEGACY_READY_PATTERNS = [
   /🚀\s*기획안\s*생성.*눌러/,
 ]
 
-export function messageContentToString(content: CoreMessage['content']): string {
+export function messageContentToString(content: ModelMessage['content']): string {
   if (typeof content === 'string') return content
   return ''
 }
@@ -28,7 +28,7 @@ export function assistantMessageHasReadySignal(content: string): boolean {
 }
 
 /** 마지막 메시지가 PM의 「생성 준비 완료」 응답일 때만 true */
-export function isPlannerReadyToGenerate(messages: CoreMessage[]): boolean {
+export function isPlannerReadyToGenerate(messages: ModelMessage[]): boolean {
   if (messages.length === 0) return false
   const last = messages[messages.length - 1]
   if (last.role !== 'assistant') return false
