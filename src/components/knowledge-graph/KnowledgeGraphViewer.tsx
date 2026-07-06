@@ -150,7 +150,7 @@ export const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({
   if (data.nodes.length === 0) {
     return (
       <div className="absolute inset-0 flex items-center justify-center">
-        <p className="text-slate-500 text-base">그래프 데이터가 없습니다.</p>
+        <p className="text-slate-500 text-[13px] md:text-[15px]">그래프 데이터가 없습니다.</p>
       </div>
     )
   }

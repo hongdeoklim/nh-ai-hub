@@ -80,7 +80,7 @@ function StatusBadge({ tone, label }: { tone: StatusTone; label: string }) {
         : 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300'
   return (
     <span
-      className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${cls}`}
+      className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-[11px]! md:text-[12px]! font-medium ${cls}`}
     >
       {label}
     </span>
@@ -89,7 +89,7 @@ function StatusBadge({ tone, label }: { tone: StatusTone; label: string }) {
 
 function KindBadge({ kind }: { kind: ToolKind }) {
   return (
-    <span className="inline-flex shrink-0 rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-tight text-stone-500 dark:bg-stone-800 dark:text-stone-400">
+    <span className="inline-flex shrink-0 rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px]! md:text-[11px]! font-semibold tracking-tight text-stone-500 dark:bg-stone-800 dark:text-stone-400">
       {KIND_LABELS[kind]}
     </span>
   )
@@ -286,15 +286,15 @@ export function AutomationStudioPage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 md:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-stone-900 dark:text-stone-50">
+          <h1 className="text-[20px]! md:text-[24px]! font-semibold text-stone-900! dark:text-stone-50!">
             자동화 스튜디오
           </h1>
-          <p className="mt-1 text-[13px] text-stone-500 dark:text-stone-400">
+          <p className="mt-1 text-[13px]! md:text-[14px]! text-stone-500 dark:text-stone-400">
             플러그인 · MCP · 스킬 · 워크플로우 · AI 어시스턴트를 한곳에서 켜고
             관리합니다.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-[12px] text-stone-500 dark:text-stone-400">
+        <div className="flex flex-wrap items-center gap-2 text-[12px]! md:text-[13px]! text-stone-500 dark:text-stone-400">
           <span className="rounded-full bg-stone-100 px-2.5 py-1 dark:bg-stone-800">
             도구 {extensions.length.toLocaleString('ko-KR')}
           </span>
@@ -315,12 +315,12 @@ export function AutomationStudioPage() {
       </header>
 
       {loadError ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400">
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px]! md:text-[14px]! text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400">
           {loadError}
         </p>
       ) : null}
       {actionNote ? (
-        <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px] text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200">
+        <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px]! md:text-[14px]! text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200">
           {actionNote}
         </p>
       ) : null}
@@ -331,7 +331,7 @@ export function AutomationStudioPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="도구 검색 (이름·설명)"
-          className="w-full max-w-xs rounded-lg border border-stone-300 bg-white px-3 py-2 text-[13px] text-stone-900 outline-none focus:border-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+          className="w-full max-w-xs rounded-lg border border-stone-300 bg-white px-3 py-2 text-[13px]! md:text-[14px]! text-stone-900 outline-none focus:border-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
         />
         <div className="flex flex-wrap items-center gap-1.5">
           {KIND_FILTERS.map((f) => (
@@ -339,7 +339,7 @@ export function AutomationStudioPage() {
               key={f.id}
               type="button"
               onClick={() => setKindFilter(f.id)}
-              className={`rounded-full px-3 py-1 text-[12px] font-medium transition ${
+              className={`rounded-full px-3 py-1 text-[12px]! md:text-[13px]! font-medium transition ${
                 kindFilter === f.id
                   ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700'
@@ -352,11 +352,11 @@ export function AutomationStudioPage() {
       </div>
 
       {loading ? (
-        <p className="py-8 text-center text-[13px] text-stone-500 dark:text-stone-400">
+        <p className="py-8 text-center text-[13px]! md:text-[14px]! text-stone-500 dark:text-stone-400">
           카탈로그를 불러오는 중…
         </p>
       ) : visibleTotal === 0 ? (
-        <p className="py-8 text-center text-[13px] text-stone-500 dark:text-stone-400">
+        <p className="py-8 text-center text-[13px]! md:text-[14px]! text-stone-500 dark:text-stone-400">
           조건에 맞는 도구가 없습니다.
         </p>
       ) : (
@@ -377,22 +377,22 @@ export function AutomationStudioPage() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-[14px] font-semibold text-stone-900 dark:text-stone-50">
+                  <h2 className="truncate text-[14px]! md:text-[15px]! font-semibold text-stone-900! dark:text-stone-50!">
                     {row.name}
                   </h2>
-                  <p className="mt-0.5 line-clamp-2 text-[12px] leading-relaxed text-stone-500 dark:text-stone-400">
+                  <p className="mt-0.5 line-clamp-2 text-[12px]! md:text-[13px]! leading-relaxed text-stone-500 dark:text-stone-400">
                     {row.description || '설명이 없습니다.'}
                   </p>
                 </div>
                 <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-                  <span className="truncate text-[11px] text-stone-400 dark:text-stone-500">
+                  <span className="truncate text-[11px]! md:text-[12px]! text-stone-400 dark:text-stone-500">
                     {row.provider} · v{row.version}
                   </span>
                   <button
                     type="button"
                     disabled={busyExtensionId === row.id}
                     onClick={() => void handleExtensionAction(row)}
-                    className={`shrink-0 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition disabled:opacity-50 ${
+                    className={`shrink-0 rounded-lg px-3 py-1.5 text-[12px]! md:text-[13px]! font-semibold transition disabled:opacity-50 ${
                       enabled
                         ? 'border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800'
                         : 'bg-stone-900 text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300'
@@ -436,15 +436,15 @@ export function AutomationStudioPage() {
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-[14px] font-semibold text-stone-900 dark:text-stone-50">
+                  <h2 className="truncate text-[14px]! md:text-[15px]! font-semibold text-stone-900! dark:text-stone-50!">
                     {row.title}
                   </h2>
-                  <p className="mt-0.5 line-clamp-2 text-[12px] leading-relaxed text-stone-500 dark:text-stone-400">
+                  <p className="mt-0.5 line-clamp-2 text-[12px]! md:text-[13px]! leading-relaxed text-stone-500 dark:text-stone-400">
                     {row.description || '내가 만든 워크플로우'}
                   </p>
                 </div>
                 <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-                  <span className="min-w-0 truncate text-[11px] text-stone-400 dark:text-stone-500">
+                  <span className="min-w-0 truncate text-[11px]! md:text-[12px]! text-stone-400 dark:text-stone-500">
                     실행 {row.run_count.toLocaleString('ko-KR')}회
                     {row.last_run_at
                       ? ` · ${formatRunTime(row.last_run_at)}`
@@ -453,7 +453,7 @@ export function AutomationStudioPage() {
                   <span className="flex shrink-0 items-center gap-1.5">
                     <Link
                       to="/workflows"
-                      className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
+                      className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px]! md:text-[13px]! font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
                     >
                       열기
                     </Link>
@@ -466,7 +466,7 @@ export function AutomationStudioPage() {
                           ? '이 워크플로우를 지금 실행합니다'
                           : '비활성 워크플로우는 실행할 수 없습니다'
                       }
-                      className="rounded-lg bg-stone-900 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
+                      className="rounded-lg bg-stone-900 px-3 py-1.5 text-[12px]! md:text-[13px]! font-semibold text-white hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
                     >
                       {running ? '실행 중…' : '실행'}
                     </button>
@@ -489,15 +489,15 @@ export function AutomationStudioPage() {
                 />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-[14px] font-semibold text-stone-900 dark:text-stone-50">
+                <h2 className="truncate text-[14px]! md:text-[15px]! font-semibold text-stone-900! dark:text-stone-50!">
                   {row.name}
                 </h2>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-stone-500 dark:text-stone-400">
+                <p className="mt-0.5 text-[12px]! md:text-[13px]! leading-relaxed text-stone-500 dark:text-stone-400">
                   {row.category}
                   {row.cost_level ? ` · ${COST_LABELS[row.cost_level] ?? ''}` : ''}
                 </p>
               </div>
-              <p className="mt-auto pt-1 text-[11px] text-stone-400 dark:text-stone-500">
+              <p className="mt-auto pt-1 text-[11px]! md:text-[12px]! text-stone-400 dark:text-stone-500">
                 채팅에서 관련 요청 시 자동으로 호출됩니다.
               </p>
             </article>
@@ -510,17 +510,17 @@ export function AutomationStudioPage() {
                 <StatusBadge tone="idle" label="관리" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-[14px] font-semibold text-stone-900 dark:text-stone-50">
+                <h2 className="text-[14px]! md:text-[15px]! font-semibold text-stone-900! dark:text-stone-50!">
                   Google Workspace · Microsoft 365
                 </h2>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-stone-500 dark:text-stone-400">
+                <p className="mt-0.5 text-[12px]! md:text-[13px]! leading-relaxed text-stone-500 dark:text-stone-400">
                   메일·캘린더·드라이브 연동 계정을 연결하고 상태를 확인합니다.
                 </p>
               </div>
               <div className="mt-auto flex justify-end pt-1">
                 <Link
                   to="/workspace-tools"
-                  className="shrink-0 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
+                  className="shrink-0 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px]! md:text-[13px]! font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
                 >
                   연동 관리
                 </Link>
@@ -535,7 +535,7 @@ export function AutomationStudioPage() {
           aria-label="최근 실행 기록"
           className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
         >
-          <h2 className="text-[15px] font-semibold text-stone-900 dark:text-stone-50">
+          <h2 className="text-[15px]! md:text-[17px]! font-semibold text-stone-900! dark:text-stone-50!">
             최근 실행 기록
           </h2>
           <ul className="mt-3 flex flex-col gap-1.5">
@@ -547,16 +547,16 @@ export function AutomationStudioPage() {
                   className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-stone-100 px-3 py-2 dark:border-stone-800"
                 >
                   <StatusBadge tone={meta.tone} label={meta.label} />
-                  <p className="min-w-0 flex-1 truncate text-[13px] text-stone-800 dark:text-stone-200">
+                  <p className="min-w-0 flex-1 truncate text-[13px]! md:text-[14px]! text-stone-800 dark:text-stone-200">
                     {workflowTitleById.get(run.workflow_id) ??
                       run.action_key ??
                       '(삭제된 워크플로우)'}
                   </p>
-                  <span className="shrink-0 text-[11px] tabular-nums text-stone-400 dark:text-stone-500">
+                  <span className="shrink-0 text-[11px]! md:text-[12px]! tabular-nums text-stone-400 dark:text-stone-500">
                     {formatRunTime(run.created_at)}
                   </span>
                   {run.status === 'failed' && run.error_message ? (
-                    <p className="w-full truncate text-[11px] text-red-500 dark:text-red-400">
+                    <p className="w-full truncate text-[11px]! md:text-[12px]! text-red-500 dark:text-red-400">
                       {run.error_message}
                     </p>
                   ) : null}
@@ -567,7 +567,7 @@ export function AutomationStudioPage() {
         </section>
       ) : null}
 
-      <p className="text-[12px] text-stone-400 dark:text-stone-500">
+      <p className="text-[12px]! md:text-[13px]! text-stone-400 dark:text-stone-500">
         워크플로우 만들기·수정은{' '}
         <Link to="/workflows" className="underline hover:text-stone-600 dark:hover:text-stone-300">
           워크플로우 빌더

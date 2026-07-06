@@ -29,7 +29,7 @@ function NodeTypeBadge({ type }: { type: string }) {
   const color = meta?.color ?? '#94a3b8'
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[13px] font-bold tracking-wider uppercase whitespace-nowrap"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] md:text-[12px] font-bold tracking-wider uppercase whitespace-nowrap"
       style={{ background: `${color}1a`, color, border: `1px solid ${color}33` }}
     >
       <span className="w-1 h-1 rounded-full shrink-0" style={{ background: color }} />
@@ -156,11 +156,11 @@ export function KnowledgeGraphPage() {
         {error ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center px-6">
-              <p className="text-red-400 text-sm mb-1">데이터 로드 실패</p>
-              <p className="text-slate-600 text-sm mb-4 max-w-xs">{error}</p>
+              <p className="text-red-400 text-[14px] md:text-[16px] font-semibold mb-1">데이터 로드 실패</p>
+              <p className="text-slate-600 text-[12px] md:text-[13px] mb-4 max-w-xs">{error}</p>
               <button
                 onClick={() => setRefreshKey(k => k + 1)}
-                className="px-4 py-1.5 rounded-lg text-sm text-slate-300 hover:text-white transition"
+                className="px-4 py-1.5 rounded-lg text-[12px] md:text-[13px] text-slate-300 hover:text-white transition"
                 style={PANEL_STYLE}
               >
                 다시 시도
@@ -186,7 +186,7 @@ export function KnowledgeGraphPage() {
                     <div className="absolute inset-2 rounded-full border-2 border-cyan-500/20 border-b-cyan-400 animate-spin"
                       style={{ animationDirection: 'reverse', animationDuration: '0.75s' }} />
                   </div>
-                  <p className="text-sm text-slate-400 tracking-wide">지식 그래프 로딩 중…</p>
+                  <p className="text-[12px] md:text-[13px] text-slate-400 tracking-wide">지식 그래프 로딩 중…</p>
                 </div>
               </div>
             )}
@@ -208,8 +208,8 @@ export function KnowledgeGraphPage() {
               </svg>
             </button>
             <div className="flex-1">
-              <p className="text-base font-bold text-white whitespace-nowrap">사내 지식 그래프</p>
-              <p className="text-sm text-slate-500 leading-none mt-0.5 whitespace-nowrap">3D Knowledge Network</p>
+              <p className="text-[13px] md:text-[15px] font-bold text-white whitespace-nowrap">사내 지식 그래프</p>
+              <p className="text-[12px] md:text-[13px] text-slate-500 leading-none mt-0.5 whitespace-nowrap">3D Knowledge Network</p>
             </div>
             <button onClick={() => setRefreshKey(k => k + 1)} disabled={loading}
               className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30" title="새로고침">
@@ -229,12 +229,12 @@ export function KnowledgeGraphPage() {
         {/* 통계 */}
         <div className="rounded-2xl px-4 py-3 grid grid-cols-2 gap-3 shadow-xl" style={PANEL_STYLE}>
           <div className="text-center">
-            <p className="text-2xl font-bold text-fuchsia-400 tabular-nums leading-none">{filteredData.nodes.length.toLocaleString()}</p>
-            <p className="text-sm text-slate-400 mt-1">노드</p>
+            <p className="text-[20px] md:text-[24px] font-bold text-fuchsia-400 tabular-nums leading-none">{filteredData.nodes.length.toLocaleString()}</p>
+            <p className="text-[12px] md:text-[13px] text-slate-400 mt-1">노드</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-cyan-400 tabular-nums leading-none">{filteredData.edges.length.toLocaleString()}</p>
-            <p className="text-sm text-slate-400 mt-1">연결</p>
+            <p className="text-[20px] md:text-[24px] font-bold text-cyan-400 tabular-nums leading-none">{filteredData.edges.length.toLocaleString()}</p>
+            <p className="text-[12px] md:text-[13px] text-slate-400 mt-1">연결</p>
           </div>
         </div>
 
@@ -252,28 +252,28 @@ export function KnowledgeGraphPage() {
             )}
             <input type="search" placeholder="제목·내용·부서 검색..."
               value={searchInput} onChange={e => setSearchInput(e.target.value)}
-              className="w-full rounded-xl border border-white/8 bg-black/30 pl-10 pr-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 outline-none focus:border-fuchsia-500/50 focus:ring-1 focus:ring-fuchsia-500/20 transition"
+              className="w-full rounded-xl border border-white/8 bg-black/30 pl-10 pr-3 py-2 text-[12px] md:text-[13px] text-slate-200 placeholder:text-slate-500 outline-none focus:border-fuchsia-500/50 focus:ring-1 focus:ring-fuchsia-500/20 transition"
             />
           </div>
           {isSearchMode && (
-            <p className="text-sm text-slate-400 px-1">
+            <p className="text-[12px] md:text-[13px] text-slate-400 px-1">
               매칭 <strong className="text-fuchsia-300">{filteredData.matchingIds?.size ?? 0}</strong>개 +
               이웃 <strong className="text-cyan-300">{filteredData.nodes.length - (filteredData.matchingIds?.size ?? 0)}</strong>개 노드
             </p>
           )}
           <select value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)}
-            className="w-full rounded-xl border border-white/8 bg-black/30 px-3 py-2 text-sm text-slate-300 outline-none focus:border-fuchsia-500/50 transition">
+            className="w-full rounded-xl border border-white/8 bg-black/30 px-3 py-2 text-[12px] md:text-[13px] text-slate-300 outline-none focus:border-fuchsia-500/50 transition">
             <option value="ALL">전체 부서</option>
             {departments.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <select value={nodeTypeFilter} onChange={e => setNodeTypeFilter(e.target.value)}
-            className="w-full rounded-xl border border-white/8 bg-black/30 px-3 py-2 text-sm text-slate-300 outline-none focus:border-fuchsia-500/50 transition">
+            className="w-full rounded-xl border border-white/8 bg-black/30 px-3 py-2 text-[12px] md:text-[13px] text-slate-300 outline-none focus:border-fuchsia-500/50 transition">
             <option value="ALL">전체 타입</option>
             {nodeTypes.map(t => <option key={t} value={t}>{NODE_TYPE_META[t]?.label ?? t}</option>)}
           </select>
           {isFiltering && (
             <button onClick={() => { setSearchInput(''); setSearchQuery(''); setSearchData(null); setDepartmentFilter('ALL'); setNodeTypeFilter('ALL') }}
-              className="text-sm text-slate-500 hover:text-fuchsia-400 transition text-center py-0.5">
+              className="text-[12px] md:text-[13px] text-slate-500 hover:text-fuchsia-400 transition text-center py-0.5">
               필터 전체 초기화
             </button>
           )}
@@ -282,7 +282,7 @@ export function KnowledgeGraphPage() {
         {/* 타입 범례 */}
         {nodeTypes.length > 0 && (
           <div className="rounded-2xl p-4 shadow-xl" style={PANEL_STYLE}>
-            <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2.5">노드 타입</p>
+            <p className="text-[12px] md:text-[13px] font-semibold text-slate-500 uppercase tracking-wider mb-2.5">노드 타입</p>
             <div className="flex flex-col gap-1.5">
               {nodeTypes.map(t => {
                 const color = NODE_TYPE_META[t]?.color ?? '#94a3b8'
@@ -291,10 +291,10 @@ export function KnowledgeGraphPage() {
                 const isActive = nodeTypeFilter === t
                 return (
                   <button key={t} onClick={() => setNodeTypeFilter(isActive ? 'ALL' : t)}
-                    className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-left transition-colors ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}>
+                    className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[12px] md:text-[13px] text-left transition-colors ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}>
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color, boxShadow: `0 0 6px ${color}99` }} />
                     <span className="flex-1 text-slate-300">{label}</span>
-                    <span className="text-slate-500 tabular-nums text-sm">{count}</span>
+                    <span className="text-slate-500 tabular-nums text-[12px] md:text-[13px]">{count}</span>
                   </button>
                 )
               })}
@@ -314,7 +314,7 @@ export function KnowledgeGraphPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <NodeTypeBadge type={selectedNode.node_type} />
-                  <h2 className="mt-2.5 text-lg font-bold text-white leading-snug">{selectedNode.title}</h2>
+                  <h2 className="mt-2.5 text-[15px] md:text-[18px] font-bold text-white leading-snug">{selectedNode.title}</h2>
                 </div>
                 <button onClick={() => setSelectedNode(null)}
                   className="shrink-0 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition mt-0.5">
@@ -325,7 +325,7 @@ export function KnowledgeGraphPage() {
               </div>
 
               {selectedNode.department && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-300" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] md:text-[13px] text-slate-300" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <svg className="w-4 h-4 text-fuchsia-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
@@ -335,8 +335,8 @@ export function KnowledgeGraphPage() {
 
               {selectedNode.content && (
                 <div>
-                  <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">본문 미리보기</p>
-                  <div className="text-sm text-slate-300 rounded-xl p-4 max-h-48 overflow-y-auto leading-relaxed"
+                  <p className="text-[12px] md:text-[13px] font-semibold text-slate-500 uppercase tracking-wider mb-2">본문 미리보기</p>
+                  <div className="text-[12px] md:text-[13px] text-slate-300 rounded-xl p-4 max-h-48 overflow-y-auto leading-relaxed"
                     style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.05)' }}>
                     {selectedNode.content}
                   </div>
@@ -344,11 +344,11 @@ export function KnowledgeGraphPage() {
               )}
 
               <div>
-                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                  연결 관계 <span className="text-cyan-400 normal-case font-bold text-sm">{selectedNodeEdges.length}</span>
+                <p className="text-[12px] md:text-[13px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  연결 관계 <span className="text-cyan-400 normal-case font-bold text-[12px] md:text-[13px]">{selectedNodeEdges.length}</span>
                 </p>
                 {selectedNodeEdges.length === 0 ? (
-                  <p className="text-sm text-slate-600 italic">연결된 노드가 없습니다.</p>
+                  <p className="text-[12px] md:text-[13px] text-slate-600 italic">연결된 노드가 없습니다.</p>
                 ) : (
                   <ul className="flex flex-col gap-2 max-h-56 overflow-y-auto">
                     {selectedNodeEdges.map(edge => {
@@ -357,11 +357,11 @@ export function KnowledgeGraphPage() {
                       const linked = baseData.nodes.find(n => n.id === linkedId)
                       return (
                         <li key={edge.id} onClick={() => linked && setSelectedNode(linked)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm cursor-pointer transition"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] md:text-[13px] cursor-pointer transition"
                           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
                           onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(167,139,250,0.35)')}
                           onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)')}>
-                          <span className={`font-bold shrink-0 text-base ${isOut ? 'text-fuchsia-400' : 'text-cyan-400'}`}>{isOut ? '→' : '←'}</span>
+                          <span className={`font-bold shrink-0 text-[13px] md:text-[15px] ${isOut ? 'text-fuchsia-400' : 'text-cyan-400'}`}>{isOut ? '→' : '←'}</span>
                           <span className="flex-1 text-slate-200 truncate">{linked?.title ?? linkedId}</span>
                           {linked && <NodeTypeBadge type={linked.node_type} />}
                         </li>
@@ -373,7 +373,7 @@ export function KnowledgeGraphPage() {
 
               {selectedNode.source_drive_id && (
                 <a href={`https://drive.google.com/open?id=${selectedNode.source_drive_id}`} target="_blank" rel="noreferrer"
-                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] md:text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg,#7c3aed,#db2777)' }}>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
