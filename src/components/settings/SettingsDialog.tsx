@@ -4,7 +4,7 @@ import { IntegrationsPanel } from './IntegrationsPanel'
 import { MyPagePanel } from './MyPagePanel'
 import { UserAiProfilePanel } from './UserAiProfilePanel'
 
-type SettingsTab =
+export type SettingsTab =
   | 'mypage'
   | 'history'
   | 'memory'
@@ -27,14 +27,20 @@ type SettingsDialogProps = {
   open: boolean
   onClose: () => void
   userId?: string
+  initialTab?: SettingsTab
 }
 
 export function SettingsDialog({
   open,
   onClose,
   userId,
+  initialTab,
 }: SettingsDialogProps) {
-  const [tab, setTab] = useState<SettingsTab>('mypage')
+  const [tab, setTab] = useState<SettingsTab>(initialTab ?? 'mypage')
+
+  useEffect(() => {
+    if (open && initialTab) setTab(initialTab)
+  }, [open, initialTab])
 
   useEffect(() => {
     if (!open) return
