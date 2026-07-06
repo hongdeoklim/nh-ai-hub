@@ -1577,11 +1577,13 @@ async function handleRequest(req: Request) {
     const openaiEmbedKey = readEnv("OPENAI_API_KEY")
     const adminSvc = svcKey ? createClient(supabaseUrl, svcKey) : null
 
+    const skillModelResult = getLowCostRoutingModel()
     const pluginTools = adminSvc
       ? await createDynamicPluginTools({
         admin: adminSvc,
         userId: user.id,
         department: profile.department,
+        skillModel: skillModelResult.ok ? skillModelResult.model : null,
       })
       : {}
 

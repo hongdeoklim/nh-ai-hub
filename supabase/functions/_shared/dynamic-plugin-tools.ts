@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.49.8"
-import { tool, zodSchema, type Tool } from "npm:ai@6.0.184"
+import { generateText, tool, zodSchema, type LanguageModel, type Tool } from "npm:ai@6.0.184"
 import { z } from "npm:zod@4.4.3"
 
 import { resolveBuiltinPluginTool } from "./builtin-plugin-tools.ts"
@@ -16,6 +16,7 @@ export type ActivePluginRow = {
   auth_header_name: string
   connection_mode: string
   extension_type: "plugin" | "mcp" | "skill" | "public_data"
+  manifest: Record<string, unknown> | null
 }
 
 async function logHealth(
@@ -173,6 +174,80 @@ function createHttpProxyTool(
 }
 
 /**
+ * `extension_type = 'skill'` 행을 실행합니다.
+ * 스킬의 `manifest.prompt` 는 HTTP 로 호출할 엔드포인트가 아니라, 별도의 저비용
+ * 모델 호출에 시스템 지침으로 주입할 프롬프트 템플릿입니다. AI(메인 대화 모델)가
+ * 이 도구를 호출하면 사용자가 전달한 원문(input)을 그 템플릿에 따라 가공한 결과
+ * 텍스트를 돌려받습니다.
+ */
+function createSkillTool(
+  row: ActivePluginRow,
+  model: LanguageModel,
+  admin: SupabaseClient,
+  userId: string,
+  department: string | null | undefined,
+): Tool<any, any> | null {
+  const rawPrompt = row.manifest?.prompt
+  const promptTemplate = typeof rawPrompt === "string" ? rawPrompt.trim() : ""
+  if (!promptTemplate.length) {
+    console.warn("[dynamic-plugin-tools] skill manifest.prompt 없음 — 건너뜀", row.id)
+    return null
+  }
+
+  const desc =
+    (row.description?.trim()?.length ? row.description.trim() : row.name) +
+    " (사내 스킬 · 전용 프롬프트 템플릿으로 결과를 생성합니다)"
+
+  return tool({
+    description: desc,
+    inputSchema: zodSchema(
+      z.object({
+        input: z
+          .string()
+          .min(1)
+          .describe(
+            "이 스킬 수행에 필요한 원문 내용을 자유 텍스트로 전달하세요(예: 이번 주 업무 목록, 회의 내용 전문, 코드 스니펫, 수신자·목적·핵심내용 등). 스킬 설명을 참고해 필요한 정보를 빠짐없이 포함하세요.",
+          ),
+      }),
+    ),
+    execute: async ({ input }: { input: string }) => {
+      const started = Date.now()
+      try {
+        const { text } = await generateText({
+          model,
+          system: promptTemplate,
+          prompt: input,
+          temperature: 0.4,
+        })
+        const latency = Date.now() - started
+        await logToolExecution(admin, {
+          userId,
+          department,
+          pluginId: row.id,
+          toolName: row.tool_function_name,
+          status: "succeeded",
+          latencyMs: latency,
+        })
+        return { ok: true, output: text }
+      } catch (e) {
+        const latency = Date.now() - started
+        const msg = e instanceof Error ? e.message : String(e)
+        await logToolExecution(admin, {
+          userId,
+          department,
+          pluginId: row.id,
+          toolName: row.tool_function_name,
+          status: "failed",
+          latencyMs: latency,
+          errorCode: "generation_failed",
+        })
+        return { ok: false, error: msg }
+      }
+    },
+  })
+}
+
+/**
  * DB plugins 테이블에서 `is_active = true` 인 행만 로드합니다.
  * `tool_function_name` 과 일치하는 내장 도구 또는 endpoint_url 프록시만 tools 맵에 포함합니다.
  * 비활성(OFF) 플러그인은 조회 자체에서 제외되어 AI 에 노출되지 않습니다.
@@ -181,13 +256,15 @@ export async function createDynamicPluginTools(deps: {
   admin: SupabaseClient
   userId: string
   department?: string | null
+  /** 스킬(extension_type='skill') 실행에 쓰일 저비용 모델. 없으면 스킬은 건너뜀. */
+  skillModel?: LanguageModel | null
 }): Promise<Record<string, Tool<any, any>>> {
-  const { admin, userId, department } = deps
+  const { admin, userId, department, skillModel } = deps
 
   const { data, error } = await admin
     .from("plugins")
     .select(
-      "id, name, description, endpoint_url, tool_function_name, auth_type, auth_header_name, connection_mode, extension_type",
+      "id, name, description, endpoint_url, tool_function_name, auth_type, auth_header_name, connection_mode, extension_type, manifest",
     )
     .eq("is_active", true)
     .eq("approval_status", "approved")
@@ -292,6 +369,16 @@ export async function createDynamicPluginTools(deps: {
       } catch (error) {
         console.error('[dynamic-plugin-tools] MCP tools/list 실패', row.id, error)
       }
+      continue
+    }
+
+    if (row.extension_type === 'skill') {
+      if (!skillModel) {
+        console.warn("[dynamic-plugin-tools] skill 실행용 모델 없음 — 건너뜀", row.id)
+        continue
+      }
+      const skillTool = createSkillTool(row, skillModel, admin, userId, department)
+      if (skillTool) out[fnName] = skillTool
       continue
     }
 
