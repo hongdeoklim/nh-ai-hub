@@ -114,7 +114,7 @@ export function UniverOfficePage() {
             </h1>
             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
               자연어로 기획서·정산서를 요청하면{' '}
-              <code className="rounded bg-stone-100 px-1 py-0.5 text-[11px] dark:bg-stone-900">
+              <code className="rounded bg-stone-100 px-1 py-0.5 text-[11px]! dark:bg-stone-900">
                 inject_univer_office_data
               </code>{' '}
               도구가 Univer 캔버스에 실시간 주입합니다.

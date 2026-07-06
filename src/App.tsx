@@ -278,7 +278,10 @@ function AppRoutes() {
             path="__ui-check"
             element={
               <Suspense fallback={<RouteLoadingFallback />}>
-                <DevUiCheckPage />
+                {/* 실제로는 MainLayout의 .app-shell 안에서 렌더링됨 — 폰트 크기 보정 규칙 재현을 위해 동일하게 감쌈 */}
+                <div className="app-shell">
+                  <DevUiCheckPage />
+                </div>
               </Suspense>
             }
           />

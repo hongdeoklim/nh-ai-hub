@@ -648,7 +648,7 @@ export function AiProductPlannerPage() {
                   <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
                     AI PM
                   </h2>
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">대화로 아이디어 스케치</p>
+                  <p className="text-[11px]! font-medium text-slate-500 dark:text-slate-400 mt-0.5">대화로 아이디어 스케치</p>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
@@ -674,15 +674,15 @@ export function AiProductPlannerPage() {
                   기획안 생성
                 </button>
                 {pmReadySignal ? (
-                  <p className="max-w-[11rem] text-right text-[10px] font-medium leading-snug text-emerald-600 dark:text-emerald-400">
+                  <p className="max-w-[11rem] text-right text-[10px]! font-medium leading-snug text-emerald-600 dark:text-emerald-400">
                     PM 준비 완료 — 생성을 권장합니다
                   </p>
                 ) : canGenerate ? (
-                  <p className="max-w-[11rem] text-right text-[10px] leading-snug text-indigo-600 dark:text-indigo-400">
+                  <p className="max-w-[11rem] text-right text-[10px]! leading-snug text-indigo-600 dark:text-indigo-400">
                     대화 내용으로 생성 가능 · 이어서 수정·질문도 OK
                   </p>
                 ) : messages.length > 0 ? (
-                  <p className="max-w-[11rem] text-right text-[10px] leading-snug text-slate-400 dark:text-slate-500">
+                  <p className="max-w-[11rem] text-right text-[10px]! leading-snug text-slate-400 dark:text-slate-500">
                     PM 답변을 받으면 버튼이 활성화됩니다
                   </p>
                 ) : null}
@@ -709,7 +709,7 @@ export function AiProductPlannerPage() {
 
               return (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[88%] rounded-2xl px-5 py-3.5 text-[15.5px] leading-relaxed shadow-sm ${
+                <div className={`max-w-[88%] rounded-2xl px-5 py-3.5 text-[15.5px]! leading-relaxed shadow-sm ${
                   msg.role === 'user'
                     ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm'
                     : 'bg-white border border-slate-100 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 rounded-bl-sm shadow-sm'
@@ -725,7 +725,7 @@ export function AiProductPlannerPage() {
                           thinkingOpen={false}
                         />
                       ) : null}
-                      <div className="prose dark:prose-invert max-w-none text-[15.5px] prose-p:my-0 prose-p:leading-relaxed prose-a:text-indigo-500">
+                      <div className="prose dark:prose-invert max-w-none text-[15.5px]! prose-p:my-0 prose-p:leading-relaxed prose-a:text-indigo-500">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {assistantDisplay?.answer ?? stripPlannerReadyMarker(messageContentToString(msg.content))}
                         </ReactMarkdown>

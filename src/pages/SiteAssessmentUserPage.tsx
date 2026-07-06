@@ -489,7 +489,7 @@ function ReportView({ record }: { record: AssessmentRecord }) {
                         <td className="px-3 py-2.5 text-slate-800 dark:text-slate-200">{d.location}</td>
                         <td className="px-3 py-2.5 font-medium text-slate-900 dark:text-slate-100">{d.defect_type}</td>
                         <td className="px-3 py-2.5">
-                          <span className={`rounded-full px-2 py-0.5 font-semibold text-[10px] ${d.severity === 'critical' ? 'bg-red-100 text-red-800' : d.severity === 'major' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                          <span className={`rounded-full px-2 py-0.5 font-semibold text-[10px]! ${d.severity === 'critical' ? 'bg-red-100 text-red-800' : d.severity === 'major' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
                             {SEV_LABEL_KO[d.severity] ?? d.severity}
                           </span>
                         </td>

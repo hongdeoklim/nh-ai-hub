@@ -85,8 +85,8 @@ export function PromptLibraryPanel({
   }
 
   const tabBase = isCompactSidebar
-    ? 'min-w-0 rounded-full px-1 py-1 text-center text-[9px] font-semibold leading-tight transition-colors'
-    : 'min-w-0 rounded-full px-2 py-2 text-center text-[20px] font-medium leading-tight transition-colors sm:px-3'
+    ? 'min-w-0 rounded-full px-1 py-1 text-center text-[9px]! font-semibold leading-tight transition-colors'
+    : 'min-w-0 rounded-full px-2 py-2 text-center text-[20px]! font-medium leading-tight transition-colors sm:px-3'
   const tabActive =
     'bg-white text-stone-900 shadow-sm dark:bg-stone-700 dark:text-stone-50'
   const tabIdle =
@@ -104,7 +104,7 @@ export function PromptLibraryPanel({
       }
     >
       {variant === 'magnet' ? (
-        <p className="text-[17px] font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
+        <p className="text-[17px]! font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
           {'\ud504\ub86c\ud504\ud2b8'}
         </p>
       ) : null}
@@ -135,26 +135,26 @@ export function PromptLibraryPanel({
   )
 
   const sectionLabelClass = isCompactSidebar
-    ? 'px-0.5 pb-0.5 text-[9px] font-medium text-stone-500 dark:text-stone-400'
-    : 'px-1 pb-1 text-[17px] font-medium text-stone-500 dark:text-stone-400'
+    ? 'px-0.5 pb-0.5 text-[9px]! font-medium text-stone-500 dark:text-stone-400'
+    : 'px-1 pb-1 text-[17px]! font-medium text-stone-500 dark:text-stone-400'
   const cardTitleClass = isCompactSidebar
-    ? 'truncate text-[10px] font-semibold text-stone-900 dark:text-stone-50'
-    : 'text-[20px] font-semibold text-stone-900 dark:text-stone-50'
+    ? 'truncate text-[10px]! font-semibold text-stone-900 dark:text-stone-50'
+    : 'text-[20px]! font-semibold text-stone-900 dark:text-stone-50'
   const cardBodyClass = isCompactSidebar
-    ? 'mt-0.5 line-clamp-2 text-[9px] leading-snug text-stone-600 dark:text-stone-400'
-    : 'mt-1 text-[18px] leading-snug text-stone-600 dark:text-stone-400'
+    ? 'mt-0.5 line-clamp-2 text-[9px]! leading-snug text-stone-600 dark:text-stone-400'
+    : 'mt-1 text-[18px]! leading-snug text-stone-600 dark:text-stone-400'
   const cardButtonClass = isCompactSidebar
     ? 'group flex w-full flex-col rounded-lg border border-transparent bg-white/60 px-1.5 py-1.5 text-left shadow-sm transition hover:border-orange-300/80 hover:bg-white dark:bg-stone-800/80 dark:hover:border-orange-700/50 dark:hover:bg-stone-800 disabled:opacity-50'
     : 'group flex w-full flex-col rounded-xl border border-transparent bg-white/60 px-3 py-2.5 text-left shadow-sm transition hover:border-orange-300/80 hover:bg-white dark:bg-stone-800/80 dark:hover:border-orange-700/50 dark:hover:bg-stone-800 disabled:opacity-50'
   const badgeOrgClass = isCompactSidebar
-    ? 'rounded bg-orange-100 px-1 py-px text-[8px] font-semibold text-orange-900 dark:bg-orange-950/80 dark:text-orange-100'
-    : 'rounded-md bg-orange-100 px-1.5 py-0.5 text-[15px] font-semibold text-orange-900 dark:bg-orange-950/80 dark:text-orange-100'
+    ? 'rounded bg-orange-100 px-1 py-px text-[8px]! font-semibold text-orange-900 dark:bg-orange-950/80 dark:text-orange-100'
+    : 'rounded-md bg-orange-100 px-1.5 py-0.5 text-[15px]! font-semibold text-orange-900 dark:bg-orange-950/80 dark:text-orange-100'
   const badgeShareClass = isCompactSidebar
-    ? 'rounded bg-amber-100 px-1 py-px text-[8px] font-semibold text-amber-950 dark:bg-amber-950/60 dark:text-amber-100'
-    : 'rounded-md bg-amber-100 px-1.5 py-0.5 text-[15px] font-semibold text-amber-950 dark:bg-amber-950/60 dark:text-amber-100'
+    ? 'rounded bg-amber-100 px-1 py-px text-[8px]! font-semibold text-amber-950 dark:bg-amber-950/60 dark:text-amber-100'
+    : 'rounded-md bg-amber-100 px-1.5 py-0.5 text-[15px]! font-semibold text-amber-950 dark:bg-amber-950/60 dark:text-amber-100'
   const badgeMineClass = isCompactSidebar
-    ? 'rounded bg-stone-200 px-1 py-px text-[8px] font-semibold text-stone-800 dark:bg-stone-700 dark:text-stone-100'
-    : 'rounded-md bg-stone-200 px-1.5 py-0.5 text-[15px] font-semibold text-stone-800 dark:bg-stone-700 dark:text-stone-100'
+    ? 'rounded bg-stone-200 px-1 py-px text-[8px]! font-semibold text-stone-800 dark:bg-stone-700 dark:text-stone-100'
+    : 'rounded-md bg-stone-200 px-1.5 py-0.5 text-[15px]! font-semibold text-stone-800 dark:bg-stone-700 dark:text-stone-100'
 
   const tabContent = loading ? (
     <p className="px-1 py-6 text-center text-xs text-stone-500">
@@ -240,8 +240,8 @@ export function PromptLibraryPanel({
         onClick={() => openSaveModal()}
         className={
           isCompactSidebar
-            ? 'w-full rounded-lg border border-dashed border-stone-400/70 bg-white/50 px-1.5 py-2 text-[9px] font-semibold text-stone-800 transition hover:border-orange-400 hover:bg-white dark:border-stone-600 dark:bg-stone-800/50 dark:text-stone-100 dark:hover:border-orange-700 disabled:opacity-50'
-            : 'w-full rounded-xl border border-dashed border-stone-400/70 bg-white/50 px-3 py-3 text-[20px] font-semibold text-stone-800 transition hover:border-orange-400 hover:bg-white dark:border-stone-600 dark:bg-stone-800/50 dark:text-stone-100 dark:hover:border-orange-700 disabled:opacity-50'
+            ? 'w-full rounded-lg border border-dashed border-stone-400/70 bg-white/50 px-1.5 py-2 text-[9px]! font-semibold text-stone-800 transition hover:border-orange-400 hover:bg-white dark:border-stone-600 dark:bg-stone-800/50 dark:text-stone-100 dark:hover:border-orange-700 disabled:opacity-50'
+            : 'w-full rounded-xl border border-dashed border-stone-400/70 bg-white/50 px-3 py-3 text-[20px]! font-semibold text-stone-800 transition hover:border-orange-400 hover:bg-white dark:border-stone-600 dark:bg-stone-800/50 dark:text-stone-100 dark:hover:border-orange-700 disabled:opacity-50'
         }
       >
         {isCompactSidebar

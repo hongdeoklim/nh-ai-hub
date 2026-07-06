@@ -124,13 +124,13 @@ export function AiDesignerPage() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="text-left text-[14px] font-semibold leading-none tracking-tight text-stone-900 transition hover:text-orange-800 dark:text-stone-50 dark:hover:text-orange-200"
+            className="text-left text-[14px]! font-semibold leading-none tracking-tight text-stone-900 transition hover:text-orange-800 dark:text-stone-50 dark:hover:text-orange-200"
             aria-label="홈 · 새 채팅"
           >
             NH-AX-HUB
           </button>
         </h1>
-        <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-[14px] font-semibold text-orange-900 dark:bg-orange-950/50 dark:text-orange-200">
+        <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-[14px]! font-semibold text-orange-900 dark:bg-orange-950/50 dark:text-orange-200">
           AI Designer
         </span>
         <AccountHeaderActions onOpenSettings={openSettings} onSignOut={signOut} />
@@ -143,10 +143,10 @@ export function AiDesignerPage() {
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-transparent gemini-zero-dark-bg text-stone-900 dark:text-stone-100">
           {!draft.trim() ? (
             <div className="mx-auto w-full max-w-3xl px-4 pt-6 text-center md:pt-10">
-              <p className="text-[14px] font-medium text-stone-800 dark:text-stone-100">
+              <p className="text-[14px]! font-medium text-stone-800 dark:text-stone-100">
                 {userGreetingName}님, 안녕하세요
               </p>
-              <p className="mt-2 text-[14px] text-stone-500 dark:text-stone-400">
+              <p className="mt-2 text-[14px]! text-stone-500 dark:text-stone-400">
                 어떤 디자인을 만들어 드릴까요?
               </p>
             </div>

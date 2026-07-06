@@ -39,7 +39,7 @@ export function AiSlidesTabNavigation({
             onClick={() => onChange(tab.id)}
             className={[
               '-mb-px inline-flex h-10 shrink-0 items-center border-b-2 pb-0 pt-0',
-              'text-[16px] font-normal leading-[1.5] transition-colors duration-150',
+              'text-[16px]! font-normal leading-[1.5] transition-colors duration-150',
               'outline-none focus-visible:ring-2 focus-visible:ring-orange-500/25 focus-visible:ring-offset-2',
               active
                 ? 'border-[#0D0D0D] text-[#0D0D0D] dark:border-stone-100 dark:text-stone-50'
@@ -49,7 +49,7 @@ export function AiSlidesTabNavigation({
             {tab.label}
             {tab.id === 'my-templates' && myTemplatesCount > 0 ? (
               <span
-                className={`ml-1.5 text-[14px] tabular-nums ${
+                className={`ml-1.5 text-[14px]! tabular-nums ${
                   active ? 'text-[#525252] dark:text-stone-400' : 'text-[#A3A3A3]'
                 }`}
               >

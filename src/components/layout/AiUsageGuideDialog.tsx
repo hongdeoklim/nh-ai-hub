@@ -23,7 +23,7 @@ function SectionCard({
         </span>
         <span className="pt-0.5 leading-snug">{title}</span>
       </h3>
-      <div className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-stone-700 dark:text-stone-300">
+      <div className="mt-3 space-y-2.5 text-[13px]! leading-relaxed text-stone-700 dark:text-stone-300">
         {children}
       </div>
     </section>
@@ -80,7 +80,7 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
         <div className="shrink-0 border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-4 dark:border-stone-700 dark:from-orange-950/40 dark:to-stone-900 sm:px-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+              <p className="text-[11px]! font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
                 공지
               </p>
               <h2
@@ -122,7 +122,7 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 sm:py-5"
         >
           <div className="space-y-4">
-            <p className="rounded-xl border border-orange-200/80 bg-orange-50/70 px-4 py-3 text-[13px] leading-relaxed text-stone-800 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-stone-200">
+            <p className="rounded-xl border border-orange-200/80 bg-orange-50/70 px-4 py-3 text-[13px]! leading-relaxed text-stone-800 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-stone-200">
               우리 사내 AI 포털은 업무 시간을 획기적으로 줄여주는 강력한 도구입니다.
               하지만 잘못 사용하면 불필요한 비용이 발생할 수 있습니다.{' '}
               <strong className="font-semibold text-stone-900 dark:text-stone-50">
@@ -162,11 +162,11 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
                 ]}
               />
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-[12px] text-red-900 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-100">
+                <div className="rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-[12px]! text-red-900 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-100">
                   <span className="font-semibold">예시 (X)</span>
                   <p className="mt-1">&quot;상하이 공항 사진 그려줘&quot;</p>
                 </div>
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-[12px] text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100">
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-[12px]! text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100">
                   <span className="font-semibold">예시 (O)</span>
                   <p className="mt-1">
                     &quot;상하이 공항 터미널의 현대적인 내부 전경, 비즈니스 분위기,
@@ -214,7 +214,7 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
                 <span aria-hidden="true">🛡️</span>
                 주의사항
               </h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px] leading-relaxed text-amber-950/90 marker:text-amber-700 dark:text-amber-100/90 dark:marker:text-amber-400">
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px]! leading-relaxed text-amber-950/90 marker:text-amber-700 dark:text-amber-100/90 dark:marker:text-amber-400">
                 <li>
                   <strong className="font-semibold">보안:</strong> 사내 비밀, 고객
                   개인정보, 미공개 계약서는 절대 업로드하지 마세요. (이미 시스템이
@@ -229,7 +229,7 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
               </ul>
             </section>
 
-            <p className="rounded-xl bg-stone-100/80 px-4 py-3 text-center text-[13px] leading-relaxed text-stone-700 dark:bg-stone-800/60 dark:text-stone-300">
+            <p className="rounded-xl bg-stone-100/80 px-4 py-3 text-center text-[13px]! leading-relaxed text-stone-700 dark:bg-stone-800/60 dark:text-stone-300">
               우리의 목표는 AI를 부려먹는 &apos;스마트한 인재&apos;가 되는 것입니다.
               효율적인 사용법을 익혀 농협네트웍스의 업무 디지털 혁신을 함께 만들어
               갑시다.

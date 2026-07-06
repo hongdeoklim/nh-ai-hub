@@ -18,7 +18,7 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
   const textCls = isGemini
     ? 'text-actual-14 text-[#1f1f1f] dark:text-stone-100'
     : isClaude
-      ? 'text-[15px] text-stone-900 dark:text-stone-100'
+      ? 'text-[15px]! text-stone-900 dark:text-stone-100'
       : 'text-sm text-slate-800 dark:text-slate-100'
 
   const strongCls = isGemini
@@ -48,14 +48,14 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
   const thCls = isGemini
     ? 'border-b border-[#e3e3e3] bg-[#f0f4f9] px-3 py-2 text-left text-actual-13 font-semibold text-[#1f1f1f] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100'
     : isClaude
-      ? 'border-b border-stone-200 bg-stone-100 px-3 py-2 text-left text-[13px] font-semibold dark:border-stone-700 dark:bg-stone-800'
-      : 'border-b border-slate-200 bg-slate-100 px-3 py-2 text-left text-[13px] font-semibold dark:border-slate-700 dark:bg-slate-800'
+      ? 'border-b border-stone-200 bg-stone-100 px-3 py-2 text-left text-[13px]! font-semibold dark:border-stone-700 dark:bg-stone-800'
+      : 'border-b border-slate-200 bg-slate-100 px-3 py-2 text-left text-[13px]! font-semibold dark:border-slate-700 dark:bg-slate-800'
 
   const tdCls = isGemini
     ? 'border-b border-[#e3e3e3] px-3 py-2 align-top text-actual-13 text-[#1f1f1f] dark:border-stone-800 dark:text-stone-100'
     : isClaude
-      ? 'border-b border-stone-200 px-3 py-2 align-top text-[13px] dark:border-stone-800'
-      : 'border-b border-slate-200 px-3 py-2 align-top text-[13px] dark:border-slate-800'
+      ? 'border-b border-stone-200 px-3 py-2 align-top text-[13px]! dark:border-stone-800'
+      : 'border-b border-slate-200 px-3 py-2 align-top text-[13px]! dark:border-slate-800'
 
   return {
     p: ({ children }) => (
@@ -79,7 +79,7 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
       </h3>
     ),
     h4: ({ children }) => (
-      <h4 className={`mb-2 mt-3 text-[15px] font-semibold leading-snug first:mt-0 ${textCls}`}>
+      <h4 className={`mb-2 mt-3 text-[15px]! font-semibold leading-snug first:mt-0 ${textCls}`}>
         {children}
       </h4>
     ),
@@ -128,13 +128,13 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
       }
 
       if (isBlock) {
-        return <code className={`block font-mono text-[13px] ${className ?? ''}`}>{children}</code>
+        return <code className={`block font-mono text-[13px]! ${className ?? ''}`}>{children}</code>
       }
       return <code className={codeInlineCls}>{children}</code>
     },
     pre: ({ children }) => (
       <pre
-        className={`my-3 max-h-[min(24rem,50vh)] overflow-auto rounded-xl border p-3 font-mono text-[13px] leading-relaxed ${
+        className={`my-3 max-h-[min(24rem,50vh)] overflow-auto rounded-xl border p-3 font-mono text-[13px]! leading-relaxed ${
           isGemini
             ? 'border-[#c4c7c5] bg-[#f8fafd] text-[#1f1f1f] dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200'
             : isClaude

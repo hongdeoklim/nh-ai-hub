@@ -2103,7 +2103,7 @@ export function Dashboard() {
         {profile &&
         dashboardTokenBudget.limit > 0 &&
         dashboardTokenBudget.pct <= 10 ? (
-          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-[12px] text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100 md:px-6">
+          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-[12px]! text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100 md:px-6">
             <span className="font-medium">
               월간 토큰 예산이 10% 이하입니다 (남은 비율 약 {dashboardTokenBudget.pct}
               %).
@@ -2215,7 +2215,7 @@ export function Dashboard() {
         <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-20 shrink-0 border-t border-stone-200/90 bg-[#FAF9F6]/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md gemini-zero-dark-composer dark:border-stone-800/80 md:pointer-events-auto md:relative md:inset-x-auto md:bottom-auto md:z-0 md:bg-transparent md:px-6 md:pb-4 md:pt-2 md:backdrop-blur-none ${isSending ? 'gemini-zero-dark-composer--generating' : ''}`}>
           <div className="pointer-events-auto">
           {referenceBootstrapBusy ? (
-            <div className="mx-auto mb-1 max-w-3xl rounded-lg border border-orange-200/80 bg-orange-50/95 px-3 py-2 text-[11px] font-medium text-orange-950 dark:border-orange-900 dark:bg-orange-950/35 dark:text-orange-100">
+            <div className="mx-auto mb-1 max-w-3xl rounded-lg border border-orange-200/80 bg-orange-50/95 px-3 py-2 text-[11px]! font-medium text-orange-950 dark:border-orange-900 dark:bg-orange-950/35 dark:text-orange-100">
               구글 드라이브에서 자료를 불러오는 중입니다…
             </div>
           ) : null}
@@ -2224,7 +2224,7 @@ export function Dashboard() {
               {referenceSnippets.map((s) => (
                 <span
                   key={s.key}
-                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-stone-300/90 bg-white px-2.5 py-1 text-[11px] font-medium text-stone-800 shadow-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-stone-300/90 bg-white px-2.5 py-1 text-[11px]! font-medium text-stone-800 shadow-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
                 >
                   <span className="truncate" title={s.title}>
                     📎 {s.title}

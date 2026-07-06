@@ -37,14 +37,14 @@ export function SlideTemplateScreenshot({
         />
         <div className="flex min-h-0 flex-1 flex-col p-3">
           <p
-            className={`text-[13px] font-bold leading-tight ${
+            className={`text-[13px]! font-bold leading-tight ${
               isDark ? 'text-stone-100' : 'text-stone-900'
             }`}
           >
             {titleKo}
           </p>
           <p
-            className={`mt-0.5 text-[13px] uppercase tracking-wide ${
+            className={`mt-0.5 text-[13px]! uppercase tracking-wide ${
               isDark ? 'text-stone-400' : 'text-stone-500'
             }`}
           >
@@ -78,7 +78,7 @@ export function SlideTemplateScreenshot({
         </div>
       </div>
       {template.isNew ? (
-        <span className="absolute right-2 top-2 rounded-full bg-orange-600 px-2 py-0.5 text-[13px] font-semibold text-white shadow">
+        <span className="absolute right-2 top-2 rounded-full bg-orange-600 px-2 py-0.5 text-[13px]! font-semibold text-white shadow">
           NEW
         </span>
       ) : null}

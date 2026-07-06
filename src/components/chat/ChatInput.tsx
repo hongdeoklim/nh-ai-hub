@@ -911,10 +911,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               )}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">
+              <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
                 {tool.label}
               </span>
-              <span className="mt-0.5 block text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+              <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                 {engineName || tool.hint}
               </span>
             </span>
@@ -1036,10 +1036,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     queueMicrotask(() => fileInputRef.current?.click())
                   }}
                 >
-                  <span className="text-[13px] font-medium text-stone-800 dark:text-stone-100">
+                  <span className="text-[13px]! font-medium text-stone-800 dark:text-stone-100">
                     이미지 첨부
                   </span>
-                  <span className="mt-0.5 text-[11px] text-stone-500 dark:text-stone-400">
+                  <span className="mt-0.5 text-[11px]! text-stone-500 dark:text-stone-400">
                     JPG, PNG · 최대 1024px · 1MB
                   </span>
                 </button>
@@ -1058,10 +1058,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     queueMicrotask(() => onOpenWorkspaceTools())
                   }}
                 >
-                  <span className="text-[13px] font-medium text-stone-800 dark:text-stone-100">
+                  <span className="text-[13px]! font-medium text-stone-800 dark:text-stone-100">
                     파일·문서 첨부
                   </span>
-                  <span className="mt-0.5 text-[11px] text-stone-500 dark:text-stone-400">
+                  <span className="mt-0.5 text-[11px]! text-stone-500 dark:text-stone-400">
                     Google Drive · Microsoft 365
                   </span>
                 </button>
@@ -1202,7 +1202,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 disabled={disabled}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className={`box-border min-h-[24px] max-h-[168px] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 text-[16px] leading-relaxed outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`box-border min-h-[24px] max-h-[168px] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 text-[16px]! leading-relaxed outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
                   isSoftShell
                     ? 'text-stone-900 placeholder:text-stone-400 dark:text-stone-100 dark:placeholder:text-stone-500'
                     : 'text-slate-900 placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500'
@@ -1221,7 +1221,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
               <div ref={toolsWrapRef} className="relative flex shrink-0 items-center gap-1">
                 {activeToolMeta ? (
-                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px]! font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">{activeToolMeta.label}</span>
                     <button
                       type="button"
@@ -1237,7 +1237,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   </span>
                 ) : null}
                 {deepResearchEnabled ? (
-                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px]! font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">Deep Research</span>
                     <button
                       type="button"
@@ -1253,7 +1253,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   </span>
                 ) : null}
                 {internetSearchEnabled ? (
-                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px]! font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">인터넷 검색</span>
                     <button
                       type="button"
@@ -1288,7 +1288,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   title="도구 · AI 기능"
                 >
                   <IconSliders className="h-4 w-4 shrink-0" />
-                  <span className="text-[11px] font-medium leading-none">도구</span>
+                  <span className="text-[11px]! font-medium leading-none">도구</span>
                 </button>
                 {toolsMenuOpen && toolsMenuAnchor
                   ? createPortal(
@@ -1304,7 +1304,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                         }}
                       >
                     <div className="border-b border-stone-100 px-3 py-2.5 dark:border-stone-700">
-                      <p className="text-[13px] font-semibold text-stone-900 dark:text-stone-50">
+                      <p className="text-[13px]! font-semibold text-stone-900 dark:text-stone-50">
                         도구
                       </p>
                     </div>
@@ -1324,10 +1324,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             <IconPlus className="h-4 w-4" />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
                               이미지 첨부
                             </span>
-                            <span className="mt-0.5 block text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                               JPG, PNG · 최대 1024px · 1MB
                             </span>
                           </span>
@@ -1349,10 +1349,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
                               파일·문서 첨부
                             </span>
-                            <span className="mt-0.5 block text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                               Google Drive · Microsoft 365
                             </span>
                           </span>
@@ -1372,10 +1372,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
                               로컬 파일 업로드
                             </span>
-                            <span className="mt-0.5 block text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                               PDF, DOCX, TXT 등 다양한 포맷 지원
                             </span>
                           </span>
@@ -1406,10 +1406,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
                               Deep Research
                             </span>
-                            <span className="mt-0.5 block text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                               Claude·GPT·Gemini 교차 검증
                             </span>
                           </span>
@@ -1441,10 +1441,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
                               인터넷 검색
                             </span>
-                            <span className="mt-0.5 block text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                               Gemini·Claude·GPT 실시간 웹 정보
                             </span>
                           </span>
@@ -1487,10 +1487,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                                   )}
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                  <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">
+                                  <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
                                     {tool.label}
                                   </span>
-                                  <span className="mt-0.5 block text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                                  <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                                     {tool.hint}
                                   </span>
                                 </span>
@@ -1518,8 +1518,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">사내 자료실</span>
-                            <span className="mt-0.5 block text-[11px] text-stone-500 dark:text-stone-400">문서·드라이브 참조</span>
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">사내 자료실</span>
+                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">문서·드라이브 참조</span>
                           </span>
                         </button>
                       ) : null}
@@ -1540,8 +1540,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">노트북 워크스페이스</span>
-                            <span className="mt-0.5 block text-[11px] text-stone-500 dark:text-stone-400">RAG · 사내 문서 분석</span>
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">노트북 워크스페이스</span>
+                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">RAG · 사내 문서 분석</span>
                           </span>
                         </button>
                       ) : null}
@@ -1562,8 +1562,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           </svg>
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">가이드 학습</span>
-                          <span className="mt-0.5 block text-[11px] text-stone-500 dark:text-stone-400">새로운 내용 공부하고 배우기</span>
+                          <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">가이드 학습</span>
+                          <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">새로운 내용 공부하고 배우기</span>
                         </span>
                       </button>
 
@@ -1583,8 +1583,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           </svg>
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">개인 인텔리전스 Labs</span>
-                          <span className="mt-0.5 block text-[11px] text-stone-500 dark:text-stone-400">데이터 분석 요청</span>
+                          <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">개인 인텔리전스 Labs</span>
+                          <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">데이터 분석 요청</span>
                         </span>
                       </button>
 
@@ -1604,8 +1604,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">워크스페이스 연동</span>
-                            <span className="mt-0.5 block text-[11px] text-stone-500 dark:text-stone-400">Google · Microsoft</span>
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">워크스페이스 연동</span>
+                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">Google · Microsoft</span>
                           </span>
                         </button>
                       ) : null}
@@ -1627,8 +1627,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium text-stone-900 dark:text-stone-50">채팅 맞춤설정</span>
-                            <span className="mt-0.5 block text-[11px] text-stone-500 dark:text-stone-400">프로필 · AI 선호 설정</span>
+                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">채팅 맞춤설정</span>
+                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">프로필 · AI 선호 설정</span>
                           </span>
                         </button>
                       ) : null}

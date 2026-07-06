@@ -27,7 +27,7 @@ function JsonBlock({ value }: { value: unknown }) {
         ? value
         : JSON.stringify(value, null, 2)
   return (
-    <pre className="max-h-60 overflow-auto rounded-xl border border-stone-200 bg-stone-950/90 p-3 text-[11px] leading-snug text-stone-100 dark:border-stone-700">
+    <pre className="max-h-60 overflow-auto rounded-xl border border-stone-200 bg-stone-950/90 p-3 text-[11px]! leading-snug text-stone-100 dark:border-stone-700">
       {text || '(비어 있음)'}
     </pre>
   )
@@ -42,7 +42,7 @@ function localDatetimeInputToIso(value: string): string | null {
 }
 
 const fieldCls =
-  'mt-1 w-full rounded-lg border border-stone-300 bg-[#FAF9F6] px-2 py-1.5 text-[13px] dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100'
+  'mt-1 w-full rounded-lg border border-stone-300 bg-[#FAF9F6] px-2 py-1.5 text-[13px]! dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100'
 
 export function WorkspaceIntegrationsPage() {
   const [googleConnected, setGoogleConnected] = useState(false)
@@ -271,7 +271,7 @@ export function WorkspaceIntegrationsPage() {
               type="button"
               disabled={busy || !googleConnected}
               onClick={() => void runGoogle('gmail.listMessages', { maxResults: 8 })}
-              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px]! font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
             >
               Gmail 목록
             </button>
@@ -284,7 +284,7 @@ export function WorkspaceIntegrationsPage() {
                   timeMin: new Date().toISOString(),
                 })
               }
-              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px]! font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
             >
               Calendar 오늘 이후
             </button>
@@ -298,7 +298,7 @@ export function WorkspaceIntegrationsPage() {
                   pageSize: 15,
                 })
               }
-              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px]! font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
             >
               Drive · PPTX
             </button>
@@ -312,7 +312,7 @@ export function WorkspaceIntegrationsPage() {
                   pageSize: 15,
                 })
               }
-              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px]! font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
             >
               Drive · XLSX
             </button>
@@ -324,7 +324,7 @@ export function WorkspaceIntegrationsPage() {
                 Gmail 보내기
               </summary>
               <div className="mt-2 flex flex-col gap-2">
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   받는 사람
                   <input
                     type="email"
@@ -337,7 +337,7 @@ export function WorkspaceIntegrationsPage() {
                     placeholder="name@company.com"
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   제목
                   <input
                     value={googleMailDraft.subject}
@@ -347,7 +347,7 @@ export function WorkspaceIntegrationsPage() {
                     className={fieldCls}
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   본문
                   <textarea
                     rows={3}
@@ -374,7 +374,7 @@ export function WorkspaceIntegrationsPage() {
                       text: googleMailDraft.body,
                     })
                   }}
-                  className="rounded-lg bg-orange-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-orange-900 disabled:opacity-45"
+                  className="rounded-lg bg-orange-800 px-3 py-1.5 text-[11px]! font-semibold text-white hover:bg-orange-900 disabled:opacity-45"
                 >
                   Gmail 전송
                 </button>
@@ -386,7 +386,7 @@ export function WorkspaceIntegrationsPage() {
                 Calendar 일정 만들기 (primary)
               </summary>
               <div className="mt-2 flex flex-col gap-2">
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   제목
                   <input
                     value={googleEventDraft.summary}
@@ -397,7 +397,7 @@ export function WorkspaceIntegrationsPage() {
                     placeholder="회의 제목"
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   시작 (로컬)
                   <input
                     type="datetime-local"
@@ -408,7 +408,7 @@ export function WorkspaceIntegrationsPage() {
                     className={fieldCls}
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   종료 (로컬)
                   <input
                     type="datetime-local"
@@ -419,7 +419,7 @@ export function WorkspaceIntegrationsPage() {
                     className={fieldCls}
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   설명 (선택)
                   <textarea
                     rows={2}
@@ -451,7 +451,7 @@ export function WorkspaceIntegrationsPage() {
                       description: googleEventDraft.description.trim() || undefined,
                     })
                   }}
-                  className="rounded-lg bg-orange-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-orange-900 disabled:opacity-45"
+                  className="rounded-lg bg-orange-800 px-3 py-1.5 text-[11px]! font-semibold text-white hover:bg-orange-900 disabled:opacity-45"
                 >
                   일정 생성
                 </button>
@@ -474,7 +474,7 @@ export function WorkspaceIntegrationsPage() {
               type="button"
               disabled={busy || !msConnected}
               onClick={() => void runMs('mail.listMessages', { top: 8 })}
-              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px]! font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
             >
               Outlook 메일
             </button>
@@ -482,7 +482,7 @@ export function WorkspaceIntegrationsPage() {
               type="button"
               disabled={busy || !msConnected}
               onClick={() => void runMs('calendar.listEvents', { top: 15 })}
-              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px]! font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
             >
               일정
             </button>
@@ -490,7 +490,7 @@ export function WorkspaceIntegrationsPage() {
               type="button"
               disabled={busy || !msConnected}
               onClick={() => void runMs('drive.listRootChildren', { top: 20 })}
-              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
+              className="rounded-lg border border-stone-300 px-2 py-1 text-[11px]! font-semibold hover:bg-stone-50 disabled:opacity-45 dark:border-stone-600 dark:hover:bg-stone-800"
             >
               OneDrive 루트
             </button>
@@ -502,7 +502,7 @@ export function WorkspaceIntegrationsPage() {
                 Outlook 메일 보내기
               </summary>
               <div className="mt-2 flex flex-col gap-2">
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   받는 사람
                   <input
                     type="email"
@@ -515,7 +515,7 @@ export function WorkspaceIntegrationsPage() {
                     placeholder="name@company.com"
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   제목
                   <input
                     value={microsoftMailDraft.subject}
@@ -528,7 +528,7 @@ export function WorkspaceIntegrationsPage() {
                     className={fieldCls}
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   본문
                   <textarea
                     rows={3}
@@ -555,7 +555,7 @@ export function WorkspaceIntegrationsPage() {
                       text: microsoftMailDraft.body,
                     })
                   }}
-                  className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
+                  className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px]! font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
                 >
                   메일 전송
                 </button>
@@ -567,7 +567,7 @@ export function WorkspaceIntegrationsPage() {
                 Outlook 일정 만들기
               </summary>
               <div className="mt-2 flex flex-col gap-2">
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   제목
                   <input
                     value={microsoftEventDraft.subject}
@@ -580,7 +580,7 @@ export function WorkspaceIntegrationsPage() {
                     className={fieldCls}
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   시작 (로컬)
                   <input
                     type="datetime-local"
@@ -594,7 +594,7 @@ export function WorkspaceIntegrationsPage() {
                     className={fieldCls}
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   종료 (로컬)
                   <input
                     type="datetime-local"
@@ -605,7 +605,7 @@ export function WorkspaceIntegrationsPage() {
                     className={fieldCls}
                   />
                 </label>
-                <label className="text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <label className="text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   본문 (선택)
                   <textarea
                     rows={2}
@@ -634,7 +634,7 @@ export function WorkspaceIntegrationsPage() {
                       timeZone: 'Asia/Seoul',
                     })
                   }}
-                  className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
+                  className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px]! font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
                 >
                   일정 생성
                 </button>
@@ -662,7 +662,7 @@ export function WorkspaceIntegrationsPage() {
               <input
                 type="file"
                 disabled={busy}
-                className="text-[13px] text-stone-800 file:mr-2 file:rounded-lg file:border file:border-stone-300 file:bg-white file:px-2 file:py-1 dark:text-stone-200 dark:file:border-stone-600 dark:file:bg-stone-900"
+                className="text-[13px]! text-stone-800 file:mr-2 file:rounded-lg file:border file:border-stone-300 file:bg-white file:px-2 file:py-1 dark:text-stone-200 dark:file:border-stone-600 dark:file:bg-stone-900"
                 onChange={(e) => {
                   const f = e.target.files?.[0]
                   if (!f) return
@@ -686,12 +686,12 @@ export function WorkspaceIntegrationsPage() {
                 value={uploadNote}
                 onChange={(e) => setUploadNote(e.target.value)}
                 placeholder="예: ○○ 프로젝트 견적"
-                className="rounded-lg border border-stone-300 bg-[#FAF9F6] px-2 py-1.5 text-[13px] dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+                className="rounded-lg border border-stone-300 bg-[#FAF9F6] px-2 py-1.5 text-[13px]! dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
               />
             </label>
           </div>
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[28rem] border-collapse text-left text-[12px]">
+            <table className="w-full min-w-[28rem] border-collapse text-left text-[12px]!">
               <thead>
                 <tr className="border-b border-stone-200 text-stone-500 dark:border-stone-700 dark:text-stone-400">
                   <th className="py-2 pr-2 font-semibold">종류</th>

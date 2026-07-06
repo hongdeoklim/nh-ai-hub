@@ -466,8 +466,7 @@ export function MainLayout() {
                   value={threadSearchQuery}
                   onChange={(event) => setThreadSearchQuery(event.target.value)}
                   placeholder="채팅 검색"
-                  style={{ fontSize: '14px' }}
-                  className="w-full rounded-full border border-stone-300/90 bg-white py-2 pl-9 pr-9 text-stone-900 outline-none ring-orange-600/25 placeholder:text-stone-400 focus:border-orange-500/60 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500"
+                  className="w-full rounded-full border border-stone-300/90 bg-white py-2 pl-9 pr-9 text-[14px]! text-stone-900 outline-none ring-orange-600/25 placeholder:text-stone-400 focus:border-orange-500/60 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500"
                 />
                 {threadSearchQuery ? (
                   <button
@@ -506,7 +505,7 @@ export function MainLayout() {
                   <p className="truncate text-sm font-semibold leading-tight text-stone-900 dark:text-white">
                     {displayName}
                   </p>
-                  <p className="truncate text-[11px] leading-snug text-stone-600 dark:text-stone-400">
+                  <p className="truncate text-[11px]! leading-snug text-stone-600 dark:text-stone-400">
                     {[department, rankTitleLine].filter(Boolean).join(' · ') ||
                       '—'}
                   </p>
@@ -522,7 +521,7 @@ export function MainLayout() {
 
             {showExpandedSidebarContent ? (
               <div className="mt-2">
-                <div className="mb-0.5 flex items-center justify-between text-[11px] font-medium text-stone-700 dark:text-stone-300">
+                <div className="mb-0.5 flex items-center justify-between text-[11px]! font-medium text-stone-700 dark:text-stone-300">
                   <span>토큰</span>
                   <span className="tabular-nums text-orange-900 dark:text-orange-300">
                     {profile ? `${remainingPct}%` : '—'}
@@ -555,7 +554,7 @@ export function MainLayout() {
                     />
                   ) : null}
                 </svg>
-                <p className="mt-0.5 truncate text-[11px] leading-snug text-stone-600 dark:text-stone-400">
+                <p className="mt-0.5 truncate text-[11px]! leading-snug text-stone-600 dark:text-stone-400">
                   {profile ? (
                     <>
                       {currentUsage.toLocaleString()} /{' '}
@@ -570,7 +569,7 @@ export function MainLayout() {
             {(!showExpandedSidebarContent) ? (
               <div className="mt-2 flex flex-col items-center justify-center">
                 <IconTokenRequest className="h-4 w-4 text-stone-500 dark:text-stone-400" />
-                <span className="mt-0.5 text-[10px] font-semibold text-orange-800 dark:text-orange-300">
+                <span className="mt-0.5 text-[10px]! font-semibold text-orange-800 dark:text-orange-300">
                   {profile ? `${remainingPct}%` : '-'}
                 </span>
               </div>
@@ -676,7 +675,7 @@ export function MainLayout() {
                               </span>
                               <span className="min-w-0 flex-1 truncate">{session.title}</span>
                               {session.has_plan ? (
-                                <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px]! font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                                   PRD
                                 </span>
                               ) : null}

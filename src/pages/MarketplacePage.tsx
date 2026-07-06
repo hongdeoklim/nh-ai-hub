@@ -308,7 +308,7 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
           <div className="flex items-center gap-3">
             <span className="text-3xl">{typeof manifest.icon === 'string' ? manifest.icon : meta.icon}</span>
             <div>
-              <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${meta.color}`}>{meta.label}</span>
+              <span className={`inline-block rounded-full px-2 py-0.5 text-[11px]! font-bold uppercase ${meta.color}`}>{meta.label}</span>
               <h2 className="mt-1 text-lg font-bold text-stone-950 dark:text-white">{ext.name}</h2>
               <p className="text-xs text-stone-500">v{ext.version} · {ext.provider}</p>
             </div>
@@ -425,7 +425,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
         <div className="flex items-center gap-2.5">
           <span className="text-2xl">{icon}</span>
           <div>
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${meta.color}`}>{meta.label}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[10px]! font-bold uppercase ${meta.color}`}>{meta.label}</span>
             <h2 className="mt-1 text-base font-bold text-stone-950 dark:text-white">{ext.name}</h2>
           </div>
         </div>
@@ -627,7 +627,7 @@ export function MarketplacePage() {
               >
                 {item.label}
                 {counts[item.id] !== undefined && (
-                  <span className="ml-1.5 rounded-full bg-black/10 px-1.5 py-0.5 text-[10px]">{counts[item.id]}</span>
+                  <span className="ml-1.5 rounded-full bg-black/10 px-1.5 py-0.5 text-[10px]!">{counts[item.id]}</span>
                 )}
               </button>
             ))}

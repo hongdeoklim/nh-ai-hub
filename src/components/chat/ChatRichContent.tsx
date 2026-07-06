@@ -132,13 +132,13 @@ function CodeCanvasPanel({
       }`}
     >
       <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-1.5">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+        <span className="text-[11px]! font-semibold uppercase tracking-wide text-stone-400">
           {language || 'code'}
         </span>
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
+          className={`rounded-md px-2 py-0.5 text-[11px]! font-semibold ${
             isGemini
               ? 'text-[#444746] hover:bg-black/5 dark:text-stone-300 dark:hover:bg-white/10'
               : 'text-stone-300 hover:bg-white/10'
@@ -148,7 +148,7 @@ function CodeCanvasPanel({
         </button>
       </div>
       <pre
-        className={`max-h-[min(24rem,50vh)] overflow-auto p-3 text-[13px] leading-relaxed ${
+        className={`max-h-[min(24rem,50vh)] overflow-auto p-3 text-[13px]! leading-relaxed ${
           isGemini ? 'text-[#1f1f1f] dark:text-stone-200' : 'text-emerald-100'
         }`}
       >
@@ -242,7 +242,7 @@ export function ChatRichContent({
               className="max-h-72 w-full object-contain transition group-hover:brightness-95"
               loading="lazy"
             />
-            <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
+            <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px]! font-semibold text-white opacity-0 transition group-hover:opacity-100">
               크게 보기
             </span>
           </button>

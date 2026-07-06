@@ -262,7 +262,7 @@ export function KnowledgeGraph({
                   x={node.x}
                   y={node.y + r + 10}
                   textAnchor="middle"
-                  className="fill-stone-700 text-[10px] font-medium dark:fill-stone-200"
+                  className="fill-stone-700 text-[10px]! font-medium dark:fill-stone-200"
                 >
                   {node.label}
                 </text>

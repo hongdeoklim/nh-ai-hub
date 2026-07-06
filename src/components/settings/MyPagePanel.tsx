@@ -131,7 +131,7 @@ export function MyPagePanel() {
 
   if (!userId || !profile) {
     return (
-      <p className="text-[20px] text-stone-600 dark:text-stone-400">
+      <p className="text-[20px]! text-stone-600 dark:text-stone-400">
         로그인 후 마이페이지를 이용할 수 있습니다.
       </p>
     )
@@ -143,12 +143,12 @@ export function MyPagePanel() {
         <p className="font-semibold text-stone-900 dark:text-stone-100">
           내 정보
         </p>
-        <p className="text-[20px] leading-relaxed text-stone-600 dark:text-stone-400">
+        <p className="text-[20px]! leading-relaxed text-stone-600 dark:text-stone-400">
           이름·소속 등은 AI 답변 맥락과 사이드바 표시에 활용할 수 있습니다. 로그인 이메일은
           보안상 여기서 변경하지 않습니다.
         </p>
 
-        <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
           로그인 이메일 <span className="font-normal text-stone-500">(읽기 전용)</span>
           <input
             type="email"
@@ -158,7 +158,7 @@ export function MyPagePanel() {
           />
         </label>
 
-        <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
           화면 테마
           <select
             value={theme}
@@ -171,7 +171,7 @@ export function MyPagePanel() {
           </select>
         </label>
 
-        <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
           이름
           <input
             value={displayName}
@@ -183,7 +183,7 @@ export function MyPagePanel() {
           />
         </label>
 
-        <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
           소속
           <input
             value={department}
@@ -195,7 +195,7 @@ export function MyPagePanel() {
         </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+          <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
             직급
             <input
               value={jobRank}
@@ -205,7 +205,7 @@ export function MyPagePanel() {
               placeholder="예: 과장"
             />
           </label>
-          <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+          <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
             직책
             <input
               value={jobTitle}
@@ -217,7 +217,7 @@ export function MyPagePanel() {
           </label>
         </div>
 
-        <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
           연락처
           <input
             value={phone}
@@ -230,7 +230,7 @@ export function MyPagePanel() {
         </label>
 
         {profileMsg ? (
-          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[20px] text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
+          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[20px]! text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
             {profileMsg}
           </p>
         ) : null}
@@ -249,11 +249,11 @@ export function MyPagePanel() {
         <p className="font-semibold text-stone-900 dark:text-stone-100">
           비밀번호 변경
         </p>
-        <p className="text-[20px] leading-relaxed text-stone-600 dark:text-stone-400">
+        <p className="text-[20px]! leading-relaxed text-stone-600 dark:text-stone-400">
           새 비밀번호는 8자 이상으로 입력하세요. 다른 기기에서도 다음 로그인부터 적용됩니다.
         </p>
 
-        <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
           새 비밀번호
           <input
             type="password"
@@ -265,7 +265,7 @@ export function MyPagePanel() {
           />
         </label>
 
-        <label className="block text-[20px] font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[20px]! font-medium text-stone-800 dark:text-stone-200">
           새 비밀번호 확인
           <input
             type="password"
@@ -278,7 +278,7 @@ export function MyPagePanel() {
         </label>
 
         {passwordMsg ? (
-          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[20px] text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
+          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[20px]! text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
             {passwordMsg}
           </p>
         ) : null}

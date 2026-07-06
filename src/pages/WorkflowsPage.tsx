@@ -332,8 +332,8 @@ function PipelinePreview({ steps }: { steps: WorkflowStep[] }) {
         const meta = STEP_META[s.type]
         return (
           <span key={s.id} className="flex items-center gap-1">
-            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${meta.bg} ${meta.color}`}>
-              <span className="text-[11px]">{meta.icon}</span>
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]! font-semibold ${meta.bg} ${meta.color}`}>
+              <span className="text-[11px]!">{meta.icon}</span>
               <span>{s.name.length > 9 ? s.name.slice(0, 9) + '…' : s.name}</span>
             </span>
             {i < steps.length - 1 && <svg className="h-2.5 w-2.5 text-slate-300 dark:text-slate-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>}
@@ -358,7 +358,7 @@ function AddStepButton({ onClick, open, onSelect, onClose }: {
   return (
     <div className="relative flex justify-center">
       <button onClick={onClick}
-        className="flex items-center gap-1 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900/50 px-3 py-1 text-[11px] font-medium text-slate-400 hover:border-indigo-400 hover:text-indigo-500 transition-colors">
+        className="flex items-center gap-1 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900/50 px-3 py-1 text-[11px]! font-medium text-slate-400 hover:border-indigo-400 hover:text-indigo-500 transition-colors">
         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
         단계 추가
       </button>
@@ -372,7 +372,7 @@ function AddStepButton({ onClick, open, onSelect, onClose }: {
             const meta = STEP_META[type]
             return (
               <div key={type}>
-                <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 ${meta.color}`}>{meta.icon} {meta.label}</p>
+                <p className={`text-[10px]! font-bold uppercase tracking-wide mb-1 ${meta.color}`}>{meta.icon} {meta.label}</p>
                 <div className="space-y-0.5">
                   {presets.map(p => (
                     <button key={p.name} onClick={() => onSelect(p)}
@@ -428,7 +428,7 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-6 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">{initial?.id ? '워크플로우 편집' : '새 워크플로우'}</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">단계를 추가해 업무 파이프라인을 구성하세요</p>
+            <p className="text-[11px]! text-slate-400 mt-0.5">단계를 추가해 업무 파이프라인을 구성하세요</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -461,8 +461,8 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                   }`}>
                   <span className="text-xl">{t.icon}</span>
-                  <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 leading-tight">{t.label}</span>
-                  <span className="text-[10px] text-slate-400 leading-tight">{t.desc}</span>
+                  <span className="text-[11px]! font-semibold text-slate-700 dark:text-slate-300 leading-tight">{t.label}</span>
+                  <span className="text-[10px]! text-slate-400 leading-tight">{t.desc}</span>
                 </button>
               ))}
             </div>
@@ -472,7 +472,7 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400">⚙️ 실행 단계</label>
-              <span className="text-[11px] text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5">{steps.length}단계</span>
+              <span className="text-[11px]! text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5">{steps.length}단계</span>
             </div>
             <div className="space-y-1">
               <AddStepButton onClick={() => setShowPresetPicker(0)} open={showPresetPicker === 0} onSelect={p => addStep(0, p)} onClose={() => setShowPresetPicker(null)} />
@@ -486,7 +486,7 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${meta.color}`}>{step.name}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">{meta.label}</p>
+                        <p className="text-[11px]! text-slate-400 mt-0.5">{meta.label}</p>
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0">
                         <button onClick={() => moveStep(idx, -1)} disabled={idx === 0} className="rounded-md p-1 text-slate-400 hover:text-slate-600 disabled:opacity-25 hover:bg-white/60 dark:hover:bg-slate-800/60">
@@ -551,7 +551,7 @@ function ExecutionModal({ wf, onClose }: { wf: WorkflowRow; onClose: () => void 
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-50">{wf.title}</h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">{running ? '실행 중…' : done ? '실행 완료' : '준비 중'}</p>
+              <p className="text-[11px]! text-slate-400 mt-0.5">{running ? '실행 중…' : done ? '실행 완료' : '준비 중'}</p>
             </div>
             {!running && <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>}
           </div>
@@ -559,7 +559,7 @@ function ExecutionModal({ wf, onClose }: { wf: WorkflowRow; onClose: () => void 
           <div className="mt-3 h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
             <div className="h-full rounded-full bg-indigo-500 transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
-          <div className="flex justify-between mt-1.5 text-[10px] text-slate-400">
+          <div className="flex justify-between mt-1.5 text-[10px]! text-slate-400">
             <span>{succeeded} 완료 {failed > 0 ? `· ${failed} 실패` : ''}</span>
             <span>{progress}%</span>
           </div>
@@ -602,7 +602,7 @@ function ExecutionModal({ wf, onClose }: { wf: WorkflowRow; onClose: () => void 
                     <p className={`mt-0.5 text-xs ${step.status === 'failed' ? 'text-rose-500' : 'text-slate-400 dark:text-slate-500'}`}>{step.result}</p>
                   )}
                 </div>
-                <span className={`shrink-0 text-[10px] font-semibold rounded-full px-2 py-0.5 ${
+                <span className={`shrink-0 text-[10px]! font-semibold rounded-full px-2 py-0.5 ${
                   isRunning        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' :
                   step.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                   step.status === 'failed'    ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' :
@@ -623,7 +623,7 @@ function ExecutionModal({ wf, onClose }: { wf: WorkflowRow; onClose: () => void 
               <p className={`text-sm font-bold ${failed > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                 {failed > 0 ? `⚠️ ${failed}단계 실패 — 확인 필요` : '✅ 모든 단계 완료'}
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">{succeeded}/{liveSteps.length} 단계 성공</p>
+              <p className="text-[11px]! text-slate-400 mt-0.5">{succeeded}/{liveSteps.length} 단계 성공</p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => void start()} className="rounded-xl border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">재실행</button>
@@ -718,7 +718,7 @@ export function WorkflowsPage() {
               <div key={label} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 flex items-center gap-3">
                 <span className="text-2xl">{icon}</span>
                 <div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{label}</p>
+                  <p className="text-[11px]! text-slate-500 dark:text-slate-400">{label}</p>
                   <p className={`text-2xl font-black tabular-nums ${color}`}>{value}</p>
                 </div>
               </div>
@@ -737,7 +737,7 @@ export function WorkflowsPage() {
                     : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}>
                 {label}
-                {id === 'template' && <span className="ml-1.5 text-[10px] rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 font-bold">{TEMPLATES.length}</span>}
+                {id === 'template' && <span className="ml-1.5 text-[10px]! rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 font-bold">{TEMPLATES.length}</span>}
               </button>
             ))}
           </div>
@@ -789,8 +789,8 @@ export function WorkflowsPage() {
                       </div>
                       <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5">{wf.steps.length}단계</span>
-                          <span className="text-[11px] text-slate-400">{triggerOpt?.label ?? '수동 실행'}</span>
+                          <span className="text-[11px]! font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5">{wf.steps.length}단계</span>
+                          <span className="text-[11px]! text-slate-400">{triggerOpt?.label ?? '수동 실행'}</span>
                         </div>
                         <button onClick={() => handleLaunch(wf)}
                           className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 shadow-sm active:scale-95 transition-all">
@@ -821,7 +821,7 @@ export function WorkflowsPage() {
                       <span className={`text-xs font-semibold shrink-0 ${
                         run.status === 'succeeded' ? 'text-emerald-600 dark:text-emerald-400' : run.status === 'failed' ? 'text-rose-500' : 'text-slate-400'
                       }`}>{run.status === 'succeeded' ? '완료' : run.status === 'failed' ? '실패' : run.status === 'running' ? '실행 중' : '대기'}</span>
-                      <span className="text-[11px] text-slate-400 shrink-0">{new Date(run.created_at).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-[11px]! text-slate-400 shrink-0">{new Date(run.created_at).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   ))}
                 </div>
@@ -844,7 +844,7 @@ export function WorkflowsPage() {
                   }`}>
                   <span>{cat.icon}</span>
                   {cat.label}
-                  <span className={`text-[10px] rounded-full px-1.5 py-0.5 font-bold ${
+                  <span className={`text-[10px]! rounded-full px-1.5 py-0.5 font-bold ${
                     catFilter === cat.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                   }`}>
                     {cat.id === 'all' ? TEMPLATES.length : TEMPLATES.filter(t => t.category === cat.id).length}
@@ -861,29 +861,29 @@ export function WorkflowsPage() {
                 return (
                   <div key={t.title} className="group relative rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all flex flex-col">
                     {t.badge && (
-                      <span className={`absolute top-3.5 right-3.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`absolute top-3.5 right-3.5 text-[10px]! font-bold px-2 py-0.5 rounded-full ${
                         t.badge === '인기' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' :
                         'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
                       }`}>{t.badge}</span>
                     )}
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xl">{triggerOpt?.icon ?? '⚡'}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 ${catMeta?.color ?? 'text-slate-500'}`}>
+                      <span className={`text-[10px]! font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 ${catMeta?.color ?? 'text-slate-500'}`}>
                         {catMeta?.label ?? t.category}
                       </span>
                     </div>
                     <h3 className="font-bold text-slate-900 dark:text-slate-50 text-sm leading-snug">{t.title}</h3>
-                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">{t.description}</p>
+                    <p className="mt-1 text-[11px]! text-slate-500 dark:text-slate-400 leading-relaxed flex-1">{t.description}</p>
                     <div className="mt-3">
                       <PipelinePreview steps={t.steps} />
                     </div>
                     <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full px-2 py-0.5">{t.steps.length}단계</span>
-                        <span className="text-[11px] text-slate-400">{triggerOpt?.label}</span>
+                        <span className="text-[11px]! font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full px-2 py-0.5">{t.steps.length}단계</span>
+                        <span className="text-[11px]! text-slate-400">{triggerOpt?.label}</span>
                       </div>
                       <button onClick={() => void useTemplate(t)}
-                        className="rounded-lg border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
+                        className="rounded-lg border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 text-[11px]! font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
                         사용하기
                       </button>
                     </div>
@@ -903,7 +903,7 @@ export function WorkflowsPage() {
                 <span className="text-xl shrink-0">{meta.icon}</span>
                 <div>
                   <p className={`text-xs font-bold ${meta.color}`}>{meta.label}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{meta.desc}</p>
+                  <p className="text-[11px]! text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{meta.desc}</p>
                 </div>
               </div>
             ))}

@@ -40,7 +40,7 @@ import {
 type ExploreTab = AiSlidesTabId
 
 const selectCls =
-  'rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px] text-stone-800 outline-none focus:ring-2 focus:ring-orange-500/30 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100'
+  'rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px]! text-stone-800 outline-none focus:ring-2 focus:ring-orange-500/30 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100'
 
 function TemplateCard({
   template,
@@ -89,7 +89,7 @@ function TemplateCard({
                 event.stopPropagation()
                 onApply()
               }}
-              className="pointer-events-auto h-8 rounded-lg bg-orange-800 px-3 text-[13px] font-semibold text-white shadow-sm transition hover:bg-orange-900 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-orange-900 dark:hover:bg-orange-950"
+              className="pointer-events-auto h-8 rounded-lg bg-orange-800 px-3 text-[13px]! font-semibold text-white shadow-sm transition hover:bg-orange-900 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-orange-900 dark:hover:bg-orange-950"
             >
               Apply
             </button>
@@ -327,7 +327,7 @@ export function AiSlidesPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#FAF9F6] dark:bg-stone-950">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-[13px] md:px-8 md:pt-[4vh]">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-[13px]! md:px-8 md:pt-[4vh]">
         <header className="mb-4">
           <p className="font-semibold uppercase tracking-wider text-orange-800 dark:text-orange-300">
             NH-AX-HUB
@@ -367,7 +367,7 @@ export function AiSlidesPage() {
 
         <AiSlidesTabPanel tabId="explore" activeTab={exploreTab}>
           <div className="explore-content">
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px]">
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px]!">
               <select
                 value={styleFilter}
                 onChange={(e) =>
@@ -409,7 +409,7 @@ export function AiSlidesPage() {
                 <option value="popularity">Sort by: Popularity</option>
                 <option value="newest">Sort by: Newest</option>
               </select>
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px] text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px]! text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200">
                 <input
                   type="checkbox"
                   checked={koreanOnly}
@@ -424,7 +424,7 @@ export function AiSlidesPage() {
 
             {filteredTemplates.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-stone-300 bg-white/60 px-6 py-12 text-center dark:border-stone-600 dark:bg-stone-900/40">
-                <p className="text-[13px] text-stone-600 dark:text-stone-400">
+                <p className="text-[13px]! text-stone-600 dark:text-stone-400">
                   선택한 필터에 맞는 템플릿이 없습니다.
                 </p>
               </div>
@@ -437,7 +437,7 @@ export function AiSlidesPage() {
             {renderTemplateWaterfall(myTemplates)}
 
             {myTemplates.length === 0 ? (
-              <p className="mt-2 text-center text-[13px] text-stone-500 dark:text-stone-400">
+              <p className="mt-2 text-center text-[13px]! text-stone-500 dark:text-stone-400">
                 Add My Template 카드에서 썸네일을 업로드하면 My Templates에 표시됩니다.
               </p>
             ) : null}

@@ -89,7 +89,7 @@ export function Scrapbook() {
       <header className="shrink-0 border-b border-stone-200/90 bg-[#FAF9F6]/95 px-4 py-4 backdrop-blur-md dark:border-stone-800 dark:bg-stone-950/95 md:px-8 md:py-5">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-900/90 dark:text-orange-300">
+            <p className="text-[11px]! font-semibold uppercase tracking-[0.14em] text-orange-900/90 dark:text-orange-300">
               Scrapbook
             </p>
             <h1 className="mt-1 text-xl font-semibold tracking-tight text-stone-900 dark:text-stone-50 md:text-2xl">
@@ -150,21 +150,21 @@ export function Scrapbook() {
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-orange-900 dark:bg-orange-950/80 dark:text-orange-100">
+                  <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px]! font-semibold uppercase tracking-wide text-orange-900 dark:bg-orange-950/80 dark:text-orange-100">
                     Prompt
                   </span>
                   <time
-                    className="shrink-0 text-[11px] tabular-nums text-stone-500 dark:text-stone-500"
+                    className="shrink-0 text-[11px]! tabular-nums text-stone-500 dark:text-stone-500"
                     dateTime={row.created_at}
                   >
                     {formatWhen(row.created_at)}
                   </time>
                 </div>
-                <p className="mt-3 text-[17px] font-medium leading-snug text-stone-900 dark:text-stone-50">
+                <p className="mt-3 text-[17px]! font-medium leading-snug text-stone-900 dark:text-stone-50">
                   {clipOneLine(row.prompt, i === 0 ? 240 : 140)}
                 </p>
                 <div className="mt-4 border-t border-stone-100 pt-3 dark:border-stone-800">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+                  <span className="text-[11px]! font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
                     AI 응답
                   </span>
                   <p className="mt-2 text-sm leading-relaxed text-stone-700 dark:text-stone-300">

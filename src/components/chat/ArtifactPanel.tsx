@@ -81,7 +81,7 @@ function MarkdownDocumentView({ content }: { content: string }) {
   const blocks = useMemo(() => content.split('\n'), [content])
 
   return (
-    <div className="space-y-3 text-[15px] leading-relaxed text-stone-800 dark:text-stone-100">
+    <div className="space-y-3 text-[15px]! leading-relaxed text-stone-800 dark:text-stone-100">
       {blocks.map((line, i) => {
         const trimmed = line.trimEnd()
         if (!trimmed.trim()) return <div key={`sp-${i}`} className="h-2" />
@@ -129,7 +129,7 @@ function ArtifactBody({ artifact }: { artifact: ChatArtifact }) {
         <p className="text-xs text-stone-500 dark:text-stone-400">
           HTML 소스 미리보기 (실행되지 않습니다)
         </p>
-        <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px] leading-relaxed text-emerald-100">
+        <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px]! leading-relaxed text-emerald-100">
           <code>{artifact.content}</code>
         </pre>
       </div>
@@ -137,7 +137,7 @@ function ArtifactBody({ artifact }: { artifact: ChatArtifact }) {
   }
   if (artifact.type === 'code') {
     return (
-      <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px] leading-relaxed text-emerald-100">
+      <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px]! leading-relaxed text-emerald-100">
         <code>{artifact.content}</code>
       </pre>
     )
@@ -188,7 +188,7 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
     >
       <header className="flex shrink-0 items-center gap-2 border-b border-stone-200/90 px-4 py-3 dark:border-stone-800 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700 dark:text-orange-400">
+          <p className="text-[10px]! font-semibold uppercase tracking-[0.16em] text-orange-700 dark:text-orange-400">
             Artifact · {TYPE_LABEL[artifact.type]}
           </p>
           <h2 className="truncate text-base font-bold text-stone-900 dark:text-stone-50">

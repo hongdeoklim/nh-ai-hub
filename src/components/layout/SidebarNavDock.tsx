@@ -105,7 +105,7 @@ export function SidebarNavDock({
                         },
                       ].map((group) => (
                         <div key={group.label}>
-                          <p className="px-1 pb-0.5 pt-1 text-[9px] font-semibold tracking-wider text-stone-400 dark:text-stone-500">
+                          <p className="px-1 pb-0.5 pt-1 text-[9px]! font-semibold tracking-wider text-stone-400 dark:text-stone-500">
                             {group.label}
                           </p>
                           <div className="grid grid-cols-3 gap-1">
@@ -122,13 +122,13 @@ export function SidebarNavDock({
                                 onClick={() => { setIsAppFolderOpen(false); setIsMobileMenuOpen(false); }}
                               >
                                 {item.icon}
-                                <span className="mt-1 text-[10px] leading-tight">{item.text}</span>
+                                <span className="mt-1 text-[10px]! leading-tight">{item.text}</span>
                               </Link>
                             ))}
                           </div>
                         </div>
                       ))}
-                      <p className="px-1 pb-0.5 pt-1 text-[9px] font-semibold tracking-wider text-stone-400 dark:text-stone-500">
+                      <p className="px-1 pb-0.5 pt-1 text-[9px]! font-semibold tracking-wider text-stone-400 dark:text-stone-500">
                         계정
                       </p>
                       <div className="grid grid-cols-3 gap-1">
@@ -140,7 +140,7 @@ export function SidebarNavDock({
                             onClick={() => { setIsAppFolderOpen(false); setIsMobileMenuOpen(false); }}
                           >
                             <IconTokenRequest className="h-5 w-5" />
-                            <span className="mt-1 text-[10px] leading-tight">토큰 관리</span>
+                            <span className="mt-1 text-[10px]! leading-tight">토큰 관리</span>
                           </Link>
                         ) : (
                           <button
@@ -154,7 +154,7 @@ export function SidebarNavDock({
                             }}
                           >
                             <IconTokenRequest className="h-5 w-5" />
-                            <span className="mt-1 text-[10px] leading-tight">토큰 요청</span>
+                            <span className="mt-1 text-[10px]! leading-tight">토큰 요청</span>
                           </button>
                         )}
                       </div>
@@ -192,7 +192,7 @@ export function SidebarNavDock({
                 ) : (
                   <>
                 {/* 3단계 IA: 평면 나열 → 5개 영역 그룹 (기능 변경 없음, 재배치만) */}
-                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px]! font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   지식
                 </p>
                 <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
@@ -238,7 +238,7 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px]! font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   자동화
                 </p>
                 <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
@@ -285,7 +285,7 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px]! font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   AI 앱
                 </p>
                 <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
@@ -336,7 +336,7 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px]! font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   팀 · 현장
                 </p>
                 <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
@@ -362,7 +362,7 @@ export function SidebarNavDock({
                 </Link>
                 </div>
 
-                <p className="px-3 pb-0.5 pt-1 text-[9px] font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
+                <p className="px-3 pb-0.5 pt-1 text-[9px]! font-semibold leading-none tracking-wider text-stone-400 dark:text-stone-500">
                   계정
                 </p>
                 <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">

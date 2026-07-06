@@ -86,7 +86,7 @@ export function DriveSyncWidget({
           <h3 className="text-lg font-bold text-gray-900 dark:text-stone-50">
             구글 드라이브 사내 자료실 동기화
           </h3>
-          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200">
+          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px]! font-semibold uppercase tracking-wide text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200">
             관리자 전용
           </span>
         </div>

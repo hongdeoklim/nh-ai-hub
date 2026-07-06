@@ -225,7 +225,7 @@ function ModelSelectDropdown({
       >
         <span className="min-w-0 truncate">{selected?.label ?? '모델 선택'}</span>
         <span
-          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${costBadgeClass(selectedCost)}`}
+          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px]! font-semibold leading-none ${costBadgeClass(selectedCost)}`}
         >
           {selectedCost}
         </span>
@@ -236,7 +236,7 @@ function ModelSelectDropdown({
 
       {tooltipText ? (
         <p
-          className={`pointer-events-none absolute bottom-full left-0 z-[60] mb-1.5 max-w-[min(18rem,70vw)] rounded-lg border border-stone-200/90 bg-white px-2.5 py-1.5 text-[11px] leading-snug text-stone-600 shadow-md dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 ${
+          className={`pointer-events-none absolute bottom-full left-0 z-[60] mb-1.5 max-w-[min(18rem,70vw)] rounded-lg border border-stone-200/90 bg-white px-2.5 py-1.5 text-[11px]! leading-snug text-stone-600 shadow-md dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 ${
             open || hoveredId ? 'opacity-100' : 'opacity-0'
           } transition-opacity duration-150`}
           role="tooltip"
@@ -286,17 +286,17 @@ function ModelSelectDropdown({
                       }`}
                     >
                       <span className="flex min-w-0 items-center justify-between gap-2">
-                        <span className="min-w-0 truncate text-[12.5px] font-medium text-stone-800 dark:text-stone-100">
+                        <span className="min-w-0 truncate text-[12.5px]! font-medium text-stone-800 dark:text-stone-100">
                           {option.label}
                         </span>
                         <span
-                          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${costBadgeClass(cost)}`}
+                          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px]! font-semibold leading-none ${costBadgeClass(cost)}`}
                         >
                           {cost}
                         </span>
                       </span>
                       {subtext ? (
-                        <span className="line-clamp-2 text-[11px] leading-snug text-stone-500 dark:text-stone-400">
+                        <span className="line-clamp-2 text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
                           {subtext}
                         </span>
                       ) : null}

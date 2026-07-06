@@ -963,7 +963,7 @@ export function SheetsGlobalCanvas({
               <button
                 type="button"
                 onClick={() => setOpenFilePanel('local')}
-                className={`rounded-[2px] px-3 py-1 text-[13px] ${
+                className={`rounded-[2px] px-3 py-1 text-[13px]! ${
                   openFilePanel === 'local'
                     ? 'bg-[#107c41] text-white'
                     : 'border border-[#c8c6c4] bg-white text-[#323130]'
@@ -978,7 +978,7 @@ export function SheetsGlobalCanvas({
                   setUrlDraft(linkedSpreadsheetUrl ?? '')
                   setRangeDraft(range)
                 }}
-                className={`inline-flex items-center gap-1.5 rounded-[2px] px-3 py-1 text-[13px] ${
+                className={`inline-flex items-center gap-1.5 rounded-[2px] px-3 py-1 text-[13px]! ${
                   openFilePanel === 'google'
                     ? 'bg-[#107c41] text-white'
                     : 'border border-[#c8c6c4] bg-white text-[#323130]'
@@ -990,7 +990,7 @@ export function SheetsGlobalCanvas({
               <button
                 type="button"
                 onClick={() => setOpenFilePanel(null)}
-                className="ml-auto text-[13px] text-[#605e5c] hover:text-[#323130]"
+                className="ml-auto text-[13px]! text-[#605e5c] hover:text-[#323130]"
               >
                 닫기
               </button>
@@ -1015,16 +1015,16 @@ export function SheetsGlobalCanvas({
                 >
                   <IconUpload className="h-6 w-6" />
                 </div>
-                <p className="text-[13px] font-medium text-[#323130] dark:text-stone-200">
+                <p className="text-[13px]! font-medium text-[#323130] dark:text-stone-200">
                   Excel 또는 CSV 파일을 여기에 놓으세요
                 </p>
-                <p className="mt-1 text-[11px] text-[#605e5c] dark:text-stone-400">
+                <p className="mt-1 text-[11px]! text-[#605e5c] dark:text-stone-400">
                   .xlsx · .xls · .csv
                 </p>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-3 rounded-[2px] px-4 py-1.5 text-[12px] font-medium text-white"
+                  className="mt-3 rounded-[2px] px-4 py-1.5 text-[12px]! font-medium text-white"
                   style={{ backgroundColor: EXCEL_GREEN }}
                 >
                   파일 선택
@@ -1032,7 +1032,7 @@ export function SheetsGlobalCanvas({
               </div>
             ) : (
               <>
-                <p className="mb-2 text-[12px] font-semibold text-[#323130] dark:text-stone-300">
+                <p className="mb-2 text-[12px]! font-semibold text-[#323130] dark:text-stone-300">
                   Google Sheets URL
                 </p>
                 <input
@@ -1040,20 +1040,20 @@ export function SheetsGlobalCanvas({
                   value={urlDraft}
                   onChange={(e) => setUrlDraft(e.target.value)}
                   placeholder="https://docs.google.com/spreadsheets/d/…/edit"
-                  className="mb-2 w-full rounded-[2px] border border-[#8a8886] bg-white px-2.5 py-1.5 text-[13px] outline-none focus:border-[#217346] focus:ring-1 focus:ring-[#217346]/25 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+                  className="mb-2 w-full rounded-[2px] border border-[#8a8886] bg-white px-2.5 py-1.5 text-[13px]! outline-none focus:border-[#217346] focus:ring-1 focus:ring-[#217346]/25 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
                 />
                 <input
                   type="text"
                   value={rangeDraft}
                   onChange={(e) => setRangeDraft(e.target.value)}
                   placeholder={`범위 (예: ${DEFAULT_SHEETS_RANGE})`}
-                  className="mb-3 w-full rounded-[2px] border border-[#8a8886] bg-white px-2.5 py-1.5 text-[13px] outline-none focus:border-[#217346] dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+                  className="mb-3 w-full rounded-[2px] border border-[#8a8886] bg-white px-2.5 py-1.5 text-[13px]! outline-none focus:border-[#217346] dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
                 />
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleConnect}
-                    className="rounded-[2px] px-3 py-1 text-[12px] font-medium text-white"
+                    className="rounded-[2px] px-3 py-1 text-[12px]! font-medium text-white"
                     style={{ backgroundColor: EXCEL_GREEN }}
                   >
                     연결
@@ -1061,7 +1061,7 @@ export function SheetsGlobalCanvas({
                   <button
                     type="button"
                     onClick={() => setOpenFilePanel(null)}
-                    className="rounded-[2px] border border-[#8a8886] px-3 py-1 text-[12px] text-[#323130] dark:border-stone-600 dark:text-stone-300"
+                    className="rounded-[2px] border border-[#8a8886] px-3 py-1 text-[12px]! text-[#323130] dark:border-stone-600 dark:text-stone-300"
                   >
                     취소
                   </button>
@@ -1131,7 +1131,7 @@ export function SheetsGlobalCanvas({
                           onBlur={() => {
                             if (linkedSpreadsheetId && range.trim()) onRefresh?.()
                           }}
-                          className="w-[9rem] rounded-[2px] border border-[#edebe9] bg-white px-1.5 py-0.5 text-[11px] dark:border-stone-600 dark:bg-stone-950"
+                          className="w-[9rem] rounded-[2px] border border-[#edebe9] bg-white px-1.5 py-0.5 text-[11px]! dark:border-stone-600 dark:bg-stone-950"
                           aria-label="시트 범위"
                         />
                         <button
@@ -1159,13 +1159,13 @@ export function SheetsGlobalCanvas({
                     className="gc-sheet-grid-wrap dark:bg-[#1e1e1e]"
                   >
                     {previewLoading ? (
-                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/85 text-[13px] text-[#605e5c] dark:bg-stone-950/85">
+                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/85 text-[13px]! text-[#605e5c] dark:bg-stone-950/85">
                         시트 불러오는 중…
                       </div>
                     ) : null}
 
                     {preview?.error ? (
-                      <div className="absolute left-3 right-3 top-3 z-10 rounded-[2px] border border-[#f1bbbc] bg-[#fde7e9] px-3 py-2 text-[13px] text-[#442726] dark:border-red-900 dark:bg-red-950/50 dark:text-red-100">
+                      <div className="absolute left-3 right-3 top-3 z-10 rounded-[2px] border border-[#f1bbbc] bg-[#fde7e9] px-3 py-2 text-[13px]! text-[#442726] dark:border-red-900 dark:bg-red-950/50 dark:text-red-100">
                         {preview.error}
                       </div>
                     ) : null}

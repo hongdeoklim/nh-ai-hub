@@ -58,7 +58,7 @@ export function AiDesignerCategoryBar({
                     </div>
                   </div>
 
-                  <span className="card-title mt-4 w-full truncate px-1 text-center text-[14px] font-bold leading-normal tracking-[-0.16px] text-[#232425] dark:text-white">
+                  <span className="card-title mt-4 w-full truncate px-1 text-center text-[14px]! font-bold leading-normal tracking-[-0.16px] text-[#232425] dark:text-white">
                     {category.label}
                   </span>
                 </div>

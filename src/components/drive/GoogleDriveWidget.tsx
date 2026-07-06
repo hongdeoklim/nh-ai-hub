@@ -137,13 +137,13 @@ export function GoogleDriveWidget({
       <div className="shrink-0 border-b border-stone-200/80 bg-gradient-to-br from-[#FFF7ED] via-white to-[#FAF9F6] px-4 py-3 dark:border-stone-700 dark:from-orange-950/30 dark:via-stone-900 dark:to-stone-950">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-orange-900/80 dark:text-orange-300">
+            <p className="text-[10px]! font-semibold uppercase tracking-[0.12em] text-orange-900/80 dark:text-orange-300">
               Shared drive
             </p>
             <h2 className="mt-0.5 truncate text-sm font-semibold text-stone-900 dark:text-stone-50">
               공유 Google Drive
             </h2>
-            <p className="mt-1 text-[11px] leading-relaxed text-stone-600 dark:text-stone-400">
+            <p className="mt-1 text-[11px]! leading-relaxed text-stone-600 dark:text-stone-400">
               사내 공유 폴더 파일을 조회·다운로드합니다.
             </p>
           </div>
@@ -151,7 +151,7 @@ export function GoogleDriveWidget({
             type="button"
             onClick={() => void load()}
             disabled={loading}
-            className="shrink-0 rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
+            className="shrink-0 rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[11px]! font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
           >
             새로고침
           </button>
@@ -160,7 +160,7 @@ export function GoogleDriveWidget({
         {stack.length > 0 ? (
           <nav
             aria-label="폴더 경로"
-            className="mt-2 flex flex-wrap items-center gap-1 text-[11px]"
+            className="mt-2 flex flex-wrap items-center gap-1 text-[11px]!"
           >
             {stack.map((c, i) => (
               <span key={`${c.id}-${i}`} className="inline-flex items-center gap-1">
@@ -247,7 +247,7 @@ export function GoogleDriveWidget({
                         <p className="truncate text-xs font-medium text-stone-900 dark:text-stone-50">
                           {file.name}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-stone-500 dark:text-stone-400">
+                        <p className="mt-0.5 text-[10px]! text-stone-500 dark:text-stone-400">
                           {formatWhen(file.modifiedTime)}
                           {sizeLabel ? ` · ${sizeLabel}` : ''}
                         </p>
@@ -276,7 +276,7 @@ export function GoogleDriveWidget({
         <div className="shrink-0 border-t border-stone-200/80 px-3 py-2 dark:border-stone-700">
           <Link
             to="/reference-room"
-            className="text-[11px] font-semibold text-orange-900 underline underline-offset-2 dark:text-orange-300"
+            className="text-[11px]! font-semibold text-orange-900 underline underline-offset-2 dark:text-orange-300"
           >
             자료실에서 더 보기 →
           </Link>

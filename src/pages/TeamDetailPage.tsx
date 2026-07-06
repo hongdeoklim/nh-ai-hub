@@ -162,9 +162,9 @@ export function TeamDetailPage() {
         <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
           멤버 초대 (이메일)
         </h2>
-        <p className="mt-2 text-[13px] text-stone-600 dark:text-stone-400">
+        <p className="mt-2 text-[13px]! text-stone-600 dark:text-stone-400">
           이미 가입되어 사용자 프로필(
-          <code className="text-[12px]">public.users</code>) 에 있는 이메일만 초대할 수
+          <code className="text-[12px]!">public.users</code>) 에 있는 이메일만 초대할 수
           있습니다.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -195,7 +195,7 @@ export function TeamDetailPage() {
           type="button"
           disabled={!teamId || !profile}
           onClick={() => openModal()}
-          className="rounded-full bg-orange-800 px-4 py-2 text-[13px] font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
+          className="rounded-full bg-orange-800 px-4 py-2 text-[13px]! font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
         >
           새 공유 채팅
         </button>
@@ -241,13 +241,13 @@ export function TeamDetailPage() {
               <p className="text-base font-semibold text-stone-900 dark:text-stone-50">
                 새 공유 채팅
               </p>
-              <p className="mt-1 text-[12px] text-stone-600 dark:text-stone-400">
+              <p className="mt-1 text-[12px]! text-stone-600 dark:text-stone-400">
                 참가자로 선택한 사람만 메시지를 주고받을 수 있습니다. 팀 채팅 화면에 들어오면 해당
                 팀의 다른 멤버는 스스로 참가할 수 있습니다(MVP 정책).
               </p>
             </div>
             <div className="space-y-3 px-4 py-3">
-              <label className="block text-[12px] font-medium text-stone-700 dark:text-stone-300">
+              <label className="block text-[12px]! font-medium text-stone-700 dark:text-stone-300">
                 방 제목
               </label>
               <input
@@ -337,7 +337,7 @@ function ParticipantPicker({
 
   return (
     <fieldset className="space-y-2">
-      <legend className="text-[12px] font-medium text-stone-700 dark:text-stone-300">
+      <legend className="text-[12px]! font-medium text-stone-700 dark:text-stone-300">
         참가자 선택
       </legend>
       {rows.map((r) => (

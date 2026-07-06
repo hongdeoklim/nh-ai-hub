@@ -57,14 +57,14 @@ export function IntegrationsPanel() {
 
   return (
     <section className="space-y-4">
-      <p className="text-[20px] leading-relaxed text-stone-600 dark:text-stone-400">
+      <p className="text-[20px]! leading-relaxed text-stone-600 dark:text-stone-400">
         각 서비스는 <strong className="text-stone-900 dark:text-stone-100">본인 계정</strong>
         으로 로그인해 연동합니다. 리프레시 토큰은 서버에서 암호화해 저장하며, 채팅 이미지는 연동된 Google
         계정 Drive 우선으로 저장됩니다. (미연동 시 관리자 공용 Drive 설정이 있으면 그쪽을 사용합니다.)
       </p>
 
       {error ? (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[18px] text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[18px]! text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           {error}{' '}
           <button
             type="button"
@@ -80,7 +80,7 @@ export function IntegrationsPanel() {
         <p className="text-sm font-semibold text-stone-900 dark:text-stone-50">
           워크스페이스 도구
         </p>
-        <p className="mt-1 text-[17px] leading-snug text-stone-600 dark:text-stone-400">
+        <p className="mt-1 text-[17px]! leading-snug text-stone-600 dark:text-stone-400">
           Gmail·Calendar·Drive·Sheets·Outlook·OneDrive 호출 및 HWPX 업로드는{' '}
           <Link
             to="/workspace-tools"
@@ -98,7 +98,7 @@ export function IntegrationsPanel() {
             <p className="text-sm font-semibold text-stone-900 dark:text-stone-50">
               Google Workspace (Drive · Gmail · Calendar · Sheets · Slides · Docs)
             </p>
-            <p className="mt-1 text-[18px] text-stone-600 dark:text-stone-400">
+            <p className="mt-1 text-[18px]! text-stone-600 dark:text-stone-400">
               {loading
                 ? '불러오는 중…'
                 : googleConnected
@@ -126,7 +126,7 @@ export function IntegrationsPanel() {
                     }
                   })()
                 }}
-                className="rounded-full border border-stone-400 px-3 py-1.5 text-[18px] font-semibold text-stone-800 hover:bg-stone-100 disabled:opacity-50 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800"
+                className="rounded-full border border-stone-400 px-3 py-1.5 text-[18px]! font-semibold text-stone-800 hover:bg-stone-100 disabled:opacity-50 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800"
               >
                 연결 해제
               </button>
@@ -147,19 +147,19 @@ export function IntegrationsPanel() {
                     }
                   })()
                 }}
-                className="rounded-full bg-orange-800 px-3 py-1.5 text-[18px] font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
+                className="rounded-full bg-orange-800 px-3 py-1.5 text-[18px]! font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
               >
                 Google 연결
               </button>
             )}
           </div>
         </div>
-        <p className="mt-2 border-t border-stone-200 pt-2 text-[17px] leading-snug text-stone-500 dark:border-stone-700 dark:text-stone-500">
+        <p className="mt-2 border-t border-stone-200 pt-2 text-[17px]! leading-snug text-stone-500 dark:border-stone-700 dark:text-stone-500">
           GCP OAuth 클라이언트에 승인된 리다이렉트 URI 예:{' '}
           <code className="break-all rounded bg-stone-100 px-1 dark:bg-stone-800">
             {redirectHint}
           </code>
-          <span className="mt-1 block text-[15px]">
+          <span className="mt-1 block text-[15px]!">
             스코프 확장 후에는 반드시 &quot;연결 해제&quot; 후 다시 연결해 동의를 갱신하세요.
           </span>
         </p>
@@ -171,7 +171,7 @@ export function IntegrationsPanel() {
             <p className="text-sm font-semibold text-stone-900 dark:text-stone-50">
               Microsoft 365 (Outlook · Calendar · OneDrive)
             </p>
-            <p className="mt-1 text-[18px] text-stone-600 dark:text-stone-400">
+            <p className="mt-1 text-[18px]! text-stone-600 dark:text-stone-400">
               {loading
                 ? '불러오는 중…'
                 : msConnected
@@ -199,7 +199,7 @@ export function IntegrationsPanel() {
                     }
                   })()
                 }}
-                className="rounded-full border border-stone-400 px-3 py-1.5 text-[18px] font-semibold text-stone-800 hover:bg-stone-100 disabled:opacity-50 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800"
+                className="rounded-full border border-stone-400 px-3 py-1.5 text-[18px]! font-semibold text-stone-800 hover:bg-stone-100 disabled:opacity-50 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800"
               >
                 연결 해제
               </button>
@@ -220,19 +220,19 @@ export function IntegrationsPanel() {
                     }
                   })()
                 }}
-                className="rounded-full bg-sky-800 px-3 py-1.5 text-[18px] font-semibold text-white hover:bg-sky-900 disabled:opacity-50 dark:bg-sky-900"
+                className="rounded-full bg-sky-800 px-3 py-1.5 text-[18px]! font-semibold text-white hover:bg-sky-900 disabled:opacity-50 dark:bg-sky-900"
               >
                 Microsoft 연결
               </button>
             )}
           </div>
         </div>
-        <p className="mt-2 border-t border-stone-200 pt-2 text-[17px] leading-snug text-stone-500 dark:border-stone-700 dark:text-stone-500">
+        <p className="mt-2 border-t border-stone-200 pt-2 text-[17px]! leading-snug text-stone-500 dark:border-stone-700 dark:text-stone-500">
           Azure 앱 등록 리다이렉트 URI 예:{' '}
           <code className="break-all rounded bg-stone-100 px-1 dark:bg-stone-800">
             {msRedirectHint}
           </code>
-          <span className="mt-1 block text-[15px]">
+          <span className="mt-1 block text-[15px]!">
             Edge 시크릿:{' '}
             <code className="rounded bg-stone-100 px-1 dark:bg-stone-800">
               MICROSOFT_OAUTH_CLIENT_ID
@@ -258,13 +258,13 @@ export function IntegrationsPanel() {
         <p className="text-sm font-semibold text-stone-800 dark:text-stone-100">
           노션 · 기타
         </p>
-        <p className="mt-1 text-[18px] text-stone-600 dark:text-stone-400">
+        <p className="mt-1 text-[18px]! text-stone-600 dark:text-stone-400">
           노션 등 추가 공급자는 단계적으로 붙입니다. HWPX·오피스 파일 업로드 메타는 마이그레이션{' '}
-          <code className="rounded bg-stone-100 px-1 text-[15px] dark:bg-stone-800">
+          <code className="rounded bg-stone-100 px-1 text-[15px]! dark:bg-stone-800">
             user_uploaded_documents
           </code>{' '}
           + Edge{' '}
-          <code className="rounded bg-stone-100 px-1 text-[15px] dark:bg-stone-800">
+          <code className="rounded bg-stone-100 px-1 text-[15px]! dark:bg-stone-800">
             user-document-upload
           </code>
           로 처리합니다.

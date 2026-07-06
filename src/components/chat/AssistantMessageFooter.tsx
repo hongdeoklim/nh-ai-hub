@@ -297,7 +297,7 @@ export function AssistantMessageFooter({
             type="button"
             disabled={regenerateDisabled}
             onClick={() => onContinue()}
-            className="mr-1 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[12px] font-medium text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+            className="mr-1 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[12px]! font-medium text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
             title="답변이 중간에 끊겼습니다. 끊긴 지점부터 이어서 생성합니다."
           >
             <svg
@@ -318,13 +318,13 @@ export function AssistantMessageFooter({
           </button>
         ) : null}
         {shareDone ? (
-          <span className="px-1 text-[13px] font-medium text-[#0b57d0] dark:text-blue-400">
+          <span className="px-1 text-[13px]! font-medium text-[#0b57d0] dark:text-blue-400">
             공유됨!
           </span>
         ) : null}
         {copied ? (
           <span
-            className={`px-1 text-[13px] font-medium ${
+            className={`px-1 text-[13px]! font-medium ${
               isGemini
                 ? 'text-[#0b57d0] dark:text-blue-400'
                 : variant === 'claude'
@@ -337,7 +337,7 @@ export function AssistantMessageFooter({
         ) : null}
         {bookmarkDone ? (
           <span
-            className={`px-1 text-[13px] font-medium ${
+            className={`px-1 text-[13px]! font-medium ${
               isGemini
                 ? 'text-[#0b57d0] dark:text-blue-400'
                 : variant === 'claude'
@@ -529,7 +529,7 @@ export function AssistantMessageFooter({
         </div>
       </div>
 
-      <p className={`ml-auto shrink-0 text-[12px] tabular-nums ${timeCls}`}>
+      <p className={`ml-auto shrink-0 text-[12px]! tabular-nums ${timeCls}`}>
         {typeof elapsedMs === 'number' && elapsedMs > 0 ? (
           <span title="생성 소요 시간">{formatElapsedKo(elapsedMs)} · </span>
         ) : null}
@@ -571,7 +571,7 @@ export function AssistantMessageFooter({
 
             {/* 모달 바디 */}
             <div className="mb-4">
-              <p className="mb-3 text-[13px] text-stone-500 dark:text-stone-400">
+              <p className="mb-3 text-[13px]! text-stone-500 dark:text-stone-400">
                 어떤 점이 아쉬웠는지 알려주시면 NH-AX-HUB 시스템이 더욱 정확하게 학습하고 답변을 고도화하는 데 반영됩니다.
               </p>
               {isFetchingDetail ? (
@@ -585,11 +585,11 @@ export function AssistantMessageFooter({
                     value={feedbackText}
                     onChange={(e) => setFeedbackText(e.target.value.slice(0, 1000))}
                     placeholder="답변의 오류나 아쉬운 부분에 대해 자유롭게 적어주세요. (선택사항, 최대 1000자)"
-                    className="w-full resize-none rounded-xl border border-stone-200 bg-white p-3 text-[14px] leading-relaxed text-stone-800 outline-none ring-[#0b57d0]/10 transition focus:border-[#0b57d0] focus:ring-4 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-100 dark:ring-blue-400/10"
+                    className="w-full resize-none rounded-xl border border-stone-200 bg-white p-3 text-[14px]! leading-relaxed text-stone-800 outline-none ring-[#0b57d0]/10 transition focus:border-[#0b57d0] focus:ring-4 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-100 dark:ring-blue-400/10"
                     maxLength={1000}
                     autoFocus
                   />
-                  <div className="mt-1 text-right text-[11px] text-stone-400 dark:text-stone-500">
+                  <div className="mt-1 text-right text-[11px]! text-stone-400 dark:text-stone-500">
                     {feedbackText.length} / 1000자
                   </div>
                 </div>
@@ -601,7 +601,7 @@ export function AssistantMessageFooter({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="rounded-lg border border-stone-200 bg-white px-3.5 py-2 text-[13px] font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
+                className="rounded-lg border border-stone-200 bg-white px-3.5 py-2 text-[13px]! font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
               >
                 취소
               </button>
@@ -609,7 +609,7 @@ export function AssistantMessageFooter({
                 type="button"
                 disabled={isSubmitting || isFetchingDetail}
                 onClick={() => void handleSubmitFeedback()}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b57d0] px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-[#0842a0] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b57d0] px-4 py-2 text-[13px]! font-semibold text-white shadow-sm hover:bg-[#0842a0] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500"
               >
                 {isSubmitting ? (
                   <>

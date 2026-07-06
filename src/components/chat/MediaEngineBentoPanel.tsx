@@ -53,7 +53,7 @@ export function MediaEngineBentoPanel({
   if (safeEngines.length === 0) {
     return (
       <div
-        className={`rounded-xl border border-stone-200/90 bg-white px-3 py-4 text-center text-[12px] text-stone-500 shadow-lg dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 ${className}`}
+        className={`rounded-xl border border-stone-200/90 bg-white px-3 py-4 text-center text-[12px]! text-stone-500 shadow-lg dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 ${className}`}
       >
         사용 가능한 미디어 엔진이 없습니다.
       </div>
@@ -66,7 +66,7 @@ export function MediaEngineBentoPanel({
       role="listbox"
       aria-label="미디어 엔진 선택"
     >
-      <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+      <p className="px-2 pb-1.5 text-[10px]! font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         엔진 선택
       </p>
       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
@@ -93,22 +93,22 @@ export function MediaEngineBentoPanel({
             >
               <span className="flex min-w-0 items-start justify-between gap-2">
                 <span className="min-w-0">
-                  <span className="block truncate text-[12px] font-semibold text-stone-900 dark:text-stone-50">
+                  <span className="block truncate text-[12px]! font-semibold text-stone-900 dark:text-stone-50">
                     {engine?.display_name ?? '미디어 엔진'}
                   </span>
-                  <span className="mt-0.5 block text-[10px] text-stone-500 dark:text-stone-400">
+                  <span className="mt-0.5 block text-[10px]! text-stone-500 dark:text-stone-400">
                     {engine?.provider
                       ? AI_MODEL_PROVIDER_LABELS[engine.provider]
                       : '—'}
                   </span>
                 </span>
                 <span
-                  className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none ${mediaCostBadgeClass(cost)}`}
+                  className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px]! font-semibold leading-none ${mediaCostBadgeClass(cost)}`}
                 >
                   {cost}
                 </span>
               </span>
-              <span className="line-clamp-2 text-[10px] leading-snug text-stone-600 dark:text-stone-400">
+              <span className="line-clamp-2 text-[10px]! leading-snug text-stone-600 dark:text-stone-400">
                 {guide}
               </span>
             </button>

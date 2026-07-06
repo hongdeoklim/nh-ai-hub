@@ -327,7 +327,7 @@ export function TeamSharedChatPage() {
       />
 
       <header className="shrink-0 border-b border-stone-200/90 px-4 py-3 backdrop-blur-md dark:border-stone-800 md:px-6">
-        <nav className="mb-2 text-[11px] text-stone-600 dark:text-stone-400">
+        <nav className="mb-2 text-[11px]! text-stone-600 dark:text-stone-400">
           <Link
             to={`/teams/${teamId ?? ''}`}
             className="underline hover:text-stone-900 dark:hover:text-stone-200"
@@ -338,7 +338,7 @@ export function TeamSharedChatPage() {
           <span className="text-stone-800 dark:text-stone-200">{title}</span>
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-[15px] font-semibold text-stone-900 dark:text-stone-50 md:text-base">
+          <h1 className="text-[15px]! font-semibold text-stone-900 dark:text-stone-50 md:text-base">
             공유 채팅
           </h1>
           {tokenLimit > 0 && remainingPct <= 10 ? (
@@ -352,7 +352,7 @@ export function TeamSharedChatPage() {
                   setTokenModalOpen(true)
                 })
               }}
-              className="rounded-full border border-amber-500/60 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+              className="rounded-full border border-amber-500/60 bg-amber-50 px-3 py-1 text-[11px]! font-semibold text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
             >
               관리자에게 요청
             </button>
@@ -389,7 +389,7 @@ export function TeamSharedChatPage() {
               value={selectedModel}
               disabled={isSending || !profile}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="min-w-0 max-w-[min(70vw,16rem)] flex-1 cursor-pointer truncate rounded-md border border-stone-300/90 bg-white py-0.5 pl-1.5 pr-1 text-[11px] font-medium text-stone-800 shadow-sm outline-none ring-orange-600/20 focus:ring-1 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 sm:text-[12px]"
+              className="min-w-0 max-w-[min(70vw,16rem)] flex-1 cursor-pointer truncate rounded-md border border-stone-300/90 bg-white py-0.5 pl-1.5 pr-1 text-[11px]! font-medium text-stone-800 shadow-sm outline-none ring-orange-600/20 focus:ring-1 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 sm:text-[12px]!"
             >
               <option value="gpt-4o">GPT‑4o</option>
               <option value="gpt-4o-mini">GPT‑4o mini</option>
@@ -401,12 +401,12 @@ export function TeamSharedChatPage() {
           }
           composerMeta={
             <div className="flex flex-col gap-1">
-              <p className="text-[10px] leading-tight text-stone-500 dark:text-stone-500">
+              <p className="text-[10px]! leading-tight text-stone-500 dark:text-stone-500">
                 같은 팀 대화에는 약 4초 간격 동기화(MVP)·토큰은 발신자(JWT 기준)
               </p>
               <Link
                 to="/workspace-tools"
-                className="text-[10px] font-semibold text-orange-800 underline underline-offset-2 hover:text-orange-950 dark:text-orange-300 dark:hover:text-orange-200"
+                className="text-[10px]! font-semibold text-orange-800 underline underline-offset-2 hover:text-orange-950 dark:text-orange-300 dark:hover:text-orange-200"
               >
                 워크스페이스 연동·문서 업로드 열기
               </Link>

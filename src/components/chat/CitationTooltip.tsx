@@ -63,7 +63,7 @@ export function CitationTooltip({
     >
       <button
         type="button"
-        className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold leading-none transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${badgeClass}`}
+        className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px]! font-semibold leading-none transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${badgeClass}`}
         aria-label={`출처: ${title}`}
       >
         {marker}
@@ -79,7 +79,7 @@ export function CitationTooltip({
             📄
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+            <p className="text-[11px]! font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               사내 문서 출처
             </p>
             <p className="mt-0.5 text-sm font-bold leading-snug text-stone-900 dark:text-stone-50">

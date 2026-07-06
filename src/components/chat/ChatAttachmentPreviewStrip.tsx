@@ -75,7 +75,7 @@ export function ChatAttachmentPreviewStrip({
                 className="h-full w-full object-cover transition group-hover:brightness-95"
               />
               <span className="pointer-events-none absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/45 to-transparent p-1.5 opacity-0 transition group-hover:opacity-100">
-                <span className="rounded-md bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white">
+                <span className="rounded-md bg-black/50 px-2 py-0.5 text-[10px]! font-semibold text-white">
                   크게 보기
                 </span>
               </span>

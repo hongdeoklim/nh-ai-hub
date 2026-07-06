@@ -464,7 +464,7 @@ export function ReferenceRoom() {
     <button
       type="button"
       onClick={() => setFolderScope(scope)}
-      className={`flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold transition-colors ${
+      className={`flex-1 rounded-md px-2 py-1.5 text-[11px]! font-semibold transition-colors ${
         folderScope === scope
           ? 'bg-orange-800 text-white dark:bg-orange-900'
           : 'text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800'
@@ -481,14 +481,14 @@ export function ReferenceRoom() {
           {scopeTabBtn('public', '공개 폴더')}
           {scopeTabBtn('personal', '내 폴더')}
         </div>
-        <p className="mt-1.5 px-1 text-[10px] leading-snug text-stone-500 dark:text-stone-400">
+        <p className="mt-1.5 px-1 text-[10px]! leading-snug text-stone-500 dark:text-stone-400">
           {folderScope === 'public'
             ? '전사가 볼 수 있는 공유 폴더·문서입니다.'
             : '본인만 보는 개인 폴더·문서입니다.'}
         </p>
       </div>
       <div className="flex items-center justify-between gap-1 border-b border-stone-200/80 px-2 py-2 dark:border-stone-700">
-        <p className="px-1 text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+        <p className="px-1 text-[10px]! font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
           폴더
         </p>
         <button
@@ -498,14 +498,14 @@ export function ReferenceRoom() {
             setFolderCreateError(null)
           }}
           disabled={!profile?.id}
-          className="rounded-md px-2 py-1 text-[11px] font-semibold text-orange-900 hover:bg-orange-100/80 disabled:opacity-50 dark:text-orange-200 dark:hover:bg-orange-950/40"
+          className="rounded-md px-2 py-1 text-[11px]! font-semibold text-orange-900 hover:bg-orange-100/80 disabled:opacity-50 dark:text-orange-200 dark:hover:bg-orange-950/40"
         >
           + 새 폴더
         </button>
       </div>
       {folderCreateOpen ? (
         <div className="border-b border-stone-200/80 px-2 py-2 dark:border-stone-700">
-          <p className="mb-1.5 text-[10px] text-stone-500 dark:text-stone-400">
+          <p className="mb-1.5 text-[10px]! text-stone-500 dark:text-stone-400">
             {registryPathKey.trim().length > 0
               ? `위치: ${registryPathKey} 아래`
               : '최상위 폴더 만들기'}
@@ -530,12 +530,12 @@ export function ReferenceRoom() {
               type="button"
               disabled={folderCreateBusy || !newFolderName.trim()}
               onClick={() => void handleCreateFolder()}
-              className="shrink-0 rounded-lg bg-orange-800 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
+              className="shrink-0 rounded-lg bg-orange-800 px-2.5 py-1.5 text-[11px]! font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
             >
               {folderCreateBusy ? '…' : '만들기'}
             </button>
           </div>
-          <label className="mt-2 flex flex-col gap-0.5 text-[10px] text-stone-500 dark:text-stone-400">
+          <label className="mt-2 flex flex-col gap-0.5 text-[10px]! text-stone-500 dark:text-stone-400">
             또는 전체 경로
             <input
               type="text"
@@ -581,7 +581,7 @@ export function ReferenceRoom() {
             />
           </label>
           {folderCreateError ? (
-            <p className="mt-1.5 text-[10px] text-red-700 dark:text-red-300">
+            <p className="mt-1.5 text-[10px]! text-red-700 dark:text-red-300">
               {folderCreateError}
             </p>
           ) : null}
@@ -620,7 +620,7 @@ export function ReferenceRoom() {
                   ev.stopPropagation()
                   setFolderMenuKey((k) => (k === e.pathKey ? null : e.pathKey))
                 }}
-                className="shrink-0 rounded px-1.5 py-1 text-[10px] text-stone-500 hover:bg-stone-200/80 dark:text-stone-400 dark:hover:bg-stone-700"
+                className="shrink-0 rounded px-1.5 py-1 text-[10px]! text-stone-500 hover:bg-stone-200/80 dark:text-stone-400 dark:hover:bg-stone-700"
               >
                 ⋮
               </button>
@@ -628,7 +628,7 @@ export function ReferenceRoom() {
                 <div className="absolute right-1 top-full z-20 mt-0.5 min-w-[9rem] rounded-lg border border-stone-200 bg-white py-1 shadow-lg dark:border-stone-600 dark:bg-stone-900">
                   <button
                     type="button"
-                    className="block w-full px-3 py-1.5 text-left text-[11px] text-stone-800 hover:bg-stone-50 dark:text-stone-100 dark:hover:bg-stone-800"
+                    className="block w-full px-3 py-1.5 text-left text-[11px]! text-stone-800 hover:bg-stone-50 dark:text-stone-100 dark:hover:bg-stone-800"
                     onClick={() => {
                       setRegistryPathKey(e.pathKey)
                       setFolderCreateOpen(true)
@@ -639,14 +639,14 @@ export function ReferenceRoom() {
                   </button>
                   <button
                     type="button"
-                    className="block w-full px-3 py-1.5 text-left text-[11px] text-stone-800 hover:bg-stone-50 dark:text-stone-100 dark:hover:bg-stone-800"
+                    className="block w-full px-3 py-1.5 text-left text-[11px]! text-stone-800 hover:bg-stone-50 dark:text-stone-100 dark:hover:bg-stone-800"
                     onClick={() => openRenameFolder(e.pathKey)}
                   >
                     이름 바꾸기
                   </button>
                   <button
                     type="button"
-                    className="block w-full px-3 py-1.5 text-left text-[11px] text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40"
+                    className="block w-full px-3 py-1.5 text-left text-[11px]! text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40"
                     onClick={() => requestDeleteFolder(e.pathKey)}
                   >
                     삭제…
@@ -671,7 +671,7 @@ export function ReferenceRoom() {
     return (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 border-b border-stone-200/80 bg-[#FAF9F6]/95 px-3 py-2 dark:border-stone-700 dark:bg-stone-950/90 md:px-4">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
+          <p className="text-[10px]! font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
             위치
           </p>
           <p className="truncate text-sm font-semibold text-stone-900 dark:text-stone-50">
@@ -682,7 +682,7 @@ export function ReferenceRoom() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {subfolders.length > 0 ? (
             <div className="border-b border-stone-200/70 dark:border-stone-700">
-              <p className="px-3 py-2 text-[11px] font-semibold text-stone-600 dark:text-stone-300 md:px-4">
+              <p className="px-3 py-2 text-[11px]! font-semibold text-stone-600 dark:text-stone-300 md:px-4">
                 하위 폴더
               </p>
               <ul className="grid gap-1 px-3 pb-3 md:grid-cols-2 md:px-4">
@@ -708,7 +708,7 @@ export function ReferenceRoom() {
           ) : null}
 
           <div className="px-3 py-3 md:px-4">
-            <p className="mb-2 text-[11px] font-semibold text-stone-600 dark:text-stone-300">
+            <p className="mb-2 text-[11px]! font-semibold text-stone-600 dark:text-stone-300">
               파일 ({node?.files.length ?? 0})
             </p>
             {!node || node.files.length === 0 ? (
@@ -731,7 +731,7 @@ export function ReferenceRoom() {
             ) : (
               <div className="overflow-hidden rounded-xl border border-stone-200/90 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-stone-200 bg-stone-50 text-[11px] font-semibold uppercase tracking-wide text-stone-500 dark:border-stone-700 dark:bg-stone-950/50 dark:text-stone-400">
+                  <thead className="border-b border-stone-200 bg-stone-50 text-[11px]! font-semibold uppercase tracking-wide text-stone-500 dark:border-stone-700 dark:bg-stone-950/50 dark:text-stone-400">
                     <tr>
                       <th className="w-10 px-3 py-2">선택</th>
                       <th className="px-3 py-2">파일명</th>
@@ -766,7 +766,7 @@ export function ReferenceRoom() {
                             <p className="truncate font-medium text-stone-900 dark:text-stone-50">
                               📄 {row.file_name}
                             </p>
-                            <p className="truncate text-[11px] text-stone-500 dark:text-stone-400">
+                            <p className="truncate text-[11px]! text-stone-500 dark:text-stone-400">
                               {row.file_url}
                             </p>
                           </td>
@@ -821,7 +821,7 @@ export function ReferenceRoom() {
       <header className="shrink-0 border-b border-stone-200/90 bg-[#FAF9F6]/95 px-4 py-4 backdrop-blur-md dark:border-stone-800 dark:bg-stone-950/95 md:px-8 md:py-5">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-900/90 dark:text-orange-300">
+            <p className="text-[11px]! font-semibold uppercase tracking-[0.14em] text-orange-900/90 dark:text-orange-300">
               Knowledge base
             </p>
             <h1 className="mt-1 text-xl font-semibold tracking-tight text-stone-900 dark:text-stone-50 md:text-2xl">
@@ -920,7 +920,7 @@ export function ReferenceRoom() {
                 {renderRegistrySidebar()}
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                   <div className="shrink-0 border-b border-stone-200/90 bg-[#FAF9F6]/95 px-4 py-3 dark:border-stone-700 dark:bg-stone-950/90">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+                    <p className="text-[11px]! font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
                       문서 업로드
                     </p>
                     <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
@@ -977,7 +977,7 @@ export function ReferenceRoom() {
                         {uploadError}
                       </p>
                     ) : null}
-                    <p className="mt-2 text-[11px] leading-relaxed text-stone-500 dark:text-stone-400">
+                    <p className="mt-2 text-[11px]! leading-relaxed text-stone-500 dark:text-stone-400">
                       PDF·HWP·Excel 등을 Storage에 저장하고, 선택한 부서만 RAG 검색·열람할
                       수 있습니다. 기본값은 로그인 직원의 소속 부서입니다.
                     </p>

@@ -55,7 +55,7 @@ function IconCheck({ className }: { className?: string }) {
 
 /** Genspark `.slides-settings-bar` 트리거 — 라벨만, chevron 없음 */
 const barTriggerCls =
-  'inline-flex h-7 max-h-7 shrink-0 cursor-pointer select-none items-center whitespace-nowrap rounded-md border-0 bg-transparent px-2 text-[13px] font-medium leading-none text-[#0D0D0D] outline-none transition hover:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-orange-500/25 dark:text-stone-100 dark:hover:bg-white/5'
+  'inline-flex h-7 max-h-7 shrink-0 cursor-pointer select-none items-center whitespace-nowrap rounded-md border-0 bg-transparent px-2 text-[13px]! font-medium leading-none text-[#0D0D0D] outline-none transition hover:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-orange-500/25 dark:text-stone-100 dark:hover:bg-white/5'
 
 type BarDropdownProps = {
   menuId: string
@@ -198,7 +198,7 @@ export function AiSlidesSettingsBar({
 
   return (
     <div
-      className="slides-settings-bar inline-flex h-9 max-h-9 w-fit max-w-full flex-nowrap items-center gap-0 overflow-visible rounded-lg bg-[#F5F5F5] p-1 text-[13px] leading-none dark:bg-stone-800/90"
+      className="slides-settings-bar inline-flex h-9 max-h-9 w-fit max-w-full flex-nowrap items-center gap-0 overflow-visible rounded-lg bg-[#F5F5F5] p-1 text-[13px]! leading-none dark:bg-stone-800/90"
       role="toolbar"
       aria-label="슬라이드 생성 설정"
     >
@@ -210,7 +210,7 @@ export function AiSlidesSettingsBar({
               key={mode.id}
               type="button"
               onClick={() => onStyleModeChange(mode.id)}
-              className={`h-6 whitespace-nowrap rounded px-2.5 text-[13px] font-medium leading-none transition ${
+              className={`h-6 whitespace-nowrap rounded px-2.5 text-[13px]! font-medium leading-none transition ${
                 active
                   ? 'bg-[#0D0D0D] text-white dark:bg-stone-100 dark:text-stone-900'
                   : 'text-[#525252] hover:text-[#0D0D0D] dark:text-stone-400 dark:hover:text-stone-100'
@@ -252,7 +252,7 @@ export function AiSlidesSettingsBar({
                 closeMenu()
               }}
             >
-              <span className="text-[13px] font-medium text-[#0D0D0D] dark:text-stone-50">
+              <span className="text-[13px]! font-medium text-[#0D0D0D] dark:text-stone-50">
                 {engine.label}
               </span>
               {selected ? (
@@ -294,10 +294,10 @@ export function AiSlidesSettingsBar({
               }}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[13px] font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
+                <span className="block text-[13px]! font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
                   {ratio.label}
                 </span>
-                <span className="mt-0.5 block text-[12px] leading-snug text-[#737373] dark:text-stone-400">
+                <span className="mt-0.5 block text-[12px]! leading-snug text-[#737373] dark:text-stone-400">
                   {ratio.hint}
                 </span>
               </span>
@@ -340,10 +340,10 @@ export function AiSlidesSettingsBar({
               }}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[13px] font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
+                <span className="block text-[13px]! font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
                   {mode.label}
                 </span>
-                <span className="mt-0.5 block text-[12px] leading-snug text-[#737373] dark:text-stone-400">
+                <span className="mt-0.5 block text-[12px]! leading-snug text-[#737373] dark:text-stone-400">
                   {mode.hint}
                 </span>
               </span>

@@ -224,7 +224,7 @@ export function LibraryPage() {
               <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-3.5 hover:border-slate-700/60 transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-300">📁 전체 등록 문서</span>
-                  <span className="text-[10px] text-pink-400 bg-pink-950/20 px-2 py-0.5 rounded border border-pink-500/10 font-medium">
+                  <span className="text-[10px]! text-pink-400 bg-pink-950/20 px-2 py-0.5 rounded border border-pink-500/10 font-medium">
                     🟢 실시간
                   </span>
                 </div>
@@ -232,13 +232,13 @@ export function LibraryPage() {
                   <span className="text-lg font-bold text-white font-mono">
                     {docsLoading ? '—' : docs.length.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-slate-500">개 파일</span>
+                  <span className="text-[10px]! text-slate-500">개 파일</span>
                 </div>
                 <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2.5 overflow-hidden">
                   <div className="bg-pink-500 h-full rounded-full transition-all duration-700"
                     style={{ width: docs.length > 0 ? `${Math.min(100, (myDocs.length / docs.length) * 100)}%` : '0%' }} />
                 </div>
-                <div className="flex justify-between text-[9px] text-slate-500 mt-1">
+                <div className="flex justify-between text-[9px]! text-slate-500 mt-1">
                   <span>내 업로드 비율</span>
                   <span className="font-bold text-slate-300">
                     {docs.length > 0 ? Math.round((myDocs.length / docs.length) * 100) : 0}%
@@ -251,11 +251,11 @@ export function LibraryPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-300">🌐 지식 그래프 노드</span>
                   {graphStats && graphStats.nodes > 0 ? (
-                    <span className="text-[10px] text-cyan-400 bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-500/10 font-medium animate-pulse">
+                    <span className="text-[10px]! text-cyan-400 bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-500/10 font-medium animate-pulse">
                       🟢 연결됨
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 font-medium">
+                    <span className="text-[10px]! text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 font-medium">
                       ⚪ 대기 중
                     </span>
                   )}
@@ -264,7 +264,7 @@ export function LibraryPage() {
                   <span className="text-lg font-bold text-white font-mono">
                     {graphStats ? graphStats.nodes.toLocaleString() : '0'}
                   </span>
-                  <span className="text-[10px] text-slate-500">개 노드</span>
+                  <span className="text-[10px]! text-slate-500">개 노드</span>
                 </div>
                 <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2.5 overflow-hidden">
                   <div 
@@ -272,7 +272,7 @@ export function LibraryPage() {
                     style={{ width: graphStats && graphStats.nodes > 0 ? `${Math.min(100, (graphStats.edges / graphStats.nodes) * 100)}%` : '0%' }} 
                   />
                 </div>
-                <div className="flex justify-between text-[9px] text-slate-500 mt-1">
+                <div className="flex justify-between text-[9px]! text-slate-500 mt-1">
                   <span>연결 엣지 수</span>
                   <span className="font-bold text-slate-300">
                     {graphStats ? graphStats.edges.toLocaleString() : '0'}개
@@ -284,7 +284,7 @@ export function LibraryPage() {
               <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-3.5 hover:border-slate-700/60 transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-300">🏢 참여 부서</span>
-                  <span className="text-[10px] text-purple-400 bg-purple-950/20 px-2 py-0.5 rounded border border-purple-500/10 font-medium flex items-center gap-1">
+                  <span className="text-[10px]! text-purple-400 bg-purple-950/20 px-2 py-0.5 rounded border border-purple-500/10 font-medium flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
                     🟢 실시간
                   </span>
@@ -293,7 +293,7 @@ export function LibraryPage() {
                   <span className="text-lg font-bold text-white font-mono">
                     {Math.max(0, departments.length - 1)}
                   </span>
-                  <span className="text-[10px] text-slate-500">개 부서</span>
+                  <span className="text-[10px]! text-slate-500">개 부서</span>
                 </div>
                 <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2.5 overflow-hidden">
                   <div 
@@ -301,7 +301,7 @@ export function LibraryPage() {
                     style={{ width: categories.length > 1 ? `${Math.min(100, ((departments.length - 1) / (categories.length - 1)) * 100)}%` : '0%' }} 
                   />
                 </div>
-                <div className="flex justify-between text-[9px] text-slate-500 mt-1">
+                <div className="flex justify-between text-[9px]! text-slate-500 mt-1">
                   <span>등록 카테고리</span>
                   <span className="font-bold text-slate-300">{Math.max(0, categories.length - 1)}개</span>
                 </div>
@@ -312,7 +312,7 @@ export function LibraryPage() {
           {/* 동기화 패널 */}
           <div className="shrink-0 bg-slate-900/60 border border-slate-800 rounded-2xl p-5 text-center shadow-inner w-full xl:w-64 flex flex-col justify-between gap-4">
             <div>
-              <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+              <span className="block text-[10px]! text-slate-400 uppercase font-bold tracking-wider">
                 내 업로드 문서
               </span>
               <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-violet-400 to-cyan-400 font-mono">
@@ -321,18 +321,18 @@ export function LibraryPage() {
             </div>
             <div className="border-t border-b border-slate-800/80 py-3 my-1 grid grid-cols-2 gap-4">
               <div>
-                <span className="block text-[9px] text-slate-500 font-semibold">전체 공유 문서</span>
+                <span className="block text-[9px]! text-slate-500 font-semibold">전체 공유 문서</span>
                 <span className="text-base font-bold text-white font-mono">{docs.length}건</span>
               </div>
               <div>
-                <span className="block text-[9px] text-slate-500 font-semibold">카테고리</span>
+                <span className="block text-[9px]! text-slate-500 font-semibold">카테고리</span>
                 <span className="text-base font-bold text-emerald-400 font-mono">{categories.length - 1}종</span>
               </div>
             </div>
             <div>
               {isSyncing ? (
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] text-pink-400 font-semibold">
+                  <div className="flex justify-between text-[10px]! text-pink-400 font-semibold">
                     <span className="animate-pulse">{syncStep}</span>
                     <span>{syncProgress}%</span>
                   </div>
@@ -359,7 +359,7 @@ export function LibraryPage() {
       {/* 헤더 + 필터 */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="text-[26px]">📚</span>
+          <span className="text-[26px]!">📚</span>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white">라이브러리</h1>
             <p className="text-sm text-slate-400 mt-0.5">
@@ -505,11 +505,11 @@ function DocCard({
     <article className="flex flex-col justify-between bg-[#0c101b]/80 border border-slate-800/80 rounded-2xl p-4 shadow-xl hover:border-pink-500/20 transition-all duration-200 gap-3">
       <div>
         <div className="flex items-center justify-between mb-2">
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${meta.colorClass}`}>
+          <span className={`px-2 py-0.5 rounded text-[10px]! font-bold tracking-wider uppercase border ${meta.colorClass}`}>
             {meta.emoji} {meta.label}
           </span>
           {mine && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-pink-950/40 text-pink-400 border border-pink-500/20 font-bold">
+            <span className="text-[9px]! px-1.5 py-0.5 rounded-full bg-pink-950/40 text-pink-400 border border-pink-500/20 font-bold">
               내 파일
             </span>
           )}
@@ -521,13 +521,13 @@ function DocCard({
 
         <div className="flex flex-wrap gap-2 mt-2">
           {doc.category && (
-            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
+            <span className="text-[10px]! px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
               {doc.category}
             </span>
           )}
           {doc.target_department && (
             <span
-              className="text-[10px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300"
+              className="text-[10px]! px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300"
               title="드라이브 폴더 경로 또는 등록 시 지정된 RAG 부서"
             >
               🏢 {knowledgeDepartmentLabel(doc.target_department)}
@@ -537,7 +537,7 @@ function DocCard({
       </div>
 
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/60">
-        <span className="text-[10px] text-slate-500 tabular-nums">
+        <span className="text-[10px]! text-slate-500 tabular-nums">
           {formatDate(doc.created_at)}
         </span>
         <div className="flex shrink-0 items-center gap-2">
@@ -546,7 +546,7 @@ function DocCard({
               href={doc.file_url}
               target="_blank"
               rel="noreferrer"
-              className="text-[10px] text-pink-400 hover:text-pink-300 font-semibold flex items-center gap-1 transition"
+              className="text-[10px]! text-pink-400 hover:text-pink-300 font-semibold flex items-center gap-1 transition"
             >
               열기 →
             </a>
@@ -556,7 +556,7 @@ function DocCard({
               type="button"
               disabled={deleting}
               onClick={onDelete}
-              className="text-[10px] font-semibold text-red-400 transition hover:text-red-300 disabled:opacity-50"
+              className="text-[10px]! font-semibold text-red-400 transition hover:text-red-300 disabled:opacity-50"
             >
               {deleting ? '삭제 중…' : '삭제'}
             </button>

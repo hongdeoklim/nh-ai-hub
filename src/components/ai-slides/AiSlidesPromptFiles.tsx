@@ -40,7 +40,7 @@ export function AiSlidesPromptFiles({
             />
           )}
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
+        <span className="min-w-0 flex-1 truncate text-[13px]! font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
           {label}
         </span>
         <button
@@ -52,7 +52,7 @@ export function AiSlidesPromptFiles({
           ×
         </button>
       </div>
-      <span className="shrink-0 text-[13px] font-medium text-[#737373] dark:text-stone-400">
+      <span className="shrink-0 text-[13px]! font-medium text-[#737373] dark:text-stone-400">
         {guideLabel}
       </span>
     </div>

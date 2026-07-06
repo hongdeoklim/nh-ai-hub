@@ -119,8 +119,8 @@ export function NotificationsAndTodos() {
               ) : (
                 notifications.map(n => (
                   <div key={n.id} onClick={() => markAsRead(n.id)} className={`mb-1 cursor-pointer rounded-lg p-3 transition hover:bg-stone-50 dark:hover:bg-stone-800/50 ${n.is_read ? 'opacity-60' : 'bg-indigo-50/50 dark:bg-indigo-900/10'}`}>
-                    <h4 className="text-[13px] font-semibold text-stone-900 dark:text-stone-100">{n.title}</h4>
-                    <p className="mt-1 text-[12px] text-stone-600 dark:text-stone-400 line-clamp-2">{n.content}</p>
+                    <h4 className="text-[13px]! font-semibold text-stone-900 dark:text-stone-100">{n.title}</h4>
+                    <p className="mt-1 text-[12px]! text-stone-600 dark:text-stone-400 line-clamp-2">{n.content}</p>
                   </div>
                 ))
               )
@@ -139,7 +139,7 @@ export function NotificationsAndTodos() {
                       className="mt-0.5 h-4 w-4 rounded border-stone-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <div>
-                      <p className={`text-[13px] font-medium ${t.status === 'completed' ? 'text-stone-400 line-through' : 'text-stone-900 dark:text-stone-100'}`}>
+                      <p className={`text-[13px]! font-medium ${t.status === 'completed' ? 'text-stone-400 line-through' : 'text-stone-900 dark:text-stone-100'}`}>
                         {t.task}
                       </p>
                     </div>

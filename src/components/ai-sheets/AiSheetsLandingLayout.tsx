@@ -193,7 +193,7 @@ export function AiSheetsLandingLayout({
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row lg:gap-0">
       <div className="shrink-0 overflow-y-auto lg:w-[min(100%,400px)] lg:max-w-[36%] lg:border-r lg:border-[#edebe9] dark:lg:border-stone-800">
-        <div className="px-4 pb-8 pt-4 text-[13px] md:px-5 md:pt-3">
+        <div className="px-4 pb-8 pt-4 text-[13px]! md:px-5 md:pt-3">
           <AiSheetsHero compact />
 
           <AiSheetsPromptSection
@@ -211,7 +211,7 @@ export function AiSheetsLandingLayout({
           />
 
           <div>
-            <p className="mb-2 text-[13px] font-medium text-stone-500 dark:text-stone-400">
+            <p className="mb-2 text-[13px]! font-medium text-stone-500 dark:text-stone-400">
               빠른 시작
             </p>
             <div className="flex flex-wrap gap-2">
@@ -220,7 +220,7 @@ export function AiSheetsLandingLayout({
                   key={starter.id}
                   type="button"
                   onClick={() => onStarterClick(starter.prompt)}
-                  className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[13px] font-medium text-stone-700 transition hover:border-orange-300 hover:bg-orange-50/80 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-orange-700 dark:hover:bg-orange-950/30"
+                  className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[13px]! font-medium text-stone-700 transition hover:border-orange-300 hover:bg-orange-50/80 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-orange-700 dark:hover:bg-orange-950/30"
                 >
                   {starter.label}
                 </button>

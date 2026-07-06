@@ -115,12 +115,12 @@ function OrgPromptGreeting({
             </div>
           ) : (
             <>
-              <p className="text-[60px] font-semibold tracking-tight text-stone-900 dark:text-stone-50">
+              <p className="text-[60px]! font-semibold tracking-tight text-stone-900 dark:text-stone-50">
                 {userGreetingName
                   ? `${userGreetingName}님, 안녕하세요`
                   : '안녕하세요'}
               </p>
-              <p className="mt-1 text-[25.5px] leading-snug text-stone-600 dark:text-stone-400">
+              <p className="mt-1 text-[25.5px]! leading-snug text-stone-600 dark:text-stone-400">
                 무엇을 도와드릴까요?
               </p>
             </>

@@ -23,14 +23,14 @@ export function AiDesignerGallery({
     <div className="ai-designer-gallery px-3 py-4 md:px-6 md:py-6">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[14px] font-semibold uppercase tracking-wider text-orange-800 dark:text-orange-300">
+          <p className="text-[14px]! font-semibold uppercase tracking-wider text-orange-800 dark:text-orange-300">
             NH-AX-HUB Designer
           </p>
-          <h2 className="mt-0.5 text-[14px] font-semibold text-stone-900 dark:text-stone-50">
+          <h2 className="mt-0.5 text-[14px]! font-semibold text-stone-900 dark:text-stone-50">
             {activeId === 'chat' ? '디자인 템플릿' : categories.find((c) => c.id === activeId)?.label}
           </h2>
         </div>
-        <p className="hidden text-[14px] text-stone-500 sm:block dark:text-stone-400">
+        <p className="hidden text-[14px]! text-stone-500 sm:block dark:text-stone-400">
           카드를 클릭하면 프롬프트가 입력됩니다
         </p>
       </div>
@@ -54,14 +54,14 @@ export function AiDesignerGallery({
                 {category.emoji}
               </span>
               <div>
-                <p className="text-[14px] font-semibold text-stone-900">{category.label}</p>
+                <p className="text-[14px]! font-semibold text-stone-900">{category.label}</p>
                 {category.aspectRatio ? (
-                  <p className="mt-0.5 text-[14px] text-stone-600">{category.aspectRatio}</p>
+                  <p className="mt-0.5 text-[14px]! text-stone-600">{category.aspectRatio}</p>
                 ) : null}
               </div>
             </div>
             <div className="bg-white px-3 py-2 dark:bg-stone-900">
-              <p className="line-clamp-2 text-[14px] leading-snug text-stone-500 dark:text-stone-400">
+              <p className="line-clamp-2 text-[14px]! leading-snug text-stone-500 dark:text-stone-400">
                 {category.promptSeed}
               </p>
             </div>

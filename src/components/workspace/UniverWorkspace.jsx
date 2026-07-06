@@ -278,7 +278,7 @@ export default function UniverWorkspace({
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start md:justify-end">
           <span
-            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+            className={`rounded-full border px-2.5 py-1 text-[11px]! font-medium ${
               isReady
                 ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                 : 'border-zinc-700 bg-zinc-900 text-zinc-400'
@@ -286,7 +286,7 @@ export default function UniverWorkspace({
           >
             {isReady ? 'Univer 가동됨' : '엔진 예열 중…'}
           </span>
-          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] font-medium text-zinc-400">
+          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px]! font-medium text-zinc-400">
             v0.23
           </span>
         </div>
@@ -312,7 +312,7 @@ export default function UniverWorkspace({
             >
               <span className="text-sm font-medium">{tab.label}</span>
               <span
-                className={`hidden rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide md:inline ${
+                className={`hidden rounded-md px-1.5 py-0.5 text-[10px]! font-semibold uppercase tracking-wide md:inline ${
                   isActive
                     ? 'bg-emerald-500/15 text-emerald-300'
                     : 'bg-zinc-800 text-zinc-500'
@@ -332,11 +332,11 @@ export default function UniverWorkspace({
               <p className="truncate text-sm font-medium text-zinc-200">
                 스프레드시트 캔버스
               </p>
-              <p className="truncate text-[11px] text-zinc-500">
+              <p className="truncate text-[11px]! text-zinc-500">
                 수식 엔진 · 셀 편집 · AI 데이터 정밀 주입
               </p>
             </div>
-            <span className="shrink-0 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+            <span className="shrink-0 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-[10px]! font-medium uppercase tracking-wide text-zinc-500">
               Bento
             </span>
           </div>
@@ -352,7 +352,7 @@ export default function UniverWorkspace({
 
         <aside className="hidden min-h-0 flex-col gap-2 md:flex">
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
+            <p className="text-[11px]! font-semibold uppercase tracking-wider text-emerald-400">
               AI Stream
             </p>
             <p className="mt-2 text-xs leading-relaxed text-zinc-400">
@@ -363,10 +363,10 @@ export default function UniverWorkspace({
             </p>
           </div>
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            <p className="text-[11px]! font-semibold uppercase tracking-wider text-zinc-500">
               Sheets Payload
             </p>
-            <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-[10px] leading-relaxed text-zinc-400">
+            <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-[10px]! leading-relaxed text-zinc-400">
               {`{
   tick: Date.now(),
   updates: [

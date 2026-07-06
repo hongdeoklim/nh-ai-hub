@@ -216,10 +216,10 @@ function ArtifactChip({
         {artifactChipIcon(artifact.type)}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[11px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+        <span className="block text-[11px]! font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
           아티팩트
         </span>
-        <span className="block truncate text-[15px] font-semibold text-stone-900 dark:text-stone-50">
+        <span className="block truncate text-[15px]! font-semibold text-stone-900 dark:text-stone-50">
           문서 보기: {artifact.title}
         </span>
       </span>
@@ -466,7 +466,7 @@ function StreamingStatusLine({
           />
         </svg>
       </span>
-      <span className="text-[12px] font-medium text-stone-600 dark:text-stone-300">
+      <span className="text-[12px]! font-medium text-stone-600 dark:text-stone-300">
         {hasText ? '작성하는 중' : '생각하는 중'} · {formatElapsedKo(elapsed)}
       </span>
       <span className="flex items-center gap-[3px]" aria-hidden="true">
@@ -506,22 +506,22 @@ export function ChatMessage({
   const isClaude = variant === 'claude'
 
   const editPrimaryBtnClass = isGemini
-    ? 'rounded-full bg-[#0b57d0] px-4 py-1.5 text-[13px] font-medium text-white shadow-sm hover:bg-[#0842a0]'
+    ? 'rounded-full bg-[#0b57d0] px-4 py-1.5 text-[13px]! font-medium text-white shadow-sm hover:bg-[#0842a0]'
     : isClaude
-    ? 'rounded-lg bg-orange-700 px-3 py-1.5 text-[13px] font-semibold text-white shadow-sm hover:bg-orange-800 dark:bg-orange-600 dark:hover:bg-orange-500'
-    : 'rounded-lg bg-emerald-600 px-3 py-1.5 text-[13px] font-semibold text-white shadow-sm hover:bg-emerald-700'
+    ? 'rounded-lg bg-orange-700 px-3 py-1.5 text-[13px]! font-semibold text-white shadow-sm hover:bg-orange-800 dark:bg-orange-600 dark:hover:bg-orange-500'
+    : 'rounded-lg bg-emerald-600 px-3 py-1.5 text-[13px]! font-semibold text-white shadow-sm hover:bg-emerald-700'
 
   const editGhostBtnClass = isGemini
-    ? 'rounded-full border border-[#c4c7c5] bg-white px-4 py-1.5 text-[13px] font-medium text-[#1f1f1f] hover:bg-[#f8fafd] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100'
+    ? 'rounded-full border border-[#c4c7c5] bg-white px-4 py-1.5 text-[13px]! font-medium text-[#1f1f1f] hover:bg-[#f8fafd] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100'
     : isClaude
-    ? 'rounded-lg border border-stone-300/90 bg-white px-3 py-1.5 text-[13px] font-semibold text-stone-800 hover:bg-stone-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800'
-    : 'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[13px] font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700'
+    ? 'rounded-lg border border-stone-300/90 bg-white px-3 py-1.5 text-[13px]! font-semibold text-stone-800 hover:bg-stone-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800'
+    : 'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[13px]! font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700'
 
   const editFieldClass = isGemini
-    ? 'mt-1 min-h-[5rem] w-full resize-y rounded-2xl border border-[#c4c7c5] bg-white px-4 py-3 text-[15px] leading-relaxed text-[#1f1f1f] outline-none ring-[#0b57d0]/15 focus:border-[#0b57d0] focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100'
+    ? 'mt-1 min-h-[5rem] w-full resize-y rounded-2xl border border-[#c4c7c5] bg-white px-4 py-3 text-[15px]! leading-relaxed text-[#1f1f1f] outline-none ring-[#0b57d0]/15 focus:border-[#0b57d0] focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100'
     : isClaude
-    ? 'mt-1 min-h-[5rem] w-full resize-y rounded-xl border border-stone-300/80 bg-white px-3 py-2 text-[15px] leading-relaxed text-stone-900 outline-none ring-orange-600/15 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 dark:ring-orange-400/20'
-    : 'mt-1 min-h-[5rem] w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2 text-[15px] leading-relaxed text-slate-900 outline-none ring-emerald-600/15 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100'
+    ? 'mt-1 min-h-[5rem] w-full resize-y rounded-xl border border-stone-300/80 bg-white px-3 py-2 text-[15px]! leading-relaxed text-stone-900 outline-none ring-orange-600/15 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 dark:ring-orange-400/20'
+    : 'mt-1 min-h-[5rem] w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2 text-[15px]! leading-relaxed text-slate-900 outline-none ring-emerald-600/15 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100'
 
   const isAssistant = msg.role === 'assistant'
 
@@ -587,16 +587,16 @@ export function ChatMessage({
   }, [userActionsPinned])
 
   const userBubbleClass = isGemini
-    ? 'max-w-[min(100%,32rem)] rounded-[24px] bg-[#f0f4f9] px-5 py-3 text-[15px] leading-relaxed text-[#1f1f1f] shadow-none dark:bg-stone-800 dark:text-stone-100 md:max-w-xl'
+    ? 'max-w-[min(100%,32rem)] rounded-[24px] bg-[#f0f4f9] px-5 py-3 text-[15px]! leading-relaxed text-[#1f1f1f] shadow-none dark:bg-stone-800 dark:text-stone-100 md:max-w-xl'
     : isClaude
-    ? 'max-w-[min(100%,28rem)] rounded-3xl rounded-br-lg bg-[#E7DDD6] px-4 py-3 text-[15px] leading-relaxed text-stone-900 shadow-none dark:bg-stone-800 dark:text-stone-100 md:max-w-xl md:text-[16px]'
+    ? 'max-w-[min(100%,28rem)] rounded-3xl rounded-br-lg bg-[#E7DDD6] px-4 py-3 text-[15px]! leading-relaxed text-stone-900 shadow-none dark:bg-stone-800 dark:text-stone-100 md:max-w-xl md:text-[16px]!'
     : 'max-w-[min(100%,28rem)] rounded-2xl rounded-br-md bg-emerald-600 px-4 py-2.5 leading-relaxed text-white shadow-sm md:max-w-xl md:py-3'
 
   const assistantShellClass = isGemini
     ? 'min-w-0 flex-1 py-0.5 text-actual-14 text-[#1f1f1f] dark:text-stone-100'
     : isClaude
-    ? 'w-full max-w-none px-0 py-1 text-[15px] leading-relaxed text-stone-900 md:text-[16px] dark:text-stone-100'
-    : 'w-full max-w-none px-0 py-1 text-sm leading-relaxed text-slate-800 md:text-[17px] dark:text-slate-100'
+    ? 'w-full max-w-none px-0 py-1 text-[15px]! leading-relaxed text-stone-900 md:text-[16px]! dark:text-stone-100'
+    : 'w-full max-w-none px-0 py-1 text-sm leading-relaxed text-slate-800 md:text-[17px]! dark:text-slate-100'
 
   if (isAssistant) {
     return (
@@ -647,7 +647,7 @@ export function ChatMessage({
               {msg.routeInfo ? (
                 <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                   <span
-                    className="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-[11px] font-medium text-stone-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
+                    className="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-[11px]! font-medium text-stone-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
                     title={
                       msg.routeInfo.auto
                         ? 'NH 스마트 라우터가 요청을 분류해 자동으로 모델을 선택했습니다.'
@@ -730,7 +730,7 @@ export function ChatMessage({
           {msg.deepResearch && !msg.streaming && !isEditing ? (
             <p className="mt-2">
               <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-tight ${
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px]! font-medium tracking-tight ${
                   isClaude
                     ? 'border-emerald-200/90 bg-emerald-50/90 text-emerald-900 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200'
                     : 'border-emerald-200/90 bg-emerald-50 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/35 dark:text-emerald-200'
@@ -765,7 +765,7 @@ export function ChatMessage({
             />
           ) : !msg.streaming && msg.content.trim().length === 0 ? (
             <p
-              className={`mt-2 text-[13px] tabular-nums ${
+              className={`mt-2 text-[13px]! tabular-nums ${
                 isClaude
                   ? 'text-stone-500 dark:text-stone-500'
                   : 'text-slate-400 dark:text-slate-500'
@@ -810,7 +810,7 @@ export function ChatMessage({
 
         <div className={userBubbleClass}>
         {msg.authorDisplay ? (
-          <p className="mb-1 text-[11px] font-medium text-stone-600 opacity-85 dark:text-stone-400">
+          <p className="mb-1 text-[11px]! font-medium text-stone-600 opacity-85 dark:text-stone-400">
             {msg.authorDisplay}
           </p>
         ) : null}
@@ -856,14 +856,14 @@ export function ChatMessage({
             </div>
           </>
         ) : (
-          <div className="whitespace-pre-wrap" style={{ fontSize: '14px' }}>
+          <div className="whitespace-pre-wrap">
             {msg.content}
           </div>
         )}
 
         <div className="mt-1.5">
           <p
-            className={`text-[13px] tabular-nums ${
+            className={`text-[13px]! tabular-nums ${
               isGemini
                 ? 'text-[#444746] dark:text-stone-500'
                 : isClaude
