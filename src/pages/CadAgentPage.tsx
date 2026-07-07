@@ -6,6 +6,7 @@ import {
   approveCadJob,
   fetchAllowedPrograms,
   fetchMyCadJobs,
+  getAgentInstallerUrl,
   rejectCadJob,
   type AllowedProgram,
   type CadJob,
@@ -18,7 +19,6 @@ import {
  * 사용자 PC의 로컬 에이전트가 이를 폴링해 정품 AutoCAD로 실행한다.
  */
 
-const AGENT_DOWNLOAD_URL = (import.meta.env.VITE_CAD_AGENT_DOWNLOAD_URL as string | undefined)?.trim()
 const WORKSPACE_ROOT = 'C:\\NH-AI-HUB-workspace'
 
 const STATUS_META: Record<CadJobStatus, { label: string; cls: string }> = {
@@ -43,21 +43,24 @@ export function CadAgentPage() {
   const isAdmin = profile?.is_admin === true
   const [jobs, setJobs] = useState<CadJob[]>([])
   const [programs, setPrograms] = useState<AllowedProgram[]>([])
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [jobRows, programRows] = await Promise.all([
+      const [jobRows, programRows, installerUrl] = await Promise.all([
         fetchMyCadJobs(50).catch((e) => {
           toast.error(`작업 조회 실패: ${e instanceof Error ? e.message : e}`)
           return [] as CadJob[]
         }),
         fetchAllowedPrograms().catch(() => [] as AllowedProgram[]),
+        getAgentInstallerUrl().catch(() => null),
       ])
       setJobs(jobRows)
       setPrograms(programRows)
+      setDownloadUrl(installerUrl)
     } finally {
       setLoading(false)
     }
@@ -113,9 +116,9 @@ export function CadAgentPage() {
           <li>③ 에이전트가 실행되면 이 페이지의 작업 큐가 자동으로 처리됩니다.</li>
         </ol>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          {AGENT_DOWNLOAD_URL ? (
+          {downloadUrl ? (
             <a
-              href={AGENT_DOWNLOAD_URL}
+              href={downloadUrl}
               className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-[13px]! font-semibold text-white transition-colors hover:bg-orange-700 md:text-[14px]!"
             >
               <span aria-hidden>⬇</span> 설치본 다운로드 (setup.exe)

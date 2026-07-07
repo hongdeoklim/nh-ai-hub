@@ -69,6 +69,24 @@ export async function rejectCadJob(id: string, adminId: string): Promise<void> {
   if (error) throw error
 }
 
+const INSTALLER_BUCKET = 'agent-installer'
+const INSTALLER_FILE = 'nh-agent-setup.exe'
+
+/**
+ * 설치본 다운로드 URL을 반환한다.
+ * 우선순위: VITE_CAD_AGENT_DOWNLOAD_URL(명시 지정) → agent-installer 버킷에
+ * 업로드된 setup.exe의 공개 URL → 없으면 null(버튼 대신 "준비 중" 표시).
+ */
+export async function getAgentInstallerUrl(): Promise<string | null> {
+  const override = (import.meta.env.VITE_CAD_AGENT_DOWNLOAD_URL as string | undefined)?.trim()
+  if (override) return override
+  const { data, error } = await supabase.storage
+    .from(INSTALLER_BUCKET)
+    .list('', { search: INSTALLER_FILE, limit: 1 })
+  if (error || !data?.some((f) => f.name === INSTALLER_FILE)) return null
+  return supabase.storage.from(INSTALLER_BUCKET).getPublicUrl(INSTALLER_FILE).data.publicUrl
+}
+
 export async function fetchAllowedPrograms(): Promise<AllowedProgram[]> {
   const { data, error } = await supabase
     .from('allowed_programs')
