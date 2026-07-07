@@ -491,8 +491,8 @@ export function AiProductPlannerPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden relative">
-        <div className="flex-1 flex flex-col bg-transparent z-0 relative">
+      <div className="flex flex-1 flex-col overflow-hidden relative lg:flex-row">
+        <div className="flex-1 flex flex-col bg-transparent z-0 relative min-h-0">
 
           {(!result && !isGenerating && !generateError) && (
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
@@ -539,8 +539,8 @@ export function AiProductPlannerPage() {
                 <div>
                   <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">기획을 시작해볼까요?</h2>
                   <p className="mt-4 leading-relaxed text-slate-500 dark:text-slate-400 text-lg">
-                    우측 패널에서 <span className="text-indigo-600 dark:text-indigo-400 font-medium">AI Copilot</span>과 대화하며 아이디어를 구체화하세요.
-                    <br/>충분한 논의 후 버튼을 누르면 이 공간에 완벽한 산출물이 작성됩니다.
+                    <span className="text-indigo-600 dark:text-indigo-400 font-medium">AI Copilot</span>과 대화하며 아이디어를 구체화하세요.
+                    <br/>충분한 논의 후 <span className="font-medium text-slate-600 dark:text-slate-300">기획안 생성</span>을 누르면 이 공간에 산출물이 작성됩니다.
                   </p>
                   <p className="mt-3 text-sm text-slate-400 dark:text-slate-500">
                     대화는 자동 저장됩니다. 사이드바의 <strong className="font-medium text-slate-600 dark:text-slate-400">기획 세션</strong>에서 이전 기록을 열 수 있습니다.
@@ -636,7 +636,7 @@ export function AiProductPlannerPage() {
           )}
         </div>
 
-        <div className="w-[420px] flex flex-col border-l border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-[#0a0a0c]/80 shadow-[0_0_40px_rgba(0,0,0,0.05)] z-10 shrink-0 relative">
+        <div className="flex h-[55vh] w-full min-h-0 shrink-0 flex-col border-t border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-[#0a0a0c]/80 shadow-[0_0_40px_rgba(0,0,0,0.05)] z-10 relative lg:h-auto lg:w-[420px] lg:border-l lg:border-t-0">
 
           <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/60 shrink-0 bg-white/50 dark:bg-slate-900/50">
             <div className="flex items-center justify-between w-full">
