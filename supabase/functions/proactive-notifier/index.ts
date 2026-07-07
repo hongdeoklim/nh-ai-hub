@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       })
 
       // 3. 알림 DB에 저장
-      await admin.from("user_notifications").insert({
+      await admin.from("nh_user_notifications").insert({
         user_id: user.id,
         title: "☀️ 오늘의 AI 아침 브리핑",
         content: text.trim()
