@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import './index.css'
+import { AppErrorBoundary } from './components/layout/AppErrorBoundary'
 import { isSupabaseConfigured } from './lib/supabase'
 import { clientAiEnvStatus } from './services/ai/config'
 import {
@@ -38,7 +39,9 @@ if (import.meta.env.PROD) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <AppErrorBoundary>
+        <App />
+      </AppErrorBoundary>
     </BrowserRouter>
   </StrictMode>,
 )
