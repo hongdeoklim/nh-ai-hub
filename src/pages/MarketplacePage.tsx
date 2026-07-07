@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -537,7 +538,7 @@ export function MarketplacePage() {
       await action()
       await load()
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : '작업에 실패했습니다.')
+      toast.error(e instanceof Error ? e.message : '작업에 실패했습니다.')
     } finally {
       setBusyId(null)
     }

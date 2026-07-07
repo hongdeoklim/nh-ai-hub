@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useState } from 'react'
 
 import type { SavedPromptRow } from '../../types/prompts'
@@ -73,7 +74,7 @@ export function PromptLibraryPanel({
     try {
       const result = await onSavePrompt(saveTitle, saveBody)
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
       setSaveOpen(false)
@@ -315,7 +316,7 @@ export function PromptLibraryPanel({
                   }
                   void (async () => {
                     const r = await onDeletePrompt(row.id)
-                    if (!r.ok) window.alert(r.message)
+                    if (!r.ok) toast.error(r.message)
                     else await onRefresh()
                   })()
                 }}

@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useEffect, useState } from 'react'
 
 import { AiSheetsHero } from './AiSheetsHero'
@@ -110,7 +111,7 @@ export function AiSheetsLandingLayout({
     (url: string, nextRange: string) => {
       const parsed = parseSheetsPromptInput(`${url}\nrange: ${nextRange}`)
       if (!parsed.spreadsheetId) {
-        window.alert('유효한 Google Sheets URL이 아닙니다.')
+        toast.error('유효한 Google Sheets URL이 아닙니다.')
         return
       }
       setLocalWorkbook(null)

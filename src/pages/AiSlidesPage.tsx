@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -271,7 +272,7 @@ export function AiSlidesPage() {
   function handleSend(payload: ChatSendPayload) {
     const template = appliedTemplate ?? selectedTemplate
     if (!template) {
-      window.alert('템플릿에서 Apply를 눌러 선택해 주세요.')
+      toast.error('템플릿에서 Apply를 눌러 선택해 주세요.')
       return
     }
     launchSlides(template, payload.text, true)
@@ -294,11 +295,11 @@ export function AiSlidesPage() {
 
   function handleAddCustomTemplate(file: File) {
     if (!file.type.startsWith('image/')) {
-      window.alert('이미지 파일만 업로드할 수 있습니다.')
+      toast.error('이미지 파일만 업로드할 수 있습니다.')
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      window.alert('2MB 이하 이미지를 사용해 주세요.')
+      toast.error('2MB 이하 이미지를 사용해 주세요.')
       return
     }
     const reader = new FileReader()

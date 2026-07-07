@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useMemo, useState } from 'react'
 
 import type { ChatCitationSource } from '../../types/chat-citations'
@@ -117,7 +118,7 @@ function CodeCanvasPanel({
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1600)
     } catch {
-      window.alert('복사에 실패했습니다.')
+      toast.error('복사에 실패했습니다.')
     }
   }, [code])
 

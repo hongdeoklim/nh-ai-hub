@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 
 import { disablePush, enablePush, isPushSupported } from '../../lib/fcm'
@@ -169,7 +170,7 @@ export function MyPagePanel() {
 
   const handleSaveProfile = useCallback(async () => {
     if (!userId) {
-      window.alert('로그인이 필요합니다.')
+      toast.error('로그인이 필요합니다.')
       return
     }
     setProfileSaving(true)

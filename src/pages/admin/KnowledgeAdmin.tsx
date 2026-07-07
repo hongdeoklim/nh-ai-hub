@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 
 import { DriveSyncWidget } from '../../components/automation/DriveSyncWidget'
@@ -41,7 +42,7 @@ export function KnowledgeAdmin() {
     const { error: dErr } = await supabase.from('knowledge_base').delete().eq('id', id)
     setBusyId(null)
     if (dErr) {
-      window.alert(dErr.message)
+      toast.error(dErr.message)
       return
     }
     await load()

@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import type { AiSlidesTemplate } from '../data/ai-slides-catalog'
 
 export type AiSlidesCustomTemplate = {
@@ -36,7 +37,7 @@ export function saveCustomAiSlidesTemplate(
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(0, 24)))
   } catch {
-    window.alert('템플릿 저장에 실패했습니다. 이미지 크기를 줄여 주세요.')
+    toast.error('템플릿 저장에 실패했습니다. 이미지 크기를 줄여 주세요.')
   }
 }
 

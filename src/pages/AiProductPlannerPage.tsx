@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
@@ -381,7 +382,7 @@ export function AiProductPlannerPage() {
   const exportToExcel = () => {
     const specMarkdown = result?.specMarkdown?.trim() ?? ''
     if (!specMarkdown) {
-      window.alert('내보낼 기능 명세서가 없습니다. 먼저 기획안을 생성해 주세요.')
+      toast.error('내보낼 기능 명세서가 없습니다. 먼저 기획안을 생성해 주세요.')
       return
     }
     const wb = XLSX.utils.book_new()

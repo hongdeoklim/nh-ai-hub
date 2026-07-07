@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useEffect, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
@@ -34,7 +35,7 @@ export function UserAiProfilePanel({ userId }: UserAiProfilePanelProps) {
 
   async function handleSave() {
     if (!userId) {
-      window.alert('로그인이 필요합니다.')
+      toast.error('로그인이 필요합니다.')
       return
     }
     setSaving(true)

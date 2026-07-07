@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useAuth } from '../components/auth/useAuth'
@@ -323,7 +324,7 @@ export function NotebookWorkspace() {
 
     setMerging(false)
     if (!result.ok && !ac.signal.aborted) {
-      window.alert(result.message)
+      toast.error(result.message)
     }
   }, [
     notes,
