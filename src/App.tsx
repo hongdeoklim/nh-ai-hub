@@ -168,6 +168,9 @@ const KnowledgeHubPage = lazy(() =>
 const AutomationStudioPage = lazy(() =>
   import('./pages/AutomationStudioPage').then((m) => ({ default: m.AutomationStudioPage })),
 )
+const CadAgentPage = lazy(() =>
+  import('./pages/CadAgentPage').then((m) => ({ default: m.CadAgentPage })),
+)
 
 function AuthSpinner() {
   return (
@@ -228,6 +231,7 @@ function AppRoutes() {
             <Route path="reference-room" element={<ReferenceRoom />} />
             <Route path="knowledge-hub" element={<KnowledgeHubPage />} />
             <Route path="automation-studio" element={<AutomationStudioPage />} />
+            <Route path="cad-agent" element={<CadAgentPage />} />
             <Route path="teams" element={<TeamsPage />} />
             <Route path="teams/:teamId" element={<TeamDetailPage />} />
             <Route

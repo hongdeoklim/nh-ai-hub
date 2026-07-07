@@ -79,6 +79,7 @@ export function SidebarNavDock({
                           label: '자동화',
                           items: [
                             { to: '/automation-studio', title: '자동화 스튜디오 (워크플로우·마켓플레이스·연동 통합)', text: '자동화', icon: <IconAutomationStudio className="h-5 w-5" /> },
+                            { to: '/cad-agent', title: 'CAD 에이전트 (내 PC AutoCAD 원격 실행)', text: 'CAD', icon: <span className="text-lg leading-none">📐</span> },
                           ],
                         },
                         {
@@ -246,6 +247,16 @@ export function SidebarNavDock({
                 >
                   <IconAutomationStudio className="h-3.5 w-3.5 shrink-0" />
                   <span className={sidebarIconDockLabelClass}>자동화 스튜디오</span>
+                </Link>
+                <Link
+                  to="/cad-agent"
+                  title="CAD 에이전트 (내 PC AutoCAD 원격 실행)"
+                  aria-label="CAD 에이전트"
+                  className={sidebarIconDockClass}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span className="text-sm leading-none">📐</span>
+                  <span className={sidebarIconDockLabelClass}>CAD 에이전트</span>
                 </Link>
                 </div>
 
