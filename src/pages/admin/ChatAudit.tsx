@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
@@ -150,7 +151,7 @@ export function ChatAudit() {
   const handleIngestRag = async () => {
     if (!selectedFeedback) return
     if (!modalTitle.trim() || !modalContent.trim()) {
-      window.alert('제목과 내용을 입력해 주세요.')
+      toast.error('제목과 내용을 입력해 주세요.')
       return
     }
 
@@ -174,13 +175,13 @@ export function ChatAudit() {
         throw new Error(data.error || '적재 중 서버 오류')
       }
 
-      window.alert('💡 RAG 지식베이스(work_cases)에 성공적으로 영구 적재되었습니다!')
+      toast.success('💡 RAG 지식베이스(work_cases)에 성공적으로 영구 적재되었습니다!')
       setIsModalOpen(false)
       setSelectedFeedback(null)
       await loadFeedbacksData()
     } catch (err) {
       console.error('RAG ingest error:', err)
-      window.alert(
+      toast.error(
         err instanceof Error
           ? err.message
           : 'RAG 적재에 실패했습니다. 다시 시도해 주세요.',

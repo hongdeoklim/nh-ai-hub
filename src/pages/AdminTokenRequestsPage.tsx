@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
@@ -94,12 +95,12 @@ export function AdminTokenRequestsPage() {
   async function approve(row: TokenAllocationRequestRow) {
     const trimmed = (grantAmounts[row.id] ?? '').trim()
     if (!trimmed) {
-      window.alert('승인 시 부여할 토큰량을 입력해 주세요.')
+      toast.error('승인 시 부여할 토큰량을 입력해 주세요.')
       return
     }
     const delta = Number(trimmed)
     if (!Number.isFinite(delta) || delta <= 0 || !Number.isInteger(delta)) {
-      window.alert('토큰량은 1 이상의 정수만 입력할 수 있습니다.')
+      toast.error('토큰량은 1 이상의 정수만 입력할 수 있습니다.')
       return
     }
 
@@ -109,7 +110,7 @@ export function AdminTokenRequestsPage() {
     try {
       const grantErr = await grantTokens(row.user_id, delta)
       if (grantErr) {
-        window.alert(grantErr)
+        toast.error(grantErr)
         return
       }
       await logAdminActivity(
@@ -123,7 +124,7 @@ export function AdminTokenRequestsPage() {
         admin_notes: notes,
       })
       if (!res.ok) {
-        window.alert(res.message)
+        toast.error(res.message)
         return
       }
       setGrantAmounts((prev) => {
@@ -152,7 +153,7 @@ export function AdminTokenRequestsPage() {
         admin_notes: notes,
       })
       if (!res.ok) {
-        window.alert(res.message)
+        toast.error(res.message)
         return
       }
       setAdminNotes((prev) => {

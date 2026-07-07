@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
@@ -59,7 +60,7 @@ export function UserTokenManager() {
     if (!modalUser) return
     const delta = Number(grantAmount.trim())
     if (!Number.isFinite(delta) || delta <= 0 || !Number.isInteger(delta)) {
-      window.alert('양의 정수만 입력해 주세요.')
+      toast.error('양의 정수만 입력해 주세요.')
       return
     }
 
@@ -70,12 +71,12 @@ export function UserTokenManager() {
         { p_user_id: modalUser.id, p_delta: delta },
       )
       if (rpcErr) {
-        window.alert(rpcErr.message)
+        toast.error(rpcErr.message)
         return
       }
       const payload = data as { ok?: boolean; error?: string } | null
       if (!payload?.ok) {
-        window.alert(payload?.error ?? '업데이트 실패')
+        toast.error(payload?.error ?? '업데이트 실패')
         return
       }
       closeModal()

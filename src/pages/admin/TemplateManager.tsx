@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
@@ -88,7 +89,7 @@ export function TemplateManager() {
     const title = form.title.trim()
     const body = form.prompt_content.trim()
     if (!title.length || !body.length) {
-      window.alert('제목과 프롬프트 본문을 입력해 주세요.')
+      toast.error('제목과 프롬프트 본문을 입력해 주세요.')
       return
     }
 
@@ -102,7 +103,7 @@ export function TemplateManager() {
           is_active: form.is_active,
         })
         if (insErr) {
-          window.alert(insErr.message)
+          toast.error(insErr.message)
           return
         }
         await logAdminActivity(
@@ -120,7 +121,7 @@ export function TemplateManager() {
           })
           .eq('id', editingId)
         if (updErr) {
-          window.alert(updErr.message)
+          toast.error(updErr.message)
           return
         }
         await logAdminActivity(
@@ -144,7 +145,7 @@ export function TemplateManager() {
         .update({ is_active: next })
         .eq('id', row.id)
       if (updErr) {
-        window.alert(updErr.message)
+        toast.error(updErr.message)
         return
       }
       await logAdminActivity(
@@ -171,7 +172,7 @@ export function TemplateManager() {
         .delete()
         .eq('id', row.id)
       if (delErr) {
-        window.alert(delErr.message)
+        toast.error(delErr.message)
         return
       }
       await logAdminActivity(

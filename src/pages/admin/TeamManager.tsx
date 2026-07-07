@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
@@ -84,7 +85,7 @@ export function TeamManager() {
   async function submitCreateTeam() {
     const name = teamName.trim()
     if (!name.length) {
-      window.alert('팀 이름을 입력해 주세요.')
+      toast.error('팀 이름을 입력해 주세요.')
       return
     }
 
@@ -92,7 +93,7 @@ export function TeamManager() {
     try {
       const result = await createAdminTeam(name)
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
       await logAdminActivity('team_create', `팀 생성: ${name}`)
@@ -123,7 +124,7 @@ export function TeamManager() {
       const employee = employees.find((e) => e.id === addUserId)
       const result = await addAdminTeamMember(selectedTeam.id, addUserId)
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
       await logAdminActivity(
@@ -151,7 +152,7 @@ export function TeamManager() {
     try {
       const result = await removeAdminTeamMember(selectedTeam.id, member.user_id)
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
       await logAdminActivity(

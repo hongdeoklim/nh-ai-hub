@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import {
   startTransition,
   useCallback,
@@ -112,7 +113,7 @@ export function PluginManager() {
   async function setPluginActive(row: PluginRow, next: boolean) {
     const builtinNames = new Set(['search_web_news', 'search_public_data'])
     if (next && !(row.endpoint_url ?? '').trim() && !builtinNames.has(row.tool_function_name)) {
-      window.alert('외부 플러그인을 활성화하려면 HTTPS 호출 URL이 필요합니다.')
+      toast.error('외부 플러그인을 활성화하려면 HTTPS 호출 URL이 필요합니다.')
       return
     }
     setSavingId(row.id)
@@ -126,7 +127,7 @@ export function PluginManager() {
         )
         .eq('id', row.id)
       if (uErr) {
-        window.alert(uErr.message)
+        toast.error(uErr.message)
         return
       }
       await load()
@@ -141,11 +142,11 @@ export function PluginManager() {
     const tool_function_name = formToolFn.trim().replace(/\s+/g, '_')
     const endpoint_url = formUrl.trim()
     if (!name.length || !tool_function_name.length) {
-      window.alert('이름과 도구 함수명(tool_function_name)은 필수입니다.')
+      toast.error('이름과 도구 함수명(tool_function_name)은 필수입니다.')
       return
     }
     if (endpoint_url && !endpoint_url.startsWith('https://')) {
-      window.alert('플러그인 호출 URL은 HTTPS 주소만 사용할 수 있습니다.')
+      toast.error('플러그인 호출 URL은 HTTPS 주소만 사용할 수 있습니다.')
       return
     }
 
@@ -174,7 +175,7 @@ export function PluginManager() {
         is_active: false,
       })
       if (insErr) {
-        window.alert(insErr.message)
+        toast.error(insErr.message)
         return
       }
       setFormName('')

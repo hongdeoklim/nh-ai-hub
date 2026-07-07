@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
@@ -238,7 +239,7 @@ export function EmployeeCRUD() {
     const email = form.email.trim()
     const name = form.display_name.trim()
     if (!email || !name) {
-      window.alert('이메일과 이름을 입력해 주세요.')
+      toast.error('이메일과 이름을 입력해 주세요.')
       return
     }
 
@@ -252,7 +253,7 @@ export function EmployeeCRUD() {
         role: form.role,
       })
       if (!result.ok) {
-        window.alert(result.error)
+        toast.error(result.error)
         return
       }
       if (result.temporary_password) {
@@ -271,7 +272,7 @@ export function EmployeeCRUD() {
     const email = form.email.trim()
     const name = form.display_name.trim()
     if (!email || !name) {
-      window.alert('이메일과 이름을 입력해 주세요.')
+      toast.error('이메일과 이름을 입력해 주세요.')
       return
     }
 
@@ -286,7 +287,7 @@ export function EmployeeCRUD() {
         role: form.role,
       })
       if (!result.ok) {
-        window.alert(result.error)
+        toast.error(result.error)
         return
       }
       closeModal()
@@ -303,7 +304,7 @@ export function EmployeeCRUD() {
     try {
       const result = await adminDeleteUser(target.id)
       if (!result.ok) {
-        window.alert(result.error)
+        toast.error(result.error)
         return
       }
       closeModal()
@@ -317,17 +318,17 @@ export function EmployeeCRUD() {
   async function submitGrant() {
     const delta = Number(grantAmount.trim())
     if (!Number.isFinite(delta) || delta <= 0 || !Number.isInteger(delta)) {
-      window.alert('양의 정수만 입력해 주세요.')
+      toast.error('양의 정수만 입력해 주세요.')
       return
     }
 
     const scope = grantScope
     if (scope === 'selected' && selectedIds.size === 0) {
-      window.alert('토큰을 부여할 직원을 선택해 주세요.')
+      toast.error('토큰을 부여할 직원을 선택해 주세요.')
       return
     }
     if (scope === 'department' && !grantDepartment.trim()) {
-      window.alert('부서를 선택해 주세요.')
+      toast.error('부서를 선택해 주세요.')
       return
     }
 
@@ -340,7 +341,7 @@ export function EmployeeCRUD() {
         department: scope === 'department' ? grantDepartment : null,
       })
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
 
@@ -367,11 +368,11 @@ export function EmployeeCRUD() {
   async function submitResetUsage() {
     const scope = resetScope
     if (scope === 'selected' && selectedIds.size === 0) {
-      window.alert('초기화할 직원을 선택해 주세요.')
+      toast.error('초기화할 직원을 선택해 주세요.')
       return
     }
     if (scope === 'department' && !resetDepartment.trim()) {
-      window.alert('부서를 선택해 주세요.')
+      toast.error('부서를 선택해 주세요.')
       return
     }
 
@@ -398,7 +399,7 @@ export function EmployeeCRUD() {
         department: scope === 'department' ? resetDepartment : null,
       })
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
       await logAdminActivity(
@@ -418,7 +419,7 @@ export function EmployeeCRUD() {
       ? dayOfMonthFromDateInput(resetDayInput)
       : null
     if (resetDayInput.trim() && day == null) {
-      window.alert('초기화일은 1~28일 사이로 선택해 주세요. (29~31일은 월별 일관성을 위해 제외)')
+      toast.error('초기화일은 1~28일 사이로 선택해 주세요. (29~31일은 월별 일관성을 위해 제외)')
       return
     }
 
