@@ -7,15 +7,12 @@ import {
   IconDesigner,
   IconFolder,
   IconKnowledgeHub,
-  IconLink,
-  IconMarketplace,
   IconNotebook,
   IconPlanner,
   IconSheets,
   IconSlides,
   IconTeams,
   IconTokenRequest,
-  IconWorkflows,
 } from './main-layout-icons'
 
 const sidebarIconDockClass =
@@ -81,10 +78,7 @@ export function SidebarNavDock({
                         {
                           label: '자동화',
                           items: [
-                            { to: '/automation-studio', title: '자동화 스튜디오', text: '자동화', icon: <IconAutomationStudio className="h-5 w-5" /> },
-                            { to: '/workflows', title: 'Workflows', text: 'Workflows', icon: <IconWorkflows className="h-5 w-5" /> },
-                            { to: '/marketplace', title: 'Marketplace', text: 'Market', icon: <IconMarketplace className="h-5 w-5" /> },
-                            { to: '/workspace-tools', title: '워크스페이스 연동', text: '연동', icon: <IconLink className="h-5 w-5" /> },
+                            { to: '/automation-studio', title: '자동화 스튜디오 (워크플로우·마켓플레이스·연동 통합)', text: '자동화', icon: <IconAutomationStudio className="h-5 w-5" /> },
                           ],
                         },
                         {
@@ -244,44 +238,14 @@ export function SidebarNavDock({
                 <div className="grid w-full grid-cols-4 divide-x divide-y divide-stone-300/65 dark:divide-stone-700/80">
                 <Link
                   to="/automation-studio"
-                  title="자동화 스튜디오"
+                  title="자동화 스튜디오 (워크플로우·마켓플레이스·연동 통합)"
                   aria-label="자동화 스튜디오"
-                  className={sidebarIconDockClass}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <IconAutomationStudio className="h-3.5 w-3.5 shrink-0" />
-                  <span className={sidebarIconDockLabelClass}>자동화 스튜디오</span>
-                </Link>
-                <Link
-                  to="/workflows"
-                  title="Workflows"
-                  aria-label="Workflows"
-                  className={sidebarIconDockClass}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <IconWorkflows className="h-3.5 w-3.5 shrink-0" />
-                  <span className={sidebarIconDockLabelClass}>Workflows</span>
-                </Link>
-                <Link
-                  to="/marketplace"
-                  title="Marketplace"
-                  aria-label="Marketplace"
                   aria-current={marketplaceActive ? 'page' : undefined}
                   className={`${sidebarIconDockClass} ${marketplaceActive ? 'bg-indigo-100/90 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300' : ''}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <IconMarketplace className="h-3.5 w-3.5 shrink-0" />
-                  <span className={sidebarIconDockLabelClass}>Marketplace</span>
-                </Link>
-                <Link
-                  to="/workspace-tools"
-                  title="워크스페이스 연동"
-                  aria-label="워크스페이스 연동"
-                  className={sidebarIconDockClass}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <IconLink className="h-3.5 w-3.5 shrink-0" />
-                  <span className={sidebarIconDockLabelClass}>워크스페이스 연동</span>
+                  <IconAutomationStudio className="h-3.5 w-3.5 shrink-0" />
+                  <span className={sidebarIconDockLabelClass}>자동화 스튜디오</span>
                 </Link>
                 </div>
 

@@ -45,7 +45,7 @@ function StatCard(props: {
         {formatCount(props.value)}
       </p>
       {props.sub ? (
-        <p className="mt-0.5 text-[10px]! md:text-[11px]! text-stone-400 dark:text-stone-500">
+        <p className="mt-0.5 text-[11px]! md:text-[12px]! text-stone-400 dark:text-stone-500">
           {props.sub}
         </p>
       ) : null}
@@ -72,7 +72,7 @@ function QueueStatusBadge({ status }: { status: IngestQueueRow['status'] }) {
           : '대기'
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px]! md:text-[11px]! font-medium ${cls}`}
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px]! md:text-[12px]! font-medium ${cls}`}
     >
       {label}
     </span>
@@ -370,7 +370,7 @@ export function KnowledgeHubPage() {
                     <p className="min-w-0 truncate text-[12px]! md:text-[13px]! font-medium text-stone-800 dark:text-stone-200">
                       [{i + 1}] {m.fileName}
                     </p>
-                    <span className="shrink-0 text-[10px]! md:text-[11px]! tabular-nums text-stone-500 dark:text-stone-400">
+                    <span className="shrink-0 text-[11px]! md:text-[12px]! tabular-nums text-stone-500 dark:text-stone-400">
                       유사도 {m.similarity.toFixed(3)} · 청크 #{m.chunkIndex}
                     </span>
                   </div>
@@ -427,7 +427,7 @@ export function KnowledgeHubPage() {
                 <p className="min-w-0 flex-1 truncate text-[12px]! md:text-[13px]! text-stone-800 dark:text-stone-200">
                   {row.fileName}
                 </p>
-                <span className="shrink-0 text-[10px]! md:text-[11px]! text-stone-400 dark:text-stone-500">
+                <span className="shrink-0 text-[11px]! md:text-[12px]! text-stone-400 dark:text-stone-500">
                   {new Date(row.createdAt).toLocaleString('ko-KR', {
                     month: 'short',
                     day: 'numeric',
@@ -436,7 +436,7 @@ export function KnowledgeHubPage() {
                   })}
                 </span>
                 {row.status === 'failed' && row.errorMessage ? (
-                  <p className="w-full truncate text-[10px]! md:text-[11px]! text-red-500 dark:text-red-400">
+                  <p className="w-full truncate text-[11px]! md:text-[12px]! text-red-500 dark:text-red-400">
                     {row.errorMessage}
                   </p>
                 ) : null}

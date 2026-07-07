@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../components/auth/useAuth'
 import { supabase } from '../lib/supabase'
 import {
+  deleteBookmarkedChat,
   fetchMyBookmarkedChats,
   type BookmarkedChatRow,
 } from '../services/scrapbook/bookmarked-chats'
@@ -52,6 +53,7 @@ export function Scrapbook() {
   const [rows, setRows] = useState<BookmarkedChatRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!profile?.id) {
@@ -83,6 +85,25 @@ export function Scrapbook() {
   }, [rows, error])
 
   const showMockBanner = Boolean(error) && rows.length === 0
+  const isMockView = showMockBanner
+
+  const handleDelete = useCallback(
+    async (row: BookmarkedChatRow) => {
+      if (!profile?.id || isMockView) return
+      if (!window.confirm('이 스크랩을 삭제할까요? 되돌릴 수 없습니다.')) return
+      setDeletingId(row.id)
+      const prev = rows
+      // 낙관적 제거 — 실패 시 롤백
+      setRows((current) => current.filter((r) => r.id !== row.id))
+      const res = await deleteBookmarkedChat(supabase, { id: row.id, userId: profile.id })
+      if (!res.ok) {
+        setRows(prev)
+        setError(res.message)
+      }
+      setDeletingId(null)
+    },
+    [profile, rows, isMockView],
+  )
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#FAF9F6] dark:bg-stone-950">
@@ -153,12 +174,28 @@ export function Scrapbook() {
                   <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px]! font-semibold uppercase tracking-wide text-orange-900 dark:bg-orange-950/80 dark:text-orange-100">
                     Prompt
                   </span>
-                  <time
-                    className="shrink-0 text-[11px]! tabular-nums text-stone-500 dark:text-stone-500"
-                    dateTime={row.created_at}
-                  >
-                    {formatWhen(row.created_at)}
-                  </time>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <time
+                      className="text-[11px]! tabular-nums text-stone-500 dark:text-stone-500"
+                      dateTime={row.created_at}
+                    >
+                      {formatWhen(row.created_at)}
+                    </time>
+                    {!isMockView ? (
+                      <button
+                        type="button"
+                        title="스크랩 삭제"
+                        aria-label="스크랩 삭제"
+                        disabled={deletingId === row.id}
+                        onClick={() => void handleDelete(row)}
+                        className="flex h-[28px] w-[28px] items-center justify-center rounded-lg text-stone-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
                 <p className="mt-3 text-[17px]! font-medium leading-snug text-stone-900 dark:text-stone-50">
                   {clipOneLine(row.prompt, i === 0 ? 240 : 140)}
