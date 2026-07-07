@@ -94,3 +94,16 @@ verify_jwt = false
 [functions.dify-sync-webhook]
 verify_jwt = false
 
+# plugin-*-bridge: Authorization 헤더를 Jira/Slack/GitHub 등 실제 3rd-party
+# 자격증명 전달용으로 쓰므로 Supabase 게이트웨이 JWT 검증을 끄고, 대신
+# X-NH-Internal-Secret 공유 시크릿으로 ai-chat 서버발 호출만 허용합니다
+# (_shared/plugin-bridge-auth.ts).
+[functions.plugin-jira-bridge]
+verify_jwt = false
+
+[functions.plugin-slack-bridge]
+verify_jwt = false
+
+[functions.plugin-github-bridge]
+verify_jwt = false
+

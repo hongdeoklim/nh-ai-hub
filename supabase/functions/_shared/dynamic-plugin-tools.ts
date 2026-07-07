@@ -75,6 +75,7 @@ function createHttpProxyTool(
   userId: string,
   department: string | null | undefined,
   credential?: string,
+  installConfig?: Record<string, unknown>,
 ): Tool<any, any> {
   const desc =
     (row.description?.trim()?.length ? row.description.trim() : row.name) +
@@ -99,12 +100,14 @@ function createHttpProxyTool(
       const abortController = new AbortController()
       const timer = setTimeout(() => abortController.abort(), 25_000)
       try {
+        const internalBridgeSecret = Deno.env.get("PLUGIN_BRIDGE_INTERNAL_SECRET")?.trim()
         const res = await fetch(endpointUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "X-NH-AI-Plugin": row.id,
             "X-NH-AI-User": userId,
+            ...(internalBridgeSecret ? { "X-NH-Internal-Secret": internalBridgeSecret } : {}),
             ...pluginAuthHeaders(row, credential),
           },
           body: JSON.stringify({
@@ -113,6 +116,7 @@ function createHttpProxyTool(
             tool_function_name: row.tool_function_name,
             arguments: args,
             user_id: userId,
+            install_config: installConfig ?? {},
           }),
           signal: abortController.signal,
         })
@@ -275,13 +279,14 @@ export async function createDynamicPluginTools(deps: {
   }
 
   let rows = (data ?? []) as ActivePluginRow[]
+  const installConfigByPlugin = new Map<string, Record<string, unknown>>()
   const pluginIds = rows.map((row) => row.id)
   if (pluginIds.length > 0) {
     const [{ data: installations, error: installationError }, { data: permissions, error: permissionError }] =
       await Promise.all([
         admin
           .from("extension_installations")
-          .select("extension_id, scope_type, scope_id, enabled")
+          .select("extension_id, scope_type, scope_id, enabled, config")
           .in("extension_id", pluginIds),
         admin
           .from("extension_permissions")
@@ -301,6 +306,17 @@ export async function createDynamicPluginTools(deps: {
           )
         )
         if (!installed) return false
+
+        // 사용자 스코프 설정 > 부서 스코프 > 워크스페이스 스코프 순으로 우선 적용.
+        const byScope = (scopeType: string, scopeId: string | undefined) =>
+          pluginInstallations.find((item) => item.enabled === true && item.scope_type === scopeType && item.scope_id === scopeId)
+        const installRow =
+          byScope("user", userId) ??
+          (department ? byScope("department", department) : undefined) ??
+          byScope("workspace", "workspace")
+        if (installRow?.config && typeof installRow.config === "object") {
+          installConfigByPlugin.set(row.id, installRow.config as Record<string, unknown>)
+        }
 
         const matchingPermissions = (permissions ?? []).filter((item) =>
           item.extension_id === row.id && (
@@ -389,7 +405,7 @@ export async function createDynamicPluginTools(deps: {
     }
 
     if (endpoint.length > 0) {
-      out[fnName] = createHttpProxyTool(row, endpoint, admin, userId, department, credential)
+      out[fnName] = createHttpProxyTool(row, endpoint, admin, userId, department, credential, installConfigByPlugin.get(row.id))
     }
   }
 
