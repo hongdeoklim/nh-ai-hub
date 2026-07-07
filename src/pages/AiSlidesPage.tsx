@@ -74,14 +74,22 @@ function TemplateCard({
               <img
                 src={template.thumbnailUrl}
                 alt={template.titleKo}
-                className="template-screenshot h-full w-full object-cover object-top"
+                className="template-screenshot h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
                 loading="lazy"
               />
             ) : (
               <SlideTemplateScreenshot template={template} fillParent />
             )}
           </button>
-          <div className="pointer-events-none absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/20 via-transparent to-transparent p-3">
+          {template.isNew ? (
+            <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px]! font-bold uppercase tracking-wide text-white shadow-sm">
+              New
+            </span>
+          ) : null}
+          <div className="pointer-events-none absolute inset-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/55 via-black/10 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <span className="pointer-events-none min-w-0 truncate text-[12px]! font-semibold text-white drop-shadow">
+              {template.titleKo}
+            </span>
             <button
               type="button"
               disabled={applying}
@@ -89,11 +97,21 @@ function TemplateCard({
                 event.stopPropagation()
                 onApply()
               }}
-              className="pointer-events-auto h-8 rounded-lg bg-orange-800 px-3 text-[13px]! font-semibold text-white shadow-sm transition hover:bg-orange-900 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-orange-900 dark:hover:bg-orange-950"
+              className="pointer-events-auto h-8 shrink-0 rounded-lg bg-orange-600 px-3 text-[13px]! font-semibold text-white shadow-sm transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Apply
             </button>
           </div>
+        </div>
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <p className="min-w-0 truncate text-[12px]! font-medium text-stone-700 dark:text-stone-300">
+            {template.titleKo}
+          </p>
+          {selected ? (
+            <span className="shrink-0 text-[10px]! font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400">
+              선택됨
+            </span>
+          ) : null}
         </div>
       </div>
     </article>
@@ -328,13 +346,16 @@ export function AiSlidesPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#FAF9F6] dark:bg-stone-950">
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-[13px]! md:px-8 md:pt-[4vh]">
-        <header className="mb-4">
-          <p className="font-semibold uppercase tracking-wider text-orange-800 dark:text-orange-300">
-            NH-AX-HUB
-          </p>
-          <h1 className="mt-1 font-semibold tracking-tight text-stone-900 dark:text-stone-50">
-            AI Slides
+        <header className="mb-5">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200/80 bg-orange-50/80 px-3 py-1 text-[10px]! font-semibold uppercase tracking-[0.12em] text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300 md:text-[11px]!">
+            <span aria-hidden>✦</span> NH-AX-HUB · AI Slides
+          </span>
+          <h1 className="mt-3 text-[22px]! font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-[28px]!">
+            발표 자료, 템플릿으로 시작하세요
           </h1>
+          <p className="mt-1.5 text-[13px]! text-stone-500 dark:text-stone-400 md:text-[15px]!">
+            원하는 템플릿에서 <span className="font-semibold text-stone-700 dark:text-stone-300">Apply</span>를 누른 뒤 주제를 입력하면 AI가 슬라이드를 만들어 드립니다.
+          </p>
         </header>
 
         <AiSlidesPromptSection
