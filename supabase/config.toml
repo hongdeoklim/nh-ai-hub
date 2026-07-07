@@ -115,6 +115,11 @@ verify_jwt = false
 [functions.send-push]
 verify_jwt = false
 
+# webauthn(패스키/지문 로그인): auth-* 는 로그인 전이라 JWT 없이 호출되고, register-* 는
+# 함수 내부에서 Authorization 사용자 JWT 를 검증한다. origin 은 allowlist 로 제한.
+[functions.webauthn]
+verify_jwt = false
+
 # cad-job-gateway: called both by admins (user JWT) and server-side by the
 # dynamic-plugin-tools proxy (X-NH-Internal-Secret, no Supabase JWT). Gate JWT
 # off at the platform and let authorize() enforce service-key / CAD_GATEWAY_SECRET

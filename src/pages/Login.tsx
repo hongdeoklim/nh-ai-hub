@@ -8,6 +8,8 @@ import { useAuth } from '../components/auth/useAuth'
 
 import { supabase } from '../lib/supabase'
 
+import { isPasskeySupported, loginWithPasskey } from '../lib/webauthn'
+
 
 
 export function Login() {
@@ -22,7 +24,39 @@ export function Login() {
 
   const [submitting, setSubmitting] = useState(false)
 
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  async function handlePasskeyLogin() {
+
+    setErrorMessage(null)
+
+    setPasskeyBusy(true)
+
+    try {
+
+      await loginWithPasskey()
+
+      navigate('/', { replace: true })
+
+    } catch (err) {
+
+      const msg = err instanceof Error ? err.message : String(err)
+
+      if (!/abort|cancel|NotAllowed/i.test(msg)) {
+
+        setErrorMessage(`지문 로그인 실패: ${msg}`)
+
+      }
+
+    } finally {
+
+      setPasskeyBusy(false)
+
+    }
+
+  }
 
 
 
@@ -397,6 +431,30 @@ export function Login() {
               구글로 로그인하기
 
             </button>
+
+
+
+            {isPasskeySupported() ? (
+
+              <button
+
+                type="button"
+
+                onClick={() => void handlePasskeyLogin()}
+
+                disabled={passkeyBusy || submitting}
+
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+
+              >
+
+                <span aria-hidden className="text-base">🔐</span>
+
+                {passkeyBusy ? '인증 중…' : '지문·생체로 로그인'}
+
+              </button>
+
+            ) : null}
 
 
 

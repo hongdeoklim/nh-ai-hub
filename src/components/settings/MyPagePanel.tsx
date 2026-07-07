@@ -3,6 +3,13 @@ import { startTransition, useCallback, useEffect, useState } from 'react'
 
 import { disablePush, enablePush, isPushSupported } from '../../lib/fcm'
 import { supabase } from '../../lib/supabase'
+import {
+  deletePasskey,
+  isPasskeySupported,
+  listMyPasskeys,
+  registerPasskey,
+  type PasskeyRow,
+} from '../../lib/webauthn'
 import { useAuth } from '../auth/useAuth'
 
 function ConsentToggle({
@@ -72,17 +79,29 @@ export function MyPagePanel() {
   const [pushSupported, setPushSupported] = useState(true)
   const [pushBusy, setPushBusy] = useState(false)
   const [pushMsg, setPushMsg] = useState<string | null>(null)
-  const [biometricConsent, setBiometricConsent] = useState(false)
-  const [bioBusy, setBioBusy] = useState(false)
+  const [passkeys, setPasskeys] = useState<PasskeyRow[]>([])
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
+  const passkeySupported = isPasskeySupported()
 
   useEffect(() => {
     setPushEnabled(Boolean(profile?.push_consent))
-    setBiometricConsent(Boolean(profile?.biometric_consent))
-  }, [profile?.push_consent, profile?.biometric_consent])
+  }, [profile?.push_consent])
 
   useEffect(() => {
     void isPushSupported().then(setPushSupported)
   }, [])
+
+  const loadPasskeys = useCallback(async () => {
+    try {
+      setPasskeys(await listMyPasskeys())
+    } catch {
+      /* 무시 — 목록 조회 실패 */
+    }
+  }, [])
+
+  useEffect(() => {
+    if (userId) void loadPasskeys()
+  }, [userId, loadPasskeys])
 
   const handleTogglePush = useCallback(
     async (next: boolean) => {
@@ -115,24 +134,44 @@ export function MyPagePanel() {
     [userId, refreshProfile],
   )
 
-  const handleToggleBiometric = useCallback(
-    async (next: boolean) => {
-      if (!userId) return
-      setBioBusy(true)
-      const prev = biometricConsent
-      setBiometricConsent(next)
-      const { error } = await supabase
-        .from('users')
-        .update({ biometric_consent: next })
-        .eq('id', userId)
-      if (error) {
-        setBiometricConsent(prev)
-      } else {
-        await refreshProfile()
+  const handleRegisterPasskey = useCallback(async () => {
+    if (!userId) return
+    setPasskeyBusy(true)
+    try {
+      const label = navigator.platform || navigator.userAgent.slice(0, 40) || '이 기기'
+      await registerPasskey(label)
+      // 패스키가 하나라도 생기면 생체 로그인 동의 플래그도 true 로 반영
+      await supabase.from('users').update({ biometric_consent: true }).eq('id', userId)
+      await Promise.all([loadPasskeys(), refreshProfile()])
+      toast.success('이 기기에 지문/생체 로그인이 등록되었습니다.')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      // 사용자가 생체 프롬프트를 취소한 경우는 조용히 넘어감
+      if (!/abort|cancel|NotAllowed/i.test(msg)) toast.error(`등록 실패: ${msg}`)
+    } finally {
+      setPasskeyBusy(false)
+    }
+  }, [userId, loadPasskeys, refreshProfile])
+
+  const handleDeletePasskey = useCallback(
+    async (id: string) => {
+      setPasskeyBusy(true)
+      try {
+        await deletePasskey(id)
+        const remaining = await listMyPasskeys()
+        setPasskeys(remaining)
+        if (remaining.length === 0 && userId) {
+          await supabase.from('users').update({ biometric_consent: false }).eq('id', userId)
+          await refreshProfile()
+        }
+        toast.success('패스키를 삭제했습니다.')
+      } catch (e) {
+        toast.error(`삭제 실패: ${e instanceof Error ? e.message : e}`)
+      } finally {
+        setPasskeyBusy(false)
       }
-      setBioBusy(false)
     },
-    [userId, biometricConsent, refreshProfile],
+    [userId, refreshProfile],
   )
 
   useEffect(() => {
@@ -381,21 +420,51 @@ export function MyPagePanel() {
           </p>
         ) : null}
 
-        <div className="flex items-start justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-700 dark:bg-stone-950">
-          <div className="min-w-0">
-            <p id="mypage-bio-label" className="text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
-              생체인식(지문) 로그인 동의
-            </p>
-            <p className="mt-0.5 text-[13px]! md:text-[14px]! leading-relaxed text-stone-500 dark:text-stone-400">
-              지원 기기에서 지문·생체인식으로 로그인하는 것에 동의합니다. 동의 여부만 저장되며, 실제 등록은 지원 기기에서 안내됩니다.
-            </p>
+        <div className="rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-700 dark:bg-stone-950">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+                지문·생체(패스키) 로그인
+              </p>
+              <p className="mt-0.5 text-[13px]! md:text-[14px]! leading-relaxed text-stone-500 dark:text-stone-400">
+                이 기기에 등록하면 다음 로그인부터 지문·FaceID·Windows Hello로 로그인할 수 있습니다.
+                {!passkeySupported && ' (이 브라우저는 패스키를 지원하지 않습니다.)'}
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={passkeyBusy || !passkeySupported}
+              onClick={() => void handleRegisterPasskey()}
+              className="shrink-0 rounded-lg bg-orange-700 px-3 py-2 text-[13px]! md:text-[14px]! font-semibold text-white transition hover:bg-orange-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              이 기기 등록
+            </button>
           </div>
-          <ConsentToggle
-            checked={biometricConsent}
-            disabled={bioBusy}
-            onToggle={(next) => void handleToggleBiometric(next)}
-            labelledBy="mypage-bio-label"
-          />
+
+          {passkeys.length > 0 && (
+            <ul className="mt-3 flex flex-col gap-2 border-t border-stone-200 pt-3 dark:border-stone-700">
+              {passkeys.map((pk) => (
+                <li key={pk.id} className="flex items-center justify-between gap-3 text-[13px]! md:text-[14px]!">
+                  <span className="min-w-0 truncate text-stone-700 dark:text-stone-300">
+                    🔑 {pk.device_label || '등록된 기기'}
+                    <span className="ml-2 text-stone-400">
+                      {pk.last_used_at
+                        ? `최근 사용 ${new Date(pk.last_used_at).toLocaleDateString('ko-KR')}`
+                        : `등록 ${new Date(pk.created_at).toLocaleDateString('ko-KR')}`}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    disabled={passkeyBusy}
+                    onClick={() => void handleDeletePasskey(pk.id)}
+                    className="shrink-0 rounded-md border border-stone-300 px-2 py-1 text-[12px]! text-stone-600 transition hover:bg-stone-50 disabled:opacity-60 dark:border-stone-600 dark:text-stone-400 dark:hover:bg-stone-900"
+                  >
+                    삭제
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
