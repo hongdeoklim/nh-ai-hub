@@ -142,12 +142,15 @@ export function AiDesignerPage() {
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-transparent gemini-zero-dark-bg text-stone-900 dark:text-stone-100">
           {!draft.trim() ? (
-            <div className="mx-auto w-full max-w-3xl px-4 pt-6 text-center md:pt-10">
-              <p className="text-[14px]! font-medium text-stone-800 dark:text-stone-100">
+            <div className="mx-auto w-full max-w-3xl px-4 pt-8 text-center md:pt-12">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200/80 bg-orange-50/80 px-3 py-1 text-[11px]! font-semibold uppercase tracking-[0.12em] text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300">
+                <span aria-hidden>✦</span> AI Designer
+              </span>
+              <h2 className="mt-4 text-[24px]! font-bold leading-tight tracking-tight text-stone-900 dark:text-stone-50 md:text-[32px]!">
                 {userGreetingName}님, 안녕하세요
-              </p>
-              <p className="mt-2 text-[14px]! text-stone-500 dark:text-stone-400">
-                어떤 디자인을 만들어 드릴까요?
+              </h2>
+              <p className="mt-2 text-[14px]! text-stone-500 dark:text-stone-400 md:text-[16px]!">
+                아래에서 유형을 고르거나, 만들고 싶은 디자인을 바로 설명해 주세요.
               </p>
             </div>
           ) : null}
