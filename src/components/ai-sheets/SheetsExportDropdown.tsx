@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { downloadCsvFromGrid, downloadXlsxFromGrid } from '../../lib/export-spreadsheet'
 import { IconExport } from './SheetsRibbonIcons'
@@ -12,8 +12,8 @@ type SheetsExportDropdownProps = {
 type ExportFormat = 'xlsx' | 'csv'
 
 const EXPORT_OPTIONS: { id: ExportFormat; label: string; hint: string }[] = [
-  { id: 'xlsx', label: 'Excel ?듯빀 臾몄꽌 (.xlsx)', hint: 'Excel' },
-  { id: 'csv', label: 'CSV (?쇳몴濡?遺꾨━) (.csv)', hint: 'CSV' },
+  { id: 'xlsx', label: 'Excel 통합 문서 (.xlsx)', hint: 'Excel' },
+  { id: 'csv', label: 'CSV (쉼표로 분리) (.csv)', hint: 'CSV' },
 ]
 
 export function SheetsExportDropdown({
@@ -57,7 +57,7 @@ export function SheetsExportDropdown({
       <button
         type="button"
         className="gc-qat-btn gc-export-btn"
-        title="?뚯씪 ?대낫?닿린"
+        title="파일 내보내기"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
@@ -65,14 +65,14 @@ export function SheetsExportDropdown({
         <span className="gc-qat-btn-icon">
           <IconExport className="h-[18px] w-[18px]" />
         </span>
-        ?대낫?닿린
+        내보내기
         <span className="gc-export-chevron" aria-hidden>
-          ??
+          ▾
         </span>
       </button>
 
       {open ? (
-        <div className="gc-export-menu" role="menu" aria-label="?대낫?닿린 ?뺤떇">
+        <div className="gc-export-menu" role="menu" aria-label="내보내기 형식">
           {EXPORT_OPTIONS.map((option) => (
             <button
               key={option.id}

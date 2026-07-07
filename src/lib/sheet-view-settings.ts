@@ -1,4 +1,4 @@
-﻿export type SheetViewSettings = {
+export type SheetViewSettings = {
   showRowHeaders: boolean
   showColHeaders: boolean
   showVerticalGridlines: boolean

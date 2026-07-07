@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '../auth/useAuth'
 import { supabase } from '../../lib/supabase'

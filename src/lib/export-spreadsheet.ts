@@ -1,4 +1,4 @@
-﻿import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx'
 
 import { gridToCsv } from './sheet-grid'
 
@@ -12,7 +12,7 @@ function normalizeBaseName(filename: string): string {
 
 export function downloadCsvFromGrid(grid: string[][], filename: string): boolean {
   if (!hasExportableData(grid)) {
-    window.alert('?대낫???곗씠?곌? ?놁뒿?덈떎.')
+    window.alert('내보낼 데이터가 없습니다.')
     return false
   }
   const csv = gridToCsv(grid)
@@ -32,7 +32,7 @@ export function downloadXlsxFromGrid(
   sheetName = 'Sheet1',
 ): boolean {
   if (!hasExportableData(grid)) {
-    window.alert('?대낫???곗씠?곌? ?놁뒿?덈떎.')
+    window.alert('내보낼 데이터가 없습니다.')
     return false
   }
   const worksheet = XLSX.utils.aoa_to_sheet(grid)
