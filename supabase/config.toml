@@ -115,3 +115,10 @@ verify_jwt = false
 [functions.send-push]
 verify_jwt = false
 
+# cad-job-gateway: called both by admins (user JWT) and server-side by the
+# dynamic-plugin-tools proxy (X-NH-Internal-Secret, no Supabase JWT). Gate JWT
+# off at the platform and let authorize() enforce service-key / CAD_GATEWAY_SECRET
+# / admin-JWT / internal-secret internally.
+[functions.cad-job-gateway]
+verify_jwt = false
+

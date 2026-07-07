@@ -35,6 +35,9 @@ interface CadJobRequest {
   params?: Record<string, unknown>
   project_classification?: "general" | "confidential"
   requested_by?: string
+  /** dynamic-plugin-tools HTTP 프록시 경로 (AI 플러그인 도구 호출) */
+  arguments?: Record<string, unknown>
+  user_id?: string
 }
 
 interface AllowedProgram {
@@ -56,6 +59,11 @@ async function authorize(
   anonKey: string,
   serviceKey: string,
 ): Promise<boolean> {
+  // dynamic-plugin-tools(AI 플러그인 도구) 프록시 호출: 공유 내부 시크릿으로 인증
+  const internalSecret = Deno.env.get("PLUGIN_BRIDGE_INTERNAL_SECRET")
+  const providedInternal = req.headers.get("X-NH-Internal-Secret")
+  if (internalSecret && providedInternal && providedInternal === internalSecret) return true
+
   const bearer = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? ""
 
   if (bearer === serviceKey) return true
@@ -191,6 +199,10 @@ Deno.serve(async (req: Request) => {
   if (body.tool_use) {
     command = body.tool_use.name
     params = body.tool_use.input ?? {}
+  } else if (body.arguments && typeof body.arguments.command === "string") {
+    // dynamic-plugin-tools HTTP 프록시: { arguments: { command, ...params }, user_id }
+    command = body.arguments.command
+    params = body.arguments
   } else if (body.command) {
     command = body.command
     params = body.params ?? {}
@@ -199,7 +211,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const classification = body.project_classification ?? "general"
-  const requestedBy = body.requested_by ?? null
+  const requestedBy = body.requested_by ?? body.user_id ?? null
   const riskTierOverride = (params._risk_tier as string | undefined)
 
   // 화이트리스트 검증
