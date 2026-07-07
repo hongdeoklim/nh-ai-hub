@@ -1,4 +1,5 @@
 import type { ClipboardEvent, FormEvent, KeyboardEvent, ReactNode } from 'react'
+import { toast } from 'sonner'
 import {
   forwardRef,
   useCallback,
@@ -332,7 +333,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       startListening,
       stopListening,
     } = useSpeechRecognition({
-      onError: (message) => window.alert(message),
+      onError: (message) => toast.error(message),
     })
 
     useEffect(() => {
@@ -594,7 +595,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         void (async () => {
           const compressed = await compressChatImageFile(files[0])
           if (!compressed) {
-            window.alert(
+            toast.error(
               'JPG 또는 PNG 이미지만 첨부할 수 있습니다. (최대 1024px, 1MB)',
             )
             return
@@ -623,7 +624,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       async (file: File) => {
         const compressed = await compressChatImageFile(file)
         if (!compressed) {
-          window.alert(
+          toast.error(
             `지원하지 않는 형식이거나 압축에 실패했습니다: ${file.name}\nJPG·PNG만 가능하며, 최대 1024px·1MB 이하로 압축됩니다.`,
           )
           return
@@ -719,7 +720,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         }
         const text = value.trim()
         if (!text) {
-          window.alert(
+          toast.error(
             actionType === 'image'
               ? '만들고 싶은 이미지를 입력해 주세요.'
               : '만들고 싶은 동영상 장면을 입력해 주세요.',
@@ -729,7 +730,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         const mediaModelId =
           actionType === 'image' ? selectedImageModelId : selectedVideoModelId
         if (!mediaModelId.trim()) {
-          window.alert('미디어 엔진을 선택해 주세요.')
+          toast.error('미디어 엔진을 선택해 주세요.')
           return false
         }
         setMediaBusy(actionType)
@@ -1143,7 +1144,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             tabIndex={-1}
             aria-hidden="true"
             onChange={() => {
-              window.alert('일반 파일 업로드 기능은 서버 연동 준비 중입니다.')
+              toast.info('일반 파일 업로드 기능은 서버 연동 준비 중입니다.')
               if (documentInputRef.current) documentInputRef.current.value = ''
             }}
           />

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import { formatElapsedKo, type ChatUiVariant } from './ChatMessage'
 import {
@@ -224,7 +225,7 @@ export function AssistantMessageFooter({
       setIsModalOpen(false)
     } catch (err) {
       console.error(err)
-      window.alert('피드백 저장 중 오류가 발생했습니다.')
+      toast.error('피드백 저장 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
     }
@@ -255,11 +256,11 @@ export function AssistantMessageFooter({
       setShareDone(true)
       window.setTimeout(() => setShareDone(false), 1600)
       if (result === 'copied') {
-        window.alert('대화 내용이 클립보드에 복사되었습니다.')
+        toast.success('대화 내용이 클립보드에 복사되었습니다.')
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return
-      window.alert('공유에 실패했습니다.')
+      toast.error('공유에 실패했습니다.')
     }
   }, [answerText, threadShareUrl, userPrompt])
 

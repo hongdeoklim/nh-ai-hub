@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode, type UIEvent } from 'react'
+import { toast } from 'sonner'
 
 import type { ChatCitationSource } from '../../types/chat-citations'
 import { ChatMessage } from './ChatMessage'
@@ -187,7 +188,7 @@ export const ChatArea = forwardRef<HTMLElement, ChatAreaProps>(
         }, 2000)
       } catch (err) {
         console.error('[ChatArea] 클립보드 복사 실패', err)
-        window.alert('복사에 실패했습니다. 브라우저 권한을 확인해 주세요.')
+        toast.error('복사에 실패했습니다. 브라우저 권한을 확인해 주세요.')
       }
     }, [])
 
@@ -214,11 +215,11 @@ export const ChatArea = forwardRef<HTMLElement, ChatAreaProps>(
               bookmarkResetRef.current = null
             }, 2200)
           } else {
-            window.alert(result.message ?? '스크랩 저장에 실패했습니다.')
+            toast.error(result.message ?? '스크랩 저장에 실패했습니다.')
           }
         } catch (err) {
           console.error('[ChatArea] 스크랩 저장 예외', err)
-          window.alert('스크랩 저장 중 오류가 발생했습니다.')
+          toast.error('스크랩 저장 중 오류가 발생했습니다.')
         } finally {
           setBookmarkBusyId(null)
         }

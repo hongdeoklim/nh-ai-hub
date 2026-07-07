@@ -1,4 +1,5 @@
 import { stripMarkdownForSpeech } from './normalize-ai-markdown'
+import { toast } from 'sonner'
 
 export type AssistantSharePayload = {
   userPrompt: string
@@ -43,7 +44,7 @@ let speechUtterance: SpeechSynthesisUtterance | null = null
 
 export function speakAssistantAnswer(rawMarkdown: string): boolean {
   if (typeof window === 'undefined' || !window.speechSynthesis) {
-    window.alert('이 브라우저에서는 음성 읽기를 지원하지 않습니다.')
+    toast.error('이 브라우저에서는 음성 읽기를 지원하지 않습니다.')
     return false
   }
 
@@ -51,7 +52,7 @@ export function speakAssistantAnswer(rawMarkdown: string): boolean {
 
   const text = stripMarkdownForSpeech(rawMarkdown)
   if (!text) {
-    window.alert('읽을 내용이 없습니다.')
+    toast.error('읽을 내용이 없습니다.')
     return false
   }
 
@@ -82,7 +83,7 @@ export async function exportAssistantToGoogleDocs(
     return
   }
   window.open('https://docs.google.com/document/create', '_blank', 'noopener,noreferrer')
-  window.alert(
+  toast.success(
     `답변 내용을 클립보드에 복사했습니다.\n새 Google 문서 탭에서 붙여넣기(Ctrl+V) 하세요.\n\n제목 제안: ${title.slice(0, 48)}`,
   )
 }

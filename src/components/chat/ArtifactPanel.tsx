@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 import type { ArtifactType, ChatArtifact } from '../../store/chat-artifact'
 import {
@@ -167,14 +168,14 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1600)
     } catch {
-      window.alert('복사에 실패했습니다.')
+      toast.error('복사에 실패했습니다.')
     }
   }, [artifact.content])
 
   const handleCsvDownload = useCallback(() => {
     const ok = exportTableContentAsCsv(artifact.content, artifact.title)
     if (!ok) {
-      window.alert('표 데이터를 찾을 수 없어 CSV로 내보낼 수 없습니다.')
+      toast.error('표 데이터를 찾을 수 없어 CSV로 내보낼 수 없습니다.')
       return
     }
     setDownloadDone(true)
