@@ -224,7 +224,7 @@ export function TeamManager() {
                   <tr
                     key={team.id}
                     className="cursor-pointer transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
-                    onClick={() => openTeamPanel(team)}
+                    tabIndex={0} onClick={() => openTeamPanel(team)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTeamPanel(team) } }}
                   >
                     <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-slate-50">
                       {team.name}

@@ -356,7 +356,7 @@ export function KnowledgeGraphPage() {
                       const linkedId = isOut ? edge.target_node_id : edge.source_node_id
                       const linked = baseData.nodes.find(n => n.id === linkedId)
                       return (
-                        <li key={edge.id} onClick={() => linked && setSelectedNode(linked)}
+                        <li key={edge.id} role="button" tabIndex={0} onClick={() => linked && setSelectedNode(linked)} onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && linked) { e.preventDefault(); setSelectedNode(linked) } }}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] md:text-[13px] cursor-pointer transition"
                           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
                           onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(167,139,250,0.35)')}

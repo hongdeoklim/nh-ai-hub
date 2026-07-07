@@ -123,7 +123,7 @@ export function NotificationsAndTodos() {
                 <p className="py-8 text-center text-sm text-stone-500">새로운 알림이 없습니다.</p>
               ) : (
                 notifications.map(n => (
-                  <div key={n.id} onClick={() => markAsRead(n.id)} className={`mb-1 cursor-pointer rounded-lg p-3 transition hover:bg-stone-50 dark:hover:bg-stone-800/50 ${n.is_read ? 'opacity-60' : 'bg-indigo-50/50 dark:bg-indigo-900/10'}`}>
+                  <div key={n.id} role="button" tabIndex={0} onClick={() => markAsRead(n.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); markAsRead(n.id) } }} className={`mb-1 cursor-pointer rounded-lg p-3 transition hover:bg-stone-50 dark:hover:bg-stone-800/50 ${n.is_read ? 'opacity-60' : 'bg-indigo-50/50 dark:bg-indigo-900/10'}`}>
                     <h4 className="text-[13px]! font-semibold text-stone-900 dark:text-stone-100">{n.title}</h4>
                     <p className="mt-1 text-[12px]! text-stone-600 dark:text-stone-400 line-clamp-2">{n.content}</p>
                   </div>
