@@ -99,11 +99,11 @@ export function CadAgentPage() {
           <span aria-hidden>📐</span> 자동화 · CAD 에이전트
         </span>
         <h1 className="mt-3 text-[22px]! font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-[28px]!">
-          내 PC의 AutoCAD를 채팅으로 실행하세요
+          내 PC의 AutoCAD·SketchUp을 채팅으로 실행하세요
         </h1>
         <p className="mt-2 text-[13px]! leading-relaxed text-stone-600 dark:text-stone-400 md:text-[15px]!">
           로컬 에이전트를 설치하면, AI 채팅에서 요청한 CAD 명령이 안전하게 검증된 뒤
-          내 컴퓨터의 정품 AutoCAD에서 실행됩니다. 도면 데이터는 PC 밖으로 나가지 않습니다.
+          내 컴퓨터의 정품 AutoCAD/SketchUp에서 실행됩니다. 도면 데이터는 PC 밖으로 나가지 않습니다.
         </p>
       </header>
 
@@ -111,8 +111,8 @@ export function CadAgentPage() {
       <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
         <h2 className="text-[15px]! font-bold text-stone-900 dark:text-stone-50 md:text-[17px]!">1. 로컬 에이전트 설치</h2>
         <ol className="mt-3 flex flex-col gap-2 text-[13px]! leading-relaxed text-stone-600 dark:text-stone-400 md:text-[14px]!">
-          <li>① 아래 버튼으로 설치본을 내려받아 실행합니다 (Windows · AutoCAD 2025 필요).</li>
-          <li>② 설치 마법사에서 Supabase 접속 정보와 작업 폴더(<code className="rounded bg-stone-100 px-1 py-0.5 text-[12px]! dark:bg-stone-800">{WORKSPACE_ROOT}</code>)를 확인합니다.</li>
+          <li>① 아래 버튼으로 설치본을 내려받아 실행합니다 (Windows · AutoCAD 필요, SketchUp은 선택).</li>
+          <li>② 설치 마법사에서 Supabase 접속 정보와 작업 폴더(<code className="rounded bg-stone-100 px-1 py-0.5 text-[12px]! dark:bg-stone-800">{WORKSPACE_ROOT}</code>)를 확인하고, SketchUp을 쓰면 SketchUp.exe 경로도 지정합니다.</li>
           <li>③ 에이전트가 실행되면 이 페이지의 작업 큐가 자동으로 처리됩니다.</li>
         </ol>
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -134,11 +134,44 @@ export function CadAgentPage() {
         </div>
       </section>
 
+      {/* 사용법 */}
+      <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <h2 className="text-[15px]! font-bold text-stone-900 dark:text-stone-50 md:text-[17px]!">2. 채팅으로 사용하기</h2>
+        <p className="mt-2 text-[13px]! leading-relaxed text-stone-600 dark:text-stone-400 md:text-[14px]!">
+          에이전트가 실행 중이면, <strong className="font-semibold text-stone-800 dark:text-stone-200">AI 채팅</strong>에
+          자연어로 요청하면 됩니다. 도면·모델 파일은 작업 폴더
+          (<code className="rounded bg-stone-100 px-1 py-0.5 text-[12px]! dark:bg-stone-800">{WORKSPACE_ROOT}</code>)
+          안에 두세요. 요청은 자동으로 안전 검증을 거쳐 아래 작업 큐에 등록되고, 내 PC의 에이전트가 실행합니다.
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-stone-200 p-3 dark:border-stone-800">
+            <p className="text-[12px]! font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300 md:text-[13px]!">AutoCAD</p>
+            <ul className="mt-2 flex flex-col gap-1.5 text-[13px]! text-stone-600 dark:text-stone-400 md:text-[14px]!">
+              <li>“작업 폴더의 <code className="rounded bg-stone-100 px-1 dark:bg-stone-800">plan.dwg</code> 열어줘”</li>
+              <li>“지금 도면 저장해줘”</li>
+              <li>“이 리스프로 정리해줘” <span className="text-[11px]! text-amber-600 dark:text-amber-400 md:text-[12px]!">(관리자 승인 필요)</span></li>
+            </ul>
+          </div>
+          <div className="rounded-xl border border-stone-200 p-3 dark:border-stone-800">
+            <p className="text-[12px]! font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300 md:text-[13px]!">SketchUp</p>
+            <ul className="mt-2 flex flex-col gap-1.5 text-[13px]! text-stone-600 dark:text-stone-400 md:text-[14px]!">
+              <li>“<code className="rounded bg-stone-100 px-1 dark:bg-stone-800">house.skp</code> 열어줘”</li>
+              <li>“이 모델을 PNG로 내보내줘”</li>
+              <li>“<code className="rounded bg-stone-100 px-1 dark:bg-stone-800">a.skp</code>를 <code className="rounded bg-stone-100 px-1 dark:bg-stone-800">a.dae</code>로 변환해줘”</li>
+            </ul>
+          </div>
+        </div>
+        <p className="mt-3 text-[12px]! leading-relaxed text-stone-500 dark:text-stone-500 md:text-[13px]!">
+          ⚠️ 파일 삭제·일괄 정리 같은 <strong className="font-semibold">되돌리기 어려운(파괴적) 명령</strong>은 바로 실행되지 않고
+          <strong className="font-semibold"> 승인 대기</strong> 상태로 등록됩니다. 관리자가 아래 작업 큐에서 승인해야 실행됩니다.
+        </p>
+      </section>
+
       {/* 작업 큐 */}
       <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
         <div className="flex items-center justify-between">
           <h2 className="text-[15px]! font-bold text-stone-900 dark:text-stone-50 md:text-[17px]!">
-            2. 작업 큐 {isAdmin && <span className="text-[12px]! font-normal text-stone-500 md:text-[13px]!">(관리자 · 전체)</span>}
+            3. 작업 큐 {isAdmin && <span className="text-[12px]! font-normal text-stone-500 md:text-[13px]!">(관리자 · 전체)</span>}
           </h2>
           <button
             type="button"
@@ -216,7 +249,7 @@ export function CadAgentPage() {
       {/* 실행 가능한 명령 */}
       {programs.length > 0 && (
         <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
-          <h2 className="text-[15px]! font-bold text-stone-900 dark:text-stone-50 md:text-[17px]!">3. 실행 가능한 명령</h2>
+          <h2 className="text-[15px]! font-bold text-stone-900 dark:text-stone-50 md:text-[17px]!">4. 실행 가능한 명령</h2>
           <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {programs.map((p) => (
               <li key={p.command_name} className="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 dark:border-stone-800">
