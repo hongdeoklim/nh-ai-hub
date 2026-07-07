@@ -14,6 +14,8 @@ export type AppUserProfile = {
   token_limit: number
   current_token_usage: number
   is_admin: boolean
+  push_consent: boolean
+  biometric_consent: boolean
 }
 
 export type AuthContextValue = {

@@ -21,6 +21,7 @@ const NAV_ITEMS: {
   { to: '/admin/ax', label: 'AX 현황' },
   { to: '/admin/knowledge-graph', label: '지식 그래프' },
   { to: '/admin/feedback', label: '피드백 관리' },
+  { to: '/admin/push', label: '푸시 알림' },
   { to: '/admin/site-assessment', label: '현장 AI 평가' },
 ]
 

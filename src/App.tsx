@@ -143,6 +143,9 @@ const AxDashboard = lazy(() =>
 const FeedbackDashboard = lazy(() =>
   import('./pages/admin/FeedbackDashboard').then((m) => ({ default: m.FeedbackDashboard })),
 )
+const PushComposer = lazy(() =>
+  import('./pages/admin/PushComposer').then((m) => ({ default: m.PushComposer })),
+)
 const SiteAssessmentPage = lazy(() =>
   import('./pages/admin/SiteAssessmentPage').then((m) => ({ default: m.SiteAssessmentPage })),
 )
@@ -266,6 +269,7 @@ function AppRoutes() {
               <Route path="models" element={<ModelManagement />} />
               <Route path="ax" element={<AxDashboard />} />
               <Route path="feedback" element={<FeedbackDashboard />} />
+              <Route path="push" element={<PushComposer />} />
               <Route path="site-assessment" element={<SiteAssessmentPage />} />
             </Route>
           </Route>

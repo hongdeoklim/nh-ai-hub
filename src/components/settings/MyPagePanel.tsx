@@ -1,7 +1,43 @@
 import { startTransition, useCallback, useEffect, useState } from 'react'
 
+import { disablePush, enablePush, isPushSupported } from '../../lib/fcm'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/useAuth'
+
+function ConsentToggle({
+  checked,
+  disabled,
+  onToggle,
+  labelledBy,
+}: {
+  checked: boolean
+  disabled?: boolean
+  onToggle: (next: boolean) => void
+  labelledBy?: string
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-labelledby={labelledBy}
+      disabled={disabled}
+      onClick={() => onToggle(!checked)}
+      className={[
+        'relative inline-flex h-[26px] w-[46px] shrink-0 items-center rounded-full border border-transparent transition',
+        checked ? 'bg-orange-700' : 'bg-stone-300 dark:bg-stone-600',
+        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:brightness-105',
+      ].join(' ')}
+    >
+      <span
+        className={[
+          'inline-block h-[20px] w-[20px] rounded-full bg-white shadow transition-transform duration-200',
+          checked ? 'translate-x-[22px]' : 'translate-x-[3px]',
+        ].join(' ')}
+      />
+    </button>
+  )
+}
 
 function normalizeBlank(s: string): string | null {
   const t = s.trim()
@@ -30,6 +66,73 @@ export function MyPagePanel() {
   const [passwordMsg, setPasswordMsg] = useState<string | null>(null)
 
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushSupported, setPushSupported] = useState(true)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushMsg, setPushMsg] = useState<string | null>(null)
+  const [biometricConsent, setBiometricConsent] = useState(false)
+  const [bioBusy, setBioBusy] = useState(false)
+
+  useEffect(() => {
+    setPushEnabled(Boolean(profile?.push_consent))
+    setBiometricConsent(Boolean(profile?.biometric_consent))
+  }, [profile?.push_consent, profile?.biometric_consent])
+
+  useEffect(() => {
+    void isPushSupported().then(setPushSupported)
+  }, [])
+
+  const handleTogglePush = useCallback(
+    async (next: boolean) => {
+      if (!userId) return
+      setPushBusy(true)
+      setPushMsg(null)
+      try {
+        if (next) {
+          const res = await enablePush(userId)
+          if (res.ok) {
+            setPushEnabled(true)
+            setPushMsg('이 기기에서 푸시 알림을 켰습니다.')
+          } else {
+            setPushMsg(res.message)
+          }
+        } else {
+          const res = await disablePush(userId)
+          if (res.ok) {
+            setPushEnabled(false)
+            setPushMsg('푸시 알림을 껐습니다.')
+          } else {
+            setPushMsg(res.message)
+          }
+        }
+        await refreshProfile()
+      } finally {
+        setPushBusy(false)
+      }
+    },
+    [userId, refreshProfile],
+  )
+
+  const handleToggleBiometric = useCallback(
+    async (next: boolean) => {
+      if (!userId) return
+      setBioBusy(true)
+      const prev = biometricConsent
+      setBiometricConsent(next)
+      const { error } = await supabase
+        .from('users')
+        .update({ biometric_consent: next })
+        .eq('id', userId)
+      if (error) {
+        setBiometricConsent(prev)
+      } else {
+        await refreshProfile()
+      }
+      setBioBusy(false)
+    },
+    [userId, biometricConsent, refreshProfile],
+  )
 
   useEffect(() => {
     const saved = localStorage.getItem('nh_theme') as 'light' | 'dark' | null
@@ -243,6 +346,56 @@ export function MyPagePanel() {
         >
           {profileSaving ? '저장 중…' : '프로필 저장'}
         </button>
+      </section>
+
+      <section className="space-y-4 border-t border-stone-200 pt-6 dark:border-stone-700">
+        <p className="font-semibold text-stone-900 dark:text-stone-100">
+          알림 · 보안
+        </p>
+
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-700 dark:bg-stone-950">
+          <div className="min-w-0">
+            <p id="mypage-push-label" className="text-[20px]! font-medium text-stone-800 dark:text-stone-200">
+              푸시 알림 (FCM)
+            </p>
+            <p className="mt-0.5 text-[20px]! leading-relaxed text-stone-500 dark:text-stone-400">
+              공지·중요 알림을 이 기기로 받습니다. 기기·브라우저마다 각각 켜야 합니다.
+            </p>
+          </div>
+          <ConsentToggle
+            checked={pushEnabled}
+            disabled={pushBusy || !pushSupported}
+            onToggle={(next) => void handleTogglePush(next)}
+            labelledBy="mypage-push-label"
+          />
+        </div>
+        {!pushSupported ? (
+          <p className="text-[20px]! text-amber-700 dark:text-amber-400">
+            이 브라우저는 웹 푸시를 지원하지 않습니다. 모바일은 홈 화면에 앱을 추가한 뒤 사용하세요.
+          </p>
+        ) : null}
+        {pushMsg ? (
+          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[20px]! text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
+            {pushMsg}
+          </p>
+        ) : null}
+
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-700 dark:bg-stone-950">
+          <div className="min-w-0">
+            <p id="mypage-bio-label" className="text-[20px]! font-medium text-stone-800 dark:text-stone-200">
+              생체인식(지문) 로그인 동의
+            </p>
+            <p className="mt-0.5 text-[20px]! leading-relaxed text-stone-500 dark:text-stone-400">
+              지원 기기에서 지문·생체인식으로 로그인하는 것에 동의합니다. 동의 여부만 저장되며, 실제 등록은 지원 기기에서 안내됩니다.
+            </p>
+          </div>
+          <ConsentToggle
+            checked={biometricConsent}
+            disabled={bioBusy}
+            onToggle={(next) => void handleToggleBiometric(next)}
+            labelledBy="mypage-bio-label"
+          />
+        </div>
       </section>
 
       <section className="space-y-3 border-t border-stone-200 pt-6 dark:border-stone-700">

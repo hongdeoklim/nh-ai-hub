@@ -21,7 +21,7 @@ async function fetchProfileRow(userId: string): Promise<AppUserProfile | null> {
   const { data, error } = await supabase
     .from('users')
     .select(
-      'id, email, display_name, department, job_rank, job_title, phone, role, preferred_ai, token_limit, current_token_usage, is_admin',
+      'id, email, display_name, department, job_rank, job_title, phone, role, preferred_ai, token_limit, current_token_usage, is_admin, push_consent, biometric_consent',
     )
     .eq('id', userId)
     .maybeSingle()
@@ -34,10 +34,16 @@ async function fetchProfileRow(userId: string): Promise<AppUserProfile | null> {
     return null
   }
 
-  const row = data as AppUserProfile & { is_admin?: boolean }
+  const row = data as AppUserProfile & {
+    is_admin?: boolean
+    push_consent?: boolean
+    biometric_consent?: boolean
+  }
   return {
     ...row,
     is_admin: Boolean(row.is_admin),
+    push_consent: Boolean(row.push_consent),
+    biometric_consent: Boolean(row.biometric_consent),
   }
 }
 
