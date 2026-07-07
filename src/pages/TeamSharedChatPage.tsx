@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { useAuth } from '../components/auth/useAuth'
 import {
@@ -142,7 +143,7 @@ export function TeamSharedChatPage() {
   useEffect(() => {
     if (!conversationTeamId || !teamId) return
     if (conversationTeamId !== teamId) {
-      window.alert('이 채팅은 현재 선택한 팀과 일치하지 않습니다.')
+      toast.error('이 채팅은 현재 선택한 팀과 일치하지 않습니다.')
       window.location.href = '/teams'
     }
   }, [conversationTeamId, teamId])
@@ -219,7 +220,7 @@ export function TeamSharedChatPage() {
     })
 
     if (!userInsert.ok) {
-      window.alert(userInsert.message)
+      toast.error(userInsert.message)
       return
     }
 

@@ -8,6 +8,7 @@ import {
   type SetStateAction,
 } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { useAuth } from '../components/auth/useAuth'
 import { supabase } from '../lib/supabase'
@@ -59,7 +60,7 @@ export function TeamDetailPage() {
     if (!teamId) return
     const res = await fetchTeamConversations(supabase, teamId)
     if (!res.ok) {
-      window.alert(res.message)
+      toast.error(res.message)
       return
     }
     startTransition(() => setConversations(res.rows))
@@ -92,11 +93,11 @@ export function TeamDetailPage() {
     try {
       const res = await inviteTeamMemberByEmail(supabase, teamId, email)
       if (!res.ok) {
-        window.alert(res.message)
+        toast.error(res.message)
         return
       }
       setEmail('')
-      window.alert('멤버를 추가했습니다.')
+      toast.success('멤버를 추가했습니다.')
     } finally {
       setInviting(false)
     }
@@ -105,7 +106,7 @@ export function TeamDetailPage() {
   async function handleCreateConversation() {
     if (!teamId || !profile?.id) return
     if (selectedIds.length === 0) {
-      window.alert('참여할 동료를 한 명 이상 선택하세요.')
+      toast.error('참여할 동료를 한 명 이상 선택하세요.')
       return
     }
     setCreating(true)
@@ -116,7 +117,7 @@ export function TeamDetailPage() {
         participantUserIds: selectedIds,
       })
       if (!res.ok) {
-        window.alert(res.message)
+        toast.error(res.message)
         return
       }
       setModalOpen(false)
@@ -144,13 +145,18 @@ export function TeamDetailPage() {
       ) : null}
 
       {team ? (
-        <div>
-          <h1 className="text-xl font-semibold text-stone-900 dark:text-stone-50">
-            {team.name}
-          </h1>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-            팀 멤버를 초대하고, 공유 채팅방을 만들 수 있습니다.
-          </p>
+        <div className="flex items-center gap-3.5">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-[18px]! font-bold text-white shadow-sm">
+            {team.name.trim().charAt(0).toUpperCase() || '팀'}
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-[20px]! md:text-[24px]! font-bold tracking-tight text-stone-900 dark:text-stone-50">
+              {team.name}
+            </h1>
+            <p className="mt-0.5 text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">
+              팀 멤버를 초대하고, 공유 채팅방을 만들 수 있습니다.
+            </p>
+          </div>
         </div>
       ) : (
         !loadError && (

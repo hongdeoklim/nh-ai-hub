@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { useAuth } from '../components/auth/useAuth'
 import { supabase } from '../lib/supabase'
@@ -18,7 +19,7 @@ export function TeamsPage() {
     try {
       const result = await fetchMyTeams(supabase)
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         setTeams([])
         return
       }
@@ -38,12 +39,12 @@ export function TeamsPage() {
     try {
       const result = await createTeam(supabase, name)
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
       setName('')
       await load()
-      window.alert('팀이 생성되었습니다.')
+      toast.success('팀이 생성되었습니다.')
     } finally {
       setCreating(false)
     }

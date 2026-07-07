@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { Toaster } from 'sonner'
 
 import { AuthProvider } from './components/auth/AuthProvider'
 import { useAuth } from './components/auth/useAuth'
@@ -332,6 +333,7 @@ export default function App() {
         <AppRoutes />
         <ReloadPrompt />
         <PwaInstallPrompt />
+        <Toaster position="top-center" richColors closeButton />
       </AppUiProvider>
     </AuthProvider>
   )
