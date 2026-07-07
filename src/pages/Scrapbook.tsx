@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import {
   deleteBookmarkedChat,
   fetchMyBookmarkedChats,
+  updateBookmarkedChatNote,
   type BookmarkedChatRow,
 } from '../services/scrapbook/bookmarked-chats'
 
@@ -54,6 +55,9 @@ export function Scrapbook() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [noteDraft, setNoteDraft] = useState('')
+  const [savingNote, setSavingNote] = useState(false)
 
   const load = useCallback(async () => {
     if (!profile?.id) {
@@ -103,6 +107,40 @@ export function Scrapbook() {
       setDeletingId(null)
     },
     [profile, rows, isMockView],
+  )
+
+  const startEditNote = useCallback((row: BookmarkedChatRow) => {
+    setEditingNoteId(row.id)
+    setNoteDraft(row.note ?? '')
+  }, [])
+
+  const cancelEditNote = useCallback(() => {
+    setEditingNoteId(null)
+    setNoteDraft('')
+  }, [])
+
+  const handleSaveNote = useCallback(
+    async (row: BookmarkedChatRow) => {
+      if (!profile?.id || isMockView) return
+      const nextNote = noteDraft.trim()
+      setSavingNote(true)
+      const res = await updateBookmarkedChatNote(supabase, {
+        id: row.id,
+        userId: profile.id,
+        note: nextNote,
+      })
+      if (res.ok) {
+        setRows((current) =>
+          current.map((r) => (r.id === row.id ? { ...r, note: nextNote } : r)),
+        )
+        setEditingNoteId(null)
+        setNoteDraft('')
+      } else {
+        setError(res.message)
+      }
+      setSavingNote(false)
+    },
+    [profile, isMockView, noteDraft],
   )
 
   return (
@@ -208,12 +246,56 @@ export function Scrapbook() {
                     {clipOneLine(row.ai_response, i === 0 ? 420 : 220)}
                   </p>
                 </div>
-                {row.note.trim().length > 0 ? (
-                  <div className="mt-4 rounded-2xl bg-stone-50 px-3 py-2 text-xs text-stone-600 dark:bg-stone-800/80 dark:text-stone-300">
-                    <span className="font-semibold text-stone-800 dark:text-stone-100">메모 · </span>
-                    {row.note}
-                  </div>
-                ) : null}
+                <div className="mt-4">
+                  {editingNoteId === row.id ? (
+                    <div className="rounded-2xl bg-stone-50 p-2.5 dark:bg-stone-800/80">
+                      <textarea
+                        value={noteDraft}
+                        onChange={(e) => setNoteDraft(e.target.value)}
+                        rows={2}
+                        autoFocus
+                        placeholder="이 스크랩에 대한 메모를 남겨보세요."
+                        className="w-full resize-none rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-[13px]! text-stone-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+                      />
+                      <div className="mt-1.5 flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={cancelEditNote}
+                          disabled={savingNote}
+                          className="rounded-lg px-2.5 py-1 text-[12px]! font-medium text-stone-500 hover:bg-stone-200/60 disabled:opacity-50 dark:text-stone-400 dark:hover:bg-stone-700/60"
+                        >
+                          취소
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveNote(row)}
+                          disabled={savingNote}
+                          className="rounded-lg bg-orange-800 px-3 py-1 text-[12px]! font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
+                        >
+                          {savingNote ? '저장 중…' : '저장'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : row.note.trim().length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => !isMockView && startEditNote(row)}
+                      className="flex w-full items-start gap-1.5 rounded-2xl bg-stone-50 px-3 py-2 text-left text-[12px]! text-stone-600 transition hover:bg-stone-100 dark:bg-stone-800/80 dark:text-stone-300 dark:hover:bg-stone-800"
+                    >
+                      <span className="font-semibold text-stone-800 dark:text-stone-100">메모 · </span>
+                      <span className="min-w-0 flex-1">{row.note}</span>
+                      {!isMockView ? <span className="shrink-0 text-stone-400">✎</span> : null}
+                    </button>
+                  ) : !isMockView ? (
+                    <button
+                      type="button"
+                      onClick={() => startEditNote(row)}
+                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px]! font-medium text-stone-400 transition hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-300"
+                    >
+                      ✎ 메모 추가
+                    </button>
+                  ) : null}
+                </div>
               </article>
             ))}
           </div>

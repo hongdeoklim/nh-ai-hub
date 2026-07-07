@@ -36,6 +36,26 @@ export async function insertBookmarkedChat(
   return { ok: true }
 }
 
+export async function updateBookmarkedChatNote(
+  client: SupabaseClient,
+  args: { id: string; userId: string; note: string },
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const { error } = await client
+    .from('bookmarked_chats')
+    .update({ note: args.note })
+    .eq('id', args.id)
+    .eq('user_id', args.userId)
+
+  if (error) {
+    console.error('[bookmarked_chats] note update 실패', error)
+    return {
+      ok: false,
+      message: error.message ?? '메모 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+    }
+  }
+  return { ok: true }
+}
+
 export async function deleteBookmarkedChat(
   client: SupabaseClient,
   args: { id: string; userId: string },
