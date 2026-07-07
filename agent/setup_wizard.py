@@ -1,4 +1,4 @@
-"""
+r"""
 Phase 9 — NH-AI-HUB Agent 설정 마법사 (tkinter GUI)
 Inno Setup 설치 중 또는 독립 실행으로 호출된다.
 

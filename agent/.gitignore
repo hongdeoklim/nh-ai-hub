@@ -1,0 +1,6 @@
+# PyInstaller 빌드 산출물 (dist 는 루트 .gitignore 에서 처리)
+__pycache__/
+build_tmp/
+build/
+# installer_lite 빌드 시 PyInstaller 가 자동 생성하는 spec (손으로 관리하는 nh-agent.spec / setup_wizard.spec 은 커밋)
+NH-AX-HUB-Agent-Setup.spec
