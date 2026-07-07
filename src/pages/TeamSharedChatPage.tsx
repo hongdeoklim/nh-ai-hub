@@ -2,12 +2,18 @@ import {
   startTransition,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { useAuth } from '../components/auth/useAuth'
+import {
+  fetchActiveTextAiModels,
+  filterActiveTextModels,
+} from '../services/ai/ai-models-client'
+import type { AiModelRow } from '../types/ai-models'
 import type { ChatBubble } from '../components/chat/ChatArea'
 import { ChatArea } from '../components/chat/ChatArea'
 import { ChatArtifactLayout } from '../components/chat/ChatArtifactLayout'
@@ -64,8 +70,40 @@ export function TeamSharedChatPage() {
   const [draft, setDraft] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedModel, setSelectedModel] = useState<string>('gpt-4o')
+  const [registryModels, setRegistryModels] = useState<AiModelRow[]>([])
   const [tokenModalOpen, setTokenModalOpen] = useState(false)
   const [modalPreset, setModalPreset] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchActiveTextAiModels()
+      .then((rows) => {
+        if (!cancelled) setRegistryModels(filterActiveTextModels(rows))
+      })
+      .catch(() => {
+        if (!cancelled) setRegistryModels([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // 관리자 모델 레지스트리 기반 옵션. 레지스트리가 비어 있으면(로딩 전·조회 실패)
+  // 최소 폴백 목록을 쓰고, 현재 선택값이 목록에 없으면 앞에 끼워 유효성을 유지한다.
+  const modelOptions = useMemo(() => {
+    const base =
+      registryModels.length > 0
+        ? registryModels.map((m) => ({ value: m.api_id, label: m.display_name }))
+        : [
+            { value: 'gpt-4o', label: 'GPT-4o' },
+            { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+            { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+          ]
+    if (selectedModel && !base.some((o) => o.value === selectedModel)) {
+      return [{ value: selectedModel, label: selectedModel }, ...base]
+    }
+    return base
+  }, [registryModels, selectedModel])
 
   const hydrateMeta = useCallback(async () => {
     if (!conversationId) return
@@ -391,12 +429,11 @@ export function TeamSharedChatPage() {
               onChange={(e) => setSelectedModel(e.target.value)}
               className="min-w-0 max-w-[min(70vw,16rem)] flex-1 cursor-pointer truncate rounded-md border border-stone-300/90 bg-white py-0.5 pl-1.5 pr-1 text-[11px]! font-medium text-stone-800 shadow-sm outline-none ring-orange-600/20 focus:ring-1 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 sm:text-[12px]!"
             >
-              <option value="gpt-4o">GPT‑4o</option>
-              <option value="gpt-4o-mini">GPT‑4o mini</option>
-              <option value="gpt-5-mini">GPT‑5 mini</option>
-              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-              <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+              {modelOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
           }
           composerMeta={
