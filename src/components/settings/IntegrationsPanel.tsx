@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
 
 import {
@@ -118,7 +119,7 @@ export function IntegrationsPanel() {
                       await disconnectGoogleIntegration()
                       await load()
                     } catch (e) {
-                      window.alert(
+                      toast.error(
                         e instanceof Error ? e.message : '연결 해제에 실패했습니다.',
                       )
                     } finally {
@@ -140,7 +141,7 @@ export function IntegrationsPanel() {
                     try {
                       await startGoogleIntegrationOAuth()
                     } catch (e) {
-                      window.alert(
+                      toast.error(
                         e instanceof Error ? e.message : '연동을 시작할 수 없습니다.',
                       )
                       setBusy(false)
@@ -191,7 +192,7 @@ export function IntegrationsPanel() {
                       await disconnectMicrosoftIntegration()
                       await load()
                     } catch (e) {
-                      window.alert(
+                      toast.error(
                         e instanceof Error ? e.message : '연결 해제에 실패했습니다.',
                       )
                     } finally {
@@ -213,7 +214,7 @@ export function IntegrationsPanel() {
                     try {
                       await startMicrosoftIntegrationOAuth()
                     } catch (e) {
-                      window.alert(
+                      toast.error(
                         e instanceof Error ? e.message : '연동을 시작할 수 없습니다.',
                       )
                       setBusy(false)

@@ -10,6 +10,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
+import { toast } from 'sonner'
 
 import { DEFAULT_SHEETS_RANGE } from '../../lib/google-sheets-url'
 import {
@@ -104,7 +105,7 @@ const INITIAL_SELECTION: SelectionRange = {
 function exportCsvFromGrid(grid: string[][], filename: string) {
   const csv = gridToCsv(grid)
   if (!csv.trim() || csv === '""') {
-    window.alert('내보낼 데이터가 없습니다.')
+    toast.error('내보낼 데이터가 없습니다.')
     return
   }
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
@@ -470,7 +471,7 @@ export function SheetsGlobalCanvas({
           })
           break
         case 'merge-center':
-          window.alert('병합 기능은 준비 중입니다.')
+          toast.info('병합 기능은 준비 중입니다.')
           break
         case 'align-left':
           applyStylePatch({ textAlign: 'left' })
@@ -514,7 +515,7 @@ export function SheetsGlobalCanvas({
         case 'filter':
         case 'replace':
         case 'stub':
-          window.alert('이 기능은 준비 중입니다.')
+          toast.info('이 기능은 준비 중입니다.')
           break
         case 'fill-down':
         case 'fill-right':
@@ -605,7 +606,7 @@ export function SheetsGlobalCanvas({
             selectionRef.current,
           )
           if (onSendSelectionToChat) onSendSelectionToChat(text)
-          else window.alert(text)
+          else toast.info(text)
           break
         }
         case 'cut':
@@ -628,13 +629,13 @@ export function SheetsGlobalCanvas({
         case 'define-name':
         case 'tags':
         case 'default':
-          window.alert('이 기능은 준비 중입니다.')
+          toast.info('이 기능은 준비 중입니다.')
           break
         case 'clear':
           handleClearRange()
           break
         case 'filter':
-          window.alert('필터는 준비 중입니다.')
+          toast.info('필터는 준비 중입니다.')
           break
         case 'sort-asc': {
           pushUndo(rawGrid)
@@ -839,7 +840,7 @@ export function SheetsGlobalCanvas({
     const url = urlDraft.trim()
     const nextRange = rangeDraft.trim() || DEFAULT_SHEETS_RANGE
     if (!url) {
-      window.alert('Google Sheets URL을 입력하세요.')
+      toast.error('Google Sheets URL을 입력하세요.')
       return
     }
     onRangeChange(nextRange)
@@ -852,7 +853,7 @@ export function SheetsGlobalCanvas({
       if (!file) return
       const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
       if (!['xlsx', 'xls', 'csv'].includes(ext)) {
-        window.alert('Excel(.xlsx, .xls) 또는 CSV 파일만 열 수 있습니다.')
+        toast.error('Excel(.xlsx, .xls) 또는 CSV 파일만 열 수 있습니다.')
         return
       }
       onOpenLocalFile(file)

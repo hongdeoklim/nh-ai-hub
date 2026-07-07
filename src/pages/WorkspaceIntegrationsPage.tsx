@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
 
 import { supabase } from '../lib/supabase'
@@ -118,10 +119,10 @@ export function WorkspaceIntegrationsPage() {
       )
       setGoogleOut(res)
       if ((res as { error?: string }).error) {
-        window.alert((res as { error: string }).error)
+        toast.error((res as { error: string }).error)
       }
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : String(e))
+      toast.error(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
@@ -137,10 +138,10 @@ export function WorkspaceIntegrationsPage() {
       )
       setMsOut(res)
       if ((res as { error?: string }).error) {
-        window.alert((res as { error: string }).error)
+        toast.error((res as { error: string }).error)
       }
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : String(e))
+      toast.error(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
@@ -183,7 +184,7 @@ export function WorkspaceIntegrationsPage() {
                   disabled={busy}
                   onClick={() =>
                     void startGoogleIntegrationOAuth().catch((e) =>
-                      window.alert(e instanceof Error ? e.message : String(e)),
+                      toast.error(e instanceof Error ? e.message : String(e)),
                     )
                   }
                   className="rounded-full bg-orange-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-900 disabled:opacity-50"
@@ -200,7 +201,7 @@ export function WorkspaceIntegrationsPage() {
                         await disconnectGoogleIntegration()
                         await loadStatus()
                       } catch (e) {
-                        window.alert(e instanceof Error ? e.message : String(e))
+                        toast.error(e instanceof Error ? e.message : String(e))
                       }
                     })()
                   }
@@ -231,7 +232,7 @@ export function WorkspaceIntegrationsPage() {
                   disabled={busy}
                   onClick={() =>
                     void startMicrosoftIntegrationOAuth().catch((e) =>
-                      window.alert(e instanceof Error ? e.message : String(e)),
+                      toast.error(e instanceof Error ? e.message : String(e)),
                     )
                   }
                   className="rounded-full bg-sky-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-900 disabled:opacity-50"
@@ -248,7 +249,7 @@ export function WorkspaceIntegrationsPage() {
                         await disconnectMicrosoftIntegration()
                         await loadStatus()
                       } catch (e) {
-                        window.alert(e instanceof Error ? e.message : String(e))
+                        toast.error(e instanceof Error ? e.message : String(e))
                       }
                     })()
                   }
@@ -365,7 +366,7 @@ export function WorkspaceIntegrationsPage() {
                     const to = googleMailDraft.to.trim()
                     const subject = googleMailDraft.subject.trim()
                     if (!to || !subject) {
-                      window.alert('받는 사람·제목을 입력하세요.')
+                      toast.error('받는 사람·제목을 입력하세요.')
                       return
                     }
                     void runGoogle('gmail.send', {
@@ -440,7 +441,7 @@ export function WorkspaceIntegrationsPage() {
                     const startIso = localDatetimeInputToIso(googleEventDraft.start)
                     const endIso = localDatetimeInputToIso(googleEventDraft.end)
                     if (!startIso || !endIso) {
-                      window.alert('시작·종료 시각을 모두 입력하세요.')
+                      toast.error('시작·종료 시각을 모두 입력하세요.')
                       return
                     }
                     void runGoogle('calendar.createEvent', {
@@ -546,7 +547,7 @@ export function WorkspaceIntegrationsPage() {
                     const to = microsoftMailDraft.to.trim()
                     const subject = microsoftMailDraft.subject.trim()
                     if (!to || !subject) {
-                      window.alert('받는 사람·제목을 입력하세요.')
+                      toast.error('받는 사람·제목을 입력하세요.')
                       return
                     }
                     void runMs('mail.send', {
@@ -623,7 +624,7 @@ export function WorkspaceIntegrationsPage() {
                     const startIso = localDatetimeInputToIso(microsoftEventDraft.start)
                     const endIso = localDatetimeInputToIso(microsoftEventDraft.end)
                     if (!startIso || !endIso) {
-                      window.alert('시작·종료 시각을 모두 입력하세요.')
+                      toast.error('시작·종료 시각을 모두 입력하세요.')
                       return
                     }
                     void runMs('calendar.createEvent', {
@@ -670,11 +671,11 @@ export function WorkspaceIntegrationsPage() {
                   void uploadUserDocument(f, uploadNote)
                     .then(async () => {
                       await loadUploads()
-                      window.alert('업로드 완료')
+                      toast.success('업로드 완료')
                       e.target.value = ''
                     })
                     .catch((err) =>
-                      window.alert(err instanceof Error ? err.message : String(err)),
+                      toast.error(err instanceof Error ? err.message : String(err)),
                     )
                     .finally(() => setBusy(false))
                 }}

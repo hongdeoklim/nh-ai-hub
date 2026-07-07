@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../components/auth/useAuth'
@@ -257,7 +258,7 @@ export function ReferenceRoom() {
 
   async function handleCreateFolder() {
     if (!profile?.id) {
-      window.alert('로그인 후 폴더를 만들 수 없습니다.')
+      toast.error('로그인 후 폴더를 만들 수 없습니다.')
       return
     }
     const joined = joinKnowledgeFolderPath(registryPathKey, newFolderName)
@@ -380,7 +381,7 @@ export function ReferenceRoom() {
     })
     setDeleteBusy(false)
     if (!res.ok) {
-      window.alert(res.message)
+      toast.error(res.message)
       return
     }
     setFolders((prev) =>
@@ -399,7 +400,7 @@ export function ReferenceRoom() {
 
   async function handleKnowledgeUpload(file: File) {
     if (!profile?.id) {
-      window.alert('로그인 후 업로드할 수 없습니다.')
+      toast.error('로그인 후 업로드할 수 없습니다.')
       return
     }
     setUploadBusy(true)
@@ -425,7 +426,7 @@ export function ReferenceRoom() {
     items: Pick<KnowledgeBaseRow, 'id' | 'file_name' | 'file_url'>[],
   ) {
     if (items.length === 0) {
-      window.alert('자료를 한 개 이상 선택해 주세요.')
+      toast.error('자료를 한 개 이상 선택해 주세요.')
       return
     }
     const threadId = crypto.randomUUID()
