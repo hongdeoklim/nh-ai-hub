@@ -103,7 +103,7 @@ export function SettingsDialog({
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-[20px]! font-medium transition-colors ${
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[13px]! md:text-[14px]! font-medium transition-colors ${
                 tab === item.id
                   ? 'bg-orange-800 text-white dark:bg-orange-900'
                   : 'text-stone-600 hover:bg-stone-200/80 dark:text-stone-400 dark:hover:bg-stone-800'
@@ -133,7 +133,7 @@ export function SettingsDialog({
                 </strong>{' '}
                 유지됩니다. 페이지를 새로 고치거나 다른 기기에서는 이어지지 않습니다.
               </p>
-              <p className="rounded-xl border border-stone-200/90 bg-white/80 px-3 py-3 text-[20px]! dark:border-stone-700 dark:bg-stone-950/60">
+              <p className="rounded-xl border border-stone-200/90 bg-white/80 px-3 py-3 text-[13px]! md:text-[14px]! dark:border-stone-700 dark:bg-stone-950/60">
                 계정별 대화 목록·검색·복원 기능은 추후 제공 예정입니다. 지금은 왼쪽
                 메뉴의 <strong>새 채팅</strong>으로 현재 대화만 초기화할 수 있습니다.
               </p>
@@ -152,7 +152,7 @@ export function SettingsDialog({
                 </strong>{' '}
                 기능은 준비 중입니다.
               </p>
-              <ul className="list-disc space-y-2 pl-5 text-[20px]! text-stone-600 dark:text-stone-400">
+              <ul className="list-disc space-y-2 pl-5 text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">
                 <li>예: 매주 안전점검 요약, 월간 토큰 사용 알림 등</li>
                 <li>출시 시 이 탭에서 생성·수정·중지할 수 있도록 할 예정입니다.</li>
               </ul>
@@ -164,7 +164,7 @@ export function SettingsDialog({
               <p className="font-semibold text-stone-900 dark:text-stone-100">
                 빠른 안내
               </p>
-              <ul className="space-y-3 text-[20px]!">
+              <ul className="space-y-3 text-[13px]! md:text-[14px]!">
                 <li>
                   <span className="font-medium text-stone-900 dark:text-stone-100">
                     새 채팅
@@ -208,11 +208,11 @@ export function SettingsDialog({
               <p className="font-semibold text-stone-900 dark:text-stone-100">
                 기타
               </p>
-              <p className="text-[20px]! text-stone-600 dark:text-stone-400">
+              <p className="text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">
                 NH-AX-HUB는 업무 관련 질의와 가드레일 정책을 따릅니다. 민감한
                 개인정보는 입력하지 마세요.
               </p>
-              <p className="text-[20px]! text-stone-600 dark:text-stone-400">
+              <p className="text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">
                 문의·개선 요청은 내부 담당 채널을 이용해 주세요.
               </p>
             </section>

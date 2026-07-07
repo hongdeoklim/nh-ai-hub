@@ -52,7 +52,7 @@ export function UserAiProfilePanel({ userId }: UserAiProfilePanelProps) {
   }
 
   if (!userId) {
-    return <p className="text-[20px]! text-stone-600 dark:text-stone-400">로그인 후 사용할 수 있습니다.</p>
+    return <p className="text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">로그인 후 사용할 수 있습니다.</p>
   }
 
   return (
@@ -60,19 +60,19 @@ export function UserAiProfilePanel({ userId }: UserAiProfilePanelProps) {
       <p className="font-semibold text-stone-900 dark:text-stone-100">
         AI 스킬 / 기억 (마크다운)
       </p>
-      <p className="text-[20px]! text-stone-600 dark:text-stone-400">
+      <p className="text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">
         자주 쓰는 용어, 문체, 업무 맥락을 간단히 적어 두면 AI가 답변에 반영합니다. 비밀번호·개인식별번호 등
         민감정보는 적지 마세요. 서버에서 길이가 길 경우 일부만 사용됩니다.
       </p>
       {loading ? (
-        <p className="text-[20px]! text-stone-500">불러오는 중…</p>
+        <p className="text-[13px]! md:text-[14px]! text-stone-500">불러오는 중…</p>
       ) : (
         <textarea
           value={text}
           disabled={saving}
           onChange={(e) => setText(e.target.value)}
           rows={12}
-          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-[20px]! leading-relaxed text-stone-900 shadow-inner outline-none ring-orange-700/25 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 md:text-sm"
+          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-[13px]! md:text-[14px]! leading-relaxed text-stone-900 shadow-inner outline-none ring-orange-700/25 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 md:text-sm"
           placeholder={`예)\n- 톤: 간결한 보고서체\n- 용어: "현장"은 건설 현장 의미`}
         />
       )}
@@ -95,7 +95,7 @@ export function UserAiProfilePanel({ userId }: UserAiProfilePanelProps) {
         </button>
       </div>
       {message ? (
-        <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[20px]! text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300">
+        <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px]! md:text-[14px]! text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300">
           {message}
         </p>
       ) : null}
