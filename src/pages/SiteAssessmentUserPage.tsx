@@ -639,16 +639,23 @@ export function SiteAssessmentUserPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-50">현장 AI 평가 · 보고서</h1>
-        <p className="mt-0.5 text-sm text-slate-500">사진과 기본 정보를 입력하면 AI가 위험성평가 / 품질검사 보고서를 작성합니다</p>
-      </div>
+      <header>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200/80 bg-indigo-50/80 px-3 py-1 text-[10px]! font-semibold uppercase tracking-[0.12em] text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300 md:text-[11px]!">
+          <span aria-hidden>🦺</span> 현장 AI 평가
+        </span>
+        <h1 className="mt-3 text-[22px]! font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-[28px]!">
+          사진 한 장으로 현장 보고서를
+        </h1>
+        <p className="mt-1.5 text-[13px]! text-slate-500 dark:text-slate-400 md:text-[15px]!">
+          현장 사진과 기본 정보를 입력하면 AI가 위험성평가 / 품질검사 보고서를 자동 작성합니다.
+        </p>
+      </header>
 
       {/* 탭 */}
-      <div className="flex gap-1 w-fit rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900/50">
-        {([['new','새 보고서'],['history','보고서 이력']] as const).map(([t,l]) => (
+      <div className="flex w-fit gap-1 rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-slate-800 dark:bg-slate-900/50">
+        {([['new','📝 새 보고서'],['history','🗂 보고서 이력']] as const).map(([t,l]) => (
           <button key={t} type="button" onClick={() => { setTab(t); setSelectedRecord(null) }}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${tab===t ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
+            className={`rounded-lg px-4 py-2 text-[13px]! font-semibold transition md:text-[14px]! ${tab===t ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-800 dark:text-indigo-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
             {l}
           </button>
         ))}
