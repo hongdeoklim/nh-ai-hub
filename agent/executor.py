@@ -110,6 +110,8 @@ class JobExecutor:
                 return self._save_dwg(params)
             elif command == "run_lisp":
                 return self._run_lisp(params)
+            elif command == "dwg_to_dxf":
+                return self._dwg_to_dxf(params)
             else:
                 raise NotImplementedError(f"알 수 없는 command: {command}")
 
@@ -149,3 +151,58 @@ class JobExecutor:
         # TODO: LISP 표현식 화이트리스트 검증 (Phase 2)
         self._acad.ActiveDocument.Util.SendCommand(expr + "\n")
         return {"executed": expr}
+
+    # 인라인으로 반환할 DXF 텍스트 최대 크기(약 6MB). 초과 시 에러로 안내.
+    _MAX_DXF_INLINE = 6_000_000
+
+    def _dwg_to_dxf(self, params: dict) -> dict:
+        """
+        DWG를 열어 DXF로 내보내고, 그 텍스트를 result로 반환한다(브라우저 CAD 에디터가 사용).
+        FILEDIA=0(safety.apply_autocad_settings)로 대화상자가 억제된 상태를 가정한다.
+        """
+        import time
+
+        path: str = params["path"]
+        if not os.path.isfile(path):
+            raise FileNotFoundError(f"DWG 파일을 찾을 수 없습니다: {path}")
+
+        dxf_path = os.path.splitext(path)[0] + ".nh-export.dxf"
+        try:
+            if os.path.exists(dxf_path):
+                os.remove(dxf_path)
+        except OSError:
+            pass
+
+        # DWG 열기 → 활성 도면 갱신
+        self._acad.ActiveDocument.Util.SendCommand(f'._OPEN "{path}"\n')
+        doc = self._acad.ActiveDocument
+        # DXF 내보내기: DXFOUT 후 파일명, 정밀도(16)
+        doc.Util.SendCommand(f'._DXFOUT\n"{dxf_path}"\n16\n')
+
+        # SendCommand는 비동기라 파일 생성/안정화를 폴링한다(최대 ~40s).
+        deadline = time.time() + 40
+        last_size = -1
+        stable = 0
+        while time.time() < deadline:
+            if os.path.exists(dxf_path):
+                size = os.path.getsize(dxf_path)
+                if size > 0 and size == last_size:
+                    stable += 1
+                    if stable >= 2:
+                        break
+                else:
+                    stable = 0
+                last_size = size
+            time.sleep(1)
+        if not os.path.exists(dxf_path) or os.path.getsize(dxf_path) == 0:
+            raise RuntimeError("DXF 내보내기에 실패했습니다(파일 미생성).")
+
+        size = os.path.getsize(dxf_path)
+        if size > self._MAX_DXF_INLINE:
+            raise RuntimeError(
+                f"도면이 너무 큽니다({size} bytes). 인라인 변환 한도({self._MAX_DXF_INLINE}) 초과 — "
+                "도면을 나누거나 정리 후 다시 시도하세요."
+            )
+        with open(dxf_path, "r", encoding="utf-8", errors="replace") as f:
+            text = f.read()
+        return {"dxf_text": text, "source": path, "bytes": size}

@@ -120,6 +120,11 @@ verify_jwt = false
 [functions.webauthn]
 verify_jwt = false
 
+# cad-convert: 브라우저 CAD 에디터의 DWG 열기 요청. OPTIONS는 JWT 없이 오고, POST는
+# 함수 내부에서 사용자 JWT를 검증해 본인 소유 변환 작업을 큐잉한다.
+[functions.cad-convert]
+verify_jwt = false
+
 # cad-job-gateway: called both by admins (user JWT) and server-side by the
 # dynamic-plugin-tools proxy (X-NH-Internal-Secret, no Supabase JWT). Gate JWT
 # off at the platform and let authorize() enforce service-key / CAD_GATEWAY_SECRET

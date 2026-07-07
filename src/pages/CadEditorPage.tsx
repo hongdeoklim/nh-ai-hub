@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { DxfCanvas, type EditorTool } from '../components/cad/DxfCanvas'
+import { requestDwgConversion, waitForConversion } from '../services/cad/cad-convert'
 import {
   distinctLayers,
   parseDxfEntities,
@@ -39,6 +40,7 @@ export function CadEditorPage() {
   const [hiddenLayers, setHiddenLayers] = useState<Set<string>>(new Set())
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [converting, setConverting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const layers = useMemo(() => {
@@ -107,6 +109,37 @@ export function CadEditorPage() {
     [loadFile],
   )
 
+  // Phase C: 로컬 에이전트로 작업 폴더의 DWG를 DXF로 변환해 연다.
+  const handleOpenDwg = useCallback(async () => {
+    const filename = window.prompt(
+      '작업 폴더(C:\\NH-AI-HUB-workspace)에 있는 DWG 파일명을 입력하세요 (예: plan.dwg)',
+    )
+    if (!filename) return
+    setConverting(true)
+    const t = toast.loading('에이전트에 DWG 변환 요청 중…')
+    try {
+      const jobId = await requestDwgConversion(filename.trim())
+      const { dxfText } = await waitForConversion(jobId, {
+        onStatus: (s) => toast.loading(`변환 진행: ${s}…`, { id: t }),
+      })
+      const result = parseDxfEntities(dxfText)
+      if (result.entities.length === 0) {
+        toast.error('변환된 도면에 그릴 도형이 없습니다.', { id: t })
+        return
+      }
+      setEntities(result.entities)
+      setPast([])
+      setBounds(result.bounds ?? DEFAULT_BOUNDS)
+      setFileName(filename.trim())
+      setSelectedIndex(null)
+      toast.success(`${filename} 변환·열기 완료 · 도형 ${result.entities.length}개`, { id: t })
+    } catch (e) {
+      toast.error(`DWG 열기 실패: ${e instanceof Error ? e.message : e}`, { id: t })
+    } finally {
+      setConverting(false)
+    }
+  }, [])
+
   const exportDxf = useCallback(() => {
     if (entities.length === 0) {
       toast.error('내보낼 도형이 없습니다.')
@@ -155,6 +188,15 @@ export function CadEditorPage() {
             className="rounded-lg border border-stone-300 px-3 py-2 text-[13px]! font-semibold text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800 md:text-[14px]!"
           >
             DXF 열기
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleOpenDwg()}
+            disabled={converting}
+            title="작업 폴더의 DWG를 로컬 에이전트가 DXF로 변환해 엽니다"
+            className="rounded-lg border border-stone-300 px-3 py-2 text-[13px]! font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800 md:text-[14px]!"
+          >
+            {converting ? '변환 중…' : 'DWG 열기'}
           </button>
           <button
             type="button"
