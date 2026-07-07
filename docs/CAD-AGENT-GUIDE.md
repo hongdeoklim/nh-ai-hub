@@ -37,26 +37,46 @@
 
 ## 2. 관리자용 — 설치본(exe) 만들기 & 배포
 
-### 2-1. 빌드 (Windows PC, 최초 1회)
-필요: **Python 3.10+**, (선택)**Inno Setup 6**(단일 설치 마법사 exe 생성용).
+> **현재 상태:** 설치본이 이미 빌드·업로드되어 있어 **직원은 바로 다운로드**할 수 있습니다.
+> 아래는 코드를 고쳐 **다시 빌드/갱신**할 때만 필요합니다.
+
+### 배포 구조 (다운로드형)
+스토리지 파일당 용량 제한(약 50MB) 때문에, 배포는 세 파일로 나뉩니다 —
+모두 공개 버킷 **`agent-installer`** 에 있습니다.
+
+| 파일 | 역할 | 크기 |
+|------|------|------|
+| `nh-agent-setup.exe` | **직원이 받는 설치기**(다운로드 스텁). 실행하면 아래 둘을 받아 설치 | ~8 MB |
+| `nh-agent.exe` | 실제 에이전트(폴링·실행) | ~43 MB |
+| `setup_wizard.exe` | 접속 정보 입력 GUI | ~23 MB |
+
+`nh-agent-setup.exe` 실행 시: 두 파일을 `%LOCALAPPDATA%\NH-AX-HUB-Agent` 로 내려받고 →
+작업 폴더 생성 → 시작 프로그램(HKCU) 등록 → 설정 마법사 실행 → 에이전트 백그라운드 실행.
+**관리자 권한·Inno Setup 불필요.**
+
+### 다시 빌드하기 (코드 변경 시)
+필요: **Python 3.10+** (Windows).
 
 ```bat
-:: 1) 에이전트 실행파일 빌드 → agent\dist\nh-agent.exe (+ setup_wizard.exe)
+:: 1) 에이전트 + 마법사 빌드 → agent\dist\nh-agent.exe, setup_wizard.exe
 cd agent
 build.bat
 
-:: 2) (선택) Inno Setup으로 단일 설치본 생성 → dist\NH-AI-HUB-Setup.exe
-cd ..\installer
-build_installer.bat
+:: 2) 다운로드 스텁 빌드 → agent\dist\NH-AX-HUB-Agent-Setup.exe
+python -m PyInstaller --onefile --name NH-AX-HUB-Agent-Setup --console installer_lite.py
 ```
 
-### 2-2. 배포 (다운로드 버튼 활성화)
-빌드된 설치본을 Supabase Storage **`agent-installer`** 버킷에
-**`nh-agent-setup.exe`** 파일명으로 업로드하면, 앱의 CAD 페이지 다운로드 버튼이 **자동 노출**됩니다.
-(재배포 불필요. 업로드/삭제는 관리자만 가능.)
+### 스토리지 업로드 (다운로드 버튼 활성화)
+세 파일을 `agent-installer` 버킷에 아래 이름으로 올립니다(업로드/삭제는 관리자만 가능):
 
-- 업로드 위치: Supabase 대시보드 → Storage → `agent-installer` → `nh-agent-setup.exe`
-- 또는 관리자 계정으로 앱에서 업로드 UI를 통해(추후 추가 예정)
+```bash
+npx supabase storage cp ./agent/dist/nh-agent.exe               ss:///agent-installer/nh-agent.exe             --experimental
+npx supabase storage cp ./agent/dist/setup_wizard.exe           ss:///agent-installer/setup_wizard.exe         --experimental
+npx supabase storage cp ./agent/dist/NH-AX-HUB-Agent-Setup.exe  ss:///agent-installer/nh-agent-setup.exe       --experimental
+```
+
+앱의 CAD 페이지 다운로드 버튼은 `nh-agent-setup.exe` 존재를 런타임에 확인해 **자동 노출**됩니다(앱 재배포 불필요).
+Supabase 대시보드 → Storage → `agent-installer` 에서 직접 올려도 됩니다.
 
 ### 2-3. 접속 정보(키) 배부 — **중요**
 에이전트는 `cad_jobs` 큐를 읽고 상태를 갱신해야 하므로 접속 키가 필요합니다.
