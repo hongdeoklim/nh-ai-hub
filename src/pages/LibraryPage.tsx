@@ -377,7 +377,7 @@ export function LibraryPage() {
             className="w-full md:w-56 rounded-lg border border-slate-800 bg-[#0c101b] px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition duration-200"
           />
           <select
-            value={categoryFilter}
+            aria-label="카테고리 필터" value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="rounded-lg border border-slate-800 bg-[#0c101b] px-3 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 transition duration-200"
           >
@@ -386,7 +386,7 @@ export function LibraryPage() {
             ))}
           </select>
           <select
-            value={deptFilter}
+            aria-label="부서 필터" value={deptFilter}
             onChange={(e) => setDeptFilter(e.target.value)}
             className="rounded-lg border border-slate-800 bg-[#0c101b] px-3 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 transition duration-200"
           >

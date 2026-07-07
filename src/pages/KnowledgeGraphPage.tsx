@@ -261,12 +261,12 @@ export function KnowledgeGraphPage() {
               이웃 <strong className="text-cyan-300">{filteredData.nodes.length - (filteredData.matchingIds?.size ?? 0)}</strong>개 노드
             </p>
           )}
-          <select value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)}
+          <select aria-label="부서 필터" value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)}
             className="w-full rounded-xl border border-white/8 bg-black/30 px-3 py-2 text-[12px] md:text-[13px] text-slate-300 outline-none focus:border-fuchsia-500/50 transition">
             <option value="ALL">전체 부서</option>
             {departments.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
-          <select value={nodeTypeFilter} onChange={e => setNodeTypeFilter(e.target.value)}
+          <select aria-label="타입 필터" value={nodeTypeFilter} onChange={e => setNodeTypeFilter(e.target.value)}
             className="w-full rounded-xl border border-white/8 bg-black/30 px-3 py-2 text-[12px] md:text-[13px] text-slate-300 outline-none focus:border-fuchsia-500/50 transition">
             <option value="ALL">전체 타입</option>
             {nodeTypes.map(t => <option key={t} value={t}>{NODE_TYPE_META[t]?.label ?? t}</option>)}

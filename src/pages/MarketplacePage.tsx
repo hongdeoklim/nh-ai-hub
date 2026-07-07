@@ -348,7 +348,7 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
                   </label>
                   <input
                     type={f.key.toLowerCase().includes('token') || f.key.toLowerCase().includes('key') || f.key.toLowerCase().includes('secret') || f.key.toLowerCase().includes('password') ? 'password' : 'text'}
-                    value={form[f.key] ?? ''}
+                    aria-label={f.label} value={form[f.key] ?? ''}
                     onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
                     placeholder={f.label}
                     className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-orange-600 focus:outline-none dark:border-stone-700 dark:bg-stone-800 dark:text-white"

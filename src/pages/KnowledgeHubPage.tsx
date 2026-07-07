@@ -336,7 +336,7 @@ export function KnowledgeHubPage() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') void handleSearchTest()
             }}
-            placeholder="예: 출장비 정산 규정"
+            aria-label="검색 테스트 질문" placeholder="예: 출장비 정산 규정"
             className="min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-[16px]! md:text-[14px]! text-stone-900 outline-none focus:border-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
           />
           <button

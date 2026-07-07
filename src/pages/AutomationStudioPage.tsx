@@ -330,7 +330,7 @@ export function AutomationStudioPage() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="도구 검색 (이름·설명)"
+          aria-label="도구 검색" placeholder="도구 검색 (이름·설명)"
           className="w-full max-w-xs rounded-lg border border-stone-300 bg-white px-3 py-2 text-[13px]! md:text-[14px]! text-stone-900 outline-none focus:border-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
         />
         <div className="flex flex-wrap items-center gap-1.5">
