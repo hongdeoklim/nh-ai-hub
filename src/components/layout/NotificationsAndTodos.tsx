@@ -87,6 +87,9 @@ export function NotificationsAndTodos() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={unreadCount > 0 ? `알림 (안 읽음 ${unreadCount}건)` : '알림'}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
         className="relative flex h-9 w-9 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

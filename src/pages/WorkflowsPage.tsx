@@ -366,7 +366,7 @@ function AddStepButton({ onClick, open, onSelect, onClose }: {
         <div className="absolute top-full mt-1 z-[60] w-72 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-3 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-slate-600 dark:text-slate-400">단계 유형 선택</p>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <button aria-label="닫기" onClick={onClose} className="text-slate-400 hover:text-slate-600"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
           </div>
           {(Object.entries(grouped) as [StepType, typeof STEP_PRESETS][]).map(([type, presets]) => {
             const meta = STEP_META[type]
@@ -430,7 +430,7 @@ function WorkflowBuilder({ initial, onSave, onClose }: {
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">{initial?.id ? '워크플로우 편집' : '새 워크플로우'}</h2>
             <p className="text-[11px]! text-slate-400 mt-0.5">단계를 추가해 업무 파이프라인을 구성하세요</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button aria-label="닫기" onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -562,7 +562,7 @@ function ExecutionModal({ wf, onClose }: { wf: WorkflowRow; onClose: () => void 
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-50">{wf.title}</h2>
               <p className="text-[11px]! text-slate-400 mt-0.5">{running ? '실행 중…' : done ? '실행 완료' : '준비 중'}</p>
             </div>
-            {!running && <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>}
+            {!running && <button aria-label="닫기" onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>}
           </div>
           {/* 프로그레스 바 */}
           <div className="mt-3 h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">

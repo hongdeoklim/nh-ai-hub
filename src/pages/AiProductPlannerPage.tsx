@@ -784,6 +784,7 @@ export function AiProductPlannerPage() {
               <button
                 onClick={handleSendMessage}
                 disabled={!chatInput.trim() || isChatting}
+                aria-label="메시지 보내기"
                 className="absolute right-3 bottom-3 p-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-600 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 shadow-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h14M12 5l7 7-7 7" /></svg>
