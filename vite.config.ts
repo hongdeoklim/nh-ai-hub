@@ -103,6 +103,33 @@ export default defineConfig({
             return undefined
           }
 
+          // 무거운 라우트 전용 라이브러리는 별도 청크로 분리해 초기 로드에서 제외
+          // (전부 lazy 라우트에서만 import 됨: Univer=시트/슬라이드/오피스,
+          //  three/force-graph=지식 그래프, mermaid=플래너, xlsx=시트/내보내기).
+          if (id.includes('@univerjs') || /[\\/]univer/i.test(id)) return 'vendor-univer'
+          // d3 is shared by both mermaid and the 3D graph — keep it separate so
+          // the planner (mermaid) doesn't drag in three/force-graph and vice versa.
+          if (id.includes('/d3-') || id.includes('\\d3-') || id.includes('/d3/') || id.includes('\\d3\\')) {
+            return 'vendor-d3'
+          }
+          if (
+            id.includes('three') ||
+            id.includes('force-graph') ||
+            id.includes('kapsule')
+          ) {
+            return 'vendor-graph3d'
+          }
+          if (
+            id.includes('mermaid') ||
+            id.includes('dagre') ||
+            id.includes('cytoscape') ||
+            id.includes('khroma') ||
+            id.includes('elkjs')
+          ) {
+            return 'vendor-mermaid'
+          }
+          if (id.includes('xlsx')) return 'vendor-xlsx'
+
           if (id.includes('@supabase')) return 'vendor-supabase'
           if (id.includes('react-router')) return 'vendor-router'
           if (
