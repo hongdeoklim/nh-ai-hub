@@ -107,6 +107,9 @@ verify_jwt = false
 [functions.plugin-github-bridge]
 verify_jwt = false
 
+[functions.plugin-higgsfield-bridge]
+verify_jwt = false
+
 # send-push: OPTIONS preflight arrives without a JWT; the POST handler verifies
 # the caller's user JWT and admin role internally.
 [functions.send-push]
