@@ -79,6 +79,18 @@ npx supabase storage cp ./agent/dist/NH-AX-HUB-Agent-Setup.exe  ss:///agent-inst
 앱의 CAD 페이지 다운로드 버튼은 `nh-agent-setup.exe` 존재를 런타임에 확인해 **자동 노출**됩니다(앱 재배포 불필요).
 Supabase 대시보드 → Storage → `agent-installer` 에서 직접 올려도 됩니다.
 
+### (권장) 코드 서명 — SmartScreen 경고 제거
+현재 설치본은 **미서명**이라 실행 시 Windows SmartScreen이 "확인되지 않은 게시자" 경고를 냅니다.
+사내 배포 전 코드서명을 권장합니다.
+
+1. 코드서명 인증서(.pfx) 준비 — DigiCert·Sectigo 등에서 발급(조직 인증). *이 부분만 외부 구매 필요.*
+2. 업로드 전 서명: `installer\sign-exes.bat  경로\인증서.pfx  비밀번호`
+   (Windows SDK의 `signtool.exe` 필요. 3개 exe를 SHA256 + 타임스탬프로 서명)
+3. 서명된 3개 exe를 스토리지에 재업로드.
+
+인증서 없이 당장 쓰려면, IT에서 그룹 정책으로 설치본 해시를 화이트리스트에 넣거나
+사용자에게 "추가 정보 → 실행" 을 안내하세요.
+
 ### 2-3. 접속 정보(키) 배부 — **중요**
 에이전트는 `cad_jobs` 큐를 읽고 상태를 갱신해야 하므로 접속 키가 필요합니다.
 **키 종류에 따라 배포 모델이 달라집니다.** 아래 "3. 운영 모델"을 먼저 결정하세요.
