@@ -112,7 +112,7 @@ export function CadAgentPage() {
         <h2 className="text-[15px]! font-bold text-stone-900 dark:text-stone-50 md:text-[17px]!">1. 로컬 에이전트 설치</h2>
         <ol className="mt-3 flex flex-col gap-2 text-[13px]! leading-relaxed text-stone-600 dark:text-stone-400 md:text-[14px]!">
           <li>① 아래 버튼으로 설치본을 내려받아 실행합니다 (Windows · AutoCAD 필요, SketchUp은 선택).</li>
-          <li>② 설치 마법사에서 <strong className="font-semibold text-stone-800 dark:text-stone-200">접속 정보(관리자에게서 받은 URL·키)</strong>와 작업 폴더(<code className="rounded bg-stone-100 px-1 py-0.5 text-[12px]! dark:bg-stone-800">{WORKSPACE_ROOT}</code>)를 입력하고, SketchUp을 쓰면 SketchUp.exe 경로도 지정합니다.</li>
+          <li>② 설치 마법사에서 <strong className="font-semibold text-stone-800 dark:text-stone-200">내 NH-AX-HUB 로그인 이메일·비밀번호</strong>를 입력하고(접속 URL·키는 내장됨), 작업 폴더(<code className="rounded bg-stone-100 px-1 py-0.5 text-[12px]! dark:bg-stone-800">{WORKSPACE_ROOT}</code>)를 확인합니다. SketchUp을 쓰면 SketchUp.exe 경로도 지정합니다. <span className="text-stone-500 dark:text-stone-500">(공용 CAD PC라면 관리자가 「서비스 키」 방식 선택)</span></li>
           <li>③ 설치가 끝나면 에이전트가 백그라운드에서 자동 실행되고, 이 페이지의 작업 큐가 자동으로 처리됩니다.</li>
         </ol>
         <div className="mt-4 flex flex-wrap items-center gap-3">

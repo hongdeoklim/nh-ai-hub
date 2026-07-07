@@ -10,10 +10,33 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-def make_client(url: str, key: str) -> Any:
-    """supabase-py 클라이언트를 생성한다."""
+def make_client(
+    url: str,
+    *,
+    service_key: str = "",
+    anon_key: str = "",
+    email: str = "",
+    password: str = "",
+) -> Any:
+    """
+    supabase-py 클라이언트를 생성한다. 두 가지 인증 모드를 지원한다.
+
+    - 서비스 키 모드(모델 A · 공용 PC): service_key(service_role) 로 생성 → 모든 작업 접근.
+    - 개인 계정 모드(모델 B · 직원 PC): anon_key 로 생성 후 email/password 로 로그인 →
+      RLS에 의해 '본인 작업'만 접근. service_role 키를 개인 PC에 두지 않아도 된다.
+    """
     from supabase import create_client  # type: ignore[import]
-    return create_client(url, key)
+
+    if service_key:
+        return create_client(url, service_key)
+
+    if not (anon_key and email and password):
+        raise ValueError(
+            "개인 계정 모드에는 anon_key, email, password 가 모두 필요합니다."
+        )
+    client = create_client(url, anon_key)
+    client.auth.sign_in_with_password({"email": email, "password": password})
+    return client
 
 
 class JobQueue:
