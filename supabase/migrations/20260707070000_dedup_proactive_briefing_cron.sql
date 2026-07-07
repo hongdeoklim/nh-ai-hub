@@ -1,0 +1,13 @@
+-- proactive-notifier (daily "☀️ 오늘의 AI 아침 브리핑") is scheduled by TWO
+-- cron jobs:
+--   'daily_proactive_briefing'      @ 23:30 UTC  (20260612)
+--   'trigger_daily_ai_assistants'   @ 00:00 UTC  (20260618)
+-- The second was intended to run each user's AI assistants, but it just POSTs
+-- to proactive-notifier with {trigger:"daily_assistants_run"} — and
+-- proactive-notifier ignores that body and always regenerates the same
+-- briefing. So the two jobs produce the identical briefing ~30 min apart
+-- (duplicate notifications), and the assistants are never actually run.
+-- Drop the redundant one; keep the single daily briefing. (Actually wiring a
+-- daily assistant-orchestration run is a separate feature.)
+-- Safe no-op if the job was never registered on this database.
+select cron.unschedule(jobid) from cron.job where jobname = 'trigger_daily_ai_assistants';
