@@ -40,7 +40,7 @@ export function PushComposer() {
       if (res.ok && res.configured !== false) {
         setResult({
           tone: 'ok',
-          text: `발송 완료 — 대상 ${res.recipients ?? 0}대 중 ${res.success ?? 0}대 성공.`,
+          text: `발송 완료 — 인앱 알림 ${res.inapp ?? 0}명, 푸시 ${res.recipients ?? 0}대 중 ${res.success ?? 0}대 성공.`,
         })
         setTitle('')
         setBody('')
@@ -48,8 +48,11 @@ export function PushComposer() {
       } else if (res.configured === false) {
         setResult({
           tone: 'warn',
-          text: `${res.error ?? ''} (대상 ${res.recipients ?? 0}대 집계됨)`,
+          text: `인앱 알림 ${res.inapp ?? 0}명에게 발송됨. ${res.error ?? ''}`,
         })
+        setTitle('')
+        setBody('')
+        setUrl('')
       } else {
         setResult({ tone: 'error', text: res.error ?? '발송에 실패했습니다.' })
       }
@@ -63,7 +66,7 @@ export function PushComposer() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">푸시 알림 보내기</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          푸시 알림을 켠 사용자에게 FCM 웹 푸시를 발송합니다. 마이페이지에서 알림을 켠 기기만 대상이 됩니다.
+          대상 사용자 전원에게 인앱 알림(종 아이콘)을 보내고, 그중 푸시를 켠 기기에는 FCM 웹 푸시도 함께 발송합니다.
         </p>
       </div>
 

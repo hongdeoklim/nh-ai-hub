@@ -119,35 +119,49 @@ Deno.serve(async (req) => {
   const targetType = body.target_type ?? "all"
   if (!title || !messageBody) return json({ ok: false, error: "제목과 내용을 입력하세요." }, 400)
 
-  // Resolve recipient user ids by target.
-  let userIds: string[] | null = null
+  // Resolve concrete recipient user ids for every target (including "all"),
+  // so we can create an in-app notification for each recipient regardless of
+  // whether they have push enabled.
+  let userIds: string[]
   if (targetType === "user" && body.target_value) {
     userIds = [body.target_value]
   } else if (targetType === "department" && body.target_value) {
-    const { data: deptUsers } = await admin
-      .from("users")
-      .select("id")
-      .eq("department", body.target_value)
+    const { data: deptUsers } = await admin.from("users").select("id").eq("department", body.target_value)
     userIds = (deptUsers ?? []).map((u) => u.id as string)
+  } else {
+    const { data: allUsers } = await admin.from("users").select("id")
+    userIds = (allUsers ?? []).map((u) => u.id as string)
   }
 
-  let tokenQuery = admin.from("user_device_tokens").select("token, user_id")
-  if (userIds) {
-    if (userIds.length === 0) return json({ ok: true, configured: true, recipients: 0, success: 0 })
-    tokenQuery = tokenQuery.in("user_id", userIds)
+  if (userIds.length === 0) {
+    return json({ ok: true, configured: true, recipients: 0, success: 0, inapp: 0 })
   }
-  const { data: tokenRows, error: tokenError } = await tokenQuery
+
+  // In-app notification for every recipient (bell menu + realtime toast).
+  // Independent of push consent — this is the fallback for users without push.
+  let inapp = 0
+  const { error: notifError } = await admin
+    .from("nh_user_notifications")
+    .insert(userIds.map((uid) => ({ user_id: uid, title, content: messageBody })))
+  if (!notifError) inapp = userIds.length
+  else console.error("[send-push] nh_user_notifications insert 실패", notifError.message)
+
+  const { data: tokenRows, error: tokenError } = await admin
+    .from("user_device_tokens")
+    .select("token, user_id")
+    .in("user_id", userIds)
   if (tokenError) return json({ ok: false, error: tokenError.message }, 500)
   const tokens = (tokenRows ?? []).map((r) => r.token as string)
 
   const saRaw = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON")?.trim()
   if (!saRaw) {
     return json({
-      ok: false,
+      ok: true,
       configured: false,
       recipients: tokens.length,
+      inapp,
       error:
-        "FCM 발송 자격증명(FCM_SERVICE_ACCOUNT_JSON)이 아직 설정되지 않았습니다. Firebase 서비스 계정 JSON을 Supabase Secret으로 등록하면 실제 발송됩니다. 현재는 대상 수신자만 집계했습니다.",
+        "인앱 알림은 발송했지만, FCM 웹 푸시 자격증명(FCM_SERVICE_ACCOUNT_JSON)이 아직 설정되지 않아 백그라운드 푸시는 보내지 못했습니다. Supabase Secret 등록 후부터 푸시도 발송됩니다.",
     })
   }
 
@@ -210,5 +224,5 @@ Deno.serve(async (req) => {
     success_count: success,
   })
 
-  return json({ ok: true, configured: true, recipients: tokens.length, success })
+  return json({ ok: true, configured: true, recipients: tokens.length, success, inapp })
 })

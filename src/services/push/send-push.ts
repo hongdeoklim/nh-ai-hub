@@ -10,6 +10,7 @@ export type SendPushResult = {
   configured?: boolean
   recipients?: number
   success?: number
+  inapp?: number
   error?: string
 }
 

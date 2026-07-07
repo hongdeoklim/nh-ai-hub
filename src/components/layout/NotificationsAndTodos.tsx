@@ -52,14 +52,15 @@ export function NotificationsAndTodos() {
         (payload) => {
           setNotifications(prev => [payload.new, ...prev])
           setUnreadCount(c => c + 1)
-          toast.success('?덈줈??AI ?뚮┝???꾩갑?덉뒿?덈떎.')
+          const title = (payload.new as { title?: string })?.title
+          toast.success(title ? `새 알림: ${title}` : '새로운 알림이 도착했습니다.')
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'nh_user_todos', filter: `user_id=eq.${profile.id}` },
         () => {
-          // ?좎씪 媛깆떊 ???ъ“??(?⑥닚??
+          // 할 일 변경 시 목록 재조회 (단순화)
           void fetchData()
         }
       )
@@ -103,19 +104,20 @@ export function NotificationsAndTodos() {
               onClick={() => setActiveTab('notifications')}
               className={`flex-1 py-3 text-sm font-medium ${activeTab === 'notifications' ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'text-stone-500 hover:text-stone-700 dark:text-stone-400'}`}
             >
-              ?뚮┝??{unreadCount > 0 && `(${unreadCount})`}
+              알림{unreadCount > 0 && ` (${unreadCount})`}
             </button>
             <button
               onClick={() => setActiveTab('todos')}
               className={`flex-1 py-3 text-sm font-medium ${activeTab === 'todos' ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'text-stone-500 hover:text-stone-700 dark:text-stone-400'}`}
             >
-              ??????            </button>
+              할 일
+            </button>
           </div>
 
           <div className="max-h-96 overflow-y-auto p-2">
             {activeTab === 'notifications' && (
               notifications.length === 0 ? (
-                <p className="py-8 text-center text-sm text-stone-500">?덈줈???뚮┝???놁뒿?덈떎.</p>
+                <p className="py-8 text-center text-sm text-stone-500">새로운 알림이 없습니다.</p>
               ) : (
                 notifications.map(n => (
                   <div key={n.id} onClick={() => markAsRead(n.id)} className={`mb-1 cursor-pointer rounded-lg p-3 transition hover:bg-stone-50 dark:hover:bg-stone-800/50 ${n.is_read ? 'opacity-60' : 'bg-indigo-50/50 dark:bg-indigo-900/10'}`}>
@@ -128,7 +130,7 @@ export function NotificationsAndTodos() {
 
             {activeTab === 'todos' && (
               todos.length === 0 ? (
-                <p className="py-8 text-center text-sm text-stone-500">???쇱씠 ?놁뒿?덈떎.</p>
+                <p className="py-8 text-center text-sm text-stone-500">할 일이 없습니다.</p>
               ) : (
                 todos.map(t => (
                   <div key={t.id} className="mb-1 flex items-start gap-3 rounded-lg p-3 hover:bg-stone-50 dark:hover:bg-stone-800/50">
