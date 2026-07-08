@@ -48,6 +48,7 @@ export function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [deptFilter, setDeptFilter] = useState('ALL')
+  const [showPipeline, setShowPipeline] = useState(false)
 
   // 사내 자료실 데이터
   const [docs, setDocs] = useState<KnowledgeBaseRow[]>([])
@@ -194,7 +195,57 @@ export function LibraryPage() {
         </div>
       )}
 
-      {/* 상단 AI 성장 대시보드 */}
+      {/* 헤더 + 필터 (최상단) */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-[26px]!">📚</span>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">라이브러리</h1>
+            <p className="text-sm text-slate-400 mt-0.5">
+              내가 올리거나 사내에 공유된 문서·이미지를 검색하고 탐색합니다.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="search"
+            placeholder="파일명, 부서, 카테고리 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-56 rounded-lg border border-slate-800 bg-[#0c101b] px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition duration-200"
+          />
+          <select
+            aria-label="카테고리 필터" value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="rounded-lg border border-slate-800 bg-[#0c101b] px-3 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 transition duration-200"
+          >
+            {categories.map((c) => (
+              <option key={c} value={c}>{c === 'ALL' ? '전체 카테고리' : c}</option>
+            ))}
+          </select>
+          <select
+            aria-label="부서 필터" value={deptFilter}
+            onChange={(e) => setDeptFilter(e.target.value)}
+            className="rounded-lg border border-slate-800 bg-[#0c101b] px-3 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 transition duration-200"
+          >
+            {departments.map((d) => (
+              <option key={d} value={d}>{d === 'ALL' ? '전체 부서' : d}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setShowPipeline((v) => !v)}
+            aria-expanded={showPipeline}
+            className="rounded-lg border border-slate-800 bg-[#0c101b] px-3 py-2 text-xs font-medium text-slate-300 outline-none transition duration-200 hover:border-pink-500 hover:text-pink-300"
+          >
+            {showPipeline ? '현황 접기 ▲' : '📊 파이프라인 현황'}
+          </button>
+        </div>
+      </header>
+
+      {/* 상단 AI 성장 대시보드 (선택 표시) */}
+      {showPipeline && (
       <div className="rounded-2xl border border-slate-800 bg-[#070b14]/90 p-6 shadow-2xl backdrop-blur-md relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-32 bg-pink-500/5 blur-[100px] rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-32 bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
@@ -355,47 +406,7 @@ export function LibraryPage() {
           </div>
         </div>
       </div>
-
-      {/* 헤더 + 필터 */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span className="text-[26px]!">📚</span>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">라이브러리</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
-              사내 자료실에 등록된 문서를 검색하고 탐색합니다.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="search"
-            placeholder="파일명, 부서, 카테고리 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-56 rounded-lg border border-slate-800 bg-[#0c101b] px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition duration-200"
-          />
-          <select
-            aria-label="카테고리 필터" value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="rounded-lg border border-slate-800 bg-[#0c101b] px-3 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 transition duration-200"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>{c === 'ALL' ? '전체 카테고리' : c}</option>
-            ))}
-          </select>
-          <select
-            aria-label="부서 필터" value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
-            className="rounded-lg border border-slate-800 bg-[#0c101b] px-3 py-2 text-xs text-slate-200 outline-none focus:border-pink-500 transition duration-200"
-          >
-            {departments.map((d) => (
-              <option key={d} value={d}>{d === 'ALL' ? '전체 부서' : d}</option>
-            ))}
-          </select>
-        </div>
-      </header>
+      )}
 
       {/* 문서 목록 */}
       <main className="flex-1">
