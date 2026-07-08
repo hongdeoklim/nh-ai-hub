@@ -1,7 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { DxfCanvas, type EditorTool } from '../components/cad/DxfCanvas'
+
+const ThreeViewer = lazy(() =>
+  import('../components/cad/ThreeViewer').then((m) => ({ default: m.ThreeViewer })),
+)
 import { requestDwgConversion, waitForConversion } from '../services/cad/cad-convert'
 import {
   distinctLayers,
@@ -41,6 +45,8 @@ export function CadEditorPage() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [converting, setConverting] = useState(false)
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d')
+  const [height3d, setHeight3d] = useState(30)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const layers = useMemo(() => {
@@ -264,7 +270,39 @@ export function CadEditorPage() {
           </select>
         </label>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-2">
+          {/* 2D / 3D 전환 */}
+          <div className="flex overflow-hidden rounded-md border border-stone-300 dark:border-stone-600">
+            {(['2d', '3d'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setViewMode(m)}
+                className={`px-2.5 py-1.5 text-[12px]! font-semibold transition-colors md:text-[13px]! ${
+                  viewMode === m
+                    ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900'
+                    : 'text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800'
+                }`}
+              >
+                {m.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          {viewMode === '3d' && (
+            <label className="flex items-center gap-1.5 text-[12px]! text-stone-600 dark:text-stone-300 md:text-[13px]!">
+              높이
+              <input
+                type="range"
+                min={1}
+                max={200}
+                value={height3d}
+                onChange={(e) => setHeight3d(Number(e.target.value))}
+                aria-label="3D 높이"
+                className="w-[90px]"
+              />
+              <span className="w-[34px] tabular-nums">{height3d}</span>
+            </label>
+          )}
           <button
             type="button"
             onClick={undo}
@@ -293,17 +331,29 @@ export function CadEditorPage() {
             dragOver ? 'border-violet-400 border-dashed bg-violet-50/40 dark:bg-violet-950/20' : 'border-stone-200 dark:border-stone-800'
           } bg-stone-50 dark:bg-stone-900`}
         >
-          <DxfCanvas
-            entities={entities}
-            bounds={bounds}
-            tool={tool}
-            currentLayer={currentLayer}
-            snap={{ endpoint: endpointSnap, grid: gridSnap, gridStep }}
-            hiddenLayers={hiddenLayers}
-            selectedIndex={selectedIndex}
-            onSelect={setSelectedIndex}
-            onEntitiesChange={commit}
-          />
+          {viewMode === '3d' ? (
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center text-[13px]! text-stone-500 md:text-[14px]!">
+                  3D 뷰 불러오는 중…
+                </div>
+              }
+            >
+              <ThreeViewer entities={entities} height={height3d} hiddenLayers={hiddenLayers} />
+            </Suspense>
+          ) : (
+            <DxfCanvas
+              entities={entities}
+              bounds={bounds}
+              tool={tool}
+              currentLayer={currentLayer}
+              snap={{ endpoint: endpointSnap, grid: gridSnap, gridStep }}
+              hiddenLayers={hiddenLayers}
+              selectedIndex={selectedIndex}
+              onSelect={setSelectedIndex}
+              onEntitiesChange={commit}
+            />
+          )}
           {entities.length === 0 && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-8 text-center">
               <div className="text-[36px]! opacity-30" aria-hidden>📐</div>
