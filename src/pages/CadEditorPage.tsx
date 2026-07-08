@@ -47,6 +47,7 @@ export function CadEditorPage() {
   const [converting, setConverting] = useState(false)
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d')
   const [height3d, setHeight3d] = useState(30)
+  const [solid3d, setSolid3d] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const layers = useMemo(() => {
@@ -303,6 +304,12 @@ export function CadEditorPage() {
               <span className="w-[34px] tabular-nums">{height3d}</span>
             </label>
           )}
+          {viewMode === '3d' && (
+            <label className="flex items-center gap-1.5 text-[12px]! text-stone-600 dark:text-stone-300 md:text-[13px]!">
+              <input type="checkbox" checked={solid3d} onChange={(e) => setSolid3d(e.target.checked)} />
+              솔리드
+            </label>
+          )}
           <button
             type="button"
             onClick={undo}
@@ -339,7 +346,7 @@ export function CadEditorPage() {
                 </div>
               }
             >
-              <ThreeViewer entities={entities} height={height3d} hiddenLayers={hiddenLayers} />
+              <ThreeViewer entities={entities} height={height3d} hiddenLayers={hiddenLayers} solid={solid3d} />
             </Suspense>
           ) : (
             <DxfCanvas

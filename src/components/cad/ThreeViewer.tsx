@@ -3,7 +3,12 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 import type { EditorEntity } from '../../services/cad/dxf'
-import { buildWallPositions, entitySegments, planBounds } from '../../services/cad/extrude'
+import {
+  buildCapPositions,
+  buildWallPositions,
+  entitySegments,
+  planBounds,
+} from '../../services/cad/extrude'
 
 /**
  * 2D DXF 편집 엔티티를 높이 height 로 압출해 3D로 보여주는 뷰어 (three.js).
@@ -15,9 +20,10 @@ interface ThreeViewerProps {
   entities: EditorEntity[]
   height: number
   hiddenLayers: Set<string>
+  solid: boolean
 }
 
-export function ThreeViewer({ entities, height, hiddenLayers }: ThreeViewerProps) {
+export function ThreeViewer({ entities, height, hiddenLayers, solid }: ThreeViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const stateRef = useRef<{
     renderer: THREE.WebGLRenderer
@@ -104,6 +110,9 @@ export function ThreeViewer({ entities, height, hiddenLayers }: ThreeViewerProps
     const visible = entities.filter((e) => !hiddenLayers.has(e.layer))
     const segs = entitySegments(visible)
     const positions = buildWallPositions(segs, height)
+    if (solid) {
+      positions.push(...buildCapPositions(visible, height, { floor: true, ceiling: true }))
+    }
     const bounds = planBounds(segs)
 
     if (positions.length > 0) {
@@ -136,7 +145,7 @@ export function ThreeViewer({ entities, height, hiddenLayers }: ThreeViewerProps
       st.camera.updateProjectionMatrix()
       st.controls.update()
     }
-  }, [entities, height, hiddenLayers])
+  }, [entities, height, hiddenLayers, solid])
 
   return <div ref={mountRef} className="h-full w-full" />
 }
