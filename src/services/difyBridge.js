@@ -11,8 +11,9 @@
 
 // ?섍꼍 蹂€?섏뿉??API URL 諛?KEY 濡쒕뱶 (?섎뱶肄붾뵫 諛⑹?)
 // Vite ?섍꼍(import.meta.env)怨??뱁뙥/CRA(process.env) ?묐갑???명솚???뺣낫
-const DIFY_API_URL = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_DIFY_API_URL || '') : (typeof process !== 'undefined' && process.env ? (process.env.REACT_APP_DIFY_API_URL || process.env.NEXT_PUBLIC_DIFY_API_URL || '') : '');
-const DIFY_API_KEY = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_DIFY_API_KEY || '') : (typeof process !== 'undefined' && process.env ? (process.env.REACT_APP_DIFY_API_KEY || process.env.NEXT_PUBLIC_DIFY_API_KEY || '') : '');
+// Dify API 키는 절대 프론트엔드 번들에 포함하지 않는다.
+// 모든 호출은 Supabase Edge Function(dify-chat-proxy)을 경유하며,
+// 실제 Dify 키는 프록시가 서버 측 시크릿(DIFY_API_KEY)으로 붙인다.
 const SUPABASE_URL = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_SUPABASE_URL || '') : '';
 
 // 로컬 메모리에서 NH-AX-HUB의 threadId와 Dify의 conversation_id를 매핑합니다.
@@ -36,15 +37,21 @@ export async function streamDifyChat(
   { query, user, conversationId = '', userContext = {}, supabaseToken = '' },
   { onMessage, onError, onDone, signal }
 ) {
-  if (!DIFY_API_URL || !DIFY_API_KEY) {
-    const errorMsg = 'Dify API 환경 변수(DIFY_API_URL, DIFY_API_KEY)가 설정되지 않았습니다.';
+  if (!SUPABASE_URL) {
+    const errorMsg = 'Supabase 환경 변수(VITE_SUPABASE_URL)가 설정되지 않아 Dify 프록시를 호출할 수 없습니다.';
+    console.error('[Dify Bridge]', errorMsg);
+    if (onError) onError(new Error(errorMsg));
+    return;
+  }
+  if (!supabaseToken) {
+    const errorMsg = '로그인 세션 토큰이 없어 Dify 프록시를 호출할 수 없습니다. 다시 로그인해 주세요.';
     console.error('[Dify Bridge]', errorMsg);
     if (onError) onError(new Error(errorMsg));
     return;
   }
 
-  // Mixed Content를 피하기 위해 프록시 서버(Edge Function)를 거쳐 Dify로 전달
-  const endpoint = SUPABASE_URL ? `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/dify-chat-proxy` : `${DIFY_API_URL.replace(/\/$/, '')}/v1/chat-messages`;
+  // Mixed Content·키 노출을 피하기 위해 항상 프록시 서버(Edge Function)를 거쳐 Dify로 전달
+  const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/dify-chat-proxy`;
 
   const payload = {
     inputs: {}, // RBAC 기능 제거 (Dify 호환성 문제)
@@ -63,7 +70,7 @@ export async function streamDifyChat(
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${supabaseToken || DIFY_API_KEY}`,
+        'Authorization': `Bearer ${supabaseToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),

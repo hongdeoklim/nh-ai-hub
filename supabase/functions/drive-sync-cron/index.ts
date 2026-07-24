@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
   const files = await listFolderFiles(accessToken, rootFolderId)
   const ragIngestUrl = `${supabaseUrl}/functions/v1/rag-ingest`
 
-  const results: Array<{ fileName: string; ok: boolean; error?: string }> = []
+  const results: Array<{ fileName: string; ok: boolean; skipped?: boolean; error?: string }> = []
 
   for (const file of files) {
     const text = await readFileText(accessToken, file)
@@ -119,7 +119,13 @@ Deno.serve(async (req) => {
         signal: AbortSignal.timeout(30_000),
       })
       const payload = await res.json().catch(() => ({})) as Record<string, unknown>
-      results.push({ fileName: file.name, ok: res.ok && payload.ok === true, error: payload.ok ? undefined : String(payload.error ?? `HTTP ${res.status}`) })
+      results.push({
+        fileName: file.name,
+        ok: res.ok && payload.ok === true,
+        // 내용 미변경으로 임베딩을 건너뛴 경우 (rag-ingest content_hash 비교)
+        skipped: payload.skipped === true || undefined,
+        error: payload.ok ? undefined : String(payload.error ?? `HTTP ${res.status}`),
+      })
     } catch (e) {
       results.push({ fileName: file.name, ok: false, error: e instanceof Error ? e.message : String(e) })
     }
@@ -127,7 +133,8 @@ Deno.serve(async (req) => {
 
   const succeeded = results.filter(r => r.ok).length
   const failed = results.filter(r => !r.ok).length
+  const skipped = results.filter(r => r.skipped).length
 
-  console.log(`[drive-sync-cron] 완료: ${succeeded}건 성공, ${failed}건 실패`)
-  return jsonResponse({ ok: succeeded > 0 || files.length === 0, total: files.length, succeeded, failed, results })
+  console.log(`[drive-sync-cron] 완료: ${succeeded}건 성공(변경 없음 스킵 ${skipped}건), ${failed}건 실패`)
+  return jsonResponse({ ok: succeeded > 0 || files.length === 0, total: files.length, succeeded, skipped, failed, results })
 })

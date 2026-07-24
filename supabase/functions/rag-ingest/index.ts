@@ -35,6 +35,11 @@ function chunkText(text: string): string[] {
   return chunks
 }
 
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("")
+}
+
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req)
   if (preflight) return preflight
@@ -163,29 +168,55 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "fileName and text (min 20 chars) are required" }, 400)
   }
 
-  // 같은 파일명의 기존 청크 삭제 (upsert 효과)
-  await admin.from("company_documents").delete().eq("file_name", fileName)
+  // AI 사용료 절감: 원문 해시가 기존과 같으면 임베딩 호출 없이 스킵.
+  // (야간 Drive 동기화가 변경 없는 문서를 매일 재임베딩하던 과금 누수 차단)
+  const contentHash = await sha256Hex(text)
+  const { data: existing } = await admin
+    .from("company_documents")
+    .select("content_hash")
+    .eq("file_name", fileName)
+    .limit(1)
+    .maybeSingle()
+  if (existing?.content_hash === contentHash) {
+    return jsonResponse({ ok: true, skipped: true, fileName, reason: "unchanged content" })
+  }
 
   const chunks = chunkText(text)
-  let inserted = 0
+  const rows: Array<Record<string, unknown>> = []
   const errors: Array<{ chunk_index: number; message: string }> = []
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i]!
     try {
       const embedding = await embedTextWithGemini(geminiKey, chunk)
-      const { error } = await admin.from("company_documents").insert({
+      rows.push({
         file_name: fileName,
         content: chunk,
         chunk_index: i,
         embedding: `[${embedding.join(",")}]`,
         uploaded_by: uploadedBy,
+        content_hash: contentHash,
       })
-      if (error) throw new Error(error.message)
-      inserted++
     } catch (e) {
       errors.push({ chunk_index: i, message: e instanceof Error ? e.message : String(e) })
     }
+  }
+
+  // 임베딩이 전부 실패하면 기존 청크를 지우지 않고 그대로 둔다.
+  if (rows.length === 0) {
+    return jsonResponse({ ok: false, fileName, chunks_total: chunks.length, inserted: 0, errors }, 500)
+  }
+
+  // 같은 파일명의 기존 청크 삭제 (upsert 효과)
+  await admin.from("company_documents").delete().eq("file_name", fileName)
+
+  // 일괄 INSERT 1문 — dify-sync 웹훅 트리거(문 단위)가 문서당 1회만 발동된다.
+  let inserted = 0
+  const { error: insertError } = await admin.from("company_documents").insert(rows)
+  if (insertError) {
+    errors.push({ chunk_index: -1, message: insertError.message })
+  } else {
+    inserted = rows.length
   }
 
   return jsonResponse({

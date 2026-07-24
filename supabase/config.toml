@@ -99,6 +99,21 @@ verify_jwt = false
 [functions.dify-knowledge-bridge]
 verify_jwt = false
 
+# drive-sync-cron: pg_cron 이 DIFY_SYNC_WEBHOOK_SECRET(비-JWT 시크릿)으로 호출하므로
+# 게이트웨이 JWT 검증을 끄고 함수 내부에서 시크릿/서비스키를 검증한다.
+[functions.drive-sync-cron]
+verify_jwt = false
+
+# dify-hub-api: Dify 서버가 커스텀 툴로 DIFY_HUB_SECRET(비-JWT)을 보내 호출한다.
+# 함수 내부에서 시크릿을 검증한다.
+[functions.dify-hub-api]
+verify_jwt = false
+
+# dify-dataset-sync: OPTIONS 프리플라이트는 JWT 없이 오고, POST 는 함수 내부에서
+# 사용자 JWT 를 검증한다.
+[functions.dify-dataset-sync]
+verify_jwt = false
+
 # plugin-*-bridge: Authorization 헤더를 Jira/Slack/GitHub 등 실제 3rd-party
 # 자격증명 전달용으로 쓰므로 Supabase 게이트웨이 JWT 검증을 끄고, 대신
 # X-NH-Internal-Secret 공유 시크릿으로 ai-chat 서버발 호출만 허용합니다

@@ -5,7 +5,8 @@ export type DifyStreamParams = {
   user: string
   conversationId?: string
   userContext?: Record<string, unknown>
-  supabaseToken?: string
+  /** dify-chat-proxy 인증용 Supabase 사용자 JWT (필수 — 프록시 경유 전용) */
+  supabaseToken: string
 }
 
 export type DifyStreamCallbacks = {

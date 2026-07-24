@@ -62,19 +62,15 @@ export function validateClientAiEnv(): ClientAiEnvStatus {
 /** 모듈 로드 시 1회 검증 — 런타임 크래시 방지용 안전벨트 */
 export const clientAiEnvStatus: ClientAiEnvStatus = validateClientAiEnv()
 
-/** 비어 있지 않은 환경 변수 문자열을 읽습니다 (Node / Edge / Vite 브라우저). */
+/**
+ * 비어 있지 않은 환경 변수 문자열을 읽습니다 (Node / Edge 전용).
+ *
+ * 주의: `import.meta.env` 를 객체로 통째로 참조하면 Vite 가 모든 VITE_* 값
+ * (API 키 포함)을 브라우저 번들에 인라인하므로 절대 사용하지 않는다.
+ * 브라우저에서는 항상 undefined 를 반환한다 — 제공자 API 키는 서버(Edge
+ * Function)에서만 주입되어야 하며, 브라우저는 edge 전송 경로를 쓴다.
+ */
 export function readEnv(name: string): string | undefined {
-  try {
-    const record = import.meta.env as Record<string, string | undefined>
-    const viteKey = `VITE_${name}`
-    const fromVite = record[viteKey]
-    if (fromVite !== undefined && fromVite !== '') {
-      return fromVite
-    }
-  } catch {
-    /* import.meta 없음 */
-  }
-
   const proc = (
     globalThis as {
       process?: { env?: Record<string, string | undefined> }
