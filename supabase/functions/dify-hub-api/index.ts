@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "npm:@supabase/supabase-js@2.49.8"
-import { handleCorsPreflight, jsonResponse, withCors } from "../_shared/cors.ts"
+import { handleCorsPreflight, jsonResponse } from "../_shared/cors.ts"
 
 /**
  * NH AI Inside Hub - Dify Cross-Cloud API Bridge
@@ -20,11 +20,11 @@ export default async function handler(req: Request): Promise<Response> {
     // 2. 인증 (Authorization Bearer 토큰 확인)
     const authHeader = req.headers.get("Authorization")
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return withCors(req, jsonResponse({ error: "Unauthorized" }, 401))
+      return jsonResponse({ error: "Unauthorized" }, 401)
     }
     const token = authHeader.split(" ")[1]
     if (token !== REQUIRED_SECRET) {
-      return withCors(req, jsonResponse({ error: "Forbidden - Invalid Token" }, 403))
+      return jsonResponse({ error: "Forbidden - Invalid Token" }, 403)
     }
 
     // 3. 쿼리 파라미터 파싱
@@ -55,21 +55,18 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (error) {
       console.error("[dify-hub-api] DB Error:", error.message)
-      return withCors(req, jsonResponse({ error: "Database error occurred" }, 500))
+      return jsonResponse({ error: "Database error occurred" }, 500)
     }
 
     // 6. 결과 반환
-    return withCors(
-      req,
-      jsonResponse({
-        success: true,
-        count: data?.length || 0,
-        partners: data || [],
-      })
-    )
+    return jsonResponse({
+      success: true,
+      count: data?.length || 0,
+      partners: data || [],
+    })
   } catch (err: any) {
     console.error("[dify-hub-api] Fatal Error:", err.message)
-    return withCors(req, jsonResponse({ error: "Internal Server Error" }, 500))
+    return jsonResponse({ error: "Internal Server Error" }, 500)
   }
 }
 
