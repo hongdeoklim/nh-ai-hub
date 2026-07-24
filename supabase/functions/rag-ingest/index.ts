@@ -2,14 +2,17 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "npm:@supabase/supabase-js@2.49.8"
 import { handleCorsPreflight, jsonResponse } from "../_shared/cors.ts"
 import { embedTextWithGemini } from "../_shared/gemini-embeddings.ts"
+import { embedWorkCaseText } from "../_shared/embeddings.ts"
 
 /**
  * rag-ingest
  *
- * 텍스트를 받아서 청킹 → Gemini 임베딩 → company_documents INSERT
- * company_documents INSERT 시 DB 트리거가 자동으로 dify-sync-webhook 호출
+ * 1) 기본(company_documents): 텍스트를 받아서 청킹 → Gemini 임베딩 → INSERT
+ *    (INSERT 시 DB 트리거가 자동으로 dify-sync-webhook 호출)
+ * 2) targetTable=work_cases: title+content → OpenAI 1536차원 임베딩 → work_cases INSERT
+ *    (관리자 전용. messageFeedbackId 가 있으면 message_feedbacks RAG 반영 플래그 갱신)
  *
- * 호출: syncGoogleDriveFolderToRag, ingestDocumentToRag
+ * 호출: syncGoogleDriveFolderToRag, ingestDocumentToRag, ChatAudit(자가학습 RAG)
  */
 
 const CHUNK_SIZE = 800   // 청크당 글자 수
@@ -63,17 +66,102 @@ Deno.serve(async (req) => {
     uploadedBy = data.user.id
   }
 
-  let body: { fileName?: string; text?: string }
+  let body: {
+    fileName?: string
+    text?: string
+    targetTable?: string
+    title?: string
+    content?: string
+    messageFeedbackId?: string
+  }
   try { body = await req.json() } catch { return jsonResponse({ error: "Invalid JSON" }, 400) }
 
+  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
+
+  // ---------------------------------------------------------------------------
+  // 분기: work_cases 적재 (자가학습 RAG — OpenAI 1536차원, match_work_cases 와 동일 계열)
+  // ---------------------------------------------------------------------------
+  if (body.targetTable === "work_cases") {
+    // 관리자 전용 (service role 내부 호출은 통과)
+    if (uploadedBy !== null) {
+      const { data: userRow } = await admin
+        .from("users")
+        .select("role, is_admin")
+        .eq("id", uploadedBy)
+        .maybeSingle()
+      const row = userRow as { role?: string | null; is_admin?: boolean | null } | null
+      const isAdmin =
+        row?.is_admin === true ||
+        String(row?.role ?? "").trim().toLowerCase() === "admin"
+      if (!isAdmin) {
+        return jsonResponse({ ok: false, error: "관리자 권한이 없습니다." }, 403)
+      }
+    }
+
+    const openaiKey = readEnv("OPENAI_API_KEY")
+    if (!openaiKey) {
+      return jsonResponse({ ok: false, error: "OPENAI_API_KEY is not configured." }, 503)
+    }
+
+    const title = body.title?.trim()
+    const content = body.content?.trim()
+    if (!title || !content || content.length < 20) {
+      return jsonResponse(
+        { ok: false, error: "title and content (min 20 chars) are required" },
+        400,
+      )
+    }
+
+    try {
+      // accumulate_new_case / dify-knowledge-bridge "cases" 검색과 동일한 임베딩 포맷
+      const embedding = await embedWorkCaseText(openaiKey, `${title}\n\n${content}`)
+
+      const { data: inserted, error: insertErr } = await admin
+        .from("work_cases")
+        .insert({ title, content, embedding })
+        .select("id")
+        .single()
+
+      if (insertErr) {
+        return jsonResponse({ ok: false, error: insertErr.message }, 500)
+      }
+
+      const workCaseId = (inserted as { id: string }).id
+      let feedbackUpdated = false
+
+      const messageFeedbackId = body.messageFeedbackId?.trim()
+      if (messageFeedbackId) {
+        const { error: fbErr } = await admin
+          .from("message_feedbacks")
+          .update({
+            is_rag_applied: true,
+            rag_applied_at: new Date().toISOString(),
+            work_case_id: workCaseId,
+          })
+          .eq("id", messageFeedbackId)
+        if (fbErr) {
+          console.error("[rag-ingest] message_feedbacks update failed:", fbErr.message)
+        } else {
+          feedbackUpdated = true
+        }
+      }
+
+      return jsonResponse({ ok: true, workCaseId, feedbackUpdated })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      return jsonResponse({ ok: false, error: msg }, 500)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 기본: company_documents 청킹 적재 (Gemini 임베딩)
+  // ---------------------------------------------------------------------------
   const fileName = body.fileName?.trim()
   const text = body.text?.trim()
 
   if (!fileName || !text || text.length < 20) {
     return jsonResponse({ error: "fileName and text (min 20 chars) are required" }, 400)
   }
-
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
 
   // 같은 파일명의 기존 청크 삭제 (upsert 효과)
   await admin.from("company_documents").delete().eq("file_name", fileName)

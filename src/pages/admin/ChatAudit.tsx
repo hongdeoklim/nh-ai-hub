@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
@@ -170,7 +171,19 @@ export function ChatAudit() {
         },
       )
 
-      if (invokeErr) throw invokeErr
+      if (invokeErr) {
+        // 4xx/5xx 응답이면 본문의 실제 오류 메시지를 추출
+        let message = invokeErr.message
+        if (invokeErr instanceof FunctionsHttpError) {
+          try {
+            const errBody = await invokeErr.context.json()
+            if (errBody?.error) message = String(errBody.error)
+          } catch {
+            // 본문이 JSON 이 아니면 기본 메시지 유지
+          }
+        }
+        throw new Error(message)
+      }
       if (data?.ok === false) {
         throw new Error(data.error || '적재 중 서버 오류')
       }
