@@ -78,7 +78,7 @@ export function MainLayout() {
 
   useEffect(() => {
     registerOpenSettingsHandler((tab) => {
-      if (tab) setSettingsTab(tab as SettingsTab)
+      if (typeof tab === 'string') setSettingsTab(tab as SettingsTab)
       setSettingsOpen(true)
     })
     return () => registerOpenSettingsHandler(null)
