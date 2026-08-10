@@ -8,7 +8,10 @@ import { getTokenWeight } from "../_shared/token-costs.ts"
  * 프론트엔드 통신 에러 방지 및 사내 토큰 한도/비용 통제를 수행합니다.
  */
 
-const DIFY_API_URL = "http://dify.nhnetworks.co.kr/v1/chat-messages"
+// DIFY_API_URL 시크릿(베이스 URL)로 오버라이드 가능 — dify-sync-webhook 과 동일 규약.
+// TODO: Dify 서버에 TLS 인증서 적용 후 기본값을 https 로 전환할 것 (현재 서버가 HTTPS 미지원).
+const DIFY_BASE_URL = (Deno.env.get("DIFY_API_URL") || "http://dify.nhnetworks.co.kr").replace(/\/$/, "")
+const DIFY_API_URL = `${DIFY_BASE_URL}/v1/chat-messages`
 
 export default async function handler(req: Request): Promise<Response> {
   const preflight = handleCorsPreflight(req)

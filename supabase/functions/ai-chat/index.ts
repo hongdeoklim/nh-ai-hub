@@ -1873,39 +1873,44 @@ async function handleRequest(req: Request) {
         await persistUsage(event)
 
         // 헤르메스 에이전트 장기 기억 추출 백그라운드 트리거 (메시지가 3턴 이상일 때만)
-        if (messages.length > 2) {
-          const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, '') || ''
-          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ''
+        // 주의: 이 블록의 예외가 스트림 응답을 깨지 않도록 try/catch 필수
+        try {
+          if (conversationMessages.length > 2) {
+            const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, '') || ''
+            const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ''
 
-          if (baseUrl && serviceKey) {
-            // fire-and-forget (await 하지 않음)
-            fetch(`${baseUrl}/functions/v1/memory-extractor`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${serviceKey}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                userId: user.id,
-                messages: messages
-              })
-            }).catch(e => console.error('[ai-chat] memory-extractor trigger failed:', e))
+            if (baseUrl && serviceKey) {
+              // fire-and-forget (await 하지 않음)
+              fetch(`${baseUrl}/functions/v1/memory-extractor`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${serviceKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  messages: conversationMessages
+                })
+              }).catch(e => console.error('[ai-chat] memory-extractor trigger failed:', e))
 
-            // 대화 내용 → Dify + 지식 그래프 아카이브 (AX 고도화 파이프라인)
-            fetch(`${baseUrl}/functions/v1/conversation-archiver`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${serviceKey}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                userId: user.id,
-                messages: messages,
-                provider: providerKindUsed,
-                threadId: conversationId ?? undefined
-              })
-            }).catch(e => console.error('[ai-chat] conversation-archiver trigger failed:', e))
+              // 대화 내용 → Dify + 지식 그래프 아카이브 (AX 고도화 파이프라인)
+              fetch(`${baseUrl}/functions/v1/conversation-archiver`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${serviceKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  messages: conversationMessages,
+                  provider: providerKindUsed,
+                  threadId: conversationId ?? undefined
+                })
+              }).catch(e => console.error('[ai-chat] conversation-archiver trigger failed:', e))
+            }
           }
+        } catch (e) {
+          console.error('[ai-chat] post-finish pipeline error:', e)
         }
       },
     } as const

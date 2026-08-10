@@ -34,7 +34,7 @@ async function handler(req: Request): Promise<Response> {
       const embedding = await embedTextWithGemini(geminiKey, query)
       const result = await admin.rpc("match_documents", {
         query_embedding: embedding,
-        match_threshold: 0.7,
+        similarity_threshold: 0.7,
         match_count: limit,
       })
       if (result.error) throw result.error

@@ -48,6 +48,13 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Server config missing" }, 500)
   }
 
+  // 내부 전용 함수: ai-chat 이 서비스 롤 키로만 호출한다.
+  // (기존에는 헤더 존재 여부만 확인해 임의 사용자 명의의 public 노드 삽입이 가능했음)
+  const bearer = authHeader.replace(/^Bearer\s+/i, "")
+  if (bearer !== serviceKey) {
+    return jsonResponse({ error: "Forbidden" }, 403)
+  }
+
   let body: { userId?: string; messages?: unknown[]; provider?: string; threadId?: string }
   try { body = await req.json() } catch { return jsonResponse({ error: "Invalid JSON" }, 400) }
 
