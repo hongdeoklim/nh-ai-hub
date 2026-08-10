@@ -360,6 +360,7 @@ async function invokeViaEdge(
     let doneUsage: InvokeAiChatSuccess['usage']
     let sawDoneEvent = false
     let receivedAnyText = false
+    let streamErrorMessage: string | null = null
     while (true) {
       if (params.signal?.aborted) {
         await reader.cancel().catch(() => undefined)
@@ -440,13 +441,14 @@ async function invokeViaEdge(
               model: typeof evt.model === 'string' ? evt.model : undefined,
             })
           } else if (evt.type === 'error') {
+            // 서버가 보낸 오류를 툴 트레이스에만 남기지 않고 실패로 승격한다
+            // (기존에는 사용자에게 빈 답변만 보였음)
+            streamErrorMessage =
+              typeof evt.message === 'string' ? evt.message : '스트림 오류'
             params.onToolTrace?.({
               at: new Date().toISOString(),
               phase: 'error',
-              message:
-                typeof evt.message === 'string'
-                  ? evt.message
-                  : '스트림 오류',
+              message: streamErrorMessage,
             })
           } else if (evt.type === 'route') {
             if (typeof evt.modelId === 'string') {
@@ -478,8 +480,17 @@ async function invokeViaEdge(
     }
     // done 이벤트 없이 스트림이 닫힘 = 엣지 함수 시간 초과 등 비정상 종료.
     // 텍스트를 일부라도 받았으면 이어쓰기 대상(interrupted)으로 알린다.
-    if (!sawDoneEvent && receivedAnyText) {
-      return { ok: true, finishReason: 'interrupted' }
+    if (!sawDoneEvent) {
+      if (streamErrorMessage && !receivedAnyText) {
+        return { ok: false, message: streamErrorMessage }
+      }
+      if (receivedAnyText) {
+        return { ok: true, finishReason: 'interrupted' }
+      }
+      return {
+        ok: false,
+        message: 'AI 응답을 받지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      }
     }
     return { ok: true, finishReason: doneFinishReason, usage: doneUsage }
   }

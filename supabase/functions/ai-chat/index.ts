@@ -93,6 +93,46 @@ const GUARDRAIL_BLOCK_MESSAGE =
 const TOKEN_EXHAUSTED_MESSAGE =
   "월간 토큰 한도를 초과하여 AI 요청을 처리할 수 없습니다. 관리자에게 문의하세요."
 
+// 미디어 생성 건당 정액 과금 (NH Credits — gemini-2.5-flash 토큰 환산 기준 추산)
+// image: dall-e-3 1024px ≈ $0.04, video: 외부 라우터 단가 보수 추산
+const MEDIA_FLAT_COST_TOKENS: Record<"image" | "video", number> = {
+  image: 20_000,
+  video: 200_000,
+}
+
+/** 미디어 생성(이미지/영상) 건당 정액 과금 기록 — token_logs + 원자적 사용량 증가 */
+async function recordFlatMediaUsage(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  kind: "image" | "video",
+  promptText: string,
+): Promise<void> {
+  const costTokens = MEDIA_FLAT_COST_TOKENS[kind]
+  try {
+    await admin.from("token_logs").insert({
+      user_id: userId,
+      ai_model: `media-${kind}`,
+      prompt_tokens: 0,
+      completion_tokens: costTokens,
+      total_cost: costTokens,
+      prompt_text: promptText ? promptText.substring(0, 200) : null,
+    })
+    const { error: rpcErr } = await admin.rpc("increment_token_usage", {
+      target_user_id: userId,
+      amount: costTokens,
+    })
+    if (rpcErr) {
+      const { data: row } = await admin
+        .from("users").select("current_token_usage").eq("id", userId).maybeSingle()
+      await admin.from("users")
+        .update({ current_token_usage: Number(row?.current_token_usage ?? 0) + costTokens })
+        .eq("id", userId)
+    }
+  } catch (e) {
+    console.error(`[ai-chat] media-${kind} 정액 과금 기록 실패`, e)
+  }
+}
+
 type ProviderKind =
   | "openai"
   | "anthropic"
@@ -930,7 +970,8 @@ async function evaluatePromptGuardrail(prompt: string): Promise<"PASS" | "BLOCK"
   const guardrailModelId = guardrailKind === "google"
     ? "gemini-2.5-flash"
     : guardrailKind === "anthropic"
-    ? "claude-3-5-haiku"
+    // 주의: 날짜 없는 "claude-3-5-haiku" 는 유효한 API ID가 아니라 항상 실패→PASS 폴백됐었음
+    ? "claude-3-5-haiku-latest"
     : "gpt-4o-mini"
 
   const guardrailModel = createLanguageModelForKind(
@@ -1148,10 +1189,45 @@ async function handleRequest(req: Request) {
     const peek = await req.clone().json().catch(() => null) as
       | Record<string, unknown>
       | null
-    if (peek && peek.actionType === "image") {
-      return handleMediaGeneration(req)
-    }
-    if (peek && peek.actionType === "video") {
+    if (peek && (peek.actionType === "image" || peek.actionType === "video")) {
+      // 미디어 생성도 텍스트 채팅과 동일하게 DLP·토큰 한도·과금을 적용한다.
+      // (과거에는 이 분기가 모든 통제를 우회했음 — 기획안 Phase 1-2)
+      const mediaSvcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      if (!mediaSvcKey) return jsonResponse({ error: "server_config" }, 500)
+      const mediaAdmin = createClient(supabaseUrl, mediaSvcKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      const mediaPrompt = typeof peek.prompt === "string" ? peek.prompt : ""
+
+      const { checkDlpViolation } = await import("../_shared/dlp-filter.ts")
+      const mediaDlp = checkDlpViolation(mediaPrompt)
+      if (mediaDlp.isViolated) {
+        return jsonResponse(
+          { error: `보안 규정 위반: ${mediaDlp.reason} (데이터가 외부 모델로 전송되지 않았습니다.)` },
+          403,
+        )
+      }
+
+      const { data: mediaProfile } = await mediaAdmin
+        .from("users")
+        .select("token_limit, current_token_usage")
+        .eq("id", user.id)
+        .maybeSingle()
+      const mediaLimit = Number(mediaProfile?.token_limit ?? 0)
+      const mediaUsage = Number(mediaProfile?.current_token_usage ?? 0)
+      if (mediaLimit > 0 && mediaUsage >= mediaLimit) {
+        return jsonResponse({ error: TOKEN_EXHAUSTED_MESSAGE }, 429)
+      }
+
+      const billMedia = (kind: "image" | "video") =>
+        recordFlatMediaUsage(mediaAdmin, user.id, kind, mediaPrompt)
+
+      if (peek.actionType === "image") {
+        const mediaRes = await handleMediaGeneration(req)
+        if (mediaRes.ok) await billMedia("image")
+        return mediaRes
+      }
+
       const body = await req.json()
       const mediaResult = await handleMediaRouterRequest({
         activeModel: typeof body.activeModel === "string"
@@ -1164,6 +1240,7 @@ async function handleRequest(req: Request) {
       if (!mediaResult.ok) {
         return jsonResponse({ ok: false, error: mediaResult.error }, mediaResult.status)
       }
+      await billMedia("video")
       return jsonResponse({
         ok: true,
         markdown: mediaResult.data.markdown,
@@ -1302,10 +1379,31 @@ async function handleRequest(req: Request) {
     }
     const finalUserPrompt = trimmedPrompt || "아름다운 풍경"
 
-    // Create a stream that will emit the image URL once the API returns
+    // 텍스트 채팅과 동일한 통제: 가드레일 + 토큰 한도 (기획안 Phase 1-2)
+    const dalleVerdict = await evaluatePromptGuardrail(finalUserPrompt)
+    if (dalleVerdict === "BLOCK") {
+      return jsonResponse({ error: GUARDRAIL_BLOCK_MESSAGE }, 422)
+    }
+    const dalleLimit = Number((profile as { token_limit?: number }).token_limit ?? 0)
+    const dalleUsage = Number(
+      (profile as { current_token_usage?: number }).current_token_usage ?? 0,
+    )
+    if (dalleLimit > 0 && dalleUsage >= dalleLimit) {
+      return jsonResponse({ error: TOKEN_EXHAUSTED_MESSAGE }, 429)
+    }
+    const dalleSvcKey = readEnv("SUPABASE_SERVICE_ROLE_KEY")
+    const dalleAdmin = dalleSvcKey
+      ? createClient(supabaseUrl, dalleSvcKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      : null
+
+    // 클라이언트 NDJSON 프로토콜({type:"text",delta}/{type:"done"})로 응답 + CORS 적용
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder()
+        const emit = (obj: Record<string, unknown>) =>
+          controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
         try {
           const res = await fetch("https://api.openai.com/v1/images/generations", {
             method: "POST",
@@ -1326,15 +1424,17 @@ async function handleRequest(req: Request) {
           }
           const imageUrl = json.data?.[0]?.url
           if (imageUrl) {
-            // Send standard Vercel AI SDK stream format for text chunk
-            const md = `![생성된 이미지](${imageUrl})`;
-            controller.enqueue(encoder.encode(`0:${JSON.stringify(md)}\n`))
+            emit({ type: "text", delta: `![생성된 이미지](${imageUrl})` })
+            emit({ type: "done", finishReason: "stop" })
+            if (dalleAdmin) {
+              await recordFlatMediaUsage(dalleAdmin, user.id, "image", finalUserPrompt)
+            }
           } else {
             throw new Error("이미지 URL을 받지 못했습니다.")
           }
-        } catch (err: any) {
-          const errMsg = `이미지 생성 중 오류가 발생했습니다: ${err.message}`;
-          controller.enqueue(encoder.encode(`0:${JSON.stringify(errMsg)}\n`))
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          emit({ type: "error", message: `이미지 생성 중 오류가 발생했습니다: ${message}` })
         } finally {
           controller.close()
         }
@@ -1342,10 +1442,10 @@ async function handleRequest(req: Request) {
     })
 
     return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "x-vercel-ai-data-stream": "v1"
-      }
+      headers: withCors({
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-cache",
+      }),
     })
   }
 
@@ -1743,35 +1843,46 @@ async function handleRequest(req: Request) {
         inputTokens?: number
         outputTokens?: number
       }
+      /** AI SDK onFinish 이벤트가 함께 전달하는 최종 응답 텍스트 (추정 과금 폴백용) */
+      text?: string
     }) => {
       try {
         const usage = event.totalUsage
-        const promptTok = Math.max(
+        let promptTok = Math.max(
           0,
           Math.round(Number(usage.inputTokens ?? 0)),
         )
-        const completionTok = Math.max(
+        let completionTok = Math.max(
           0,
           Math.round(Number(usage.outputTokens ?? 0)),
         )
-        const totalTok = promptTok + completionTok
 
-        if (totalTok <= 0) {
+        if (promptTok + completionTok <= 0) {
+          // 프로바이더가 usage 를 안 준 경우 — 무과금 통과 대신 글자수 기반 추정 과금.
+          // (한국어 혼합 텍스트 기준 보수적으로 3자 ≈ 1토큰)
+          const contextChars = conversationMessages
+            .map((m) => (typeof m.content === "string" ? m.content.length : 0))
+            .reduce((a, b) => a + b, 0) + trimmedPrompt.length
+          promptTok = Math.ceil(contextChars / 3)
+          completionTok = Math.ceil((event.text?.length ?? 0) / 3)
           console.warn(
-            "[ai-chat] usage.totalTokens=0 — provider did not report token counts",
+            `[ai-chat] provider usage 미보고 → 추정 과금 적용 (prompt≈${promptTok}, completion≈${completionTok})`,
           )
-          return
+          if (promptTok + completionTok <= 0) return
         }
 
         let promptWeight = getTokenWeight(modelIdUsed)
         let completionWeight = getTokenWeight(modelIdUsed)
 
         try {
-          const { data: modelData } = await adminClient
+          // DB 에는 가상 ID(요청값)로 저장된 경우가 많아 실호출 ID와 양쪽으로 조회한다.
+          const weightKeys = [...new Set([modelIdUsed, model])].filter(Boolean)
+          const { data: modelRows } = await adminClient
             .from("ai_models")
-            .select("prompt_weight, completion_weight")
-            .eq("api_id", modelIdUsed)
-            .maybeSingle()
+            .select("api_id, prompt_weight, completion_weight")
+            .in("api_id", weightKeys)
+          const modelData =
+            modelRows?.find((r) => r.api_id === modelIdUsed) ?? modelRows?.[0]
 
           if (modelData) {
             promptWeight = Number(modelData.prompt_weight) || promptWeight
@@ -1782,7 +1893,6 @@ async function handleRequest(req: Request) {
         }
 
         const costTokens = (promptTok * promptWeight) + (completionTok * completionWeight)
-        const totalCost = Number((costTokens * 0.000001).toFixed(8))
 
         const { error: logErr } = await adminClient.from("token_logs").insert({
           user_id: user.id,
@@ -1796,25 +1906,26 @@ async function handleRequest(req: Request) {
           console.error("[ai-chat] token_logs insert 실패", logErr)
         }
 
-        const { data: usageRow, error: readErr } = await adminClient
-          .from("users")
-          .select("current_token_usage")
-          .eq("id", user.id)
-          .maybeSingle()
-
-        if (readErr) {
-          console.error("[ai-chat] users 조회 실패", readErr)
-          return
-        }
-
-        const base = Number(usageRow?.current_token_usage ?? 0)
-        const { error: updErr } = await adminClient
-          .from("users")
-          .update({ current_token_usage: base + costTokens })
-          .eq("id", user.id)
-
-        if (updErr) {
-          console.error("[ai-chat] current_token_usage 업데이트 실패", updErr)
+        // 동시 요청 시 갱신 유실을 막기 위해 원자적 RPC 사용 (dify-chat-proxy 와 동일 규약)
+        const { error: rpcErr } = await adminClient.rpc("increment_token_usage", {
+          target_user_id: user.id,
+          amount: costTokens,
+        })
+        if (rpcErr) {
+          console.error("[ai-chat] increment_token_usage RPC 실패 — read-modify-write 폴백", rpcErr)
+          const { data: usageRow } = await adminClient
+            .from("users")
+            .select("current_token_usage")
+            .eq("id", user.id)
+            .maybeSingle()
+          const base = Number(usageRow?.current_token_usage ?? 0)
+          const { error: updErr } = await adminClient
+            .from("users")
+            .update({ current_token_usage: base + costTokens })
+            .eq("id", user.id)
+          if (updErr) {
+            console.error("[ai-chat] current_token_usage 업데이트 실패", updErr)
+          }
         }
       } catch (persistErr) {
         console.error("[ai-chat] onFinish 처리 예외", persistErr)

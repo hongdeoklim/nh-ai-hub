@@ -55,7 +55,9 @@ export default async function handler(req: Request): Promise<Response> {
       .single()
 
     if (profile) {
-      if (profile.current_token_usage >= profile.token_limit) {
+      // token_limit 0 = 무제한 (ai-chat 과 동일 정책)
+      const limit = Number(profile.token_limit ?? 0)
+      if (limit > 0 && Number(profile.current_token_usage ?? 0) >= limit) {
         return jsonResponse(
           { error: "월간 토큰 한도를 초과하여 AI 요청을 처리할 수 없습니다. 관리자에게 문의하세요." },
           403
@@ -109,14 +111,18 @@ export default async function handler(req: Request): Promise<Response> {
       console.error("Dify request parsing or weight fetch error", e)
     }
 
+    // SSE 파싱용 버퍼 — 청크 경계에서 잘린 message_end 이벤트 유실(정산 누락)과
+    // 멀티바이트 문자 깨짐을 막기 위해 단일 decoder + 줄 버퍼를 유지한다.
+    const sseDecoder = new TextDecoder()
+    let sseBuffer = ""
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         controller.enqueue(chunk)
-        
+
         // 토큰 정산 (비동기)
-        const decoder = new TextDecoder()
-        const text = decoder.decode(chunk)
-        const lines = text.split("\n")
+        sseBuffer += sseDecoder.decode(chunk, { stream: true })
+        const lines = sseBuffer.split("\n")
+        sseBuffer = lines.pop() || ""
         for (const line of lines) {
           if (line.trim().startsWith("data: ")) {
             try {
