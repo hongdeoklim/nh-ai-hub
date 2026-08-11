@@ -10,6 +10,7 @@ import { tool, zodSchema } from "npm:ai@6.0.184"
 import { z } from "npm:zod@4.4.3"
 
 import {
+  prepareMatchesForModel,
   retrieveCompanyDocumentMatches,
   type CompanyDocumentMatch,
 } from "../_shared/company-documents-rag.ts"
@@ -616,17 +617,55 @@ async function executeSearchCompanyDocuments(
     }
   }
   try {
-    const matches = await retrieveCompanyDocumentMatches({
+    const requestedCount =
+      typeof input.match_count === "number" && input.match_count > 0
+        ? Math.min(Math.round(input.match_count), 25)
+        : 5
+    // 리랭커가 있으면 1차로 넉넉히(15) 가져와 LLM 재정렬 후 상위만 반환한다
+    // (work_cases 경로와 동일 패턴 — 기획안 D4)
+    const useReranker = typeof ctx.rerankCases === "function"
+    const firstStageCount = useReranker
+      ? Math.max(15, requestedCount)
+      : requestedCount
+
+    const rawMatches = await retrieveCompanyDocumentMatches({
       admin: ctx.admin,
       userClient: ctx.supabaseUser,
       geminiKey: ctx.geminiKey,
       openaiKey: ctx.openaiKey,
       query: input.query,
-      matchCount: input.match_count,
+      matchCount: firstStageCount,
       similarityThreshold: input.similarity_threshold,
       logUserId: ctx.userId ?? null,
     })
-    return { ok: true, matches }
+
+    let matches = rawMatches
+    if (useReranker && rawMatches.length > 1) {
+      try {
+        type ShapedMatch = { title: string; content: string; __match: CompanyDocumentMatch }
+        const shaped: ShapedMatch[] = rawMatches.map((m) => ({
+          title: m.fileName,
+          content: m.content,
+          __match: m,
+        }))
+        const reranked = await ctx.rerankCases!(input.query, shaped)
+        matches = (reranked as ShapedMatch[])
+          .map((r) => r.__match)
+          .filter(Boolean)
+          .slice(0, requestedCount)
+      } catch (rerankErr) {
+        console.error(
+          "[mcp-tools] 사내 문서 리랭킹 실패 — 하이브리드 순위 유지:",
+          rerankErr,
+        )
+        matches = rawMatches.slice(0, requestedCount)
+      }
+    } else {
+      matches = rawMatches.slice(0, requestedCount)
+    }
+
+    // 비가독 청크 제거 + 인젝션 살균 + 인용 번호 재부여 후 모델에 전달 (D3)
+    return { ok: true, matches: prepareMatchesForModel(matches) }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     return { ok: false, error: msg }
