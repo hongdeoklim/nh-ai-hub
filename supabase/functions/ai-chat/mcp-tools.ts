@@ -362,8 +362,8 @@ export const MCP_COMPANY_RAG_TOOL_GUIDANCE = `
 
 ## 사내 문서 검색 (search_company_documents)
 규정·매뉴얼·내부 자료·업무 절차 등 **회사 내부 지식**이 필요하면 search_company_documents 를 호출하라.
-- 시스템 프롬프트에 이미 주입된 RAG 블록과 도구 결과를 **함께** 근거로 사용하라.
-- 인용 시 **[1], [2], [3]** … 번호를 문장 끝에 붙이고, 검색 결과에 없는 사실은 추측하지 마라.
+- 인용 시 도구 결과 각 항목의 **index 필드 번호**를 그대로 [1], [2], [3] … 형태로 문장 끝에 붙여라.
+- 검색 결과에 없는 사실은 추측하지 마라.
 - 개인정보·계약 비밀은 인용·재전달하지 마라.`
 
 export const MCP_KNOWLEDGE_AGENT_TOOL_GUIDANCE = `
@@ -637,35 +637,52 @@ async function executeSearchCompanyDocuments(
       matchCount: firstStageCount,
       similarityThreshold: input.similarity_threshold,
       logUserId: ctx.userId ?? null,
+      logExtra: {
+        requested_count: requestedCount,
+        first_stage_count: firstStageCount,
+        reranker_enabled: useReranker,
+      },
     })
 
-    let matches = rawMatches
-    if (useReranker && rawMatches.length > 1) {
+    // 비가독 청크 제거 + 인젝션 살균을 리랭크 **이전**에 적용 —
+    // 문서에 심긴 인젝션이 리랭커 LLM 순위를 조작하지 못하게 하고,
+    // 상위 슬라이스에서 비가독 청크로 결과 수가 깎이지 않게 한다 (D3)
+    const cleaned = prepareMatchesForModel(rawMatches)
+
+    let matches = cleaned
+    if (useReranker && cleaned.length > 1) {
       try {
         type ShapedMatch = { title: string; content: string; __match: CompanyDocumentMatch }
-        const shaped: ShapedMatch[] = rawMatches.map((m) => ({
+        const shaped: ShapedMatch[] = cleaned.map((m) => ({
           title: m.fileName,
           content: m.content,
           __match: m,
         }))
         const reranked = await ctx.rerankCases!(input.query, shaped)
         matches = (reranked as ShapedMatch[])
-          .map((r) => r.__match)
+          .map((r) => r?.__match)
           .filter(Boolean)
           .slice(0, requestedCount)
+        // 리랭커가 형태를 재구성해 __match 가 유실되는 미래 변경에 대한 방어
+        if (matches.length === 0 && cleaned.length > 0) {
+          matches = cleaned.slice(0, requestedCount)
+        }
       } catch (rerankErr) {
         console.error(
           "[mcp-tools] 사내 문서 리랭킹 실패 — 하이브리드 순위 유지:",
           rerankErr,
         )
-        matches = rawMatches.slice(0, requestedCount)
+        matches = cleaned.slice(0, requestedCount)
       }
     } else {
-      matches = rawMatches.slice(0, requestedCount)
+      matches = cleaned.slice(0, requestedCount)
     }
 
-    // 비가독 청크 제거 + 인젝션 살균 + 인용 번호 재부여 후 모델에 전달 (D3)
-    return { ok: true, matches: prepareMatchesForModel(matches) }
+    // 최종 순서 기준으로 인용 번호 재부여
+    return {
+      ok: true,
+      matches: matches.map((m, i) => ({ ...m, index: i + 1 })),
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     return { ok: false, error: msg }

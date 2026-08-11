@@ -56,6 +56,8 @@ export async function retrieveCompanyDocumentMatches(params: {
   logUserId?: string | null
   /** 계측 소스 구분 — 평가/진단 발 검색이 실트래픽 지표를 오염시키지 않도록 지정 */
   logSource?: "company_documents" | "rag_eval" | "admin_diagnostic"
+  /** 계측 extra 에 병합할 호출 맥락 (예: 리랭크 여부, 요청/1차 건수) */
+  logExtra?: Record<string, unknown>
 }): Promise<CompanyDocumentMatch[]> {
   if (!isCompanyRagEnabled()) return []
 
@@ -161,6 +163,7 @@ export async function retrieveCompanyDocumentMatches(params: {
     })),
     latencyMs: Date.now() - startedAt,
     userId: params.logUserId ?? null,
+    extra: params.logExtra,
   })
 
   return matches
