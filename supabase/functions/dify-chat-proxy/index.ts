@@ -115,7 +115,45 @@ export default async function handler(req: Request): Promise<Response> {
     // 멀티바이트 문자 깨짐을 막기 위해 단일 decoder + 줄 버퍼를 유지한다.
     const sseDecoder = new TextDecoder()
     let sseBuffer = ""
+    const settleLine = (line: string) => {
+      if (!line.trim().startsWith("data: ")) return
+      try {
+        const data = JSON.parse(line.trim().slice(6))
+        if (data.event === "message_end" && data.metadata?.usage) {
+          const promptTokens = data.metadata.usage.prompt_tokens || 0
+          const completionTokens = data.metadata.usage.completion_tokens || 0
+          const costTokens = (promptTokens * promptWeight) + (completionTokens * completionWeight)
+
+          Promise.all([
+            adminClient.rpc("increment_token_usage", {
+              target_user_id: user.id,
+              amount: costTokens
+            }).then(({ error }) => {
+              if (error) {
+                return adminClient.from("users")
+                  .update({ current_token_usage: (profile?.current_token_usage || 0) + costTokens })
+                  .eq("id", user.id)
+              }
+            }),
+            adminClient.from("token_logs").insert({
+              user_id: user.id,
+              ai_model: "dify-ax",
+              prompt_tokens: promptTokens * promptWeight,
+              completion_tokens: completionTokens * completionWeight,
+              total_cost: costTokens,
+              prompt_text: promptText
+            })
+          ]).catch(err => console.error("Token log error:", err))
+        }
+      } catch (_e) {
+        // 불완전 청크 파싱 실패는 무시
+      }
+    }
     const transformStream = new TransformStream({
+      flush() {
+        // 스트림이 개행 없이 끝나면 버퍼에 남은 마지막 이벤트도 정산한다
+        if (sseBuffer.trim().length > 0) settleLine(sseBuffer)
+      },
       transform(chunk, controller) {
         controller.enqueue(chunk)
 
@@ -124,44 +162,7 @@ export default async function handler(req: Request): Promise<Response> {
         const lines = sseBuffer.split("\n")
         sseBuffer = lines.pop() || ""
         for (const line of lines) {
-          if (line.trim().startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.trim().slice(6))
-              if (data.event === "message_end" && data.metadata?.usage) {
-                const promptTokens = data.metadata.usage.prompt_tokens || 0
-                const completionTokens = data.metadata.usage.completion_tokens || 0
-                const totalRaw = promptTokens + completionTokens
-                
-                // 가중치 적용
-                const costTokens = (promptTokens * promptWeight) + (completionTokens * completionWeight)
-
-                // 백그라운드 DB 기록
-                Promise.all([
-                  adminClient.rpc("increment_token_usage", {
-                    target_user_id: user.id,
-                    amount: costTokens
-                  }).then(({ error }) => {
-                    if (error) {
-                      // RPC 없으면 fallback
-                      return adminClient.from("users")
-                        .update({ current_token_usage: (profile?.current_token_usage || 0) + costTokens })
-                        .eq("id", user.id)
-                    }
-                  }),
-                  adminClient.from("token_logs").insert({
-                    user_id: user.id,
-                    ai_model: "dify-ax",
-                    prompt_tokens: promptTokens * promptWeight,
-                    completion_tokens: completionTokens * completionWeight,
-                    total_cost: costTokens,
-                    prompt_text: promptText
-                  })
-                ]).catch(err => console.error("Token log error:", err))
-              }
-            } catch (e) {
-              // Parse error on incomplete chunk
-            }
-          }
+          settleLine(line)
         }
       }
     })
