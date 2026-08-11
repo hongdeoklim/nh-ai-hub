@@ -46,7 +46,8 @@ Deno.serve(async (req) => {
 
     // 3. Get Dify API keys
     // In production, these should be set in Supabase Edge Function Secrets
-    const difyApiUrl = Deno.env.get("DIFY_DATASET_API_URL") || "http://dify.nhnetworks.co.kr/v1/datasets"
+    const difyApiUrl = Deno.env.get("DIFY_DATASET_API_URL")
+      || `${(Deno.env.get("DIFY_API_URL") || "http://dify.nhnetworks.co.kr").replace(/\/$/, "")}/v1/datasets`
     const difyDatasetId = Deno.env.get("DIFY_DATASET_ID")
     const difyApiKey = Deno.env.get("DIFY_DATASET_API_KEY")
 

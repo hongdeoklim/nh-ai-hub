@@ -7,9 +7,9 @@ import { handleCorsPreflight, jsonResponse } from "../_shared/cors.ts"
  * Dify 서버가 사내 직원 데이터를 필요로 할 때 호출하는 API 엔드포인트입니다.
  */
 
-// DIFY 연동 시 사용할 API KEY (임의로 설정)
 // Dify Custom Tool 등록 시 헤더에 Authorization: Bearer <DIFY_HUB_SECRET> 형태로 전송
-const REQUIRED_SECRET = Deno.env.get("DIFY_HUB_SECRET") || "nh-dify-secret-key-1234"
+// 보안: 폴백 시크릿 금지 — 미설정 시 503으로 명시 실패한다.
+const REQUIRED_SECRET = Deno.env.get("DIFY_HUB_SECRET") || ""
 
 export default async function handler(req: Request): Promise<Response> {
   // 1. CORS 프리플라이트 처리
@@ -18,6 +18,9 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     // 2. 인증 (Authorization Bearer 토큰 확인)
+    if (!REQUIRED_SECRET) {
+      return jsonResponse({ error: "DIFY_HUB_SECRET is not configured." }, 503)
+    }
     const authHeader = req.headers.get("Authorization")
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return jsonResponse({ error: "Unauthorized" }, 401)

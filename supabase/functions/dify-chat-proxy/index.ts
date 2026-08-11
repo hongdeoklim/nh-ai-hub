@@ -8,7 +8,10 @@ import { getTokenWeight } from "../_shared/token-costs.ts"
  * 프론트엔드 통신 에러 방지 및 사내 토큰 한도/비용 통제를 수행합니다.
  */
 
-const DIFY_API_URL = "http://dify.nhnetworks.co.kr/v1/chat-messages"
+// DIFY_API_URL 시크릿(베이스 URL)로 오버라이드 가능 — dify-sync-webhook 과 동일 규약.
+// TODO: Dify 서버에 TLS 인증서 적용 후 기본값을 https 로 전환할 것 (현재 서버가 HTTPS 미지원).
+const DIFY_BASE_URL = (Deno.env.get("DIFY_API_URL") || "http://dify.nhnetworks.co.kr").replace(/\/$/, "")
+const DIFY_API_URL = `${DIFY_BASE_URL}/v1/chat-messages`
 
 export default async function handler(req: Request): Promise<Response> {
   const preflight = handleCorsPreflight(req)
@@ -52,7 +55,9 @@ export default async function handler(req: Request): Promise<Response> {
       .single()
 
     if (profile) {
-      if (profile.current_token_usage >= profile.token_limit) {
+      // token_limit 0 = 무제한 (ai-chat 과 동일 정책)
+      const limit = Number(profile.token_limit ?? 0)
+      if (limit > 0 && Number(profile.current_token_usage ?? 0) >= limit) {
         return jsonResponse(
           { error: "월간 토큰 한도를 초과하여 AI 요청을 처리할 수 없습니다. 관리자에게 문의하세요." },
           403
@@ -106,53 +111,62 @@ export default async function handler(req: Request): Promise<Response> {
       console.error("Dify request parsing or weight fetch error", e)
     }
 
+    // SSE 파싱용 버퍼 — 청크 경계에서 잘린 message_end 이벤트 유실(정산 누락)과
+    // 멀티바이트 문자 깨짐을 막기 위해 단일 decoder + 줄 버퍼를 유지한다.
+    const sseDecoder = new TextDecoder()
+    let sseBuffer = ""
+    const settleLine = (line: string) => {
+      if (!line.trim().startsWith("data: ")) return
+      try {
+        const data = JSON.parse(line.trim().slice(6))
+        if (data.event === "message_end" && data.metadata?.usage) {
+          const promptTokens = data.metadata.usage.prompt_tokens || 0
+          const completionTokens = data.metadata.usage.completion_tokens || 0
+          const costTokens = (promptTokens * promptWeight) + (completionTokens * completionWeight)
+
+          const settlement = Promise.all([
+            adminClient.rpc("increment_token_usage", {
+              target_user_id: user.id,
+              amount: costTokens
+            }).then(({ error }) => {
+              if (error) {
+                return adminClient.from("users")
+                  .update({ current_token_usage: (profile?.current_token_usage || 0) + costTokens })
+                  .eq("id", user.id)
+              }
+            }),
+            adminClient.from("token_logs").insert({
+              user_id: user.id,
+              ai_model: "dify-ax",
+              prompt_tokens: promptTokens * promptWeight,
+              completion_tokens: completionTokens * completionWeight,
+              total_cost: costTokens,
+              prompt_text: promptText
+            })
+          ]).catch(err => console.error("Token log error:", err))
+          // 응답 종료 직후 워커가 회수돼도 정산 Promise 가 완료되도록 등록
+          ;(globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } })
+            .EdgeRuntime?.waitUntil?.(settlement)
+        }
+      } catch (_e) {
+        // 불완전 청크 파싱 실패는 무시
+      }
+    }
     const transformStream = new TransformStream({
+      flush() {
+        // 스트림이 개행 없이 끝나면 버퍼에 남은 마지막 이벤트도 정산한다
+        sseBuffer += sseDecoder.decode() // 멀티바이트 꼬리 바이트 최종 플러시
+        if (sseBuffer.trim().length > 0) settleLine(sseBuffer)
+      },
       transform(chunk, controller) {
         controller.enqueue(chunk)
-        
-        // 토큰 정산 (비동기)
-        const decoder = new TextDecoder()
-        const text = decoder.decode(chunk)
-        const lines = text.split("\n")
-        for (const line of lines) {
-          if (line.trim().startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.trim().slice(6))
-              if (data.event === "message_end" && data.metadata?.usage) {
-                const promptTokens = data.metadata.usage.prompt_tokens || 0
-                const completionTokens = data.metadata.usage.completion_tokens || 0
-                const totalRaw = promptTokens + completionTokens
-                
-                // 가중치 적용
-                const costTokens = (promptTokens * promptWeight) + (completionTokens * completionWeight)
 
-                // 백그라운드 DB 기록
-                Promise.all([
-                  adminClient.rpc("increment_token_usage", {
-                    target_user_id: user.id,
-                    amount: costTokens
-                  }).then(({ error }) => {
-                    if (error) {
-                      // RPC 없으면 fallback
-                      return adminClient.from("users")
-                        .update({ current_token_usage: (profile?.current_token_usage || 0) + costTokens })
-                        .eq("id", user.id)
-                    }
-                  }),
-                  adminClient.from("token_logs").insert({
-                    user_id: user.id,
-                    ai_model: "dify-ax",
-                    prompt_tokens: promptTokens * promptWeight,
-                    completion_tokens: completionTokens * completionWeight,
-                    total_cost: costTokens,
-                    prompt_text: promptText
-                  })
-                ]).catch(err => console.error("Token log error:", err))
-              }
-            } catch (e) {
-              // Parse error on incomplete chunk
-            }
-          }
+        // 토큰 정산 (비동기)
+        sseBuffer += sseDecoder.decode(chunk, { stream: true })
+        const lines = sseBuffer.split("\n")
+        sseBuffer = lines.pop() || ""
+        for (const line of lines) {
+          settleLine(line)
         }
       }
     })

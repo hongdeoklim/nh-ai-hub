@@ -656,18 +656,12 @@ export class NHSmartRoutingController {
       }
 
       if (!crawledData) {
-        console.log("[NH-Smart-Router] CORP_DATA_PORTAL_API_KEY 미설정 또는 오류로 기본 사내 목업 입찰 공고 정보를 제공합니다.");
-        crawledData = {
-          source: "조달청 나라장터 입찰공고 API (Mockup)",
-          queryTime: new Date().toISOString(),
-          items: [
-            { title: "농협네트웍스 시설 개선 공사 입찰", status: "공고중", price: "550,000,000 KRW" },
-            { title: "사내 패키지 위탁 운영 입찰", status: "마감", price: "120,000,000 KRW" }
-          ]
-        };
+        // 목업 데이터 주입 금지 — 모델이 허위 입찰 정보를 사실처럼 답하는 것을 방지한다.
+        console.warn("[NH-Smart-Router] 조달청 공공데이터 조회 실패 — 실패 사실을 프롬프트에 명시합니다.");
+        verifiedPrompt = `${verifiedPrompt}\n\n[조달청 공공데이터]: 실시간 조회에 실패했습니다(API 키 미설정 또는 오류). 입찰 공고 정보를 추측하거나 지어내지 말고, 조회가 불가했음을 사용자에게 알리세요.`;
+      } else {
+        verifiedPrompt = `${verifiedPrompt}\n\n[사전 수집 조달청 공공데이터]:\n${JSON.stringify(crawledData, null, 2)}`;
       }
-
-      verifiedPrompt = `${verifiedPrompt}\n\n[사전 수집 조달청 공공데이터]:\n${JSON.stringify(crawledData, null, 2)}`;
     }
 
     return {
