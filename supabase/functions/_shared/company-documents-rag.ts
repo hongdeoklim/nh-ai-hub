@@ -54,6 +54,8 @@ export async function retrieveCompanyDocumentMatches(params: {
   similarityThreshold?: number
   /** 계측 로그(rag_retrieval_logs)에 남길 사용자 — 없으면 익명 기록 */
   logUserId?: string | null
+  /** 계측 소스 구분 — 평가/진단 발 검색이 실트래픽 지표를 오염시키지 않도록 지정 */
+  logSource?: "company_documents" | "rag_eval" | "admin_diagnostic"
 }): Promise<CompanyDocumentMatch[]> {
   if (!isCompanyRagEnabled()) return []
 
@@ -150,7 +152,7 @@ export async function retrieveCompanyDocumentMatches(params: {
   }))
 
   logRagRetrieval(params.admin, {
-    source: "company_documents",
+    source: params.logSource ?? "company_documents",
     query: q,
     results: matches.map((m) => ({
       id: m.id,

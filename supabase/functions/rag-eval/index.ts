@@ -61,7 +61,10 @@ Deno.serve(async (req) => {
   const cases: GoldenCase[] = Array.isArray(body.cases) && body.cases.length > 0
     ? body.cases
     : DEFAULT_GOLDEN_CASES
-  const matchCount = Math.min(Math.max(Number(body.matchCount ?? 5), 1), 20)
+  const rawMatchCount = Number(body.matchCount)
+  const matchCount = Number.isFinite(rawMatchCount)
+    ? Math.min(Math.max(Math.round(rawMatchCount), 1), 20)
+    : 5
 
   const results: Array<Record<string, unknown>> = []
   let scored = 0
@@ -101,6 +104,7 @@ Deno.serve(async (req) => {
           geminiKey,
           query,
           matchCount,
+          logSource: "rag_eval", // 실트래픽 지표(company_documents) 오염 방지
         })
         top = matches.map((m) => ({ id: m.id, label: m.fileName, similarity: m.similarity }))
       }

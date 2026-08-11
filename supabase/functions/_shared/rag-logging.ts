@@ -14,6 +14,7 @@ export type RagRetrievalLogEntry = {
     | "dify_bridge_documents"
     | "dify_bridge_cases"
     | "rag_eval"
+    | "admin_diagnostic"
   query: string
   results: Array<{ id: string; label: string; similarity: number }>
   latencyMs: number
