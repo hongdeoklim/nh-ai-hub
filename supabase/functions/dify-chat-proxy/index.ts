@@ -124,7 +124,7 @@ export default async function handler(req: Request): Promise<Response> {
           const completionTokens = data.metadata.usage.completion_tokens || 0
           const costTokens = (promptTokens * promptWeight) + (completionTokens * completionWeight)
 
-          Promise.all([
+          const settlement = Promise.all([
             adminClient.rpc("increment_token_usage", {
               target_user_id: user.id,
               amount: costTokens
@@ -144,6 +144,9 @@ export default async function handler(req: Request): Promise<Response> {
               prompt_text: promptText
             })
           ]).catch(err => console.error("Token log error:", err))
+          // 응답 종료 직후 워커가 회수돼도 정산 Promise 가 완료되도록 등록
+          ;(globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } })
+            .EdgeRuntime?.waitUntil?.(settlement)
         }
       } catch (_e) {
         // 불완전 청크 파싱 실패는 무시
@@ -152,6 +155,7 @@ export default async function handler(req: Request): Promise<Response> {
     const transformStream = new TransformStream({
       flush() {
         // 스트림이 개행 없이 끝나면 버퍼에 남은 마지막 이벤트도 정산한다
+        sseBuffer += sseDecoder.decode() // 멀티바이트 꼬리 바이트 최종 플러시
         if (sseBuffer.trim().length > 0) settleLine(sseBuffer)
       },
       transform(chunk, controller) {

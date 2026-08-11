@@ -39,7 +39,8 @@ import {
   WEB_SEARCH_GEMINI_GROUNDING_GUIDANCE,
   WEB_SEARCH_PREFETCH_GUIDANCE,
 } from "../_shared/web-search-routing.ts"
-import { loadUserGoogleRefreshToken } from "../_shared/google-user-access-token.ts"
+// loadUserGoogleRefreshToken 은 이 파일 하단의 동명 로컬 함수를 사용한다
+// (임포트와 동명 선언이 공존하면 deno check TS2440 으로 차단됨)
 import { createGoogleWorkspaceAgentTools } from "../_shared/google-workspace-agent-tools.ts"
 import {
   buildMcpCoreAiSdkTools,
@@ -1240,7 +1241,9 @@ async function handleRequest(req: Request) {
       if (!mediaResult.ok) {
         return jsonResponse({ ok: false, error: mediaResult.error }, mediaResult.status)
       }
-      await billMedia("video")
+      // 과금 없음: 현재 video 경로는 외부 생성 API 호출 없이 정적 안내 마크다운만
+      // 반환한다(mediaRouter.buildVideoGuidanceMarkdown). 실제 백엔드가 붙으면
+      // billMedia("video") 를 복원할 것.
       return jsonResponse({
         ok: true,
         markdown: mediaResult.data.markdown,
@@ -1860,9 +1863,10 @@ async function handleRequest(req: Request) {
         if (promptTok + completionTok <= 0) {
           // 프로바이더가 usage 를 안 준 경우 — 무과금 통과 대신 글자수 기반 추정 과금.
           // (한국어 혼합 텍스트 기준 보수적으로 3자 ≈ 1토큰)
+          // conversationMessages 에는 현재 사용자 턴이 이미 포함돼 있다 (이중 계산 금지)
           const contextChars = conversationMessages
             .map((m) => (typeof m.content === "string" ? m.content.length : 0))
-            .reduce((a, b) => a + b, 0) + trimmedPrompt.length
+            .reduce((a, b) => a + b, 0)
           promptTok = Math.ceil(contextChars / 3)
           completionTok = Math.ceil((event.text?.length ?? 0) / 3)
           console.warn(
