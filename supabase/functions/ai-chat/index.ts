@@ -1761,7 +1761,7 @@ async function handleRequest(req: Request) {
           })()
         : undefined,
       userRefreshToken: googleRefresh ?? undefined,
-      supabaseUser,
+      userId: user.id,
     }
 
     const coreMcpTools = buildMcpCoreAiSdkTools(mcpToolCtx, mcpToolFlags)

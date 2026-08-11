@@ -114,6 +114,11 @@ verify_jwt = false
 [functions.dify-knowledge-bridge]
 verify_jwt = false
 
+# rag-eval: RAG 골든셋 회귀 평가. OPTIONS 프리플라이트는 JWT 없이 오고,
+# POST 는 함수 내부에서 관리자 JWT 또는 서비스 롤 키를 검증한다.
+[functions.rag-eval]
+verify_jwt = false
+
 # plugin-*-bridge: Authorization 헤더를 Jira/Slack/GitHub 등 실제 3rd-party
 # 자격증명 전달용으로 쓰므로 Supabase 게이트웨이 JWT 검증을 끄고, 대신
 # X-NH-Internal-Secret 공유 시크릿으로 ai-chat 서버발 호출만 허용합니다

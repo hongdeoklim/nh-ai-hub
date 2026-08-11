@@ -326,6 +326,7 @@ Deno.serve(async (req) => {
       geminiKey: readEnv("GEMINI_API_KEY"),
       openaiKey: readEnv("OPENAI_API_KEY"),
       query,
+      logSource: "admin_diagnostic", // 관리 미리보기 — 실트래픽 지표와 분리
       matchCount: Math.min(Math.max(Number(body.matchCount ?? 8), 1), 20),
       similarityThreshold: 0.2,
     })
