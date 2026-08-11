@@ -14,8 +14,8 @@
 --  키워드-only 행의 similarity 는 word_similarity 값(0~1)으로 채워 병합 정렬에서
 --  0.0 고정 페널티를 제거한다.
 --
--- 주의: pg_trgm 은 extensions 스키마에 설치되므로 함수 search_path 에
---  extensions 를 포함해야 %/<% 연산자가 해석된다.
+-- 주의: pg_trgm 설치 스키마가 환경마다 다를 수 있어(기존 20260605 는 무스키마 설치)
+--  세션·함수 search_path 에 public, extensions 를 모두 포함한다.
 -- =============================================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions;
@@ -36,8 +36,14 @@ CREATE INDEX IF NOT EXISTS work_cases_text_trgm_idx
 -- -----------------------------------------------------------------------------
 -- 사내 문서 하이브리드 (시그니처·반환 컬럼 기존과 동일 — 호출부 무변경)
 -- fts_rank 컬럼은 이제 word_similarity(0~1) 값을 담는다.
+--
+-- DROP 선행: 리포지토리에 5컬럼 반환판(20260611233743)과 7컬럼판(20260612100000)이
+-- 공존해, 환경에 따라 5컬럼판이 살아있으면 CREATE OR REPLACE 가 42P13
+-- (반환타입 변경 불가)으로 실패한다. 안전하게 DROP 후 재생성한다.
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.match_documents_hybrid(
+DROP FUNCTION IF EXISTS public.match_documents_hybrid(vector, text, integer, double precision, integer);
+
+CREATE FUNCTION public.match_documents_hybrid(
   query_embedding vector(768),
   query_text text,
   match_count integer DEFAULT 5,
@@ -57,12 +63,14 @@ LANGUAGE plpgsql
 VOLATILE
 SECURITY DEFINER
 SET search_path = public, extensions
+-- 한국어 짧은 질의용 word similarity 하한 (기본 0.6 → 0.30, 함수 종료 시 자동 복원)
+SET pg_trgm.word_similarity_threshold = 0.30
 AS $$
 DECLARE
   n integer := LEAST(GREATEST(COALESCE(match_count, 5), 1), 25);
 BEGIN
-  -- 한국어 짧은 질의에 맞춰 word similarity 하한을 요청 범위에서 완화 (기본 0.6 → 0.30)
-  PERFORM set_config('pg_trgm.word_similarity_threshold', '0.30', true);
+  -- HNSW 스캔 후보 수가 ef_search(기본 40)에 캡되지 않도록 요청 크기에 맞춰 상향
+  PERFORM set_config('hnsw.ef_search', GREATEST(n * 3, 40)::text, true);
 
   RETURN QUERY
   WITH vector_matches AS (
@@ -118,6 +126,7 @@ $$;
 COMMENT ON FUNCTION public.match_documents_hybrid(vector, text, integer, double precision, integer) IS
   '벡터 유사도 + pg_trgm word_similarity 키워드 검색 RRF 병합 (한국어 조사 변형 대응, HNSW 인덱스 활용)';
 
+REVOKE ALL ON FUNCTION public.match_documents_hybrid(vector, text, integer, double precision, integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.match_documents_hybrid(vector, text, integer, double precision, integer) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.match_documents_hybrid(vector, text, integer, double precision, integer) TO service_role;
 
@@ -144,11 +153,12 @@ LANGUAGE plpgsql
 VOLATILE
 SECURITY DEFINER
 SET search_path = public, extensions
+SET pg_trgm.word_similarity_threshold = 0.30
 AS $$
 DECLARE
   n integer := LEAST(GREATEST(COALESCE(match_count, 10), 1), 50);
 BEGIN
-  PERFORM set_config('pg_trgm.word_similarity_threshold', '0.30', true);
+  PERFORM set_config('hnsw.ef_search', GREATEST(n * 3, 40)::text, true);
 
   RETURN QUERY
   WITH vector_search AS (
