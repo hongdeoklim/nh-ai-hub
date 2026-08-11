@@ -56,6 +56,8 @@ export async function retrieveCompanyDocumentMatches(params: {
   logUserId?: string | null
   /** 계측 소스 구분 — 평가/진단 발 검색이 실트래픽 지표를 오염시키지 않도록 지정 */
   logSource?: "company_documents" | "rag_eval" | "admin_diagnostic"
+  /** 계측 extra 에 병합할 호출 맥락 (예: 리랭크 여부, 요청/1차 건수) */
+  logExtra?: Record<string, unknown>
 }): Promise<CompanyDocumentMatch[]> {
   if (!isCompanyRagEnabled()) return []
 
@@ -161,6 +163,7 @@ export async function retrieveCompanyDocumentMatches(params: {
     })),
     latencyMs: Date.now() - startedAt,
     userId: params.logUserId ?? null,
+    extra: params.logExtra,
   })
 
   return matches
@@ -182,11 +185,28 @@ export function sanitizeRagContent(content: string): string {
   return content;
 }
 
-function isReadableText(content: string): boolean {
+export function isReadableText(content: string): boolean {
   if (!content || content.length === 0) return false
   // 비가독 문자(제어문자, 고서로게이트 등) 비율이 15% 초과이면 바이너리로 판단
   const nonPrintable = (content.match(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ud800-\udfff]/g) ?? []).length
   return nonPrintable / content.length < 0.15
+}
+
+/**
+ * 도구 결과를 모델에 넘기기 전 정제: 비가독(바이너리성) 청크 제거 +
+ * 프롬프트 인젝션 살균 + 인용 번호([1],[2]…) 재부여.
+ * (기존에는 도구 반환값이 정제 없이 모델 컨텍스트로 직행했음 — 기획안 D3)
+ */
+export function prepareMatchesForModel(
+  matches: CompanyDocumentMatch[],
+): CompanyDocumentMatch[] {
+  return matches
+    .filter((m) => isReadableText(m.content))
+    .map((m, i) => ({
+      ...m,
+      index: i + 1,
+      content: sanitizeRagContent(m.content),
+    }))
 }
 
 export function formatCompanyDocumentsForPrompt(matches: CompanyDocumentMatch[]): string {

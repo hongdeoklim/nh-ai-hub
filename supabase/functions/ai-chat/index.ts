@@ -907,7 +907,8 @@ ${casesPrompt}
         model: deps.model,
         prompt: prompt,
         temperature: 0,
-        maxTokens: 50,
+        // ai@6 에서 maxTokens 는 무시됨(maxOutputTokens 로 개명) — 순위 배열만 받으면 되므로 상한 필수
+        maxOutputTokens: 50,
       })
 
       const matchedIdxs = text
@@ -1743,7 +1744,11 @@ async function handleRequest(req: Request) {
       embedText: adminSvc && openaiEmbedKey
         ? (t: string) => embedWorkCaseText(openaiEmbedKey, t)
         : undefined,
-      rerankCases: adminSvc && openaiEmbedKey
+      // 리랭커는 Gemini(flash)만으로도 동작하므로 openai 키에 묶지 않는다
+      // (기존엔 openaiEmbedKey 조건이라 Gemini-only 환경에서 조용히 비활성 — F3)
+      rerankCases: adminSvc &&
+          (openaiEmbedKey || readEnv("GEMINI_API_KEY") ||
+            readEnv("GOOGLE_GENERATIVE_AI_API_KEY"))
         ? (() => {
             // Deno 환경 및 CORP 접두사 인프라를 고려하여 readEnv 기반 안전 검증
             const googleKey = readEnv("GEMINI_API_KEY") ?? readEnv("GOOGLE_GENERATIVE_AI_API_KEY");
