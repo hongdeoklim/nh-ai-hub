@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.49.8"
 import { handleCorsPreflight, jsonResponse } from "../_shared/cors.ts"
 import { embedTextWithGemini } from "../_shared/gemini-embeddings.ts"
 import { embedWorkCaseText } from "../_shared/embeddings.ts"
+import { logRagRetrieval } from "../_shared/rag-logging.ts"
 
 /** Exact-key Dify HTTP tool bridge to Supabase RAG indexes. */
 async function handler(req: Request): Promise<Response> {
@@ -27,6 +28,7 @@ async function handler(req: Request): Promise<Response> {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
 
+    const startedAt = Date.now()
     let rows: any[] = []
     if (type === "documents") {
       const geminiKey = Deno.env.get("GEMINI_API_KEY") || Deno.env.get("GOOGLE_GENERATIVE_AI_API_KEY") || ""
@@ -53,6 +55,17 @@ async function handler(req: Request): Promise<Response> {
     } else {
       return jsonResponse({ error: "type must be documents or cases." }, 400)
     }
+
+    logRagRetrieval(admin, {
+      source: type === "cases" ? "dify_bridge_cases" : "dify_bridge_documents",
+      query,
+      results: rows.map((row) => ({
+        id: String(row.id ?? ""),
+        label: String(row.file_name ?? row.title ?? ""),
+        similarity: Number(row.similarity ?? 0),
+      })),
+      latencyMs: Date.now() - startedAt,
+    })
 
     return jsonResponse({
       success: true,

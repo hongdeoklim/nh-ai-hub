@@ -428,6 +428,8 @@ export type McpToolExecutionContext = {
   /** 사용자 Google OAuth refresh token (개인 Drive 접근용) */
   userRefreshToken?: string
   supabaseUser?: SupabaseClient
+  /** 계측 로그(rag_retrieval_logs)용 사용자 ID */
+  userId?: string
 }
 
 export type McpToolEnableFlags = {
@@ -622,6 +624,7 @@ async function executeSearchCompanyDocuments(
       query: input.query,
       matchCount: input.match_count,
       similarityThreshold: input.similarity_threshold,
+      logUserId: ctx.userId ?? null,
     })
     return { ok: true, matches }
   } catch (e) {

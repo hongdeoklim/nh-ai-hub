@@ -6,6 +6,7 @@ import {
   GEMINI_KG_EMBEDDING_DIM,
 } from "./gemini-embeddings.ts"
 import { embedWorkCaseText } from "./embeddings.ts"
+import { logRagRetrieval } from "./rag-logging.ts"
 
 export type CompanyDocumentMatch = {
   index: number
@@ -51,12 +52,15 @@ export async function retrieveCompanyDocumentMatches(params: {
   query: string
   matchCount?: number
   similarityThreshold?: number
+  /** 계측 로그(rag_retrieval_logs)에 남길 사용자 — 없으면 익명 기록 */
+  logUserId?: string | null
 }): Promise<CompanyDocumentMatch[]> {
   if (!isCompanyRagEnabled()) return []
 
   const q = params.query.trim()
   if (!q.length) return []
 
+  const startedAt = Date.now()
   let combinedRows: MatchDocumentsRow[] = []
 
   // 1 & 2. Gemini를 이용한 사내 문서 검색 (선택)
@@ -136,7 +140,7 @@ export async function retrieveCompanyDocumentMatches(params: {
   const limit = params.matchCount ?? DEFAULT_MATCH_COUNT
   combinedRows = combinedRows.slice(0, limit)
 
-  return combinedRows.map((row, i) => ({
+  const matches = combinedRows.map((row, i) => ({
     index: i + 1,
     id: String(row.id),
     fileName: String(row.file_name ?? "사내 문서").trim() || "사내 문서",
@@ -144,6 +148,20 @@ export async function retrieveCompanyDocumentMatches(params: {
     chunkIndex: Number(row.chunk_index ?? 0),
     similarity: Number(row.similarity ?? 0),
   }))
+
+  logRagRetrieval(params.admin, {
+    source: "company_documents",
+    query: q,
+    results: matches.map((m) => ({
+      id: m.id,
+      label: m.fileName,
+      similarity: m.similarity,
+    })),
+    latencyMs: Date.now() - startedAt,
+    userId: params.logUserId ?? null,
+  })
+
+  return matches
 }
 
 export function sanitizeRagContent(content: string): string {

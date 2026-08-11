@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.49.8"
 import { tool, zodSchema } from "npm:ai@6.0.184"
 import { z } from "npm:zod@4.4.3"
+import { logRagRetrieval } from "./rag-logging.ts"
 
 export function createWorkCaseKnowledgeTools(deps: {
   admin: SupabaseClient
@@ -39,6 +40,7 @@ export function createWorkCaseKnowledgeTools(deps: {
       similarity_threshold = 0.25,
     }) => {
       try {
+        const startedAt = Date.now()
         const query_embedding = await embedText(situation)
         // Reranker가 작동할 수 있도록 1차적으로 10개(또는 match_count와 비교해 넉넉하게)를 추출합니다.
         const firstStageLimit = rerankCases ? Math.max(10, match_count) : match_count
@@ -56,10 +58,12 @@ export function createWorkCaseKnowledgeTools(deps: {
         }
 
         let cases = data ?? []
+        let reranked = false
         if (rerankCases && cases.length > 0) {
           try {
             cases = await rerankCases(situation, cases)
             cases = cases.slice(0, match_count)
+            reranked = true
           } catch (rerankErr) {
             console.error(
               "[work-case-tools] LLM Reranking failed, fallback to hybrid ranking:",
@@ -68,6 +72,18 @@ export function createWorkCaseKnowledgeTools(deps: {
             cases = cases.slice(0, match_count)
           }
         }
+
+        logRagRetrieval(admin, {
+          source: "work_cases",
+          query: situation,
+          results: (cases as Array<Record<string, unknown>>).map((c) => ({
+            id: String(c.id ?? ""),
+            label: String(c.title ?? ""),
+            similarity: Number(c.similarity ?? 0),
+          })),
+          latencyMs: Date.now() - startedAt,
+          extra: { reranked, first_stage_limit: firstStageLimit },
+        })
 
         return { ok: true as const, cases }
       } catch (e) {
