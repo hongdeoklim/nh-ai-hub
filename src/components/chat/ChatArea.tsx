@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 
 import type { ChatCitationSource } from '../../types/chat-citations'
 import { ChatMessage } from './ChatMessage'
+import { FollowupSuggestions } from './FollowupSuggestions'
 
 export type ChatBubble = {
   id: string
@@ -37,6 +38,8 @@ export type ChatBubble = {
     inputTokens: number
     outputTokens: number
   }
+  /** 답변 끝에 모델이 제안한 "이어서 물어보기" 질문 (마지막 답변 아래 칩으로 표시) */
+  followups?: string[]
 }
 
 function IconArrowDown(props: { className?: string }) {
@@ -83,6 +86,8 @@ type ChatAreaProps = {
   onRegenerateAssistant?: (assistantIndex: number) => void
   /** 잘린 답변(truncated) 이어서 생성 */
   onContinueAssistant?: (assistantIndex: number) => void
+  /** 마지막 답변 아래 추천 질문 칩을 누르면 그 질문을 보낸다 */
+  onFollowupSelect?: (text: string) => void
   regenerateDisabled?: boolean
   /** 현재 선택 모델 표시명 (더보기 메뉴) */
   activeModelLabel?: string
@@ -126,6 +131,7 @@ export const ChatArea = forwardRef<HTMLElement, ChatAreaProps>(
       onCommitMessageEdit,
       onRegenerateAssistant,
       onContinueAssistant,
+      onFollowupSelect,
       regenerateDisabled = false,
       activeModelLabel = '',
       threadShareUrl,
@@ -234,15 +240,23 @@ export const ChatArea = forwardRef<HTMLElement, ChatAreaProps>(
       }
     }, [])
 
-    useEffect(() => {
-      if (!editSession) return
-      if (!messages.some((m) => m.id === editSession.id)) {
-        setEditSession(null)
-      }
-    }, [messages, editSession])
+    // 편집 중이던 메시지가 목록에서 사라지면 편집 상태를 해제한다 (렌더 중 조정)
+    if (editSession && !messages.some((m) => m.id === editSession.id)) {
+      setEditSession(null)
+    }
 
     const isGemini = variant === 'gemini'
     const isClaude = variant === 'claude'
+
+    const lastMessage = messages[messages.length - 1]
+    const followups =
+      onFollowupSelect &&
+      lastMessage?.role === 'assistant' &&
+      !lastMessage.streaming &&
+      !lastMessage.truncated &&
+      editSession === null
+        ? lastMessage.followups ?? []
+        : []
 
     return (
       <section
@@ -337,6 +351,14 @@ export const ChatArea = forwardRef<HTMLElement, ChatAreaProps>(
               />
             )
           })}
+          {followups.length > 0 && onFollowupSelect ? (
+            <FollowupSuggestions
+              items={followups}
+              onSelect={onFollowupSelect}
+              disabled={regenerateDisabled}
+              indent={isGemini}
+            />
+          ) : null}
         </div>
 
         {showScrollBottom ? (

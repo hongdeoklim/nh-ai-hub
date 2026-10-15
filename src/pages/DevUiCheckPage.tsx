@@ -69,6 +69,27 @@ const MOCK_MESSAGES: ChatBubble[] = [
     createdAt: new Date(Date.now() - 67_000).toISOString(),
     streaming: true,
   },
+  {
+    id: 'user-4',
+    role: 'user',
+    content: '출장비 정산 기한이 언제야?',
+    time: '09:15',
+  },
+  {
+    id: 'assistant-4',
+    role: 'assistant',
+    content:
+      '국내 출장비는 **출장 종료일로부터 7일 이내**에 영수증과 함께 정산해야 합니다. 기한을 넘기면 소속 부서장 승인이 추가로 필요합니다.',
+    time: '09:15',
+    elapsedMs: 4_200,
+    usage: { inputTokens: 812, outputTokens: 164 },
+    // 마지막 답변 아래 "이어서 물어보기" 칩 검수용
+    followups: [
+      '해외 출장도 같은 기한인가요?',
+      '영수증을 잃어버리면 어떻게 하나요?',
+      '부서장 승인은 어디서 요청하나요?',
+    ],
+  },
 ]
 
 /** 하네스용 공급자→모델 카탈로그 — 실제 Dashboard 폴백 목록과 동일 구조로 항상 매칭 유지 */
@@ -117,6 +138,7 @@ export function DevUiCheckPage() {
         onContinueAssistant={(index) =>
           console.log('[ui-check] continue clicked:', index)
         }
+        onFollowupSelect={(text) => console.log('[ui-check] followup clicked:', text)}
       />
       <div className="border-t border-border bg-bg px-3 py-3">
         <ChatInput

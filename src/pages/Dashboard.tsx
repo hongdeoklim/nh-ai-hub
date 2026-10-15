@@ -2,6 +2,7 @@ import {
   startTransition,
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -46,6 +47,8 @@ import { invokeCreativeGenerate } from '../services/ai/invoke-creative'
 import { invokeMediaRouter } from '../services/ai/invoke-media-router'
 import { invokeDeepResearch } from '../services/ai/deep-research-client'
 import { invokeAiChat } from '../services/ai/invoke-chat'
+import { resolveAiTransport } from '../services/ai/api'
+import { FOLLOWUP_INSTRUCTION, splitFollowups } from '../lib/chat-followups'
 import {
   buildModelSelectOptions,
   fetchActiveMediaAiModels,
@@ -427,17 +430,29 @@ export function Dashboard() {
     }
   }, [])
 
-  const safeRegistryModels = Array.isArray(registryModels) ? registryModels : []
+  const safeRegistryModels = useMemo(
+    () => (Array.isArray(registryModels) ? registryModels : []),
+    [registryModels],
+  )
   const textRegistryModels = useMemo(
     () => filterActiveTextModels(safeRegistryModels),
     [safeRegistryModels],
   )
-  const safeMediaImageModels = Array.isArray(mediaImageModels)
-    ? filterActiveMediaModels(mediaImageModels, 'image')
-    : []
-  const safeMediaVideoModels = Array.isArray(mediaVideoModels)
-    ? filterActiveMediaModels(mediaVideoModels, 'video')
-    : []
+  // 매 렌더 새 배열이 되면 ChatInput·자동 전송 effect 가 불필요하게 다시 돈다
+  const safeMediaImageModels = useMemo(
+    () =>
+      Array.isArray(mediaImageModels)
+        ? filterActiveMediaModels(mediaImageModels, 'image')
+        : [],
+    [mediaImageModels],
+  )
+  const safeMediaVideoModels = useMemo(
+    () =>
+      Array.isArray(mediaVideoModels)
+        ? filterActiveMediaModels(mediaVideoModels, 'video')
+        : [],
+    [mediaVideoModels],
+  )
 
   const versionRows = useMemo(() => {
     if (selectedProvider === 'auto') {
@@ -620,6 +635,30 @@ export function Dashboard() {
     rememberLastPrivateThread(threadId)
   }, [threadId, navigate])
 
+  // 다른 화면에서 넘긴 프롬프트 자동 전송 — 항상 최신 handleSend·handleMediaGenerate 를 쓰되
+  // effect 재실행 조건(threadId·프로필·엔진 목록)에는 넣지 않는다 (React 19.2 useEffectEvent)
+  const sendBootstrapPrompt = useEffectEvent((text: string) => {
+    queueMicrotask(() => {
+      handleSend({
+        text,
+        experimental_attachments: [],
+        imageFiles: [],
+      })
+    })
+  })
+  const generateBootstrapImage = useEffectEvent((text: string, engine: string) => {
+    queueMicrotask(() => {
+      void handleMediaGenerate('image', text, engine)
+    })
+  })
+
+  /*
+   * 대화(threadId) 전환 · 다른 화면에서 넘긴 1회성 부트스트랩(세션 저장소) 소비 구간.
+   * 저장소 읽기·삭제, ref 갱신, 포커스 같은 외부 동기화가 상태 갱신과 한 덩어리이고,
+   * AI Sheets 부트스트랩이 쓴 시트 컨텍스트를 뒤의 effect 가 같은 커밋에서 읽어야 하므로
+   * (선언 순서 의존) 렌더 중 조정으로 옮기지 않고 effect 로 유지한다.
+   */
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setReferenceSnippets([])
     sendQueueRef.current = []
@@ -668,13 +707,7 @@ export function Dashboard() {
       return
     }
     slidesAutoSendPendingRef.current = null
-    queueMicrotask(() => {
-      handleSend({
-        text,
-        experimental_attachments: [],
-        imageFiles: [],
-      })
-    })
+    sendBootstrapPrompt(text)
   }, [threadId, profile?.id])
 
   useEffect(() => {
@@ -713,20 +746,12 @@ export function Dashboard() {
       if (!engine || mediaEnginesLoading) return
       designerAutoSendPendingRef.current = null
       designerUseImageRef.current = false
-      queueMicrotask(() => {
-        void handleMediaGenerate('image', text, engine)
-      })
+      generateBootstrapImage(text, engine)
       return
     }
     designerAutoSendPendingRef.current = null
     designerUseImageRef.current = false
-    queueMicrotask(() => {
-      handleSend({
-        text,
-        experimental_attachments: [],
-        imageFiles: [],
-      })
-    })
+    sendBootstrapPrompt(text)
   }, [threadId, profile?.id, safeMediaImageModels, mediaEnginesLoading])
 
   useEffect(() => {
@@ -764,13 +789,7 @@ export function Dashboard() {
       return
     }
     sheetsAutoSendPendingRef.current = null
-    queueMicrotask(() => {
-      handleSend({
-        text,
-        experimental_attachments: [],
-        imageFiles: [],
-      })
-    })
+    sendBootstrapPrompt(text)
   }, [threadId, profile?.id])
 
   const loadSheetsPreview = useCallback(
@@ -799,10 +818,12 @@ export function Dashboard() {
     setSheetsAgentContext(ctx)
     if (ctx?.range) setSheetsRange(ctx.range)
   }, [threadId])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
-    if (!sheetsAgentContext?.spreadsheetId) return
-    void loadSheetsPreview(sheetsAgentContext.spreadsheetId, sheetsRange)
+    const spreadsheetId = sheetsAgentContext?.spreadsheetId
+    if (!spreadsheetId) return
+    queueMicrotask(() => void loadSheetsPreview(spreadsheetId, sheetsRange))
   }, [sheetsAgentContext?.spreadsheetId, sheetsRange, loadSheetsPreview])
 
   useEffect(() => {
@@ -1239,6 +1260,33 @@ export function Dashboard() {
    */
   const MAX_AUTO_CONTINUES = 5
 
+  /**
+   * 추천 질문("이어서 물어보기")을 붙일 수 있는 일반 텍스트 대화인지.
+   * 캔버스·Dify·브라우저 직접 호출(실험실 오버레이 미지원)과 워크플로(전용 프롬프트)는 제외한다.
+   */
+  function followupsSupported(model: string, composerTool: string | null): boolean {
+    return (
+      composerTool !== 'canvas' &&
+      model !== 'dify-ax' &&
+      resolveAiTransport() !== 'direct' &&
+      !activeWorkflowSystemPrompt
+    )
+  }
+
+  /** ai-chat 실험실 오버레이: 워크플로 프롬프트(대체) 또는 추천 질문 지시문(추가) */
+  function buildChatLab(withFollowups: boolean) {
+    if (activeWorkflowSystemPrompt) {
+      return {
+        system_prompt: activeWorkflowSystemPrompt,
+        system_prompt_mode: 'replace' as const,
+      }
+    }
+    if (withFollowups) {
+      return { system_prompt: FOLLOWUP_INSTRUCTION, system_prompt_mode: 'append' as const }
+    }
+    return undefined
+  }
+
   async function executeChatTurn(
     item: PendingChatTurn,
     turnThreadId: string,
@@ -1466,6 +1514,8 @@ export function Dashboard() {
       const apiMessages = buildMessagesForApi(historySnapshot, apiPrompt, {
         excludeLastUser: item.regenerate === true,
       })
+      const withFollowups =
+        !hasImages && followupsSupported(modelNow, composerToolMode)
       const callAiChat = (messagesForApi: typeof apiMessages) =>
         invokeAiChat({
         supabase,
@@ -1484,10 +1534,7 @@ export function Dashboard() {
           legacyAttachments.length > 0
             ? legacyAttachments
             : undefined,
-        experimental_lab: activeWorkflowSystemPrompt ? {
-          system_prompt: activeWorkflowSystemPrompt,
-          system_prompt_mode: 'replace',
-        } : undefined,
+        experimental_lab: buildChatLab(withFollowups),
         tokenLimit,
         currentTokenUsage,
         signal,
@@ -1496,12 +1543,15 @@ export function Dashboard() {
           if (composerToolMode === 'canvas') canvasStreamText += delta
           streamRawText += delta
           const { thinkingContent, content } = splitThinkingStream(streamRawText)
+          const visible = withFollowups
+            ? splitFollowups(content, { partial: true }).body
+            : content
           setMessages((prev) =>
             prev.map((message) =>
               message.id === assistantId
                 ? {
                     ...message,
-                    content,
+                    content: visible,
                     thinkingContent,
                   }
                 : message,
@@ -1593,12 +1643,22 @@ export function Dashboard() {
       {
         const generationElapsedMs = Date.now() - genStartMs
         const hasUsage = usageTotal.inputTokens + usageTotal.outputTokens > 0
+        // 본문 끝의 추천 질문 블록을 떼어 칩으로 보여준다 (잘린 답변은 블록이 없으니 건너뜀)
+        const finalSplit = withFollowups && outcome.ok
+          ? splitFollowups(splitThinkingStream(streamRawText).content)
+          : null
         setMessages((prev) =>
           prev.map((message) =>
             message.id === assistantId
               ? {
                   ...message,
                   ...(endedTruncated ? { truncated: true } : {}),
+                  ...(finalSplit
+                    ? {
+                        content: finalSplit.body,
+                        followups: endedTruncated ? undefined : finalSplit.followups,
+                      }
+                    : {}),
                   elapsedMs: generationElapsedMs,
                   ...(hasUsage ? { usage: { ...usageTotal } } : {}),
                 }
@@ -1771,6 +1831,7 @@ export function Dashboard() {
     const { signal } = turnAbort
 
     let streamRawText = assistant.content
+    const continueWithFollowups = followupsSupported(modelNow, null)
     const contStartMs = Date.now()
     setIsSending(true)
     setMessages((prev) =>
@@ -1788,12 +1849,7 @@ export function Dashboard() {
         activeModel: modelNow,
         providerPreference: selectedProviderRef.current,
         composerTool: null,
-        experimental_lab: activeWorkflowSystemPrompt
-          ? {
-              system_prompt: activeWorkflowSystemPrompt,
-              system_prompt_mode: 'replace',
-            }
-          : undefined,
+        experimental_lab: buildChatLab(continueWithFollowups),
         tokenLimit: profileNow.token_limit ?? 0,
         currentTokenUsage: profileNow.current_token_usage ?? 0,
         signal,
@@ -1801,12 +1857,15 @@ export function Dashboard() {
           if (threadIdRef.current !== turnThreadId) return
           streamRawText += delta
           const { thinkingContent, content } = splitThinkingStream(streamRawText)
+          const visible = continueWithFollowups
+            ? splitFollowups(content, { partial: true }).body
+            : content
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
                 ? {
                     ...m,
-                    content,
+                    content: visible,
                     thinkingContent: thinkingContent ?? m.thinkingContent,
                   }
                 : m,
@@ -1844,13 +1903,24 @@ export function Dashboard() {
       if (signal.aborted) return
 
       const hasUsage = usageTotal.inputTokens + usageTotal.outputTokens > 0
+      const stillTruncated = endedTruncated(outcome)
+      const finalSplit =
+        continueWithFollowups && outcome.ok
+          ? splitFollowups(splitThinkingStream(streamRawText).content)
+          : null
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId
             ? {
                 ...m,
                 streaming: false,
-                truncated: endedTruncated(outcome),
+                truncated: stillTruncated,
+                ...(finalSplit
+                  ? {
+                      content: finalSplit.body,
+                      followups: stillTruncated ? undefined : finalSplit.followups,
+                    }
+                  : {}),
                 elapsedMs: (m.elapsedMs ?? 0) + (Date.now() - contStartMs),
                 ...(hasUsage
                   ? {
@@ -1966,6 +2036,11 @@ export function Dashboard() {
       }),
     )
     setIsSending(false)
+  }
+
+  /** "이어서 물어보기" 칩 → 그 질문을 그대로 다음 메시지로 보낸다 */
+  function handleFollowupSelect(text: string) {
+    handleSend({ text, experimental_attachments: [], imageFiles: [] })
   }
 
   function handleSend(payload: ChatSendPayload) {
@@ -2165,6 +2240,7 @@ export function Dashboard() {
                     onBookmarkAssistant={handleBookmarkAssistant}
                     onRegenerateAssistant={handleRegenerateAssistant}
                     onContinueAssistant={(index) => void handleContinueAssistant(index)}
+                    onFollowupSelect={handleFollowupSelect}
                     regenerateDisabled={isSending}
                     onCommitMessageEdit={handleCommitMessageEdit}
                     topPanel={null}
@@ -2190,6 +2266,7 @@ export function Dashboard() {
                 onBookmarkAssistant={handleBookmarkAssistant}
                 onRegenerateAssistant={handleRegenerateAssistant}
                 onContinueAssistant={(index) => void handleContinueAssistant(index)}
+                    onFollowupSelect={handleFollowupSelect}
                 regenerateDisabled={isSending}
                 onCommitMessageEdit={handleCommitMessageEdit}
                 topPanel={
