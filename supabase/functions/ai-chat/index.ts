@@ -1952,34 +1952,20 @@ async function handleRequest(req: Request) {
       )
     }
 
-    // Deno/Google AI SDK Context Caching 및 OpenAI/DeepSeek Thinking Budget 메타데이터 주입
-    const googleMetadata = nhRouteResult?.useContextCaching ? {
-      google: {
-        cachedContent: {
-          ttl: "300s"
-        }
-      }
-    } : {}
-
-    const thinkingMetadata = nhRouteResult?.thinkingBudget?.enabled ? {
-      openai: {
-        // o3-mini/o3 용 reasoningEffort
-        ...(nhRouteResult.thinkingBudget.reasoningEffort ? { reasoningEffort: nhRouteResult.thinkingBudget.reasoningEffort } : {}),
-        // OpenAI 호환 API로 R1 호출 시 호환 매개변수 바인딩
-        ...(nhRouteResult.thinkingBudget.maxThinkingTokens ? { maxCompletionTokens: nhRouteResult.thinkingBudget.maxThinkingTokens } : {})
-      },
-      deepseek: {
-        // DeepSeek Native SDK 용 maxThinkingTokens 바인딩
-        maxThinkingTokens: nhRouteResult.thinkingBudget.maxThinkingTokens
-      }
-    } : {}
-
-    const nhProviderMetadata = {
-      ...googleMetadata,
-      ...thinkingMetadata
-    }
-
-    const hasProviderMetadata = Object.keys(nhProviderMetadata).length > 0
+    // 프로바이더별 추가 옵션. AI SDK v6 의 입력 옵션 이름은 providerOptions 다
+    // (예전 코드는 출력 필드인 providerMetadata 로 넘겨 전부 조용히 무시되고 있었다).
+    // - OpenAI 추론 모델(o3-mini·gpt-5 등): 라우터가 정한 reasoningEffort 만 넘긴다.
+    //   maxCompletionTokens 는 추론 토큰까지 포함한 총 출력 상한이라 1~4천으로 두면 답이 비거나 잘린다.
+    // - Gemini 컨텍스트 캐싱은 미리 만든 캐시 리소스 이름(cachedContents/…)이 필요해 여기서는 쓰지 않는다.
+    // - DeepSeek 에는 추론 토큰 상한 옵션이 없다.
+    const routedReasoningEffort = nhRouteResult?.thinkingBudget?.enabled
+      ? nhRouteResult.thinkingBudget.reasoningEffort
+      : undefined
+    const nhProviderOptions =
+      routedReasoningEffort && providerKindUsed === "openai"
+        ? { openai: { reasoningEffort: routedReasoningEffort } }
+        : {}
+    const hasProviderOptions = Object.keys(nhProviderOptions).length > 0
 
     const streamCommon = {
       model: resolvedLanguageModel,
@@ -2059,7 +2045,7 @@ async function handleRequest(req: Request) {
             ],
           },
         ],
-        ...(hasProviderMetadata ? { providerMetadata: nhProviderMetadata } : {}),
+        ...(hasProviderOptions ? { providerOptions: nhProviderOptions } : {}),
       })
       return result.toTextStreamResponse({
         headers: withCors({ "X-NH-AI-Model-Used": modelIdUsed }),
@@ -2092,7 +2078,7 @@ async function handleRequest(req: Request) {
               ...(mergedTools
                 ? { tools: mergedTools, stopWhen: stepCountIs(12) }
                 : {}),
-              ...(hasProviderMetadata ? { providerMetadata: nhProviderMetadata } : {}),
+              ...(hasProviderOptions ? { providerOptions: nhProviderOptions } : {}),
               onStepFinish: async (step) => {
                 // ── 중앙 집중형 에이전트 루프: tool_use → NDJSON 이벤트 ─────
                 // execute 라우팅은 mcp-tools.routeMcpToolInvocation (및 플러그인 도구) 에 위임
@@ -2215,7 +2201,7 @@ async function handleRequest(req: Request) {
       ...(mergedTools
         ? { tools: mergedTools, stopWhen: stepCountIs(12) }
         : {}),
-      ...(hasProviderMetadata ? { providerMetadata: nhProviderMetadata } : {}),
+      ...(hasProviderOptions ? { providerOptions: nhProviderOptions } : {}),
     })
 
     return result.toTextStreamResponse({
