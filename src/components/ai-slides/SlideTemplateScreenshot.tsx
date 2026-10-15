@@ -28,7 +28,7 @@ export function SlideTemplateScreenshot({
         className={`absolute inset-3 flex flex-col overflow-hidden rounded-md border shadow-md ${
           isDark
             ? 'border-stone-600/80 bg-stone-900/95'
-            : 'border-white/80 bg-surface/95'
+            : 'border-border/80 bg-surface/95'
         }`}
       >
         <div

@@ -12,6 +12,8 @@ import {
 } from '../services/marketplace'
 import { PageHeader } from '../components/common/PageHeader'
 import { IconStore } from '../components/common/icons'
+import { useDialogs } from '../components/common/DialogProvider'
+import { EmptyState } from '../components/common/EmptyState'
 
 // ── Type metadata ────────────────────────────────────────────────────────────
 
@@ -499,6 +501,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export function MarketplacePage() {
+  const { confirm: confirmDialog } = useDialogs()
   const [extensions, setExtensions] = useState<MarketplaceExtension[]>([])
   const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('all')
   const [search, setSearch] = useState('')
@@ -561,9 +564,14 @@ export function MarketplacePage() {
   const handleToggle = (ext: MarketplaceExtension) =>
     run(ext.id, () => setExtensionEnabled(ext.installation!.id, !ext.installation!.enabled))
 
-  const handleUninstall = (ext: MarketplaceExtension) => {
-    if (!window.confirm(`"${ext.name}"을(를) 제거하시겠습니까?`)) return Promise.resolve()
-    return run(ext.id, () => uninstallExtension(ext.installation!.id))
+  const handleUninstall = async (ext: MarketplaceExtension) => {
+    const ok = await confirmDialog({
+      title: `"${ext.name}"을(를) 제거하시겠습니까?`,
+      confirmLabel: '제거',
+      tone: 'danger',
+    })
+    if (!ok) return
+    await run(ext.id, () => uninstallExtension(ext.installation!.id))
   }
 
   const installedCount = extensions.filter((x) => x.installation?.enabled).length
@@ -646,10 +654,12 @@ export function MarketplacePage() {
           </div>
         )}
         {!loading && visible.length === 0 && (
-          <div className="mt-10 text-center">
-            <p className="text-2xl">🔍</p>
-            <p className="mt-2 text-fg-subtle">{search ? `"${search}"에 해당하는 확장이 없습니다.` : '표시할 확장이 없습니다.'}</p>
-          </div>
+          <EmptyState
+            className="mt-10"
+            icon={IconStore}
+            title={search ? `"${search}"에 해당하는 확장이 없습니다` : '표시할 확장이 없습니다'}
+            description="다른 검색어나 종류를 선택해 보세요."
+          />
         )}
 
         {/* Grid */}

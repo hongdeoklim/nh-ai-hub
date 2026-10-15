@@ -614,7 +614,7 @@ export function AssistantMessageFooter({
               >
                 {isSubmitting ? (
                   <>
-                    <div className="h-3 w-3 animate-spin rounded-full border border-white/30 border-t-white" />
+                    <div className="h-3 w-3 animate-spin rounded-full border border-border/30 border-t-white" />
                     저장 중...
                   </>
                 ) : (

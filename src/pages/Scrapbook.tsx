@@ -10,6 +10,8 @@ import {
 } from '../services/scrapbook/bookmarked-chats'
 import { PageHeader } from '../components/common/PageHeader'
 import { IconBookmark } from '../components/common/icons'
+import { useDialogs } from '../components/common/DialogProvider'
+import { EmptyState } from '../components/common/EmptyState'
 
 function clipOneLine(text: string, max = 160): string {
   const t = text.trim().replace(/\s+/g, ' ')
@@ -51,6 +53,7 @@ const MOCK_SCRAPS: BookmarkedChatRow[] = [
 ]
 
 export function Scrapbook() {
+  const { confirm: confirmDialog } = useDialogs()
   const { profile } = useAuth()
   const [rows, setRows] = useState<BookmarkedChatRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,7 +98,7 @@ export function Scrapbook() {
   const handleDelete = useCallback(
     async (row: BookmarkedChatRow) => {
       if (!profile?.id || isMockView) return
-      if (!window.confirm('이 스크랩을 삭제할까요? 되돌릴 수 없습니다.')) return
+      if (!(await confirmDialog({ title: '이 스크랩을 삭제할까요?', description: '되돌릴 수 없습니다.', confirmLabel: '삭제', tone: 'danger' }))) return
       setDeletingId(row.id)
       const prev = rows
       // 낙관적 제거 — 실패 시 롤백
@@ -107,7 +110,7 @@ export function Scrapbook() {
       }
       setDeletingId(null)
     },
-    [profile, rows, isMockView],
+    [profile, rows, isMockView, confirmDialog],
   )
 
   const startEditNote = useCallback((row: BookmarkedChatRow) => {
@@ -177,15 +180,11 @@ export function Scrapbook() {
             ))}
           </div>
         ) : displayRows.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border-strong bg-surface/70 px-6 py-12 text-center">
-            <p className="text-base font-semibold text-fg">
-              아직 스크랩한 대화가 없습니다
-            </p>
-            <p className="mt-2 text-sm text-fg-muted">
-              대화 탭에서 AI 답변 아래 <span className="font-semibold">⭐️ 스크랩</span>을 눌러 저장해
-              보세요.
-            </p>
-          </div>
+          <EmptyState
+            icon={IconBookmark}
+            title="아직 스크랩한 대화가 없습니다"
+            description="대화 화면에서 AI 답변 아래의 스크랩 버튼을 눌러 저장해 보세요."
+          />
         ) : (
           <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayRows.map((row, i) => (

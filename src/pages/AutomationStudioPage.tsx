@@ -17,6 +17,7 @@ import {
 import { supabase } from '../lib/supabase'
 import { PageHeader } from '../components/common/PageHeader'
 import { IconZap } from '../components/common/icons'
+import { EmptyState } from '../components/common/EmptyState'
 
 /**
  * 자동화 스튜디오 — 플러그인·MCP·스킬·공공데이터·AI 어시스턴트·워크플로우·연동을
@@ -355,9 +356,11 @@ export function AutomationStudioPage() {
           카탈로그를 불러오는 중…
         </p>
       ) : visibleTotal === 0 ? (
-        <p className="py-8 text-center text-[13px] md:text-[14px] text-fg-subtle">
-          조건에 맞는 도구가 없습니다.
-        </p>
+        <EmptyState
+          icon={IconZap}
+          title="조건에 맞는 도구가 없습니다"
+          description="검색어나 종류 필터를 바꿔 보세요."
+        />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visibleExtensions.map((row) => {

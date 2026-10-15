@@ -405,7 +405,7 @@ export function AiProductPlannerPage() {
 
   const exportToDesigner = async () => {
     if (!result) {
-      alert('전달할 기획 데이터가 없습니다. 먼저 기획안을 생성해 주세요.')
+      toast.error('전달할 기획 데이터가 없습니다. 먼저 기획안을 생성해 주세요.')
       return
     }
 
@@ -422,11 +422,11 @@ export function AiProductPlannerPage() {
 
     try {
       await navigator.clipboard.writeText(plannerContext)
-      alert('기획 데이터가 클립보드에 복사되었습니다. AI 디자이너로 이동합니다.')
+      toast.success('기획 데이터가 클립보드에 복사되었습니다. AI 디자이너로 이동합니다.')
       navigate('/ai-designer')
     } catch (error) {
       console.error(error)
-      alert('기획 데이터를 클립보드에 복사하지 못했습니다. 브라우저 권한을 확인해 주세요.')
+      toast.error('기획 데이터를 클립보드에 복사하지 못했습니다. 브라우저 권한을 확인해 주세요.')
     }
   }
 

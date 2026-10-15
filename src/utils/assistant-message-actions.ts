@@ -78,7 +78,17 @@ export async function exportAssistantToGoogleDocs(
   try {
     await navigator.clipboard.writeText(plain)
   } catch {
-    window.prompt('아래 내용을 복사한 뒤 Google Docs에 붙여넣으세요.', plain)
+    // 클립보드 API 거부 시 레거시 복사 폴백
+    const area = document.createElement('textarea')
+    area.value = plain
+    area.setAttribute('readonly', '')
+    area.className = 'fixed -left-[9999px] top-0 opacity-0'
+    document.body.appendChild(area)
+    area.select()
+    const copied = document.execCommand('copy')
+    document.body.removeChild(area)
+    if (copied) toast.success('답변을 복사했습니다. Google Docs 에 붙여넣으세요.')
+    else toast.error('클립보드 복사에 실패했습니다. 답변을 직접 선택해 복사해 주세요.')
     window.open('https://docs.google.com/document/create', '_blank', 'noopener,noreferrer')
     return
   }

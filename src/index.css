@@ -613,6 +613,12 @@ body {
     font-size: 0.875rem;
     line-height: 1.45;
   }
+
+  /* 키보드 포커스 기본 표시 — 개별 focus-visible:ring 유틸이 없는 요소에도 보이도록 (WCAG 2.4.7) */
+  :where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--nh-focus);
+    outline-offset: 2px;
+  }
 }
 
 

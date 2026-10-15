@@ -14,6 +14,7 @@ import {
   type DxfBounds,
   type EditorEntity,
 } from '../services/cad/dxf'
+import { useDialogs } from '../components/common/DialogProvider'
 
 /**
  * CAD 에디터 (Phase B) — 브라우저 안 DXF 뷰어 + 편집.
@@ -32,6 +33,7 @@ const TOOLS: Array<{ id: EditorTool; label: string; hint: string }> = [
 ]
 
 export function CadEditorPage() {
+  const { prompt: promptDialog } = useDialogs()
   const [entities, setEntities] = useState<EditorEntity[]>([])
   const [past, setPast] = useState<EditorEntity[][]>([])
   const [bounds, setBounds] = useState<DxfBounds>(DEFAULT_BOUNDS)
@@ -118,9 +120,12 @@ export function CadEditorPage() {
 
   // Phase C: 로컬 에이전트로 작업 폴더의 DWG를 DXF로 변환해 연다.
   const handleOpenDwg = useCallback(async () => {
-    const filename = window.prompt(
-      '작업 폴더(C:\\NH-AI-HUB-workspace)에 있는 DWG 파일명을 입력하세요 (예: plan.dwg)',
-    )
+    const filename = await promptDialog({
+      title: 'DWG 파일 열기',
+      label: '작업 폴더(C:\\NH-AI-HUB-workspace)에 있는 DWG 파일명',
+      placeholder: 'plan.dwg',
+      submitLabel: '열기',
+    })
     if (!filename) return
     setConverting(true)
     const t = toast.loading('에이전트에 DWG 변환 요청 중…')
@@ -145,7 +150,7 @@ export function CadEditorPage() {
     } finally {
       setConverting(false)
     }
-  }, [])
+  }, [promptDialog])
 
   const exportDxf = useCallback(() => {
     if (entities.length === 0) {

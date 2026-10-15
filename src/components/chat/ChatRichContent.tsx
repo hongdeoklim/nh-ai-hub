@@ -132,7 +132,7 @@ function CodeCanvasPanel({
           : 'border-slate-700 bg-slate-950'
       }`}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-1.5">
+      <div className="flex items-center justify-between gap-2 border-b border-border/10 px-3 py-1.5">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-fg-subtle">
           {language || 'code'}
         </span>

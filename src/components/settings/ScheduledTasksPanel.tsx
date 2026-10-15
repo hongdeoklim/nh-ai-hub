@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { EmptyState } from '../common/EmptyState'
+import { IconClock } from '../common/icons'
 
 interface ScheduledTask {
   id: string
@@ -225,9 +227,11 @@ export function ScheduledTasksPanel() {
         {loading ? (
           <p className="text-sm text-fg-subtle">불러오는 중...</p>
         ) : tasks.length === 0 ? (
-          <div className="rounded-xl border border-border bg-bg/50 p-8 text-center">
-            <p className="text-sm text-fg-subtle">등록된 예약 작업이 없습니다.</p>
-          </div>
+          <EmptyState
+            icon={IconClock}
+            title="등록된 예약 작업이 없습니다"
+            description="프롬프트와 실행 주기를 정해 첫 예약 작업을 만들어 보세요."
+          />
         ) : (
           tasks.map(task => (
             <div key={task.id} className={`group relative flex items-start gap-4 rounded-xl border p-4 transition-all ${task.is_active ? 'border-border bg-surface shadow-sm' : 'border-border bg-bg'}`}>

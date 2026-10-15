@@ -112,7 +112,7 @@ export function ChatMediaLightbox({
                 onClick={() => onIndexChange(i)}
                 className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition ${
                   i === safeIndex
-                    ? 'border-white ring-2 ring-white/40'
+                    ? 'border-border ring-2 ring-white/40'
                     : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
               >

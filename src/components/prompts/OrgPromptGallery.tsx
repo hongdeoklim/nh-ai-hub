@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import type { StaticOrgPromptItem } from '../../data/org-static-prompts'
+import { useDialogs } from '../common/DialogProvider'
 
 const CARD_SURFACE: readonly { gradient: string; icon: string }[] = [
   { gradient: 'from-amber-100/95 via-brand-soft/90 to-stone-100/80', icon: '🛠️' },
@@ -160,6 +161,7 @@ export function OrgPromptGallery({
   modelToolbar,
   userGreetingName,
 }: OrgPromptGalleryProps) {
+  const { confirm: confirmDialog } = useDialogs()
   if (prompts.length === 0) return null
 
   return (
@@ -190,15 +192,14 @@ export function OrgPromptGallery({
                     disabled={disabled}
                     title={item.title}
                     onClick={() => {
-                      if (
-                        typeof window !== 'undefined' &&
-                        !window.confirm(
-                          '이 프롬프트 카드를 목록에서 숨길까요? 이 계정에서는 다시 표시되지 않습니다.',
-                        )
-                      ) {
-                        return
-                      }
-                      void onRemoveFromGallery(item.id)
+                      void (async () => {
+                        const ok = await confirmDialog({
+                          title: '이 프롬프트 카드를 목록에서 숨길까요?',
+                          description: '이 계정에서는 다시 표시되지 않습니다.',
+                          confirmLabel: '숨기기',
+                        })
+                        if (ok) await onRemoveFromGallery(item.id)
+                      })()
                     }}
                   />
                 </div>

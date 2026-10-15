@@ -12,6 +12,8 @@ import { fetchKnowledgeGraphData } from '../services/knowledge-graph/knowledge-g
 import { invokeIngestWorker } from '../services/knowledge-graph/knowledge-ingest-client'
 import { PageHeader } from '../components/common/PageHeader'
 import { IconLibrary } from '../components/common/icons'
+import { useDialogs } from '../components/common/DialogProvider'
+import { EmptyState } from '../components/common/EmptyState'
 
 
 // 파일 확장자 → 타입 레이블 매핑
@@ -46,6 +48,7 @@ function formatDate(iso: string) {
 }
 
 export function LibraryPage() {
+  const { confirm: confirmDialog } = useDialogs()
   const { profile } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
@@ -125,9 +128,12 @@ export function LibraryPage() {
       return
     }
 
-    const yes = window.confirm(
-      `"${doc.file_name}" 자료를 안전하게 휴지통으로 이동할까요?\n(사내 자료실 휴지통에서 복원할 수 있습니다.)`,
-    )
+    const yes = await confirmDialog({
+      title: `"${doc.file_name}" 자료를 휴지통으로 이동할까요?`,
+      description: '사내 자료실 휴지통에서 복원할 수 있습니다.',
+      confirmLabel: '휴지통으로 이동',
+      tone: 'danger',
+    })
     if (!yes) return
 
     setDeletingId(doc.id)
@@ -441,10 +447,12 @@ export function LibraryPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 gap-3 text-fg-subtle bg-surface/25 border border-border rounded-2xl max-w-2xl mx-auto">
-              <span className="text-4xl">📭</span>
-              <p className="text-sm">검색 조건에 맞는 문서가 없습니다.</p>
-            </div>
+            <EmptyState
+              className="mx-auto max-w-2xl"
+              icon={IconLibrary}
+              title="검색 조건에 맞는 문서가 없습니다"
+              description="검색어나 카테고리·부서 필터를 바꿔 보세요."
+            />
           )
         ) : (
 

@@ -49,7 +49,7 @@ export function ChatAttachmentPreviewStrip({
   const borderClass =
     variant === 'claude'
       ? 'border-border-strong/80'
-      : 'border-white/30'
+      : 'border-border/30'
 
   return (
     <>

@@ -241,7 +241,7 @@ export function AdminDashboard() {
                 return (
                   <div
                     key={row.dept}
-                    className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-slate-50 to-white p-4"
+                    className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-slate-50 to-surface p-4"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-2xl" aria-hidden>

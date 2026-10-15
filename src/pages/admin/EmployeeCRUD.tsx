@@ -25,6 +25,7 @@ import {
   EMPLOYEE_DEPARTMENTS,
   EMPLOYEE_JOB_TITLES,
 } from '../../types/employee-org'
+import { useDialogs } from '../../components/common/DialogProvider'
 
 type EmployeeRow = {
   id: string
@@ -76,6 +77,7 @@ function usageTone(used: number, limit: number): string {
 }
 
 export function EmployeeCRUD() {
+  const { confirm: confirmDialog } = useDialogs()
   const [rows, setRows] = useState<EmployeeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -384,9 +386,12 @@ export function EmployeeCRUD() {
           : `선택 ${selectedIds.size}명`
 
     if (
-      !window.confirm(
-        `${scopeLabel}의 토큰 사용량(current_token_usage)을 0으로 초기화합니다. 계속할까요?`,
-      )
+      !(await confirmDialog({
+        title: `${scopeLabel}의 토큰 사용량을 0으로 초기화합니다. 계속할까요?`,
+        description: 'current_token_usage 값이 즉시 0이 되며 되돌릴 수 없습니다.',
+        confirmLabel: '초기화',
+        tone: 'danger',
+      }))
     ) {
       return
     }

@@ -13,6 +13,7 @@ import {
   type AdminTeamMemberRow,
   type AdminTeamRow,
 } from '../../services/admin/admin-teams'
+import { useDialogs } from '../../components/common/DialogProvider'
 
 type EmployeeOption = {
   id: string
@@ -34,6 +35,7 @@ function employeeLabel(row: EmployeeOption): string {
 }
 
 export function TeamManager() {
+  const { confirm: confirmDialog } = useDialogs()
   const { rows, loading, error, reload } = useAdminTeams()
   const [createOpen, setCreateOpen] = useState(false)
   const [teamName, setTeamName] = useState('')
@@ -142,8 +144,11 @@ export function TeamManager() {
   async function removeMember(member: AdminTeamMemberRow) {
     if (!selectedTeam) return
     if (
-      typeof window !== 'undefined' &&
-      !window.confirm(`${memberLabel(member)}님을 팀에서 제외할까요?`)
+      !(await confirmDialog({
+        title: `${memberLabel(member)}님을 팀에서 제외할까요?`,
+        confirmLabel: '제외',
+        tone: 'danger',
+      }))
     ) {
       return
     }

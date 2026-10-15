@@ -127,6 +127,7 @@ import {
   manualProviderChoiceForModelId,
   type DashboardProviderPreference,
 } from '../constants/dashboard-model-catalog'
+import { toast } from 'sonner'
 
 type ReferenceSnippet =
   | { key: string; kind: 'text'; title: string; sourceUrl: string; body: string }
@@ -841,7 +842,7 @@ export function Dashboard() {
           if (!googleConnected) {
             if (!askedDriveConnect) {
               askedDriveConnect = true
-              window.alert(
+              toast.info(
                 '구글 계정 연동이 필요합니다. 설정 → 워크스페이스 연동에서 Google을 연결하면 드라이브 문서 본문을 채팅에 넣을 수 있습니다.',
               )
             }
@@ -857,7 +858,7 @@ export function Dashboard() {
           const res = await exportDriveFileForChat(fid)
           if (ac.signal.aborted) return
           if (!res.ok) {
-            window.alert(`「${item.file_name}」 불러오기 실패: ${res.message}`)
+            toast.error(`「${item.file_name}」 불러오기 실패: ${res.message}`)
             snippets.push({
               key: crypto.randomUUID(),
               kind: 'link_only',
@@ -1060,7 +1061,7 @@ export function Dashboard() {
     if (!profile?.id) return
     const result = await hideOrgPromptForUser(supabase, profile.id, promptId)
     if (!result.ok) {
-      window.alert(result.message)
+      toast.error(result.message)
       return
     }
     startTransition(() =>

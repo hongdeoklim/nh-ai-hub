@@ -65,7 +65,9 @@
 | P0 | 앱 셸 v2 — PC 레일+패널, 모바일 하단 탭+드로어, 앱 런처 | ✅ 구현 |
 | P0 | 전역 헤더: 검색/명령 팔레트(Ctrl K), 알림 벨, 토큰 칩, 계정 메뉴(테마 토글) | ✅ 구현 |
 | P0 | 숨겨진 기능 연결: 알림 · 예약 작업 · 플러그인 연결, 안내 문구 정정 | ✅ 구현 |
-| P0 | `window.alert/confirm/prompt` → `ConfirmDialog`/`PromptDialog`/토스트 (셸 영역) | ✅ 셸 적용 · 페이지 잔여 ~25건 |
+| P0 | `window.alert/confirm/prompt` → `useDialogs()`(Promise 기반 `confirm`/`prompt`) · 토스트 | ✅ 전 화면 적용 (잔여: `ai-sheets/SheetsGlobalCanvas` 4건 — 제외 영역) |
+| P1 | 빈 목록 `EmptyState` 적용 (스크랩북·팀·팀 상세·자동화·마켓·라이브러리·예약 작업·토큰 요청 관리) | ✅ 완료 |
+| P1 | 키보드 포커스 전역 기본 표시 (`:focus-visible` outline, @layer base) | ✅ 완료 |
 | P0 | PWA: viewport·theme-color·color-scheme, 로컬 폰트, 스플래시 450ms, 매니페스트(shortcuts/orientation any/display_override) | ✅ 구현 |
 | P0 | `sonner` 명시 의존성, README 재작성, 데드 코드 삭제 | ✅ 구현 |
 | **P1** | **루트 폰트 16px 전환** (§3.1) | ✅ 완료 (2단계 커밋) |

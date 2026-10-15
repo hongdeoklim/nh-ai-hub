@@ -207,7 +207,7 @@ export function WeeklyTrendReport() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm">
+                <div className="rounded-lg border border-border bg-gradient-to-br from-slate-50 to-surface p-4 shadow-sm">
                   <h2 className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                     메타
                   </h2>

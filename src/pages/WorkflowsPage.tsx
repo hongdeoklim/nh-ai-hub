@@ -16,6 +16,7 @@ import { writeWorkflowBootstrap } from '../lib/workflow-bootstrap'
 import { rememberLastPrivateThread } from '../lib/private-chat-storage'
 import { PageHeader } from '../components/common/PageHeader'
 import { IconPlus, IconWorkflow } from '../components/common/icons'
+import { useDialogs } from '../components/common/DialogProvider'
 
 // ─── 스텝 메타 ───────────────────────────────────────────────
 const STEP_META: Record<StepType, { label: string; color: string; bg: string; dot: string; icon: string; desc: string }> = {
@@ -649,6 +650,7 @@ function ExecutionModal({ wf, onClose }: { wf: WorkflowRow; onClose: () => void 
 
 // ─── 메인 페이지 ─────────────────────────────────────────────
 export function WorkflowsPage() {
+  const { confirm: confirmDialog } = useDialogs()
   const navigate = useNavigate()
   const [workflows, setWorkflows] = useState<WorkflowRow[]>([])
   const [runs, setRuns] = useState<WorkflowRunRow[]>([])
@@ -674,7 +676,7 @@ export function WorkflowsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('이 워크플로우를 삭제할까요?')) return
+    if (!(await confirmDialog({ title: '이 워크플로우를 삭제할까요?', confirmLabel: '삭제', tone: 'danger' }))) return
     await deleteWorkflow(id); await load()
   }
 

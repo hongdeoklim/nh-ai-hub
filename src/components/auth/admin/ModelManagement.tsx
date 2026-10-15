@@ -23,6 +23,7 @@ import {
   type AiModelRow,
   type AiModelType,
 } from '../../../types/ai-models'
+import { useDialogs } from '../../common/DialogProvider'
 
 type ModalMode = 'create' | 'edit'
 
@@ -89,6 +90,7 @@ function modelTypeLabel(type: AiModelType): string {
 }
 
 export function ModelManagement() {
+  const { confirm: confirmDialog } = useDialogs()
   const { profile, session } = useAuth()
   const [rows, setRows] = useState<AiModelRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -187,9 +189,12 @@ export function ModelManagement() {
   }
 
   async function handleDelete(row: AiModelRow) {
-    const confirmed = window.confirm(
-      `「${row.display_name}」(${row.api_id}) 모델을 삭제할까요?\n삭제 후에는 복구할 수 없습니다.`,
-    )
+    const confirmed = await confirmDialog({
+      title: `「${row.display_name}」(${row.api_id}) 모델을 삭제할까요?`,
+      description: '삭제 후에는 복구할 수 없습니다.',
+      confirmLabel: '삭제',
+      tone: 'danger',
+    })
     if (!confirmed) return
 
     setBusyId(row.id)

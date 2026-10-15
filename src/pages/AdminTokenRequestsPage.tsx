@@ -18,6 +18,8 @@ import {
   updateTokenAllocationRequestAdmin,
   type TokenAllocationRequestRow,
 } from '../services/token-allocation-requests'
+import { EmptyState } from '../components/common/EmptyState'
+import { IconCoins } from '../components/common/icons'
 
 function requesterLabel(row: TokenAllocationRequestRow): string {
   const name = row.users?.display_name?.trim()
@@ -201,14 +203,11 @@ export function AdminTokenRequestsPage() {
       ) : null}
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
-          <p className="text-sm font-medium text-fg-muted">
-            대기 중인 요청이 없습니다
-          </p>
-          <p className="mt-1 text-xs text-fg-subtle">
-            직원이 토큰 부족 시 요청을 보내면 이 목록에 표시됩니다.
-          </p>
-        </div>
+        <EmptyState
+          icon={IconCoins}
+          title="대기 중인 요청이 없습니다"
+          description="직원이 토큰 부족 시 요청을 보내면 이 목록에 표시됩니다."
+        />
       ) : (
         <div className={adminTableWrap}>
           <ul className="divide-y divide-border">

@@ -8,6 +8,7 @@ import { createTeam, fetchMyTeams } from '../services/teams'
 import type { TeamRow } from '../services/teams'
 import { PageHeader } from '../components/common/PageHeader'
 import { IconUsers } from '../components/common/icons'
+import { EmptyState } from '../components/common/EmptyState'
 
 export function TeamsPage() {
   const { profile } = useAuth()
@@ -61,7 +62,7 @@ export function TeamsPage() {
         icon={IconUsers}
       />
 
-      <section className="rounded-2xl border border-border bg-gradient-to-br from-white to-brand-soft/40 px-5 py-5 shadow-sm">
+      <section className="rounded-2xl border border-border bg-gradient-to-br from-surface to-brand-soft/40 px-5 py-5 shadow-sm">
         <h2 className="text-[13px] font-semibold text-fg md:text-[14px]">
           새 팀 만들기
         </h2>
@@ -107,17 +108,11 @@ export function TeamsPage() {
             ))}
           </div>
         ) : teams.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border-strong bg-surface/60 px-6 py-12 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft text-2xl">
-              👥
-            </div>
-            <p className="text-[13px] font-semibold text-fg md:text-[14px]">
-              아직 소속된 팀이 없습니다
-            </p>
-            <p className="mt-1 text-[12px] text-fg-subtle md:text-[13px]">
-              위에서 팀을 만들어 멤버를 초대해 보세요.
-            </p>
-          </div>
+          <EmptyState
+            icon={IconUsers}
+            title="아직 소속된 팀이 없습니다"
+            description="위에서 팀을 만들어 멤버를 초대해 보세요."
+          />
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {teams.map((t) => {

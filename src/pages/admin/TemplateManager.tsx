@@ -8,6 +8,7 @@ import {
   type PromptTemplateDepartment,
   type PromptTemplateRow,
 } from '../../types/prompt-templates'
+import { useDialogs } from '../../components/common/DialogProvider'
 
 type ModalMode = 'create' | 'edit'
 
@@ -26,6 +27,7 @@ const INITIAL_FORM: FormState = {
 }
 
 export function TemplateManager() {
+  const { confirm: confirmDialog } = useDialogs()
   const [rows, setRows] = useState<PromptTemplateRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -160,8 +162,12 @@ export function TemplateManager() {
 
   async function removeRow(row: PromptTemplateRow) {
     if (
-      typeof window !== 'undefined' &&
-      !window.confirm(`「${row.title}」템플릿을 삭제할까요? 이 작업은 되돌릴 수 없습니다.`)
+      !(await confirmDialog({
+        title: `「${row.title}」 템플릿을 삭제할까요?`,
+        description: '이 작업은 되돌릴 수 없습니다.',
+        confirmLabel: '삭제',
+        tone: 'danger',
+      }))
     ) {
       return
     }

@@ -19,6 +19,8 @@ import {
   inviteTeamMemberByEmail,
 } from '../services/teams'
 import type { TeamConversationRow, TeamRow } from '../services/teams'
+import { EmptyState } from '../components/common/EmptyState'
+import { IconChat } from '../components/common/icons'
 
 export function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>()
@@ -208,9 +210,11 @@ export function TeamDetailPage() {
       </section>
 
       {conversations.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border-strong px-4 py-6 text-center text-sm text-fg-subtle">
-          아직 채팅이 없습니다. 위 버튼으로 방을 만들고 동료를 선택하세요.
-        </p>
+        <EmptyState
+          icon={IconChat}
+          title="아직 채팅이 없습니다"
+          description="위 버튼으로 방을 만들고 동료를 선택하세요."
+        />
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
           {conversations.map((c) => (

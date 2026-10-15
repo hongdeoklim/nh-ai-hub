@@ -7,8 +7,10 @@ import {
   type KnowledgeBaseRow,
 } from '../../services/reference-room/knowledge-base'
 import { supabase } from '../../lib/supabase'
+import { useDialogs } from '../../components/common/DialogProvider'
 
 export function KnowledgeAdmin() {
+  const { confirm: confirmDialog } = useDialogs()
   const [rows, setRows] = useState<KnowledgeBaseRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -32,10 +34,7 @@ export function KnowledgeAdmin() {
   }, [load])
 
   async function removeRow(id: string) {
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm('이 자료 메타를 삭제할까요?')
-    ) {
+    if (!(await confirmDialog({ title: '이 자료 메타를 삭제할까요?', confirmLabel: '삭제', tone: 'danger' }))) {
       return
     }
     setBusyId(id)

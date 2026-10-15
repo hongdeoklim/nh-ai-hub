@@ -13,6 +13,7 @@ import { Login } from './pages/Login'
 import { PrivateChatHomeRedirect } from './pages/PrivateChatHomeRedirect'
 import { AdminRoute } from './routes/AdminRoute'
 import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt'
+import { DialogProvider } from './components/common/DialogProvider'
 const Scrapbook = lazy(() =>
   import('./pages/Scrapbook').then((m) => ({ default: m.Scrapbook })),
 )
@@ -349,10 +350,12 @@ export default function App() {
   return (
     <AuthProvider>
       <AppUiProvider>
-        <AppRoutes />
-        <ReloadPrompt />
-        <PwaInstallPrompt />
-        <Toaster position="top-center" richColors closeButton />
+        <DialogProvider>
+          <AppRoutes />
+          <ReloadPrompt />
+          <PwaInstallPrompt />
+          <Toaster position="top-center" richColors closeButton />
+        </DialogProvider>
       </AppUiProvider>
     </AuthProvider>
   )

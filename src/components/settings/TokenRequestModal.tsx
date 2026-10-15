@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { submitTokenAllocationRequest } from '../../services/token-allocation-requests'
+import { toast } from 'sonner'
 
 type TokenRequestModalProps = {
   open: boolean
@@ -46,7 +47,7 @@ export function TokenRequestModal({
 
   async function submit() {
     if (!userId) {
-      window.alert('로그인이 필요합니다.')
+      toast.error('로그인이 필요합니다.')
       return
     }
     setSending(true)
@@ -56,10 +57,10 @@ export function TokenRequestModal({
         message: text.trim(),
       })
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
-      window.alert('요청이 접수되었습니다. 관리자가 순차적으로 처리합니다.')
+      toast.success('요청이 접수되었습니다. 관리자가 순차적으로 처리합니다.')
       onClose()
     } finally {
       setSending(false)

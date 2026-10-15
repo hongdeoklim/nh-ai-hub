@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import type { SavedPromptRow } from '../../types/prompts'
 import type { StaticOrgPromptItem } from '../../data/org-static-prompts'
+import { useDialogs } from '../common/DialogProvider'
 
 export type { StaticOrgPromptItem }
 
@@ -55,6 +56,7 @@ export function PromptLibraryPanel({
   promptPanelRegionId = 'prompt-library-panel',
   variant = 'sidebar',
 }: PromptLibraryPanelProps) {
+  const { confirm: confirmDialog } = useDialogs()
   const [tab, setTab] = useState<PromptTab>('org')
   const [saveOpen, setSaveOpen] = useState(false)
   const [saveTitle, setSaveTitle] = useState('')
@@ -307,14 +309,13 @@ export function PromptLibraryPanel({
                 aria-label={'\ud504\ub86c\ud504\ud2b8 \uc0ad\uc81c'}
                 title={'\uc0ad\uc81c'}
                 onClick={() => {
-                  if (
-                    !window.confirm(
-                      `\u300c${row.title}\u300d \ud504\ub86c\ud504\ud2b8\ub97c \uc0ad\uc81c\ud560\uae4c\uc694?`,
-                    )
-                  ) {
-                    return
-                  }
                   void (async () => {
+                    const ok = await confirmDialog({
+                      title: `「${row.title}」 프롬프트를 삭제할까요?`,
+                      confirmLabel: '삭제',
+                      tone: 'danger',
+                    })
+                    if (!ok) return
                     const r = await onDeletePrompt(row.id)
                     if (!r.ok) toast.error(r.message)
                     else await onRefresh()

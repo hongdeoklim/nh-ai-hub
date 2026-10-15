@@ -7,6 +7,7 @@ import {
   testPluginConnection,
   type ConnectablePlugin,
 } from '../../services/integrations/plugin-connections'
+import { useDialogs } from '../common/DialogProvider'
 
 const MODE_LABEL = {
   per_user: '사용자별 연결',
@@ -16,6 +17,7 @@ const MODE_LABEL = {
 } as const
 
 export function PluginConnectionsPanel() {
+  const { confirm: confirmDialog } = useDialogs()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [plugins, setPlugins] = useState<ConnectablePlugin[]>([])
   const [selected, setSelected] = useState<ConnectablePlugin | null>(null)
@@ -61,7 +63,7 @@ export function PluginConnectionsPanel() {
   }
 
   const disconnect = async (plugin: ConnectablePlugin) => {
-    if (!window.confirm(`${plugin.name} 연결을 해제하시겠습니까?`)) return
+    if (!(await confirmDialog({ title: `${plugin.name} 연결을 해제하시겠습니까?`, confirmLabel: '해제', tone: 'danger' }))) return
     setBusyId(plugin.id)
     try { await deletePluginConnection(plugin.id); await load() }
     catch (disconnectError) { setError(disconnectError instanceof Error ? disconnectError.message : '연결 해제에 실패했습니다.') }
