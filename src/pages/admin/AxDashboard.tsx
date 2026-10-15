@@ -66,7 +66,8 @@ export function AxDashboard() {
         { data: tokenRows },
       ] = await Promise.all([
         supabase.from('knowledge_base').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-        supabase.from('knowledge_base_chunks').select('id', { count: 'exact', head: true }),
+        // 앱 내 RAG 검색용 임베딩 청크 (knowledge_base_chunks 테이블은 존재하지 않음)
+        supabase.from('company_documents').select('id', { count: 'exact', head: true }),
         supabase.from('nh_knowledge_nodes').select('id', { count: 'exact', head: true }),
         supabase.from('nh_knowledge_edges').select('id', { count: 'exact', head: true }),
         supabase.from('user_long_term_memory').select('id', { count: 'exact', head: true }),
@@ -276,7 +277,7 @@ export function AxDashboard() {
           <section className="rounded-xl border border-accent/30 bg-accent-soft p-4">
             <h2 className="mb-2 text-[13px] font-semibold text-accent">AX 고도화 요약</h2>
             <ul className="space-y-1 text-[13px] text-accent">
-              <li>• 지식 문서 <strong>{metrics.knowledgeDocCount}</strong>개, 벡터 청크 <strong>{metrics.knowledgeChunkCount}</strong>개가 Dify에 동기화되어 검색에 활용됩니다.</li>
+              <li>• 자료실 문서 <strong>{metrics.knowledgeDocCount}</strong>개가 등록되어 있고, 앱 내 검색용 벡터 청크 <strong>{metrics.knowledgeChunkCount}</strong>개가 답변 근거로 활용됩니다.</li>
               <li>• 지식 그래프에 <strong>{metrics.knowledgeNodeCount}</strong>개 노드 · <strong>{metrics.knowledgeEdgeCount}</strong>개 엣지가 개념 연결을 형성합니다.</li>
               <li>• 사용자 장기 기억 <strong>{metrics.memoryCount}</strong>개가 개인화 응답에 반영됩니다.</li>
               <li>• 피드백 <strong>{metrics.feedbackTotal}</strong>건 중 긍정 <strong>{metrics.feedbackPositive}</strong>건, DPO 학습 페어 <strong>{metrics.dpoCount}</strong>개가 모델 개선에 사용됩니다.</li>

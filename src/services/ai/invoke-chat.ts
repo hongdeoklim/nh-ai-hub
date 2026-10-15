@@ -18,6 +18,7 @@ import {
 } from './api'
 import { routeAiRequest } from './router'
 import { streamDifyChat } from '../difyBridge.js'
+import { difyRetrieverSources } from '../../lib/dify-citations'
 
 export type AiToolTraceEntry = {
   at: string
@@ -131,6 +132,11 @@ export type InvokeAiChatParams = {
   experimental_attachments?: ChatExperimentalAttachment[]
   /** 공유 채팅: 대화 참가 검증(Edge) */
   conversationId?: string
+  /**
+   * Dify 채팅 전용: 개인 대화(threadId)별로 Dify conversation_id 를 이어 쓰기 위한 키.
+   * conversationId 는 Edge 가 공유 채팅 참가 검증에 쓰므로 개인 대화 ID 를 넣으면 안 된다.
+   */
+  difyThreadId?: string
   /** 발신 사용자(JWT sub)와 동일해야 함 — Edge 에서 검증 */
   billingUserId?: string
   /** `routeAiRequest`(direct 모드) 에만 사용. Edge 는 DB에서 조회 */
@@ -155,7 +161,10 @@ export type InvokeAiChatParams = {
   composerTool?: ComposerToolMode | null
   /** [인터넷 검색] 토글 — Edge 휴리스틱·강제 웹 검색 라우팅 */
   internetSearchEnabled?: boolean
-  /** 관리자 AI 실험실 — Edge 가 관리자 세션에서만 시스템 프롬프트 오버레이를 적용합니다. */
+  /**
+   * ai-chat 시스템 프롬프트 오버레이. replace 는 워크플로·관리자 실험실, append 는 추천 질문 지시문 등에 쓴다.
+   * Edge 는 역할과 무관하게 적용한다 (이미지 첨부 요청에는 적용하지 않음).
+   */
   experimental_lab?: {
     system_prompt: string
     system_prompt_mode?: 'append' | 'replace'
@@ -206,17 +215,37 @@ async function invokeViaEdge(
     return new Promise((resolve) => {
       const lastUserContent =
         [...apiMessages].reverse().find((m) => m.role === 'user')?.content || ''
+      let receivedText = false
       streamDifyChat(
         {
           query: lastUserContent,
           user: params.billingUserId || session.user.id,
-          conversationId: params.conversationId || '',
+          // 같은 대화의 Dify conversation_id 를 이어 써야 앞선 질문·답을 기억한다
+          conversationId: params.difyThreadId || params.conversationId || '',
           supabaseToken: session.access_token,
         },
         {
-          onMessage: (msg: string) => params.onTextDelta(msg),
-          onError: (err: Error) => resolve({ ok: false, message: err.message }),
-          onDone: () => resolve({ ok: true }),
+          onMessage: (msg: string) => {
+            receivedText = true
+            params.onTextDelta(msg)
+          },
+          onError: (err) =>
+            resolve({ ok: false, message: err.message, httpStatus: err.status }),
+          onAbort: () => resolve({ ok: false, message: 'aborted', aborted: true }),
+          onDone: (metadata) => {
+            // Dify 지식 베이스에서 찾은 사내 문서를 출처로 보여 준다
+            const sources = difyRetrieverSources(metadata)
+            if (sources.length > 0) params.onCitationSources?.(sources)
+            resolve(
+              receivedText
+                ? { ok: true }
+                : {
+                    ok: false,
+                    message:
+                      'Dify 가 빈 답변을 보냈습니다. 지식 베이스 연결 상태를 확인하거나 잠시 후 다시 시도해 주세요.',
+                  },
+            )
+          },
           signal: params.signal,
         },
       ).catch((err: unknown) =>
