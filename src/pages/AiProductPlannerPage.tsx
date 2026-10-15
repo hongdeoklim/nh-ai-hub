@@ -469,7 +469,7 @@ export function AiProductPlannerPage() {
           {isGenerating ? (
             <div className="flex h-full flex-col items-center justify-center space-y-6 z-10">
               <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-accent" />
+                <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-accent/20" />
                 <div className="h-16 w-16 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600 dark:border-t-indigo-400" />
               </div>
               <div className="text-center">

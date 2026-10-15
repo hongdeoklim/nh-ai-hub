@@ -221,7 +221,8 @@ AI 앱           Planner · Designer · Slides · Sheets   (hidden: AI Office)
 - `src/components/common/DialogProvider.tsx` (`useDialogs`), `src/lib/token-budget.ts`
 - 13개 화면 `PageHeader`, 8개 화면 `EmptyState`, `LibraryPage` 토큰화, 네이티브 다이얼로그 20곳 교체
 - `public/` 아이콘 192/512/180 리사이즈 + `pwa-maskable-512.png`, `vite.config.ts` 매니페스트 maskable 분리
-- `src/App.tsx` `portalPageRoutes` 추출 + DEV 검수 라우트 `/__ui-check/app/*` (채팅 포함), `DevUiCheckPage` 에 채팅 홈 갤러리 목업
+- `src/App.tsx` `portalPageRoutes`·`adminPageRoutes` 추출 + DEV 검수 라우트 `/__ui-check/app/*` (채팅 포함) · `/__ui-check/admin/*`, `DevUiCheckPage` 에 채팅 홈 갤러리 목업
+- `MainLayout` 본문 건너뛰기 링크(`#main-content`), 마이그레이션으로 투명도가 빠진 장식 요소(`bg-accent/10`, `bg-accent/20`) 복원
 
 ---
 

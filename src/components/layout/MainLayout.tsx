@@ -283,6 +283,13 @@ export function MainLayout() {
       data-standalone={standalone ? 'true' : undefined}
       className={`app-shell flex h-dvh w-full bg-bg text-fg ${bottomNavVar}`}
     >
+      {/* 키보드 사용자용 본문 건너뛰기 — 포커스될 때만 표시 */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-[12px] focus:top-[12px] focus:z-[100] focus:rounded-[8px] focus:bg-brand focus:px-[12px] focus:py-[8px] focus:text-sm focus:font-semibold focus:text-brand-fg focus:shadow-pop"
+      >
+        본문으로 건너뛰기
+      </a>
       <NavRail
         activeGroupId={activeGroup?.id ?? null}
         panelOpen={panelOpen}
@@ -359,9 +366,11 @@ export function MainLayout() {
         />
 
         <main
+          id="main-content"
+          tabIndex={-1}
           onFocus={onMainFocus}
           onBlur={onMainBlur}
-          className="flex min-h-0 flex-1 flex-col pb-[var(--app-bottom-nav,0px)] transition-[padding] duration-200"
+          className="flex min-h-0 flex-1 flex-col pb-[var(--app-bottom-nav,0px)] outline-none transition-[padding] duration-200"
         >
           <Outlet />
         </main>

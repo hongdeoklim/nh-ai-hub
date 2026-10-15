@@ -127,7 +127,7 @@ function StatCard({
 }) {
   return (
     <article className="group relative overflow-hidden rounded-xl border border-border/80 bg-surface p-5 shadow-sm">
-      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent blur-2xl" />
+      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/10 blur-2xl" />
       <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
         {label}
       </p>

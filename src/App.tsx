@@ -215,6 +215,31 @@ const portalPageRoutes = (
   </>
 )
 
+/**
+ * 관리자 콘솔 화면 라우트 (AdminLayout 하위). 실제 앱과 DEV 검수 라우트(__ui-check/admin/*)가 공유한다.
+ */
+const adminPageRoutes = (
+  <>
+    <Route index element={<ModernAdminDashboard />} />
+    <Route path="employees" element={<EmployeeCRUD />} />
+    <Route path="teams" element={<TeamManager />} />
+    <Route path="activity-logs" element={<ActivityLogViewer />} />
+    <Route path="weekly-reports" element={<WeeklyTrendReport />} />
+    <Route path="tokens" element={<Navigate to="/admin/employees" replace />} />
+    <Route path="token-requests" element={<AdminTokenRequestsPage />} />
+    <Route path="plugins" element={<PluginManager />} />
+    <Route path="lab" element={<AiLab />} />
+    <Route path="audit" element={<ChatAudit />} />
+    <Route path="reference" element={<KnowledgeAdmin />} />
+    <Route path="templates" element={<TemplateManager />} />
+    <Route path="models" element={<ModelManagement />} />
+    <Route path="ax" element={<AxDashboard />} />
+    <Route path="feedback" element={<FeedbackDashboard />} />
+    <Route path="push" element={<PushComposer />} />
+    <Route path="site-assessment" element={<SiteAssessmentPage />} />
+  </>
+)
+
 function AuthSpinner() {
   return (
     <div className="app-shell flex min-h-dvh w-full items-center justify-center bg-bg">
@@ -269,23 +294,7 @@ function AppRoutes() {
         <Route path="admin" element={<AdminRoute />}>
           <Route element={<LazyAdminOutlet />}>
             <Route element={<AdminLayout />}>
-              <Route index element={<ModernAdminDashboard />} />
-              <Route path="employees" element={<EmployeeCRUD />} />
-              <Route path="teams" element={<TeamManager />} />
-              <Route path="activity-logs" element={<ActivityLogViewer />} />
-              <Route path="weekly-reports" element={<WeeklyTrendReport />} />
-              <Route path="tokens" element={<Navigate to="/admin/employees" replace />} />
-              <Route path="token-requests" element={<AdminTokenRequestsPage />} />
-              <Route path="plugins" element={<PluginManager />} />
-              <Route path="lab" element={<AiLab />} />
-              <Route path="audit" element={<ChatAudit />} />
-              <Route path="reference" element={<KnowledgeAdmin />} />
-              <Route path="templates" element={<TemplateManager />} />
-              <Route path="models" element={<ModelManagement />} />
-              <Route path="ax" element={<AxDashboard />} />
-              <Route path="feedback" element={<FeedbackDashboard />} />
-              <Route path="push" element={<PushComposer />} />
-              <Route path="site-assessment" element={<SiteAssessmentPage />} />
+              {adminPageRoutes}
             </Route>
           </Route>
           <Route path="knowledge-graph" element={<KnowledgeGraphPage />} />
@@ -333,6 +342,10 @@ function AppRoutes() {
             </Route>
           </Route>
           {/* 포털 화면 레이아웃 검수 — 로그인 없이 /__ui-check/app/<경로> 로 각 화면의 셸·헤더를 확인 (데이터는 로드되지 않음) */}
+          {/* 관리자 콘솔 레이아웃 검수 — 로그인/권한 없이 /__ui-check/admin/<경로> (데이터는 로드되지 않음) */}
+          <Route path="__ui-check/admin" element={<LazyAdminOutlet />}>
+            <Route element={<AdminLayout />}>{adminPageRoutes}</Route>
+          </Route>
           <Route path="__ui-check/app" element={<MainLayout />}>
             <Route path="chat/:threadId" element={<Dashboard />} />
             <Route element={<LazyRouteOutlet />}>
