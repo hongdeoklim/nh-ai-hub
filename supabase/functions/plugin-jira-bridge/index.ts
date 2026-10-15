@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
+import { isHealthCheckRequest, verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
 
 /**
  * Jira Cloud REST API 브릿지 — dynamic-plugin-tools.ts 의 createHttpProxyTool 이
@@ -48,6 +48,21 @@ Deno.serve(async (req) => {
   }
   if (!jiraUrl.startsWith("https://")) {
     return json({ ok: false, error: "jira_url 은 https:// 로 시작해야 합니다 (예: https://yourcompany.atlassian.net)" }, 400)
+  }
+
+  if (isHealthCheckRequest(body)) {
+    // 연결 테스트: 이슈 검색 대신 내 계정 조회(/myself)로 사이트·이메일·토큰을 확인한다
+    try {
+      const res = await fetch(`${jiraUrl}/rest/api/3/myself`, {
+        headers: { Authorization: `Basic ${btoa(`${jiraEmail}:${apiToken}`)}`, Accept: "application/json" },
+        signal: AbortSignal.timeout(10_000),
+      })
+      if (!res.ok) return json({ ok: false, error: `Jira 계정 확인 실패 (${res.status})` }, 401)
+      const me = await res.json() as { displayName?: string }
+      return json({ ok: true, health_check: true, account: me.displayName })
+    } catch (e) {
+      return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 502)
+    }
   }
 
   const jql = body.arguments?.jql?.trim()

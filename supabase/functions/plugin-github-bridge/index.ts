@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
+import { isHealthCheckRequest, verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
 
 /**
  * GitHub REST API 브릿지 — `nh.plugin.github` 플러그인의 endpoint_url.
@@ -33,6 +33,25 @@ Deno.serve(async (req) => {
 
   const pat = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim()
   if (!pat) return json({ ok: false, error: "GitHub Personal Access Token 이 연결되지 않았습니다. /marketplace 에서 먼저 연결하세요." }, 400)
+
+  if (isHealthCheckRequest(body)) {
+    // 연결 테스트: 검색 대신 토큰 소유자 조회(/user)로 토큰만 확인한다
+    try {
+      const res = await fetch("https://api.github.com/user", {
+        headers: {
+          Authorization: `Bearer ${pat}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+        signal: AbortSignal.timeout(10_000),
+      })
+      if (!res.ok) return json({ ok: false, error: `GitHub 토큰 확인 실패 (${res.status})` }, 401)
+      const user = await res.json() as { login?: string }
+      return json({ ok: true, health_check: true, login: user.login })
+    } catch (e) {
+      return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 502)
+    }
+  }
 
   const query = body.arguments?.query?.trim()
   if (!query) {

@@ -69,7 +69,9 @@
 ### 2.2 문제점 (우선순위순)
 
 1. **[높음] 내부 시크릿 유출**: `dynamic-plugin-tools.ts` 가 `X-NH-Internal-Secret` 을 관리자가 등록한 제3자 URL 에도 보낸다. 이 시크릿 하나로 모든 브릿지와 CAD 게이트웨이를 통과할 수 있다. 우리 함수 URL 일 때만 붙여야 한다.
+   - ✅ 코드 수정(배포 필요): `_shared/plugin-bridge-auth.ts` 의 `internalBridgeHeaders()` 가 이 프로젝트 `SUPABASE_URL` 의 `/functions/v1/` 주소일 때만 헤더를 붙인다. 로컬 개발 호스트는 `PLUGIN_BRIDGE_INTERNAL_HOSTS` 로 허용.
 2. **[높음] Jira·Slack·GitHub·Higgsfield 가 채팅에서 쓰이지 않는다**: 연결 테스트가 내부 시크릿을 보내지 않아 브릿지가 401 → 상태가 `failed` 로 남고, 도구 로딩은 `connected` 만 허용한다.
+   - ✅ 코드 수정(배포 필요): 연결 테스트가 내부 시크릿과 설치 설정을 보내고, 각 브릿지는 `health_check` 요청에 실제 작업 대신 자격 증명만 확인한다 (Slack `auth.test`, GitHub `/user`, Jira `/myself`, Higgsfield 키 형식, 날씨 서버 키). 날씨 브릿지 `verify_jwt=false` 추가.
 3. **[높음] 프롬프트 인젝션·무승인 쓰기**: 웹 페이지 원문·메일 제목이 그대로 모델에 들어가고, 사례 덮어쓰기·캘린더·Slack 전송 같은 쓰기 도구에 확인 절차가 없다. AI SDK v6 `needsApproval`, 도구 출력 격리, URL 허용 목록·크기 상한이 필요하다.
 4. **[중] `mcp-client.ts` 가 MCP 규격을 따르지 않는다**: `initialize` 핸드셰이크·세션 헤더·페이지네이션·`isError` 처리가 없고, 서버가 다운되면 요청마다 최대 20초씩 기다린다.
 5. **[중] 마켓플레이스 MCP 설치 흐름이 동작할 수 없다**: 화면은 `server_url`(대부분 localhost)을 받지만 코드는 `endpoint_url`·HTTPS 만 쓴다.

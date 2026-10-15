@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
+import { isHealthCheckRequest, verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
 
 /**
  * Slack Web API 브릿지 — `nh.plugin.slack` 플러그인의 endpoint_url.
@@ -31,6 +31,23 @@ Deno.serve(async (req) => {
 
   const botToken = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim()
   if (!botToken) return json({ ok: false, error: "Slack Bot 토큰이 연결되지 않았습니다. /marketplace 에서 먼저 연결하세요." }, 400)
+
+  if (isHealthCheckRequest(body)) {
+    // 연결 테스트: 메시지를 보내지 않고 auth.test 로 토큰만 확인한다
+    try {
+      const res = await fetch("https://slack.com/api/auth.test", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${botToken}` },
+        signal: AbortSignal.timeout(10_000),
+      })
+      const payload = await res.json() as { ok: boolean; error?: string; team?: string }
+      return payload.ok
+        ? json({ ok: true, health_check: true, team: payload.team })
+        : json({ ok: false, error: `Slack 토큰 확인 실패: ${payload.error ?? "unknown_error"}` }, 401)
+    } catch (e) {
+      return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 502)
+    }
+  }
 
   const channel = body.arguments?.channel?.trim()
   const text = body.arguments?.text?.trim()

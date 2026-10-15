@@ -4,6 +4,7 @@ import { z } from "npm:zod@4.4.3"
 
 import { resolveBuiltinPluginTool } from "./builtin-plugin-tools.ts"
 import { decryptPluginCredential, pluginAuthHeaders } from "./plugin-credentials.ts"
+import { internalBridgeHeaders } from "./plugin-bridge-auth.ts"
 import { createMcpAiTools } from './mcp-client.ts'
 
 export type ActivePluginRow = {
@@ -100,14 +101,14 @@ function createHttpProxyTool(
       const abortController = new AbortController()
       const timer = setTimeout(() => abortController.abort(), 25_000)
       try {
-        const internalBridgeSecret = Deno.env.get("PLUGIN_BRIDGE_INTERNAL_SECRET")?.trim()
         const res = await fetch(endpointUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "X-NH-AI-Plugin": row.id,
             "X-NH-AI-User": userId,
-            ...(internalBridgeSecret ? { "X-NH-Internal-Secret": internalBridgeSecret } : {}),
+            // 내부 시크릿은 우리 Edge Function 주소일 때만 (제3자 플러그인 URL 로 유출 금지)
+            ...internalBridgeHeaders(endpointUrl),
             ...pluginAuthHeaders(row, credential),
           },
           body: JSON.stringify({

@@ -7,11 +7,29 @@ import {
   pluginAuthHeaders,
 } from "../_shared/plugin-credentials.ts"
 import { testMcpConnection } from '../_shared/mcp-client.ts'
+import { internalBridgeHeaders } from "../_shared/plugin-bridge-auth.ts"
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
+}
+
+/** 연결 테스트에 쓸 사용자 설치 설정 (사용자 스코프 > 워크스페이스 스코프) */
+async function loadInstallConfig(
+  admin: ReturnType<typeof createClient>,
+  pluginId: string,
+  userId: string,
+): Promise<Record<string, unknown>> {
+  const { data } = await admin
+    .from("extension_installations")
+    .select("scope_type, scope_id, enabled, config")
+    .eq("extension_id", pluginId)
+  const rows = (data ?? []) as { scope_type: string; scope_id: string | null; enabled: boolean; config: unknown }[]
+  const pick =
+    rows.find((r) => r.enabled && r.scope_type === "user" && r.scope_id === userId) ??
+    rows.find((r) => r.enabled && r.scope_type === "workspace")
+  return pick?.config && typeof pick.config === "object" ? pick.config as Record<string, unknown> : {}
 }
 
 function json(body: unknown, status = 200) {
@@ -86,10 +104,21 @@ Deno.serve(async (req) => {
         statusCode = 200
         await admin.from('api_health_logs').insert({ plugin_id: plugin.id, ok: true, status_code: 200, latency_ms: Date.now() - started, detail: `MCP tools/list 성공 (${tested.toolCount} tools)` })
       } else {
+        // 브릿지는 내부 시크릿이 없으면 401 이라 연결 테스트가 늘 실패했다 — 우리 함수 주소에만 붙인다
+        const installConfig = await loadInstallConfig(admin, plugin.id, auth.user.id)
         const response = await fetch(plugin.endpoint_url, {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...pluginAuthHeaders(plugin, credential) },
-          body: JSON.stringify({ health_check: true, plugin_id: plugin.id, user_id: auth.user.id }),
+          headers: {
+            "Content-Type": "application/json",
+            ...internalBridgeHeaders(plugin.endpoint_url),
+            ...pluginAuthHeaders(plugin, credential),
+          },
+          body: JSON.stringify({
+            health_check: true,
+            plugin_id: plugin.id,
+            user_id: auth.user.id,
+            install_config: installConfig,
+          }),
           signal: AbortSignal.timeout(15_000),
         })
         statusCode = response.status
