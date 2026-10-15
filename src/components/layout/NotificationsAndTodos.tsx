@@ -3,13 +3,26 @@ import { toast } from 'sonner'
 import { useAuth } from '../auth/useAuth'
 import { supabase } from '../../lib/supabase'
 
+type NotificationRow = {
+  id: string
+  title: string | null
+  content: string | null
+  is_read: boolean
+}
+
+type TodoRow = {
+  id: string
+  task: string
+  status: string
+}
+
 export function NotificationsAndTodos() {
   const { profile } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'notifications' | 'todos'>('notifications')
   
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [todos, setTodos] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<NotificationRow[]>([])
+  const [todos, setTodos] = useState<TodoRow[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
@@ -25,8 +38,9 @@ export function NotificationsAndTodos() {
         .limit(20)
       
       if (notifs) {
-        setNotifications(notifs)
-        setUnreadCount(notifs.filter(n => !n.is_read).length)
+        const rows = notifs as NotificationRow[]
+        setNotifications(rows)
+        setUnreadCount(rows.filter(n => !n.is_read).length)
       }
 
       // 2. Fetch Todos
@@ -37,7 +51,7 @@ export function NotificationsAndTodos() {
         .order('created_at', { ascending: false })
       
       if (todoList) {
-        setTodos(todoList)
+        setTodos(todoList as TodoRow[])
       }
     }
 
@@ -50,7 +64,7 @@ export function NotificationsAndTodos() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'nh_user_notifications', filter: `user_id=eq.${profile.id}` },
         (payload) => {
-          setNotifications(prev => [payload.new, ...prev])
+          setNotifications(prev => [payload.new as NotificationRow, ...prev])
           setUnreadCount(c => c + 1)
           const title = (payload.new as { title?: string })?.title
           toast.success(title ? `새 알림: ${title}` : '새로운 알림이 도착했습니다.')

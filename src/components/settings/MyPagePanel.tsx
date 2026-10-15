@@ -305,7 +305,7 @@ export function MyPagePanel() {
           화면 테마
           <select
             value={theme}
-            onChange={(e) => handleThemeChange(e.target.value as any)}
+            onChange={(e) => handleThemeChange(e.target.value as 'light' | 'dark' | 'system')}
             className={inputCls}
           >
             <option value="system">시스템 기본값</option>

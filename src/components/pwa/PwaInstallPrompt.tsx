@@ -2,16 +2,22 @@ import { useEffect, useState } from 'react'
 
 const HIDE_PWA_PROMPT_KEY = 'nh_ai_hub_hide_pwa_prompt_until'
 
+/** Chromium 전용 beforeinstallprompt 이벤트 (표준 lib.dom 에는 없음) */
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
 export function PwaInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e: any) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault()
       // Stash the event so it can be triggered later.
-      setDeferredPrompt(e)
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
 
       // Check if we should show it
       const hideUntilStr = localStorage.getItem(HIDE_PWA_PROMPT_KEY)
@@ -43,7 +49,7 @@ export function PwaInstallPrompt() {
     if (!deferredPrompt) return
 
     // Show the install prompt
-    deferredPrompt.prompt()
+    void deferredPrompt.prompt()
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice
     

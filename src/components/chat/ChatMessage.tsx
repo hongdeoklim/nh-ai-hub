@@ -12,6 +12,7 @@ import {
 } from './GeminiSparkleIcon'
 import { ThinkingProcessPanel } from './ThinkingProcessPanel'
 import type { ChatBubble } from './ChatArea'
+import { formatElapsedKo } from '../../utils/format-elapsed'
 
 export type ChatUiVariant = 'default' | 'claude' | 'gemini'
 
@@ -137,7 +138,7 @@ function splitTextAndTables(
   return out
 }
 
-export function parseAssistantMessageForArtifacts(
+function parseAssistantMessageForArtifacts(
   content: string,
   options?: { promoteTables?: boolean },
 ): ParsedMessageSegment[] {
@@ -410,16 +411,6 @@ function routeTaskLabel(taskType: string | null): string {
   return ROUTE_TASK_LABELS[taskType] ?? taskType
 }
 
-/** 밀리초 → "1시간 2분 3초" / "2분 3초" / "7초" */
-export function formatElapsedKo(ms: number): string {
-  const totalSec = Math.max(0, Math.floor(ms / 1000))
-  const h = Math.floor(totalSec / 3600)
-  const m = Math.floor((totalSec % 3600) / 60)
-  const s = totalSec % 60
-  if (h > 0) return `${h}시간 ${m}분 ${s}초`
-  if (m > 0) return `${m}분 ${s}초`
-  return `${s}초`
-}
 
 /**
  * 스트리밍 중 상태 라인 — NH 새싹 배지 + 3색(파랑·노랑·초록) 웨이브 점 + 경과시간(1초 갱신).

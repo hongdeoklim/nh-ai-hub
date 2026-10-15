@@ -99,7 +99,7 @@ function sanitizeMermaidContent(text: string): string {
   // Drop trailing lines that have unclosed node brackets (truncated content)
   while (result.length > 0) {
     const last = result[result.length - 1].trim()
-    if (last && /[\[({]/.test(last) && !/[\])}]/.test(last.replace(/^[^[\](){}]*/, ''))) {
+    if (last && /[[({]/.test(last) && !/[\])}]/.test(last.replace(/^[^[\](){}]*/, ''))) {
       result.pop()
     } else {
       break

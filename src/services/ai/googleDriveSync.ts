@@ -334,7 +334,7 @@ export async function syncGoogleDriveFolderToRag(options?: {
     }
   }
 
-  let textFiles: GdriveServiceFile[] = []
+  let textFiles: GdriveServiceFile[]
   try {
     textFiles = await collectTextFilesRecursive(rootListed.folderId, onProgress)
   } catch (e) {

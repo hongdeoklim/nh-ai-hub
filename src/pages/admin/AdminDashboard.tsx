@@ -62,7 +62,6 @@ export function AdminDashboard() {
       }
 
       let tokensSum = 0
-      let internalCostSum = 0
       const activeIds = new Set<string>()
       const deptTokens = new Map<string, number>()
 
@@ -71,7 +70,6 @@ export function AdminDashboard() {
         const ct = Number(row.completion_tokens ?? 0)
         const t = pt + ct
         tokensSum += t
-        internalCostSum += Number(row.total_cost ?? 0)
         activeIds.add(row.user_id)
 
         const dept = deptByUser.get(row.user_id) ?? '(미지정)'

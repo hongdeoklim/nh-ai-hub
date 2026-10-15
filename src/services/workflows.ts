@@ -67,7 +67,9 @@ export async function fetchMyWorkflows(): Promise<WorkflowRow[]> {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
   if (error) return []
-  return (data ?? []).map((r: any) => ({
+  type WorkflowRaw = Omit<WorkflowRow, 'steps' | 'trigger_type' | 'trigger_config' | 'last_run_at' | 'run_count'> &
+    Partial<Pick<WorkflowRow, 'steps' | 'trigger_type' | 'trigger_config' | 'last_run_at' | 'run_count'>>
+  return ((data ?? []) as WorkflowRaw[]).map((r) => ({
     ...r,
     steps: r.steps ?? [],
     trigger_type: r.trigger_type ?? 'manual',

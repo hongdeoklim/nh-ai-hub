@@ -135,14 +135,14 @@ export function FeedbackDashboard() {
       .limit(200)
 
     // 부정 피드백 유저 이메일 병합
-    let emailMap: Record<string, string> = {}
+    const emailMap: Record<string, string> = {}
     if (negData?.length) {
-      const userIds = [...new Set(negData.map((r: any) => r.user_id))]
+      const userIds = [...new Set((negData as Array<{ user_id: string }>).map((r) => r.user_id))]
       const { data: users } = await supabase.from('users').select('id, email').in('id', userIds)
       for (const u of users ?? []) emailMap[u.id] = u.email
     }
 
-    const posRows: FeedbackRow[] = (posData ?? []).map((r: any) => ({
+    const posRows: FeedbackRow[] = ((posData ?? []) as FeedbackRow[]).map((r) => ({
       feedback_id: r.feedback_id,
       message_id: r.message_id,
       message_type: r.message_type,
@@ -155,7 +155,17 @@ export function FeedbackDashboard() {
       user_prompt: r.user_prompt,
     }))
 
-    const neg: FeedbackRow[] = (negData ?? []).map((r: any) => ({
+    type NegativeFeedbackRaw = {
+      id: string
+      message_id: string
+      message_type: FeedbackRow['message_type']
+      feedback_text: string | null
+      rating: FeedbackRow['rating']
+      created_at: string
+      is_rag_applied: boolean | null
+      user_id: string
+    }
+    const neg: FeedbackRow[] = ((negData ?? []) as NegativeFeedbackRaw[]).map((r) => ({
       feedback_id: r.id,
       message_id: r.message_id,
       message_type: r.message_type,

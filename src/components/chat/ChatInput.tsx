@@ -26,10 +26,8 @@ import type { AiModelRow } from '../../types/ai-models'
 import { compressChatImageFile } from '../../utils/compress-chat-image'
 
 import { ChatAttachmentPreviewStrip } from './ChatAttachmentPreviewStrip'
-import {
-  MediaEngineBentoPanel,
-  mediaEngineLabel,
-} from './MediaEngineBentoPanel'
+import { MediaEngineBentoPanel } from './MediaEngineBentoPanel'
+import { mediaEngineLabel } from '../../lib/media-engine-label'
 
 export type { ChatExperimentalAttachment, ChatSendPayload }
 

@@ -251,14 +251,14 @@ export async function ingestKnowledgeFile(
     
     // 비동기로 호출하고 결과 맵핑 (UI 블로킹 방지를 위해 백그라운드 구동)
     void invokeProcessDocument(meta.documentId, 'knowledge_base')
-      .then((res: any) => {
+      .then((res) => {
         if (res.ok) {
           console.log(`[ingestKnowledgeFile] RAG 자동 파이프라인 완료: 청크 ${res.chunks}개 생성됨.`)
         } else {
           console.error(`[ingestKnowledgeFile] RAG 자동 파이프라인 오류:`, res.message)
         }
       })
-      .catch((e: any) => {
+      .catch((e: unknown) => {
         console.error(`[ingestKnowledgeFile] RAG 자동 파이프라인 실패:`, e)
       })
 

@@ -13,8 +13,8 @@ export function RechartsRenderer({ dataString }: RechartsRendererProps) {
   let parsed;
   try {
     parsed = JSON.parse(dataString);
-  } catch (e) {
-    return <div className="text-red-500">Failed to parse chart data.</div>;
+  } catch {
+    return <div className="text-danger">Failed to parse chart data.</div>;
   }
 
   const { type, data, xKey, yKeys = [], nameKey, valueKey } = parsed;
@@ -66,7 +66,7 @@ export function RechartsRenderer({ dataString }: RechartsRendererProps) {
               fill="#8884d8"
               label
             >
-              {data.map((_entry: any, index: number) => (
+              {data.map((_entry: unknown, index: number) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

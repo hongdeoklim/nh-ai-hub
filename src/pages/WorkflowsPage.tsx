@@ -691,7 +691,7 @@ export function WorkflowsPage() {
     setRunTarget(wf)
   }
 
-  const useTemplate = async (t: typeof TEMPLATES[0]) => {
+  const applyTemplate = async (t: typeof TEMPLATES[0]) => {
     const created = await createWorkflow({ title: t.title, description: t.description, category: t.category, trigger_type: t.trigger_type, steps: t.steps, system_prompt: '' })
     if (created) { await load(); setActiveTab('my') }
   }
@@ -898,7 +898,7 @@ export function WorkflowsPage() {
                         <span className="text-[11px] font-medium bg-surface-2 text-fg-subtle rounded-full px-2 py-0.5">{t.steps.length}단계</span>
                         <span className="text-[11px] text-fg-subtle">{triggerOpt?.label}</span>
                       </div>
-                      <button onClick={() => void useTemplate(t)}
+                      <button onClick={() => void applyTemplate(t)}
                         className="rounded-lg border border-accent/30 bg-accent-soft px-3 py-1.5 text-[11px] font-bold text-accent hover:bg-accent-soft transition-colors">
                         사용하기
                       </button>

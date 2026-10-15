@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-import { formatElapsedKo, type ChatUiVariant } from './ChatMessage'
+import type { ChatUiVariant } from './ChatMessage'
+import { formatElapsedKo } from '../../utils/format-elapsed'
 import {
   getMessageFeedback,
   saveFeedbackToDb,

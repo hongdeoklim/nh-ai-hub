@@ -69,19 +69,20 @@ export function CadAgentPage() {
   }, [])
 
   useEffect(() => {
-    queueMicrotask(() => void load())
+    void load()
   }, [load])
 
+  const profileId = profile?.id
   const handleApprove = useCallback(
     async (id: string, approve: boolean) => {
-      if (!profile?.id) return
+      if (!profileId) return
       setActing(id)
       try {
         if (approve) {
-          await approveCadJob(id, profile.id)
+          await approveCadJob(id, profileId)
           toast.success('작업을 승인했습니다. 에이전트가 곧 실행합니다.')
         } else {
-          await rejectCadJob(id, profile.id)
+          await rejectCadJob(id, profileId)
           toast.success('작업을 반려했습니다.')
         }
         await load()
@@ -91,7 +92,7 @@ export function CadAgentPage() {
         setActing(null)
       }
     },
-    [profile?.id, load],
+    [profileId, load],
   )
 
   return (

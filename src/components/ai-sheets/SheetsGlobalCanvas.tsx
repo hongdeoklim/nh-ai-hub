@@ -225,7 +225,9 @@ export function SheetsGlobalCanvas({
   const selectionRef = useRef(selection)
   const isDragSelectingRef = useRef(false)
   const dragAnchorRef = useRef<CellCoords | null>(null)
-  selectionRef.current = selection
+  useEffect(() => {
+    selectionRef.current = selection
+  })
 
   const selectedCell = cellIdFromSelectionFocus(selection)
   const nameBoxLabel = rangeToLabel(selection)
@@ -373,7 +375,7 @@ export function SheetsGlobalCanvas({
 
   const handlePaste = useCallback(async () => {
     const { row, col } = selectionRef.current.focus
-    let text = ''
+    let text: string
     try {
       text = await navigator.clipboard.readText()
     } catch {

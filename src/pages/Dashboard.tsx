@@ -1925,7 +1925,7 @@ export function Dashboard() {
           return { ...message, content: result.message, streaming: false }
         }
         if (actionType === 'image' && result.mediaUrl) {
-          const alt = trimmed.slice(0, 80).replace(/[\[\]]/g, '') || '생성 이미지'
+          const alt = trimmed.slice(0, 80).replace(/[[\]]/g, '') || '생성 이미지'
           return {
             ...message,
             content: result.markdown || `![${alt}](${result.mediaUrl})`,

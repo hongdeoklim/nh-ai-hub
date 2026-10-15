@@ -128,6 +128,8 @@ export function AutomationStudioPage() {
   const [workflows, setWorkflows] = useState<WorkflowRow[]>([])
   const [assistants, setAssistants] = useState<AssistantRow[]>([])
   const [runs, setRuns] = useState<WorkflowRunRow[]>([])
+  /** 목록을 불러온 시각 — 렌더 중 Date.now() 호출을 피하기 위해 로드 시점에 기록 */
+  const [loadedAt, setLoadedAt] = useState(0)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [busyExtensionId, setBusyExtensionId] = useState<string | null>(null)
@@ -156,6 +158,7 @@ export function AutomationStudioPage() {
     if (wf.status === 'fulfilled') setWorkflows(wf.value)
     if (as.status === 'fulfilled') setAssistants(as.value)
     if (rn.status === 'fulfilled') setRuns(rn.value)
+    setLoadedAt(Date.now())
     setLoading(false)
   }, [])
 
@@ -222,13 +225,13 @@ export function AutomationStudioPage() {
 
   /** 최근 7일 실행 통계 */
   const weekStats = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+    const weekAgo = loadedAt - 7 * 24 * 60 * 60 * 1000
     const recent = runs.filter(
       (run) => new Date(run.created_at).getTime() >= weekAgo,
     )
     const succeeded = recent.filter((run) => run.status === 'succeeded').length
     return { total: recent.length, succeeded }
-  }, [runs])
+  }, [runs, loadedAt])
 
   const workflowTitleById = useMemo(
     () => new Map(workflows.map((row) => [row.id, row.title])),

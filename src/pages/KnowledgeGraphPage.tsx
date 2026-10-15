@@ -62,8 +62,8 @@ export function KnowledgeGraphPage() {
         setLoading(true); setError(null)
         const result = await fetchKnowledgeGraphData(5000)
         if (!cancelled) setData(result)
-      } catch (e: any) {
-        if (!cancelled) setError(e.message)
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e))
       } finally {
         if (!cancelled) setLoading(false)
       }

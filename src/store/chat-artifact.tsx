@@ -48,6 +48,7 @@ export function ChatArtifactProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- 컨텍스트 훅 표준 패턴
 export function useChatArtifact(): ChatArtifactContextValue {
   const ctx = useContext(ChatArtifactContext)
   if (!ctx) {

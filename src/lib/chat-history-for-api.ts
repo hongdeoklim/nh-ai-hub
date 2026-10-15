@@ -41,7 +41,7 @@ export function buildChatHistoryForApi(
     }
   }
 
-  let result: ChatApiHistoryMessage[] = eligible.slice(-maxTurns).map((m) => ({
+  const result: ChatApiHistoryMessage[] = eligible.slice(-maxTurns).map((m) => ({
     role: m.role,
     content: m.content.trim(),
   }))

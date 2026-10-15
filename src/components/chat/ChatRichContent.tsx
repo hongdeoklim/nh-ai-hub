@@ -191,7 +191,15 @@ export function ChatRichContent({
     [segments],
   )
 
-  let imageCursor = -1
+  // 이미지 세그먼트별 라이트박스 인덱스를 렌더 전에 미리 계산 (렌더 콜백 안에서의 변이 금지)
+  const imageIndexBySegment: number[] = []
+  {
+    let cursor = -1
+    for (const seg of segments) {
+      if (seg.kind === 'image') cursor += 1
+      imageIndexBySegment.push(cursor)
+    }
+  }
 
   return (
     <div className="space-y-1">
@@ -228,8 +236,7 @@ export function ChatRichContent({
             />
           )
         }
-        imageCursor += 1
-        const imgIdx = imageCursor
+        const imgIdx = imageIndexBySegment[i] ?? 0
         return (
           <button
             key={`img-${i}`}

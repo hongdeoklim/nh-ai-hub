@@ -36,7 +36,7 @@ export function PromptLibraryMagnetSheet({
   const dragStartYRef = useRef(0)
   const dragStartHeightRef = useRef(readExpandedHeightPx())
   const expandedHeightRef = useRef(readExpandedHeightPx())
-  const [heightPx, setHeightPx] = useState(expandedHeightRef.current)
+  const [heightPx, setHeightPx] = useState(() => readExpandedHeightPx())
   const [isDragging, setIsDragging] = useState(false)
 
   const close = useCallback(() => {

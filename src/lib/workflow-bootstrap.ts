@@ -18,7 +18,9 @@ export function writeWorkflowBootstrap(
 export function clearWorkflowBootstrap(threadId: string) {
   try {
     sessionStorage.removeItem(`workflow_bootstrap_${threadId}`)
-  } catch {}
+  } catch {
+    /* sessionStorage 를 쓸 수 없는 환경은 무시 */
+  }
 }
 
 export function readWorkflowBootstrap(threadId: string): WorkflowBootstrapData | null {

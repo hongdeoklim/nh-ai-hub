@@ -38,7 +38,6 @@ function costBadgeClass(costInfo: string): string {
   return 'bg-surface-3/90 text-fg-muted'
 }
 
-export { costBadgeClass as modelCostBadgeClass }
 
 export type ModelSelectRowProps = {
   selectedModel: string

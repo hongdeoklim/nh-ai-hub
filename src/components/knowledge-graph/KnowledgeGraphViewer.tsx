@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- react-force-graph-3d 의 노드/링크/인스턴스 타입이 느슨해 이 뷰어에서만 any 를 허용한다 */
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import type { GraphNode, GraphData } from '../../services/knowledge-graph/knowledge-graph-client'
 import ForceGraph3D from 'react-force-graph-3d'
