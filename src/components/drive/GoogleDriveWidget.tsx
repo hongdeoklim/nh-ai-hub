@@ -110,7 +110,7 @@ export function GoogleDriveWidget({
   }, [currentFolderId])
 
   useEffect(() => {
-    void load()
+    queueMicrotask(() => void load())
   }, [load])
 
   function enterFolder(folder: GdriveServiceFolder) {

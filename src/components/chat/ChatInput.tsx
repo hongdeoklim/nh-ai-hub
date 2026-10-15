@@ -137,6 +137,16 @@ function IconSpinner(props: { className?: string }) {
   )
 }
 
+/** 선택한 미디어 엔진이 목록에 없으면 첫 엔진으로 대체 (목록이 비면 선택값 유지) */
+function resolveMediaModelId(
+  engines: readonly AiModelRow[],
+  picked: string,
+): string {
+  if (engines.length === 0) return picked
+  if (picked && engines.some((row) => row?.api_id === picked)) return picked
+  return engines[0]?.api_id ?? ''
+}
+
 function randomId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
@@ -334,31 +344,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       onError: (message) => toast.error(message),
     })
 
-    useEffect(() => {
-      if (safeMediaImageEngines.length === 0) return
-      setSelectedImageModelId((current) => {
-        if (
-          current &&
-          safeMediaImageEngines.some((row) => row?.api_id === current)
-        ) {
-          return current
-        }
-        return safeMediaImageEngines[0]?.api_id ?? ''
-      })
-    }, [safeMediaImageEngines])
-
-    useEffect(() => {
-      if (safeMediaVideoEngines.length === 0) return
-      setSelectedVideoModelId((current) => {
-        if (
-          current &&
-          safeMediaVideoEngines.some((row) => row?.api_id === current)
-        ) {
-          return current
-        }
-        return safeMediaVideoEngines[0]?.api_id ?? ''
-      })
-    }, [safeMediaVideoEngines])
+    // 엔진 목록에 없는 선택값은 첫 엔진으로 대체한다 (effect 동기화 대신 렌더 중 파생)
+    const imageModelId = resolveMediaModelId(safeMediaImageEngines, selectedImageModelId)
+    const videoModelId = resolveMediaModelId(safeMediaVideoEngines, selectedVideoModelId)
 
     useEffect(() => {
       latestValueRef.current = value
@@ -408,10 +396,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [attachMenuOpen, metaMenuOpen, toolsMenuOpen])
 
     useLayoutEffect(() => {
-      if (!attachMenuOpen) {
-        setAttachMenuAnchor(null)
-        return
-      }
+      if (!attachMenuOpen) return
 
       function updatePosition() {
         const button = attachButtonRef.current
@@ -430,10 +415,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [attachMenuOpen])
 
     useLayoutEffect(() => {
-      if (!toolsMenuOpen) {
-        setToolsMenuAnchor(null)
-        return
-      }
+      if (!toolsMenuOpen) return
 
       function updatePosition() {
         const button = toolsButtonRef.current
@@ -452,10 +434,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [toolsMenuOpen])
 
     useLayoutEffect(() => {
-      if (!metaMenuOpen) {
-        setMetaMenuAnchor(null)
-        return
-      }
+      if (!metaMenuOpen) return
 
       function updatePosition() {
         const button = metaButtonRef.current
@@ -483,20 +462,41 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
     }, [metaMenuOpen])
 
-    useEffect(() => {
-      if (disableAttachments) setAttachMenuOpen(false)
-    }, [disableAttachments])
-
-    useEffect(() => {
-      if (disabled) {
+    // 메뉴가 닫히면 위치 앵커를 비우고, 입력·첨부가 비활성화되면 열린 메뉴를 닫는다.
+    // effect 로 동기화하면 한 번 더 렌더되므로 렌더 중에 조정한다.
+    const menuSync = {
+      attach: attachMenuOpen,
+      tools: toolsMenuOpen,
+      meta: metaMenuOpen,
+      disabled,
+      disableAttachments,
+    }
+    const [prevMenuSync, setPrevMenuSync] = useState(menuSync)
+    if (
+      prevMenuSync.attach !== menuSync.attach ||
+      prevMenuSync.tools !== menuSync.tools ||
+      prevMenuSync.meta !== menuSync.meta ||
+      prevMenuSync.disabled !== menuSync.disabled ||
+      prevMenuSync.disableAttachments !== menuSync.disableAttachments
+    ) {
+      setPrevMenuSync(menuSync)
+      if (!attachMenuOpen) setAttachMenuAnchor(null)
+      if (!toolsMenuOpen) setToolsMenuAnchor(null)
+      if (!metaMenuOpen) setMetaMenuAnchor(null)
+      if (disabled && !prevMenuSync.disabled) {
         setAttachMenuOpen(false)
         setMetaMenuOpen(false)
         setToolsMenuOpen(false)
       }
-    }, [disabled])
+      if (disableAttachments && !prevMenuSync.disableAttachments) {
+        setAttachMenuOpen(false)
+      }
+    }
 
     useEffect(() => {
       if (!disableAttachments) return
+      // 미리보기 blob URL(외부 자원) 해제와 함께 비워야 하므로 effect 에서 처리한다
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAttachments((prev) => {
         prev.forEach((a) => URL.revokeObjectURL(a.previewUrl))
         return []
@@ -726,7 +726,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           return false
         }
         const mediaModelId =
-          actionType === 'image' ? selectedImageModelId : selectedVideoModelId
+          actionType === 'image' ? imageModelId : videoModelId
         if (!mediaModelId.trim()) {
           toast.error('미디어 엔진을 선택해 주세요.')
           return false
@@ -745,8 +745,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         generating,
         mediaBusy,
         onMediaGenerate,
-        selectedImageModelId,
-        selectedVideoModelId,
+        imageModelId,
+        videoModelId,
         value,
       ],
     )
@@ -859,7 +859,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       const engines =
         mediaKind === 'image' ? safeMediaImageEngines : safeMediaVideoEngines
       const selectedModelId =
-        mediaKind === 'image' ? selectedImageModelId : selectedVideoModelId
+        mediaKind === 'image' ? imageModelId : videoModelId
       const active = composerTool === mediaKind
       const panelOpen = mediaEnginePanel === mediaKind
       const busy = mediaBusy === mediaKind

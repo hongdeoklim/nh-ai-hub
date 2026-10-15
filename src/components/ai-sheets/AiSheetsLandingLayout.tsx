@@ -67,18 +67,27 @@ export function AiSheetsLandingLayout({
 
   const isLocalFile = linkedSpreadsheet?.source === 'local'
 
-  useEffect(() => {
-    if (linkedSpreadsheet?.source !== 'local') {
+  // 연결된 시트가 바뀌면 로컬 통합 문서·범위·미리보기를 맞춘다 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  const linkSync = {
+    source: linkedSpreadsheet?.source,
+    spreadsheetId: linkedSpreadsheet?.spreadsheetId,
+    range: linkedSpreadsheet?.range,
+  }
+  const [prevLinkSync, setPrevLinkSync] = useState(linkSync)
+  if (
+    prevLinkSync.source !== linkSync.source ||
+    prevLinkSync.spreadsheetId !== linkSync.spreadsheetId ||
+    prevLinkSync.range !== linkSync.range
+  ) {
+    setPrevLinkSync(linkSync)
+    if (linkSync.source !== 'local') {
       setLocalWorkbook(null)
       setActiveSheetName('')
     }
-  }, [linkedSpreadsheet?.source, linkedSpreadsheet?.spreadsheetId])
-
-  useEffect(() => {
-    if (linkedSpreadsheet?.range) {
-      setCanvasRange(linkedSpreadsheet.range)
-    }
-  }, [linkedSpreadsheet?.range])
+    if (linkSync.range) setCanvasRange(linkSync.range)
+    // 구글 시트 연결이 끊기면 이전 미리보기를 비운다
+    if (!linkSync.spreadsheetId && linkSync.source !== 'local') setPreview(null)
+  }
 
   useEffect(() => {
     onPreviewChange?.(preview)
@@ -95,11 +104,9 @@ export function AiSheetsLandingLayout({
   )
 
   useEffect(() => {
-    if (!linkedSpreadsheet?.spreadsheetId || isLocalFile) {
-      if (!isLocalFile) setPreview(null)
-      return
-    }
-    loadGooglePreview(linkedSpreadsheet.spreadsheetId, canvasRange)
+    const spreadsheetId = linkedSpreadsheet?.spreadsheetId
+    if (!spreadsheetId || isLocalFile) return
+    queueMicrotask(() => loadGooglePreview(spreadsheetId, canvasRange))
   }, [
     linkedSpreadsheet?.spreadsheetId,
     canvasRange,

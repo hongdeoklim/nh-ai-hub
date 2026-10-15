@@ -106,10 +106,10 @@ export function NotebookWorkspace() {
     queueMicrotask(() => void loadSources())
   }, [loadSources])
 
-  useEffect(() => {
-    if (sources.length === 0 || selectedIds.size > 0) return
+  // 선택된 소스가 없으면 앞쪽 3개를 기본 선택한다 (렌더 중 조정)
+  if (sources.length > 0 && selectedIds.size === 0) {
     setSelectedIds(new Set(sources.slice(0, Math.min(3, sources.length)).map((s) => s.id)))
-  }, [sources, selectedIds.size])
+  }
 
   useEffect(() => {
     queueMicrotask(() => void loadGraph())

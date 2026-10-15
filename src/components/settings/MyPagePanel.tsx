@@ -73,7 +73,9 @@ export function MyPagePanel() {
   const [profileMsg, setProfileMsg] = useState<string | null>(null)
   const [passwordMsg, setPasswordMsg] = useState<string | null>(null)
 
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
+    () => (localStorage.getItem('nh_theme') as 'light' | 'dark' | null) ?? 'system',
+  )
 
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushSupported, setPushSupported] = useState(true)
@@ -83,9 +85,13 @@ export function MyPagePanel() {
   const [passkeyBusy, setPasskeyBusy] = useState(false)
   const passkeySupported = isPasskeySupported()
 
-  useEffect(() => {
-    setPushEnabled(Boolean(profile?.push_consent))
-  }, [profile?.push_consent])
+  // 프로필의 푸시 동의값이 바뀌면 토글에 반영한다 (렌더 중 조정)
+  const profilePushConsent = Boolean(profile?.push_consent)
+  const [syncedPushConsent, setSyncedPushConsent] = useState<boolean | null>(null)
+  if (profilePushConsent !== syncedPushConsent) {
+    setSyncedPushConsent(profilePushConsent)
+    setPushEnabled(profilePushConsent)
+  }
 
   useEffect(() => {
     void isPushSupported().then(setPushSupported)
@@ -100,7 +106,7 @@ export function MyPagePanel() {
   }, [])
 
   useEffect(() => {
-    if (userId) void loadPasskeys()
+    if (userId) queueMicrotask(() => void loadPasskeys())
   }, [userId, loadPasskeys])
 
   const handleTogglePush = useCallback(
@@ -173,13 +179,6 @@ export function MyPagePanel() {
     },
     [userId, refreshProfile],
   )
-
-  useEffect(() => {
-    const saved = localStorage.getItem('nh_theme') as 'light' | 'dark' | null
-    if (saved) {
-      setTheme(saved)
-    }
-  }, [])
 
   const handleThemeChange = useCallback((newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme)

@@ -32,7 +32,7 @@ export function DriveSyncWidget({
   }, [])
 
   useEffect(() => {
-    void refreshLastUpdated()
+    queueMicrotask(() => void refreshLastUpdated())
   }, [refreshLastUpdated])
 
   const handleSync = useCallback(async () => {

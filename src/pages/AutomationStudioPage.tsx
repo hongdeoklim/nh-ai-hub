@@ -163,7 +163,7 @@ export function AutomationStudioPage() {
   }, [])
 
   useEffect(() => {
-    void reload()
+    queueMicrotask(() => void reload())
   }, [reload])
 
   const handleExtensionAction = useCallback(

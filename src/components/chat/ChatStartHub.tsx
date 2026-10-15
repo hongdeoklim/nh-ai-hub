@@ -81,11 +81,15 @@ export function ModelSelectRow({
     tooltipSource?.hint?.trim() ||
     '안내 준비 중'
 
+  // 닫히면 위치 앵커를 비운다 (렌더 중 조정 — 다시 열 때 이전 위치가 잠깐 보이지 않게)
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (!open) setMenuAnchor(null)
+  }
+
   useLayoutEffect(() => {
-    if (!open) {
-      setMenuAnchor(null)
-      return
-    }
+    if (!open) return
 
     function updatePosition() {
       const button = buttonRef.current

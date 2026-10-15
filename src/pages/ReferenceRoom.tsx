@@ -108,12 +108,18 @@ export function ReferenceRoom() {
     KNOWLEDGE_SHARED_DEPARTMENT,
   )
 
-  useEffect(() => {
-    const dept = profile?.department?.trim()
-    if (dept && (KNOWLEDGE_DEPARTMENT_OPTIONS as readonly string[]).includes(dept)) {
-      setUploadDepartment(dept)
+  // 프로필 부서가 정해지면 업로드 기본 부서로 쓴다 (렌더 중 조정)
+  const profileDepartment = profile?.department?.trim() ?? ''
+  const [syncedDepartment, setSyncedDepartment] = useState('')
+  if (profileDepartment !== syncedDepartment) {
+    setSyncedDepartment(profileDepartment)
+    if (
+      profileDepartment &&
+      (KNOWLEDGE_DEPARTMENT_OPTIONS as readonly string[]).includes(profileDepartment)
+    ) {
+      setUploadDepartment(profileDepartment)
     }
-  }, [profile?.department])
+  }
 
   const [sourceTab, setSourceTab] = useState<SourceTab>('registry')
   const [folderScope, setFolderScope] = useState<KnowledgeFolderVisibility>('public')
@@ -208,30 +214,29 @@ export function ReferenceRoom() {
     return map
   }, [scopedFolders])
 
-  useEffect(() => {
-    if (registryPathKey.trim().length > 0) {
-      setUploadCategory(registryPathKey)
-    }
-  }, [registryPathKey])
-
-  useEffect(() => {
+  // 폴더 선택·범위 동기화 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  // 1) 공개/개인 범위가 바뀌면 선택 상태를 비운다
+  const [syncedFolderScope, setSyncedFolderScope] = useState(folderScope)
+  const scopeChanged = folderScope !== syncedFolderScope
+  if (scopeChanged) {
+    setSyncedFolderScope(folderScope)
     setRegistryPathKey('')
     setFolderMenuKey(null)
     setSelectedIds(new Set())
-  }, [folderScope])
-
-  useEffect(() => {
-    if (loading || sourceTab !== 'registry') return
-    setRegistryPathKey((prev) => {
-      if (prev !== '') return prev
-      const keys = [...kbTree.folders.keys()].sort((a, b) =>
-        a.localeCompare(b, 'ko'),
-      )
-      const first = keys[0]
-      if (!first) return ''
-      return kbTree.folders.get(first)?.pathKey ?? ''
-    })
-  }, [loading, sourceTab, kbTree, folderScope])
+  }
+  // 2) 선택된 폴더가 없으면 첫 폴더를 고른다
+  if (!scopeChanged && !loading && sourceTab === 'registry' && registryPathKey === '') {
+    const keys = [...kbTree.folders.keys()].sort((a, b) => a.localeCompare(b, 'ko'))
+    const first = keys[0]
+    const firstPath = first ? kbTree.folders.get(first)?.pathKey ?? '' : ''
+    if (firstPath) setRegistryPathKey(firstPath)
+  }
+  // 3) 폴더를 고르면 업로드 분류도 그 폴더로 맞춘다
+  const [syncedPathKey, setSyncedPathKey] = useState(registryPathKey)
+  if (registryPathKey !== syncedPathKey) {
+    setSyncedPathKey(registryPathKey)
+    if (registryPathKey.trim().length > 0) setUploadCategory(registryPathKey)
+  }
 
   const registryNode = useMemo(
     () => getKnowledgeFolderNode(kbTree, registryPathKey),

@@ -65,11 +65,15 @@ export function PrivateChatThreadRow({
     left: number
   } | null>(null)
 
+  // 닫히면 메뉴 위치를 비운다 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  const [prevMenuOpen, setPrevMenuOpen] = useState(menuOpen)
+  if (menuOpen !== prevMenuOpen) {
+    setPrevMenuOpen(menuOpen)
+    if (!menuOpen) setMenuPosition(null)
+  }
+
   useLayoutEffect(() => {
-    if (!menuOpen) {
-      setMenuPosition(null)
-      return
-    }
+    if (!menuOpen) return
 
     function updatePosition() {
       const button = menuButtonRef.current

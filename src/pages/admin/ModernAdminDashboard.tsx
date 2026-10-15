@@ -371,7 +371,7 @@ export function ModernAdminDashboard() {
   }
 
   useEffect(() => {
-    void load()
+    queueMicrotask(() => void load())
   }, [])
 
   const thisMonth = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })

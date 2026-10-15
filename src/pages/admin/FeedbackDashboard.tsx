@@ -183,7 +183,7 @@ export function FeedbackDashboard() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => { queueMicrotask(() => void load()) }, [load])
 
   const allRows = [...rows, ...negRows].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()

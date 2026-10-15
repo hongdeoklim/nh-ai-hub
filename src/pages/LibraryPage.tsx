@@ -70,7 +70,7 @@ export function LibraryPage() {
 
   // 사내 자료실 불러오기
   useEffect(() => {
-    setDocsLoading(true)
+    // docsLoading 초기값이 true 라 마운트 시 다시 켤 필요가 없다
     fetchKnowledgeBase(supabase)
       .then((res) => {
         if (res.ok) setDocs(res.rows)

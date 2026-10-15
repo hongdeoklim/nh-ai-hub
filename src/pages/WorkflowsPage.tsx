@@ -549,7 +549,7 @@ function ExecutionModal({ wf, onClose }: { wf: WorkflowRow; onClose: () => void 
     setRunning(false); setDone(true)
   }, [wf.steps])
 
-  useEffect(() => { void start() }, [start])
+  useEffect(() => { queueMicrotask(() => void start()) }, [start])
 
   const succeeded = liveSteps.filter(s => s.status === 'succeeded').length
   const failed = liveSteps.filter(s => s.status === 'failed').length
@@ -667,7 +667,7 @@ export function WorkflowsPage() {
     setWorkflows(wfs); setRuns(rs); setLoading(false)
   }, [])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => { queueMicrotask(() => void load()) }, [load])
 
   const handleSave = async (data: { title: string; description: string; category: string; trigger_type: TriggerType; steps: WorkflowStep[] }) => {
     if (editTarget) await updateWorkflow(editTarget.id, data)

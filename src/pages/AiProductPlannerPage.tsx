@@ -263,7 +263,7 @@ export function AiProductPlannerPage() {
   }, [navigate, routeSessionId])
 
   useEffect(() => {
-    void bootstrapSession()
+    queueMicrotask(() => void bootstrapSession())
   }, [bootstrapSession])
 
   useEffect(() => {

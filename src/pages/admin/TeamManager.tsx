@@ -75,8 +75,11 @@ export function TeamManager() {
 
   useEffect(() => {
     if (!selectedTeam) return
-    void loadMembers(selectedTeam.id)
-    void loadEmployees()
+    const teamId = selectedTeam.id
+    queueMicrotask(() => {
+      void loadMembers(teamId)
+      void loadEmployees()
+    })
   }, [selectedTeam, loadMembers, loadEmployees])
 
   const availableEmployees = useMemo(() => {

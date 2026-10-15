@@ -50,7 +50,7 @@ export function ScheduledTasksPanel() {
   }
 
   useEffect(() => {
-    fetchTasks()
+    queueMicrotask(() => void fetchTasks())
   }, [])
 
   const handleCreate = async (e: React.FormEvent) => {

@@ -116,7 +116,7 @@ export function AxDashboard() {
   }
 
   useEffect(() => {
-    load()
+    queueMicrotask(() => void load())
   }, [])
 
   const routerAccuracy = metrics && metrics.routerLogCount > 0

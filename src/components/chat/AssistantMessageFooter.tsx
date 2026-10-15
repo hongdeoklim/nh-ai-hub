@@ -175,9 +175,12 @@ export function AssistantMessageFooter({
   const [isFetchingDetail, setIsFetchingDetail] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
+  // 다른 메시지로 바뀌면 저장된 피드백을 다시 읽는다 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  const [feedbackFor, setFeedbackFor] = useState(messageId)
+  if (feedbackFor !== messageId) {
+    setFeedbackFor(messageId)
     setFeedback(getMessageFeedback(messageId))
-  }, [messageId])
+  }
 
   const handleFeedback = useCallback(
     async (target: MessageFeedbackRating) => {
@@ -218,7 +221,7 @@ export function AssistantMessageFooter({
         }
       }
     },
-    [messageId, messageType, feedback],
+    [messageId, messageType, feedback, userPrompt, answerText],
   )
 
   const handleSubmitFeedback = useCallback(async () => {

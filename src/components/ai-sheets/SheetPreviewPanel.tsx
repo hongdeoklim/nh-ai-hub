@@ -26,14 +26,9 @@ export function SheetPreviewPanel({
   onRefresh,
 }: SheetPreviewPanelProps) {
   const headers = preview?.headers ?? []
-  const rows = preview?.rows ?? []
   const viewUrl = spreadsheetUrl ?? buildGoogleSheetsViewUrl(spreadsheetId)
 
-  const tableRows = useMemo(() => {
-    if (rows.length > 0) return rows.slice(0, 100)
-    if (headers.length === 0) return []
-    return []
-  }, [headers.length, rows])
+  const tableRows = useMemo(() => (preview?.rows ?? []).slice(0, 100), [preview?.rows])
 
   return (
     <div className="sheet-preview-panel flex h-full min-h-0 flex-col bg-surface">

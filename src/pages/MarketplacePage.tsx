@@ -576,12 +576,10 @@ export function MarketplacePage() {
 
   const installedCount = extensions.filter((x) => x.installation?.enabled).length
 
-  // Sync detailExt after reload so modal reflects latest state
-  useEffect(() => {
-    if (!detailExt) return
-    const fresh = extensions.find((x) => x.id === detailExt.id)
-    if (fresh) setDetailExt(fresh)
-  }, [extensions]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 새로고침 후에도 상세 모달이 최신 상태를 보이도록 목록에서 다시 찾는다 (파생값)
+  const detailView = detailExt
+    ? extensions.find((x) => x.id === detailExt.id) ?? detailExt
+    : null
 
   return (
     <main className="min-h-full overflow-y-auto bg-bg px-4 py-8 md:px-8">
@@ -713,13 +711,13 @@ export function MarketplacePage() {
       </div>
 
       {/* Detail Modal */}
-      {detailExt && (
+      {detailView && (
         <DetailModal
-          ext={detailExt}
-          busy={busyId === detailExt.id}
+          ext={detailView}
+          busy={busyId === detailView.id}
           onClose={() => setDetailExt(null)}
-          onInstall={(config) => handleInstall(detailExt, config).then(() => setDetailExt(null))}
-          onUpdateConfig={(config) => handleUpdateConfig(detailExt, config)}
+          onInstall={(config) => handleInstall(detailView, config).then(() => setDetailExt(null))}
+          onUpdateConfig={(config) => handleUpdateConfig(detailView, config)}
         />
       )}
     </main>

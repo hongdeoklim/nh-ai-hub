@@ -16,12 +16,15 @@ export function ChatArtifactLayout({
   const { activeArtifact, closeArtifact } = useChatArtifact()
   const open = activeArtifact !== null
   const [sheetEntered, setSheetEntered] = useState(false)
+  // 닫히면 진입 애니메이션 상태를 되돌린다 (렌더 중 조정 — 다시 열 때 처음부터 슬라이드)
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (!open) setSheetEntered(false)
+  }
 
   useEffect(() => {
-    if (!open) {
-      setSheetEntered(false)
-      return
-    }
+    if (!open) return
     let frame2 = 0
     const frame1 = requestAnimationFrame(() => {
       frame2 = requestAnimationFrame(() => setSheetEntered(true))

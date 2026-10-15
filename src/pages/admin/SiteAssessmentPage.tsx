@@ -438,7 +438,7 @@ export function SiteAssessmentPage() {
   }, [])
 
   useEffect(() => {
-    void loadHistory()
+    queueMicrotask(() => void loadHistory())
   }, [loadHistory])
 
   // ── Submit ──

@@ -130,8 +130,14 @@ export function KnowledgeGraph({
     [data],
   )
 
-  useEffect(() => {
+  // 그래프 데이터가 바뀌면 시뮬레이션을 새로 만든다 (렌더 중 조정)
+  const [simSource, setSimSource] = useState(data)
+  if (simSource !== data) {
+    setSimSource(data)
     setSim(buildSimGraph(data))
+  }
+
+  useEffect(() => {
     alphaRef.current = 1
   }, [graphKey, data])
 

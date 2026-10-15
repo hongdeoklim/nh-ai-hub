@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { useAuth } from '../components/auth/useAuth'
@@ -34,14 +34,18 @@ export function UniverOfficePage() {
   const [univerActiveTab, setUniverActiveTab] =
     useState<UniverOfficeActiveTab>('sheets')
 
-  useEffect(() => {
+  // 채팅에서 넘어온 내비게이션 상태(탭·AI 데이터)를 반영한다 (렌더 중 조정)
+  const [syncedNavState, setSyncedNavState] = useState<unknown>(null)
+  if (location.state !== syncedNavState) {
+    setSyncedNavState(location.state)
     const navState = readUniverOfficeNavigationState(location.state)
-    if (!navState) return
-    if (navState.activeTab) {
-      setUniverActiveTab(navState.activeTab)
+    if (navState) {
+      if (navState.activeTab) {
+        setUniverActiveTab(navState.activeTab)
+      }
+      setUniverSignal(navState.aiDataSignal)
     }
-    setUniverSignal(navState.aiDataSignal)
-  }, [location.state])
+  }
 
   const preferredAi = useMemo(() => {
     const fromProfile = profile?.preferred_ai?.trim()

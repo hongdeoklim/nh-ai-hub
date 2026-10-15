@@ -69,7 +69,7 @@ export function CadAgentPage() {
   }, [])
 
   useEffect(() => {
-    void load()
+    queueMicrotask(() => void load())
   }, [load])
 
   const profileId = profile?.id

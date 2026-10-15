@@ -130,7 +130,7 @@ export function KnowledgeHubPage() {
   }, [])
 
   useEffect(() => {
-    void reload()
+    queueMicrotask(() => void reload())
   }, [reload])
 
   const handleRetryFailed = useCallback(async () => {

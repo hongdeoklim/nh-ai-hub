@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { GeminiThinkingDots } from './GeminiSparkleIcon'
 
@@ -16,11 +16,12 @@ export function ThinkingProcessPanel({
   const showThinkingPhase =
     streaming && (thinkingOpen || thinking.trim().length === 0)
   const [manualExpanded, setManualExpanded] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    if (!streaming) return
-    setManualExpanded(null)
-  }, [streaming])
+  // 새 스트리밍이 시작되면 수동 펼침 상태를 초기화 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  const [prevStreaming, setPrevStreaming] = useState(streaming)
+  if (streaming !== prevStreaming) {
+    setPrevStreaming(streaming)
+    if (streaming) setManualExpanded(null)
+  }
 
   const expanded = manualExpanded ?? showThinkingPhase
 

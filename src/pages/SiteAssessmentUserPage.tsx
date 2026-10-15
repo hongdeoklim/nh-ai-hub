@@ -631,7 +631,7 @@ export function SiteAssessmentUserPage() {
     setHistory((data ?? []) as AssessmentRecord[])
   }, [])
 
-  useEffect(() => { void loadHistory() }, [loadHistory])
+  useEffect(() => { queueMicrotask(() => void loadHistory()) }, [loadHistory])
 
   const handleSubmit = useCallback(async () => {
     if (!imagePreview) { setError('사진을 먼저 업로드해주세요.'); return }
