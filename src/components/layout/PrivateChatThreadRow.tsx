@@ -44,7 +44,7 @@ type PrivateChatThreadRowProps = {
 }
 
 const menuItemClass =
-  'flex w-full items-center px-4 py-2.5 text-left leading-snug text-stone-800 transition hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-stone-800'
+  'flex w-full items-center px-[14px] py-[9px] text-left leading-snug text-fg transition hover:bg-surface-2'
 
 export function PrivateChatThreadRow({
   thread,
@@ -123,7 +123,7 @@ export function PrivateChatThreadRow({
             ref={menuRef}
             role="menu"
             aria-label={`${thread.title} 메뉴`}
-            className="private-chat-thread-menu fixed z-[200] w-[9.375rem] -translate-y-1/2 overflow-hidden rounded-xl border border-stone-200/90 bg-white py-1 shadow-xl dark:border-stone-600 dark:bg-stone-900"
+            className="private-chat-thread-menu fixed z-[200] w-[160px] -translate-y-1/2 overflow-hidden rounded-[12px] border border-border bg-surface py-[4px] shadow-pop"
             style={{ top: menuPosition.top, left: menuPosition.left }}
           >
             <button
@@ -171,13 +171,13 @@ export function PrivateChatThreadRow({
               노트북에 추가
             </button>
             <div
-              className="my-1 border-t border-stone-200 dark:border-stone-700"
+              className="my-[4px] border-t border-border"
               role="separator"
             />
             <button
               type="button"
               role="menuitem"
-              className={`${menuItemClass} text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40`}
+              className={`${menuItemClass} text-danger hover:bg-danger-soft`}
               onClick={() => {
                 onCloseMenu()
                 onDelete(thread.threadId)
@@ -191,17 +191,17 @@ export function PrivateChatThreadRow({
       : null
 
   return (
-    <div className="group relative flex min-w-0 w-full items-center rounded-none hover:bg-white/50 dark:hover:bg-stone-800/40">
+    <div className="group relative flex min-w-0 w-full items-center rounded-[8px] hover:bg-surface-2">
       <NavLink
         to={`/chat/${thread.threadId}`}
         title={thread.title}
         className={({ isActive }) =>
           [
-            'min-w-0 flex-1 truncate rounded-none py-1.5 pl-3 text-left text-sm font-normal leading-5 transition-colors',
+            'min-w-0 flex-1 truncate rounded-[8px] py-[7px] pl-[10px] text-left text-sm font-normal leading-5 transition-colors',
             thread.pinned ? 'pr-1 font-medium' : 'pr-0',
             isActive
-              ? 'bg-orange-200/80 font-medium text-orange-950 dark:bg-orange-950/50 dark:text-orange-50'
-              : 'text-stone-700 hover:bg-white/70 dark:text-stone-200 dark:hover:bg-stone-800/80',
+              ? 'bg-brand-soft font-medium text-fg'
+              : 'text-fg-muted hover:text-fg',
           ].join(' ')
         }
         onClick={() => {
@@ -215,7 +215,7 @@ export function PrivateChatThreadRow({
       <div className="relative flex shrink-0 items-center">
         {thread.pinned ? (
           <span
-            className="flex h-7 w-7 items-center justify-center text-stone-500 dark:text-stone-400"
+            className="flex h-[28px] w-[28px] items-center justify-center text-fg-subtle"
             title="고정된 대화"
             aria-label="고정된 대화"
           >
@@ -225,7 +225,7 @@ export function PrivateChatThreadRow({
         <button
           ref={menuButtonRef}
           type="button"
-          className={`flex h-7 w-7 items-center justify-center rounded-none text-stone-500 transition hover:bg-white/80 hover:text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600/30 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 ${
+          className={`mr-[2px] flex h-[28px] w-[28px] items-center justify-center rounded-[6px] text-fg-subtle transition hover:bg-surface-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 ${
             menuOpen
               ? 'opacity-100'
               : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'

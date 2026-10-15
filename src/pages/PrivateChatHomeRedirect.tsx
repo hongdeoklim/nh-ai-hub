@@ -45,8 +45,8 @@ export function PrivateChatHomeRedirect() {
   }, [navigate, profile?.id, loading])
 
   return (
-    <div className="flex min-h-[40vh] flex-1 items-center justify-center bg-[#FAF9F6] px-4 dark:bg-stone-950">
-      <p className="text-sm text-stone-600 dark:text-stone-400">
+    <div className="flex min-h-[40vh] flex-1 items-center justify-center bg-bg px-[16px]">
+      <p className="text-sm text-fg-muted">
         대화 화면으로 이동하는 중…
       </p>
     </div>

@@ -60,12 +60,12 @@ export function PwaInstallPrompt() {
   if (!showPrompt) return null
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-[9999] md:left-auto md:right-8 md:bottom-8 md:w-[22rem] scale-[0.70] origin-bottom md:origin-bottom-right transition-transform">
-      <div className="flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-white/95 p-4 shadow-2xl backdrop-blur-md dark:border-stone-700/80 dark:bg-stone-900/95">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/40">
+    <div className="app-shell fixed inset-x-[12px] bottom-[calc(var(--app-bottom-nav,0px)+12px)] z-[90] md:inset-x-auto md:bottom-[24px] md:right-[24px] md:w-[352px]">
+      <div className="flex flex-col gap-[12px] rounded-[16px] border border-border bg-surface/95 p-[16px] shadow-pop backdrop-blur-md">
+        <div className="flex items-start gap-[12px]">
+          <div className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[12px] bg-brand-soft">
             <svg
-              className="h-6 w-6 text-orange-700 dark:text-orange-400"
+              className="h-[22px] w-[22px] text-brand"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -80,36 +80,36 @@ export function PwaInstallPrompt() {
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+            <h3 className="text-sm font-bold text-fg">
               NH-AX-HUB 앱 설치
             </h3>
-            <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
+            <p className="mt-[4px] text-xs text-fg-muted">
               앱으로 설치하면 바탕화면에서 더 빠르고 편리하게 접속할 수 있습니다.
             </p>
           </div>
         </div>
 
-        <div className="mt-1 flex flex-col gap-2">
+        <div className="flex flex-col gap-[8px]">
           <button
             type="button"
             onClick={handleInstall}
-            className="w-full rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:bg-orange-700 dark:hover:bg-orange-600"
+            className="h-[40px] w-full rounded-[10px] bg-brand px-[14px] text-sm font-semibold text-brand-fg shadow-card transition hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"
           >
             앱 설치하기
           </button>
           
-          <div className="flex gap-2">
+          <div className="flex gap-[8px]">
             <button
               type="button"
               onClick={() => hideForDays(1)}
-              className="flex-1 rounded-xl bg-stone-100 px-3 py-2 text-xs font-medium text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+              className="h-[34px] flex-1 rounded-[10px] bg-surface-2 px-[10px] text-xs font-medium text-fg-muted transition hover:bg-surface-3 hover:text-fg"
             >
               오늘 하루 보지 않기
             </button>
             <button
               type="button"
               onClick={() => hideForDays(7)}
-              className="flex-1 rounded-xl bg-stone-100 px-3 py-2 text-xs font-medium text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+              className="h-[34px] flex-1 rounded-[10px] bg-surface-2 px-[10px] text-xs font-medium text-fg-muted transition hover:bg-surface-3 hover:text-fg"
             >
               7일 동안 보지 않기
             </button>

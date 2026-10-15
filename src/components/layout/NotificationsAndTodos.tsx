@@ -90,42 +90,44 @@ export function NotificationsAndTodos() {
         aria-label={unreadCount > 0 ? `알림 (안 읽음 ${unreadCount}건)` : '알림'}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+        className="relative inline-flex h-[36px] w-[36px] items-center justify-center rounded-[10px] text-fg-muted transition hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"
       >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-[20px] w-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute right-1.5 top-1.5 flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-stone-900"></span>
+          <span className="absolute right-[7px] top-[7px] flex h-[9px] w-[9px] rounded-full bg-danger ring-2 ring-surface"></span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 flex w-80 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl dark:border-stone-700 dark:bg-stone-900 z-50">
-          <div className="flex border-b border-stone-100 dark:border-stone-800">
+        <>
+        <div className="fixed inset-0 z-[60]" aria-hidden="true" onClick={() => setIsOpen(false)} />
+        <div className="absolute right-0 top-[44px] z-[61] flex w-[320px] max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-[14px] border border-border bg-surface shadow-pop">
+          <div className="flex border-b border-border">
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`flex-1 py-3 text-sm font-medium ${activeTab === 'notifications' ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'text-stone-500 hover:text-stone-700 dark:text-stone-400'}`}
+              className={`flex-1 py-3 text-sm font-medium ${activeTab === 'notifications' ? 'border-b-2 border-brand text-brand' : 'text-fg-muted hover:text-fg'}`}
             >
               알림{unreadCount > 0 && ` (${unreadCount})`}
             </button>
             <button
               onClick={() => setActiveTab('todos')}
-              className={`flex-1 py-3 text-sm font-medium ${activeTab === 'todos' ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'text-stone-500 hover:text-stone-700 dark:text-stone-400'}`}
+              className={`flex-1 py-3 text-sm font-medium ${activeTab === 'todos' ? 'border-b-2 border-brand text-brand' : 'text-fg-muted hover:text-fg'}`}
             >
               할 일
             </button>
           </div>
 
-          <div className="max-h-96 overflow-y-auto p-2">
+          <div className="max-h-[384px] overflow-y-auto p-[8px]">
             {activeTab === 'notifications' && (
               notifications.length === 0 ? (
-                <p className="py-8 text-center text-sm text-stone-500">새로운 알림이 없습니다.</p>
+                <p className="py-[32px] text-center text-sm text-fg-muted">새로운 알림이 없습니다.</p>
               ) : (
                 notifications.map(n => (
-                  <div key={n.id} role="button" tabIndex={0} onClick={() => markAsRead(n.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); markAsRead(n.id) } }} className={`mb-1 cursor-pointer rounded-lg p-3 transition hover:bg-stone-50 dark:hover:bg-stone-800/50 ${n.is_read ? 'opacity-60' : 'bg-indigo-50/50 dark:bg-indigo-900/10'}`}>
-                    <h4 className="text-[13px]! font-semibold text-stone-900 dark:text-stone-100">{n.title}</h4>
-                    <p className="mt-1 text-[12px]! text-stone-600 dark:text-stone-400 line-clamp-2">{n.content}</p>
+                  <div key={n.id} role="button" tabIndex={0} onClick={() => markAsRead(n.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); markAsRead(n.id) } }} className={`mb-[4px] cursor-pointer rounded-[10px] p-[10px] transition hover:bg-surface-2 ${n.is_read ? 'opacity-60' : 'bg-brand-soft/60'}`}>
+                    <h4 className="text-[13px]! font-semibold text-fg">{n.title}</h4>
+                    <p className="mt-[4px] text-[12px]! text-fg-muted line-clamp-2">{n.content}</p>
                   </div>
                 ))
               )
@@ -133,18 +135,18 @@ export function NotificationsAndTodos() {
 
             {activeTab === 'todos' && (
               todos.length === 0 ? (
-                <p className="py-8 text-center text-sm text-stone-500">할 일이 없습니다.</p>
+                <p className="py-[32px] text-center text-sm text-fg-muted">할 일이 없습니다.</p>
               ) : (
                 todos.map(t => (
-                  <div key={t.id} className="mb-1 flex items-start gap-3 rounded-lg p-3 hover:bg-stone-50 dark:hover:bg-stone-800/50">
+                  <div key={t.id} className="mb-[4px] flex items-start gap-[10px] rounded-[10px] p-[10px] hover:bg-surface-2">
                     <input
                       type="checkbox"
                       checked={t.status === 'completed'}
                       onChange={() => toggleTodoStatus(t.id, t.status)}
-                      className="mt-0.5 h-4 w-4 rounded border-stone-300 text-indigo-600 focus:ring-indigo-500"
+                      className="mt-[2px] h-[16px] w-[16px] rounded border-border-strong accent-brand"
                     />
                     <div>
-                      <p className={`text-[13px]! font-medium ${t.status === 'completed' ? 'text-stone-400 line-through' : 'text-stone-900 dark:text-stone-100'}`}>
+                      <p className={`text-[13px]! font-medium ${t.status === 'completed' ? 'text-fg-subtle line-through' : 'text-fg'}`}>
                         {t.task}
                       </p>
                     </div>
@@ -154,6 +156,7 @@ export function NotificationsAndTodos() {
             )}
           </div>
         </div>
+        </>
       )}
     </div>
   )

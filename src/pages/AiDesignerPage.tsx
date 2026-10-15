@@ -6,8 +6,6 @@ import { AiDesignerGallery } from '../components/ai-designer/AiDesignerGallery'
 import { useAuth } from '../components/auth/useAuth'
 import { ChatInput, type ChatSendPayload } from '../components/chat/ChatInput'
 import { ModelSelectRow } from '../components/chat/ChatStartHub'
-import { AccountHeaderActions } from '../components/layout/AccountHeaderActions'
-import { useAppUi } from '../contexts/AppUiContext'
 import {
   AI_DESIGNER_CATEGORIES,
   buildDesignerPrompt,
@@ -25,8 +23,7 @@ import {
 
 export function AiDesignerPage() {
   const navigate = useNavigate()
-  const { profile, signOut } = useAuth()
-  const { openSettings } = useAppUi()
+  const { profile } = useAuth()
   const chatInputRef = useRef<ComponentRef<typeof ChatInput>>(null)
 
   const [activeCategory, setActiveCategory] = useState<AiDesignerCategoryId>('chat')
@@ -119,22 +116,6 @@ export function AiDesignerPage() {
 
   return (
     <div className="main-inner chat-agent flex min-h-0 flex-1 flex-col overflow-hidden bg-[#FAF9F6] dark:bg-stone-950">
-      <header className="hidden shrink-0 items-center gap-1 border-b border-stone-200/90 bg-[#FAF9F6]/95 px-2 py-1 backdrop-blur-md dark:border-stone-800/60 dark:bg-[#050508]/55 md:flex md:px-3 md:py-1.5">
-        <h1 className="min-w-0">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="text-left text-[14px]! font-semibold leading-none tracking-tight text-stone-900 transition hover:text-orange-800 dark:text-stone-50 dark:hover:text-orange-200"
-            aria-label="홈 · 새 채팅"
-          >
-            NH-AX-HUB
-          </button>
-        </h1>
-        <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-[14px]! font-semibold text-orange-900 dark:bg-orange-950/50 dark:text-orange-200">
-          AI Designer
-        </span>
-        <AccountHeaderActions onOpenSettings={openSettings} onSignOut={signOut} />
-      </header>
 
       <section
         className="flex min-h-0 flex-1 flex-col overflow-hidden"

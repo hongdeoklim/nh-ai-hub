@@ -27,7 +27,6 @@ import {
 } from '../components/prompts/PromptLibraryPanel'
 import { PromptLibraryMagnetSheet } from '../components/prompts/PromptLibraryMagnetSheet'
 import { TokenRequestModal } from '../components/settings/TokenRequestModal'
-import { AccountHeaderActions } from '../components/layout/AccountHeaderActions'
 import { useAppUi } from '../contexts/AppUiContext'
 import {
   routePromptToModelId,
@@ -229,12 +228,11 @@ const DEEP_RESEARCH_LOADING_MESSAGE =
   '🤖 3개의 AI(Claude, GPT, Gemini)가 회의 중입니다... (약 15~30초 소요)'
 
 export function Dashboard() {
-  const { profile, profileError, refreshProfile, signOut } = useAuth()
+  const { profile, profileError, refreshProfile } = useAuth()
   const {
     registerNewChatHandler,
     registerPromptPanel,
     openSettings,
-    requestNewChat,
   } = useAppUi()
   const [selectedModel, setSelectedModel] = useState<string>('auto')
   const [selectedProvider, setSelectedProvider] =
@@ -2019,7 +2017,7 @@ export function Dashboard() {
 
   return (
     <ChatArtifactProvider>
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#FAF9F6] dark:bg-transparent lg:flex-row">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-bg dark:bg-transparent lg:flex-row">
       <div
         className={`hidden min-w-0 shrink-0 transition-[width] duration-200 ease-out lg:flex lg:h-full lg:max-h-none ${
           promptPanelExpanded
@@ -2048,23 +2046,6 @@ export function Dashboard() {
         <GeminiChatBackground
           active={isSending || messages.some((message) => message.streaming)}
         />
-        <header className="hidden shrink-0 items-center gap-1 border-b border-stone-200/90 bg-[#FAF9F6]/95 px-2 py-1 backdrop-blur-md dark:border-stone-800/60 dark:bg-[#050508]/55 md:flex md:px-3 md:py-1.5">
-          <h1 className="min-w-0">
-            <button
-              type="button"
-              onClick={() => requestNewChat()}
-              className="text-left text-2xl font-semibold leading-none tracking-tight text-stone-900 transition hover:text-orange-800 dark:text-stone-50 dark:hover:text-orange-200"
-              aria-label="홈 · 새 채팅"
-              title="홈 · 새 채팅"
-            >
-              NH-AX-HUB
-            </button>
-          </h1>
-          <AccountHeaderActions
-            onOpenSettings={openSettings}
-            onSignOut={signOut}
-          />
-        </header>
 
         {activeWorkflowTitle && (
           <div className="shrink-0 border-b border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200 flex flex-wrap items-center justify-between gap-2 md:px-6">
@@ -2212,7 +2193,7 @@ export function Dashboard() {
           </ChatArtifactLayout>
           )}
 
-        <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-20 shrink-0 border-t border-stone-200/90 bg-[#FAF9F6]/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md gemini-zero-dark-composer dark:border-stone-800/80 md:pointer-events-auto md:relative md:inset-x-auto md:bottom-auto md:z-0 md:bg-transparent md:px-6 md:pb-4 md:pt-2 md:backdrop-blur-none ${isSending ? 'gemini-zero-dark-composer--generating' : ''}`}>
+        <div className={`pointer-events-none fixed inset-x-0 bottom-[var(--app-bottom-nav,0px)] z-20 shrink-0 border-t border-border bg-surface/95 px-3 py-2 pb-[max(8px,calc(env(safe-area-inset-bottom)_-_var(--app-bottom-nav,0px)))] backdrop-blur-md gemini-zero-dark-composer dark:border-stone-800/80 md:pointer-events-auto md:relative md:inset-x-auto md:bottom-auto md:z-0 md:bg-transparent md:px-6 md:pb-4 md:pt-2 md:backdrop-blur-none ${isSending ? 'gemini-zero-dark-composer--generating' : ''}`}>
           <div className="pointer-events-auto">
           {referenceBootstrapBusy ? (
             <div className="mx-auto mb-1 max-w-3xl rounded-lg border border-orange-200/80 bg-orange-50/95 px-3 py-2 text-[11px]! font-medium text-orange-950 dark:border-orange-900 dark:bg-orange-950/35 dark:text-orange-100">

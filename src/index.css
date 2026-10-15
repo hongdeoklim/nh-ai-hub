@@ -1,38 +1,113 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans:
-    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+/* ------------------------------------------------------------------
+ * Pretendard — 로컬 self-host (오프라인 PWA 대응, CDN 의존 제거)
+ * ------------------------------------------------------------------ */
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Bold.woff2') format('woff2');
 }
 
+/* ------------------------------------------------------------------
+ * NH-AX-HUB 디자인 토큰 (2026-10 개편)
+ *
+ *  · 원시값은 :root / .dark 의 --nh-* 변수에만 둔다.
+ *  · Tailwind 유틸은 아래 @theme inline 매핑을 통해 생성된다.
+ *      bg-bg · bg-surface · bg-surface-2 · bg-surface-3
+ *      text-fg · text-fg-muted · text-fg-subtle
+ *      border-border · border-border-strong
+ *      bg-brand · bg-brand-strong · bg-brand-soft · text-brand · text-brand-fg
+ *      bg-accent · bg-accent-soft · text-accent
+ *      text-success / warning / danger (+ -soft 배경)
+ *      ring-focus · shadow-card · shadow-pop
+ *  · 컴포넌트에서 hex 를 직접 쓰지 말고 위 유틸을 사용한다.
+ * ------------------------------------------------------------------ */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* 브랜드 — NH 그린 / NH 블루 */
+  --nh-brand: #0f8a4f;
+  --nh-brand-strong: #0b6e3f;
+  --nh-brand-soft: #e7f5ec;
+  --nh-brand-fg: #ffffff;
+  --nh-accent: #1757b8;
+  --nh-accent-soft: #e8f0fb;
+
+  /* 표면 */
+  --nh-bg: #f5f7f4;
+  --nh-surface: #ffffff;
+  --nh-surface-2: #eef1ed;
+  --nh-surface-3: #e3e8e2;
+  --nh-border: #e1e6e0;
+  --nh-border-strong: #c7cec6;
+
+  /* 텍스트 */
+  --nh-fg: #15201a;
+  --nh-fg-muted: #56655d;
+  --nh-fg-subtle: #87948c;
+
+  /* 상태 */
+  --nh-success: #15803d;
+  --nh-success-soft: #dcfce7;
+  --nh-warning: #b45309;
+  --nh-warning-soft: #fef3c7;
+  --nh-danger: #b91c1c;
+  --nh-danger-soft: #fee2e2;
+  --nh-focus: #1757b8;
+
+  /* 그림자 */
+  --nh-shadow-card: 0 1px 2px rgba(21, 32, 26, 0.06), 0 1px 1px rgba(21, 32, 26, 0.04);
+  --nh-shadow-pop: 0 12px 32px -8px rgba(21, 32, 26, 0.22), 0 2px 8px rgba(21, 32, 26, 0.08);
+
+  /* 레거시 변수 — 마크다운/코드 블록 등 기존 CSS 가 참조. 신규 코드에서 사용 금지 */
+  --text: var(--nh-fg-muted);
+  --text-h: var(--nh-fg);
+  --bg: var(--nh-surface);
+  --border: var(--nh-border);
+  --code-bg: var(--nh-surface-2);
+  --accent: var(--nh-brand);
+  --accent-bg: var(--nh-brand-soft);
+  --accent-border: var(--nh-brand);
+  --shadow: var(--nh-shadow-pop);
 
   --sans:
     'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
-  --heading:
-    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  --heading: var(--sans);
   --mono: ui-monospace, Consolas, monospace;
 
+  /*
+   * ⚠ 루트 폰트 27px(≤1024px: 24px) — 레거시 rem 유틸 팽창의 원인.
+   *   16px 전환은 docs/REDESIGN-2026-10.md §3.1 절차에 따라 별도 승인 후 진행.
+   */
   font: 27px/145% var(--sans);
   letter-spacing: 0.27px;
   color-scheme: light;
   color: var(--text);
-  background: var(--bg);
+  background: var(--nh-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -43,42 +118,74 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  :root:not(.light) #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
 :root.dark {
-  --text: #9ca3af;
-  --text-h: #f3f4f6;
-  --bg: #16171d;
-  --border: #2e303a;
-  --code-bg: #1f2028;
-  --accent: #c084fc;
-  --accent-bg: rgba(192, 132, 252, 0.15);
-  --accent-border: rgba(192, 132, 252, 0.5);
-  --social-bg: rgba(47, 48, 58, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  color-scheme: dark;
+
+  --nh-brand: #34c77b;
+  --nh-brand-strong: #22a864;
+  --nh-brand-soft: rgba(52, 199, 123, 0.14);
+  --nh-brand-fg: #06281a;
+  --nh-accent: #6ba3f2;
+  --nh-accent-soft: rgba(107, 163, 242, 0.16);
+
+  --nh-bg: #0e1211;
+  --nh-surface: #161b19;
+  --nh-surface-2: #1e2522;
+  --nh-surface-3: #273029;
+  --nh-border: #2a332e;
+  --nh-border-strong: #3b463f;
+
+  --nh-fg: #ecf1ee;
+  --nh-fg-muted: #a5b0aa;
+  --nh-fg-subtle: #74807a;
+
+  --nh-success: #4ade80;
+  --nh-success-soft: rgba(74, 222, 128, 0.14);
+  --nh-warning: #fbbf24;
+  --nh-warning-soft: rgba(251, 191, 36, 0.14);
+  --nh-danger: #f87171;
+  --nh-danger-soft: rgba(248, 113, 113, 0.14);
+  --nh-focus: #6ba3f2;
+
+  --nh-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --nh-shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-:root.dark #social .button-icon {
-  filter: invert(1) brightness(2);
+@theme {
+  --font-sans:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+}
+
+@theme inline {
+  --color-brand: var(--nh-brand);
+  --color-brand-strong: var(--nh-brand-strong);
+  --color-brand-soft: var(--nh-brand-soft);
+  --color-brand-fg: var(--nh-brand-fg);
+  --color-accent: var(--nh-accent);
+  --color-accent-soft: var(--nh-accent-soft);
+
+  --color-bg: var(--nh-bg);
+  --color-surface: var(--nh-surface);
+  --color-surface-2: var(--nh-surface-2);
+  --color-surface-3: var(--nh-surface-3);
+  --color-border: var(--nh-border);
+  --color-border-strong: var(--nh-border-strong);
+
+  --color-fg: var(--nh-fg);
+  --color-fg-muted: var(--nh-fg-muted);
+  --color-fg-subtle: var(--nh-fg-subtle);
+
+  --color-success: var(--nh-success);
+  --color-success-soft: var(--nh-success-soft);
+  --color-warning: var(--nh-warning);
+  --color-warning-soft: var(--nh-warning-soft);
+  --color-danger: var(--nh-danger);
+  --color-danger-soft: var(--nh-danger-soft);
+  --color-focus: var(--nh-focus);
+
+  --shadow-card: var(--nh-shadow-card);
+  --shadow-pop: var(--nh-shadow-pop);
 }
 
 #root {
@@ -893,75 +1000,32 @@ body {
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 84px;
-  letter-spacing: -2.52px;
-  margin: 48px 0;
-  @media (max-width: 1024px) {
-    font-size: 54px;
-    margin: 30px 0;
-  }
-}
-h2 {
-  font-size: 36px;
-  line-height: 118%;
-  letter-spacing: -0.36px;
-  margin: 0 0 12px;
-  @media (max-width: 1024px) {
-    font-size: 30px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
+  font-weight: 600;
   color: var(--text-h);
 }
 
 code {
-  font-size: 22.5px;
-  line-height: 135%;
-  padding: 4px 8px;
+  font-family: var(--mono);
+  border-radius: 4px;
+  color: var(--text-h);
   background: var(--code-bg);
 }
 
-/* Google OGB 스타일 — 데스크톱 헤더 좌측 정렬 버퍼 */
-.desktop-ogb-buffer {
-  display: none;
-  flex: 0 0 auto;
-  flex-shrink: 0;
-  width: 0;
-  min-width: 0;
+
+
+/* 앱 전역 기본 서체 */
+body,
+#root {
+  font-family: var(--sans);
 }
 
-@media (min-width: 768px) {
-  .desktop-ogb-buffer {
-    display: block;
-    width: 3rem;
-    min-width: 3rem;
-    max-width: 3rem;
+/* 모션 축소 환경 — 장식 애니메이션 전역 억제 */
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .admin-shell * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-}
-
-@media (min-width: 1024px) {
-  .desktop-ogb-buffer {
-    width: 4.5rem;
-    min-width: 4.5rem;
-    max-width: 4.5rem;
-  }
-}
-
-
-/* Force Pretendard globally */
-body, .app-shell, .admin-shell, .admin-sidebar, #root {
-  font-family: 'Pretendard', sans-serif !important;
 }

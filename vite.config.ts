@@ -12,16 +12,47 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
+        id: '/',
         name: 'NH-AX-HUB',
         short_name: 'NH-AX-HUB',
-        description: 'NH AI Inside Hub — 사내 AI 업무 포털',
-        theme_color: '#020617',
-        background_color: '#020617',
+        description: 'NH-AX-HUB — 농협네트웍스 임직원 전용 생성형 AI 업무 포털',
+        theme_color: '#f5f7f4',
+        background_color: '#f5f7f4',
         display: 'standalone',
-        orientation: 'portrait',
+        display_override: ['standalone', 'minimal-ui'],
+        // 태블릿·데스크톱 PWA 에서 가로 모드를 막지 않는다
+        orientation: 'any',
         scope: '/',
         start_url: '/',
         lang: 'ko-KR',
+        categories: ['business', 'productivity'],
+        // 홈 화면 아이콘 길게 누르기 / 작업 표시줄 점프 리스트
+        shortcuts: [
+          {
+            name: '새 채팅',
+            short_name: '채팅',
+            url: '/',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: '사내 자료실',
+            short_name: '자료실',
+            url: '/reference-room',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: '자동화 스튜디오',
+            short_name: '자동화',
+            url: '/automation-studio',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: '노트북 워크스페이스',
+            short_name: '노트북',
+            url: '/notebook',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+        ],
         icons: [
           {
             src: 'pwa-192x192.png',

@@ -159,8 +159,8 @@ const KnowledgeGraphPage = lazy(() =>
 const DevUiCheckPage = lazy(() =>
   import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevUiCheckPage })),
 )
-const DevSidebarDockCheckPage = lazy(() =>
-  import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevSidebarDockCheckPage })),
+const DevShellCheckPage = lazy(() =>
+  import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevShellCheckPage })),
 )
 const KnowledgeHubPage = lazy(() =>
   import('./pages/KnowledgeHubPage').then((m) => ({ default: m.KnowledgeHubPage })),
@@ -174,8 +174,8 @@ const CadAgentPage = lazy(() =>
 
 function AuthSpinner() {
   return (
-    <div className="app-shell flex min-h-dvh w-full items-center justify-center bg-slate-100 dark:bg-slate-950">
-      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+    <div className="app-shell flex min-h-dvh w-full items-center justify-center bg-bg">
+      <p className="text-sm font-medium text-fg-muted">
         인증 정보를 불러오는 중…
       </p>
     </div>
@@ -315,14 +315,13 @@ function AppRoutes() {
               </Suspense>
             }
           />
-          <Route
-            path="__ui-check/sidebar-dock"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <DevSidebarDockCheckPage />
-              </Suspense>
-            }
-          />
+          {/* 앱 셸 v2 + 디자인 토큰 검수 — MainLayout 안에서 렌더 (로그인 불필요) */}
+          <Route path="__ui-check/shell" element={<MainLayout />}>
+            <Route element={<LazyRouteOutlet />}>
+              <Route index element={<DevShellCheckPage />} />
+              <Route path="*" element={<DevShellCheckPage />} />
+            </Route>
+          </Route>
         </>
       ) : null}
       <Route path="*" element={<Navigate to="/" replace />} />
