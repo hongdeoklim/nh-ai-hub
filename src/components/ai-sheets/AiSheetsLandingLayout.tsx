@@ -212,7 +212,7 @@ export function AiSheetsLandingLayout({
           />
 
           <div>
-            <p className="mb-2 text-[13px] font-medium text-stone-500 dark:text-stone-400">
+            <p className="mb-2 text-[13px] font-medium text-fg-subtle">
               빠른 시작
             </p>
             <div className="flex flex-wrap gap-2">
@@ -221,7 +221,7 @@ export function AiSheetsLandingLayout({
                   key={starter.id}
                   type="button"
                   onClick={() => onStarterClick(starter.prompt)}
-                  className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[13px] font-medium text-stone-700 transition hover:border-orange-300 hover:bg-orange-50/80 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-orange-700 dark:hover:bg-orange-950/30"
+                  className="rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] font-medium text-fg-muted transition hover:border-orange-300 hover:bg-brand-soft/80"
                 >
                   {starter.label}
                 </button>

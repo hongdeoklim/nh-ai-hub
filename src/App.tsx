@@ -334,6 +334,7 @@ function AppRoutes() {
           </Route>
           {/* 포털 화면 레이아웃 검수 — 로그인 없이 /__ui-check/app/<경로> 로 각 화면의 셸·헤더를 확인 (데이터는 로드되지 않음) */}
           <Route path="__ui-check/app" element={<MainLayout />}>
+            <Route path="chat/:threadId" element={<Dashboard />} />
             <Route element={<LazyRouteOutlet />}>
               <Route index element={<DevShellCheckPage />} />
               {portalPageRoutes}

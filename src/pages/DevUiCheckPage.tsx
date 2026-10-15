@@ -6,6 +6,8 @@ import { EmptyState } from '../components/common/EmptyState'
 import { PageHeader } from '../components/common/PageHeader'
 import { TokenMeter } from '../components/common/TokenMeter'
 import { IconBookmark, IconFolder, IconSparkles } from '../components/common/icons'
+import { OrgPromptGallery } from '../components/prompts/OrgPromptGallery'
+import type { StaticOrgPromptItem } from '../data/org-static-prompts'
 
 /**
  * DEV 전용 UI 검수 페이지 (/__ui-check) — 프로덕션 라우트에는 등록되지 않습니다.
@@ -168,6 +170,15 @@ export function DevUiCheckPage() {
   )
 }
 
+const MOCK_ORG_PROMPTS: StaticOrgPromptItem[] = [
+  { id: 'p1', title: '출장비 정산 규정 요약', description: '여비 규정에서 숙박·일비 상한과 증빙 기한을 정리합니다.', content: '' },
+  { id: 'p2', title: '현장 안전점검 체크리스트', description: '공종별 위험 요인과 점검 항목을 표로 만듭니다.', content: '' },
+  { id: 'p3', title: '회의록 → 액션 아이템', description: '회의록을 붙여넣으면 담당자·기한별 할 일로 변환합니다.', content: '' },
+  { id: 'p4', title: '견적서 검토 포인트', description: '협력사 견적서의 누락 항목과 단가 이상치를 찾습니다.', content: '' },
+  { id: 'p5', title: '주간 업무 보고 초안', description: '이번 주 진행 사항을 보고서 형식으로 정리합니다.', content: '' },
+  { id: 'p6', title: '사내 규정 Q&A', description: '취업규칙·복무규정에서 근거 조항과 함께 답합니다.', content: '' },
+]
+
 const SWATCHES: Array<{ label: string; className: string }> = [
   { label: 'bg', className: 'bg-bg' },
   { label: 'surface', className: 'bg-surface' },
@@ -262,6 +273,16 @@ export function DevShellCheckPage() {
           icon={IconFolder}
           title="등록된 자료가 없습니다"
           description="드라이브 폴더를 연결하거나 파일을 업로드해 AI 참조 자료로 등록하세요."
+        />
+      </section>
+
+      <section aria-label="채팅 홈 프롬프트 갤러리" className="rounded-[16px] border border-border bg-surface shadow-card">
+        <OrgPromptGallery
+          prompts={MOCK_ORG_PROMPTS}
+          userGreetingName="홍길동"
+          onApplyToInput={() => undefined}
+          onRemoveFromGallery={() => undefined}
+          onDismissSection={() => undefined}
         />
       </section>
 

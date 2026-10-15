@@ -214,7 +214,14 @@ AI 앱           Planner · Designer · Slides · Sheets   (hidden: AI Office)
 - `index.html`, `vite.config.ts`(매니페스트), `package.json`(sonner), `README.md`
 
 **삭제**
-- `src/App.css`, `src/components/layout/SidebarNavDock.tsx`, `src/components/layout/AccountHeaderActions.tsx`
+- `src/App.css`, `src/components/layout/SidebarNavDock.tsx`, `src/components/layout/AccountHeaderActions.tsx`, `public/splash-bg.png`
+
+**2~4단계 추가 (커밋 12b0da4 · 0eb0162 · 3df7037)**
+- `src/index.css` 루트 16px · 역보정 제거 · `@layer base` 타이포/포커스 기본값
+- `src/components/common/DialogProvider.tsx` (`useDialogs`), `src/lib/token-budget.ts`
+- 13개 화면 `PageHeader`, 8개 화면 `EmptyState`, `LibraryPage` 토큰화, 네이티브 다이얼로그 20곳 교체
+- `public/` 아이콘 192/512/180 리사이즈 + `pwa-maskable-512.png`, `vite.config.ts` 매니페스트 maskable 분리
+- `src/App.tsx` `portalPageRoutes` 추출 + DEV 검수 라우트 `/__ui-check/app/*` (채팅 포함), `DevUiCheckPage` 에 채팅 홈 갤러리 목업
 
 ---
 
@@ -243,7 +250,8 @@ AI 앱           Planner · Designer · Slides · Sheets   (hidden: AI Office)
 ### 6.1 1차 기계 마이그레이션 결과와 잔여 작업
 
 - 스크립트(§6 치환표 + `dark:` 팔레트 변형 삭제)를 93개 파일에 적용: 페이지 전부(아래 제외), 채팅·프롬프트·설정·관리자 컴포넌트.
-- **제외(별도 리디자인 필요)**: `LibraryPage`(네이비+핑크 독자 테마), `components/ai-sheets/*`(Sheets 리본 hex 테마), `components/knowledge-graph/*`, `CadEditorPage`, `UniverOfficePage`.
+- **2차 적용(5단계)**: `LibraryPage`, AI Sheets 랜딩 컴포넌트(Hero·LandingLayout·ModeAccordion·PromptSection·SheetPreviewPanel·SplitLayout), `UniverOfficePage`, `CadEditorPage`, `KnowledgeGraphHelpDialog` 까지 토큰화.
+- **여전히 제외(의도된 독자 테마)**: `components/ai-sheets/SheetsGlobalCanvas·SheetsDesignerRibbon·SheetsRibbon*·SheetsContextMenu`(Google Sheets 형 hex 테마), `KnowledgeGraphPage`·`KnowledgeGraphViewer`(항상 다크인 3D 그래프).
 - 잔여: hex(`bg-[#…]`) 색상은 손대지 않았다(Gemini 변형 채팅 UI 등). 이후 수작업으로 `PageHeader`/`EmptyState` 적용과 함께 정리한다.
 - 실제 로그인 세션이 필요한 화면(자료실·팀·관리자)은 로컬에서 로그인 후 390/768/1280 폭 육안 검수를 권장한다.
 
