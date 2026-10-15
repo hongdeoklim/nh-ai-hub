@@ -235,6 +235,18 @@ AI 앱           Planner · Designer · Slides · Sheets   (hidden: AI Office)
 - 검증: `src/lib/__tests__/markdown-to-hwpx.test.ts`(zip 구조·XML 적격성·ID 범위), 한글 2024 COM 자동화로 샘플·브라우저 생성 파일을 열어 쪽수·본문 텍스트·PDF 렌더 확인.
 - 한글은 문단 테두리를 문단 뒤 간격 바깥에 그리므로 괘선 제목·표·구분선 뒤에는 빈 간격 문단을 둔다.
 
+**10단계 — 대화 흐름 · 품질**
+- 잘린 답변 자동 이어쓰기 2회 → 5회. '이어서 생성' 버튼도 한 번 누르면 다시 잘릴 때 끝까지 이어 쓴다.
+- **이어서 물어보기**: `src/lib/chat-followups.ts` 지시문을 ai-chat 실험실 오버레이(append)로 덧붙여, 모델이 본문 끝에
+  `<followups>` 블록으로 후속 질문 3개를 쓴다. 스트리밍 중에는 블록을 숨기고 완료 시 마지막 답변 아래 칩
+  (`FollowupSuggestions`)으로 보여 준다. 칩을 누르면 그 질문을 바로 보낸다. 별도 요청이 없어 지연·추가 비용이 거의 없다.
+  캔버스·Dify·워크플로·이미지 첨부·브라우저 직접 호출 모드에서는 붙이지 않는다.
+- jsdom 컴포넌트 테스트(DialogProvider·Overlay·CommandPalette) + 추천 질문 파서 테스트.
+- ESLint 경고 69 → 5. effect 안 setState 는 렌더 중 조정·파생값으로 바꾸고, 첫 로드는 기존 관례(`queueMicrotask`)를
+  따르며, 채팅 화면의 저장소 부트스트랩 구간은 선언 순서 의존 때문에 사유 주석과 함께 effect 로 유지했다.
+  남은 5건: `DxfCanvas` 4건(CAD 편집기, 동작 검증 후 정리), `Dashboard` 대기열 `runDrain` 1건.
+- Dify·MCP 점검 보고서: `docs/reports/2026-10-dify-mcp-review.md`.
+
 ---
 
 ## 6. 페이지 마이그레이션 가이드 (후속)
