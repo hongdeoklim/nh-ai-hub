@@ -7,8 +7,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   test: {
-    // 순수 헬퍼 단위 테스트 (DOM 불필요). 컴포넌트 테스트를 추가할 때 jsdom 환경을 별도 설정한다.
-    include: ['src/**/*.test.ts'],
+    // 기본은 node. 컴포넌트 테스트(*.test.tsx)는 파일 첫 줄 `// @vitest-environment jsdom` 으로 DOM 을 켠다.
+    include: ['src/**/*.test.{ts,tsx}'],
     environment: 'node',
   },
   plugins: [
