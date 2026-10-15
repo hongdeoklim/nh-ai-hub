@@ -37,12 +37,14 @@
    `.app-shell`/`.admin-shell` 의 역보정 CSS 는 모두 제거됐고, 기본 타이포는 `@layer base` 에만 둔다.
    모바일 입력창(input/textarea)은 iOS 자동 확대를 피하기 위해 16px 이상(`text-base`)으로 지정한다.
 
-8. **색상은 시맨틱 토큰 유틸로 쓴다.** `bg-bg` `bg-surface` `bg-surface-2` `border-border`
+7. **색상은 시맨틱 토큰 유틸로 쓴다.** `bg-bg` `bg-surface` `bg-surface-2` `border-border`
    `text-fg` `text-fg-muted` `text-fg-subtle` `bg-brand` `text-brand` `bg-brand-soft` `text-accent`
    `text-success|warning|danger` (+ `-soft` 배경). 토큰이 다크 모드를 내포하므로 `dark:` 변형을
    덧붙이지 않는다. 치환표는 `docs/REDESIGN-2026-10.md` §6.
+   페이지 상단은 `components/common/PageHeader`, 빈 목록은 `EmptyState`, 확인/입력은
+   `ConfirmDialog`/`PromptDialog`(window.alert/confirm/prompt 금지)를 사용한다.
 
-7. 위 규칙과 충돌하는 기존 코드를 발견하면, 임의로 전면 리팩터링하지 말고
+8. 위 규칙과 충돌하는 기존 코드를 발견하면, 임의로 전면 리팩터링하지 말고
    먼저 사용자에게 알린 뒤 진행한다.
 
 ## 작업 일반 규칙

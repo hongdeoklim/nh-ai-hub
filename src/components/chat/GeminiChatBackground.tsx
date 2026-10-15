@@ -1,15 +1,15 @@
 type GeminiChatBackgroundProps = {
   /** 답변 생성 중 — 그라데이션 오브 애니메이션 강화 */
- active?: boolean
+  active?: boolean
 }
 
 export function GeminiChatBackground({ active = false }: GeminiChatBackgroundProps) {
- return (
+  return (
     <div
- className={`gemini-lm-background pointer-events-none absolute inset-0 -z-10 overflow-hidden ${
- active ? 'gemini-lm-background--generating' : ''
+      className={`gemini-lm-background pointer-events-none absolute inset-0 -z-10 overflow-hidden ${
+        active ? 'gemini-lm-background--generating' : ''
       }`}
- aria-hidden
+      aria-hidden
     >
       <div className="gemini-lm-background__base" />
       <div className="gemini-lm-background__orb gemini-lm-background__orb--blue" />

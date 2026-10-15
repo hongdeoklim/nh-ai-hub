@@ -11,18 +11,18 @@ import { useAuth } from '../components/auth/useAuth'
 import { supabase } from '../lib/supabase'
 import { generateProductPlan, chatWithPlanner, type PlannerFullResult } from '../services/ai/planner-client'
 import {
- createPlannerSession,
- fetchPlannerSession,
- fetchPlannerSessionSummaries,
- savePlannerSession,
+  createPlannerSession,
+  fetchPlannerSession,
+  fetchPlannerSessionSummaries,
+  savePlannerSession,
 } from '../services/ai/planner-sessions'
 import { fetchActiveTextAiModels, filterActiveTextModels, buildModelSelectOptions } from '../services/ai/ai-models-client'
 import {
- canGeneratePlannerPlan,
- hasPlannerReadySignal,
- messagesForPlannerGeneration,
- stripPlannerReadyMarker,
- messageContentToString,
+  canGeneratePlannerPlan,
+  hasPlannerReadySignal,
+  messagesForPlannerGeneration,
+  stripPlannerReadyMarker,
+  messageContentToString,
 } from '../services/ai/planner-readiness'
 import { ModelSelectRow } from '../components/chat/ChatStartHub'
 import { ThinkingProcessPanel } from '../components/chat/ThinkingProcessPanel'
@@ -31,82 +31,82 @@ import { parseThinkingContent } from '../utils/thinking-content'
 type PlannerMessage = ModelMessage & { truncated?: boolean }
 
 function plannerAssistantDisplay(content: ModelMessage['content']) {
- const raw = stripPlannerReadyMarker(messageContentToString(content))
- const parsed = parseThinkingContent(raw)
- if (!parsed.answer.trim() && raw.trim()) {
- return { ...parsed, answer: raw }
+  const raw = stripPlannerReadyMarker(messageContentToString(content))
+  const parsed = parseThinkingContent(raw)
+  if (!parsed.answer.trim() && raw.trim()) {
+    return { ...parsed, answer: raw }
   }
- return parsed
+  return parsed
 }
 
 mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' })
 
 function stripMermaidMarkdown(text: string) {
- let cleaned = text.replace(/^\uFEFF/, '').trim()
- const fenced = cleaned.match(/```(?:mermaid)?\s*([\s\S]*?)```/i)
- if (fenced?.[1]) cleaned = fenced[1]
+  let cleaned = text.replace(/^\uFEFF/, '').trim()
+  const fenced = cleaned.match(/```(?:mermaid)?\s*([\s\S]*?)```/i)
+  if (fenced?.[1]) cleaned = fenced[1]
 
- cleaned = cleaned
+  cleaned = cleaned
     .replace(/<\/?\s*MERMAID\b[^>]*>/gi, '')
     .replace(/^```(?:mermaid)?\s*/i, '')
     .replace(/\s*```$/i, '')
     .trim()
 
- const lines = cleaned.split(/\r?\n/)
- const declarationIndex = lines.findIndex((line) =>
+  const lines = cleaned.split(/\r?\n/)
+  const declarationIndex = lines.findIndex((line) =>
     /^(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|journey|gantt|pie|mindmap|timeline|quadrantChart|xychart-beta)\b/i.test(
- line.trim(),
+      line.trim(),
     ),
   )
 
- return (declarationIndex >= 0 ? lines.slice(declarationIndex).join('\n') : cleaned).trim()
+  return (declarationIndex >= 0 ? lines.slice(declarationIndex).join('\n') : cleaned).trim()
 }
 
 function quoteNodeLabel(open: string, label: string, close: string): string {
   // Already quoted
- if (label.startsWith('"') && label.endsWith('"')) return `${open}${label}${close}`
+  if (label.startsWith('"') && label.endsWith('"')) return `${open}${label}${close}`
   // Contains characters that break Mermaid parsing: comma, colon, parens
- if (/[,:()/]/.test(label)) return `${open}"${label}"${close}`
- return `${open}${label}${close}`
+  if (/[,:()/]/.test(label)) return `${open}"${label}"${close}`
+  return `${open}${label}${close}`
 }
 
 function sanitizeMermaidContent(text: string): string {
- const lines = text.split(/\r?\n/)
- const result: string[] = []
- for (const line of lines) {
+  const lines = text.split(/\r?\n/)
+  const result: string[] = []
+  for (const line of lines) {
     // Quote node labels that contain special characters (comma, colon, parens).
     // Handles [], (), {} shapes — skips already-quoted labels.
- let sanitized = line
+    let sanitized = line
       .replace(/(\[)([^\]"]+?)(\])/g, (_, o, label, c) => quoteNodeLabel(o, label, c))
       .replace(/(?<!\[)\(([^)"]+?)\)(?!-->)/g, (_, label) => quoteNodeLabel('(', label, ')'))
       .replace(/(\{)([^}"]+?)(\})/g, (_, o, label, c) => quoteNodeLabel(o, label, c))
 
     // Normalize edge labels: strip inner quotes, then re-wrap if label contains special chars.
- const fixEdgeLabel = (prefix: string, label: string, suffix: string) => {
- const stripped = label.replace(/"/g, '').trim()
- if (!stripped) return `${prefix}${label}${suffix}`
- return /[,:()/]/.test(stripped)
+    const fixEdgeLabel = (prefix: string, label: string, suffix: string) => {
+      const stripped = label.replace(/"/g, '').trim()
+      if (!stripped) return `${prefix}${label}${suffix}`
+      return /[,:()/]/.test(stripped)
         ? `${prefix}"${stripped}"${suffix}`
         : `${prefix}${stripped}${suffix}`
     }
- sanitized = sanitized
+    sanitized = sanitized
       .replace(/(--\s*)([^|>\n]*)(\s*-->)/g, (_, p, l, s) => fixEdgeLabel(p, l, s))
       .replace(/(--\|)([^|>\n]*)(\|-->)/g, (_, p, l, s) => fixEdgeLabel(p, l, s))
 
- result.push(sanitized)
+    result.push(sanitized)
   }
 
   // Drop trailing lines that have unclosed node brackets (truncated content)
- while (result.length > 0) {
- const last = result[result.length - 1].trim()
- if (last && /[\[({]/.test(last) && !/[\])}]/.test(last.replace(/^[^[\](){}]*/, ''))) {
- result.pop()
+  while (result.length > 0) {
+    const last = result[result.length - 1].trim()
+    if (last && /[\[({]/.test(last) && !/[\])}]/.test(last.replace(/^[^[\](){}]*/, ''))) {
+      result.pop()
     } else {
- break
+      break
     }
   }
 
- return result.join('\n').trim()
+  return result.join('\n').trim()
 }
 
 const INVALID_WIREFRAME_HTML = `<!doctype html>
@@ -117,20 +117,20 @@ const INVALID_WIREFRAME_HTML = `<!doctype html>
 </html>`
 
 function getWireframePreview(html?: string) {
- const trimmed = html?.trim() ?? ''
- if (!trimmed) return INVALID_WIREFRAME_HTML
+  const trimmed = html?.trim() ?? ''
+  if (!trimmed) return INVALID_WIREFRAME_HTML
 
- const isHtml = /<(?:!doctype\s+html|html|body|main|section|div)\b/i.test(trimmed)
- const isMermaidError = /syntax error in text|mermaid version/i.test(trimmed)
- const isMermaidSource = /^\s*(?:flowchart|graph)\s+(?:TD|TB|BT|RL|LR)\b/i.test(trimmed)
+  const isHtml = /<(?:!doctype\s+html|html|body|main|section|div)\b/i.test(trimmed)
+  const isMermaidError = /syntax error in text|mermaid version/i.test(trimmed)
+  const isMermaidSource = /^\s*(?:flowchart|graph)\s+(?:TD|TB|BT|RL|LR)\b/i.test(trimmed)
 
- return isHtml && !isMermaidError && !isMermaidSource
+  return isHtml && !isMermaidError && !isMermaidSource
     ? trimmed
     : INVALID_WIREFRAME_HTML
 }
 
 function splitMarkdownTableRow(line: string): string[] {
- return line
+  return line
     .trim()
     .replace(/^\|/, '')
     .replace(/\|$/, '')
@@ -139,299 +139,299 @@ function splitMarkdownTableRow(line: string): string[] {
 }
 
 function isMarkdownTableSeparator(line: string): boolean {
- return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line.trim())
+  return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line.trim())
 }
 
 function markdownSpecToGrid(markdown: string): string[][] | null {
- const lines = markdown.split(/\r?\n/)
+  const lines = markdown.split(/\r?\n/)
 
- for (let i = 0; i < lines.length - 1; i += 1) {
- if (!lines[i].includes('|') || !isMarkdownTableSeparator(lines[i + 1])) continue
+  for (let i = 0; i < lines.length - 1; i += 1) {
+    if (!lines[i].includes('|') || !isMarkdownTableSeparator(lines[i + 1])) continue
 
- const tableLines: string[] = [lines[i]]
- for (let j = i + 2; j < lines.length; j += 1) {
- const line = lines[j].trim()
- if (!line || !line.includes('|')) break
- tableLines.push(lines[j])
+    const tableLines: string[] = [lines[i]]
+    for (let j = i + 2; j < lines.length; j += 1) {
+      const line = lines[j].trim()
+      if (!line || !line.includes('|')) break
+      tableLines.push(lines[j])
     }
 
- const rows = tableLines
+    const rows = tableLines
       .filter((line) => !isMarkdownTableSeparator(line))
       .map(splitMarkdownTableRow)
       .filter((row) => row.some((cell) => cell.length > 0))
 
- if (rows.length > 0) return rows
+    if (rows.length > 0) return rows
   }
 
- return null
+  return null
 }
 
 function hasGridContent(grid: string[][]): boolean {
- return grid.some((row) => row.some((cell) => cell.trim().length > 0))
+  return grid.some((row) => row.some((cell) => cell.trim().length > 0))
 }
 
 function fitWorksheetColumns(worksheet: XLSX.WorkSheet, grid: string[][]) {
- const colCount = Math.max(...grid.map((row) => row.length), 1)
- worksheet['!cols'] = Array.from({ length: colCount }, (_, colIndex) => {
- const maxLength = Math.max(
+  const colCount = Math.max(...grid.map((row) => row.length), 1)
+  worksheet['!cols'] = Array.from({ length: colCount }, (_, colIndex) => {
+    const maxLength = Math.max(
       ...grid.map((row) => String(row[colIndex] ?? '').length),
- 10,
+      10,
     )
- return { wch: Math.min(Math.max(maxLength + 2, 12), 48) }
+    return { wch: Math.min(Math.max(maxLength + 2, 12), 48) }
   })
 }
 
 export function AiProductPlannerPage() {
- const navigate = useNavigate()
- const { sessionId: routeSessionId } = useParams<{ sessionId?: string }>()
- const { profile } = useAuth()
+  const navigate = useNavigate()
+  const { sessionId: routeSessionId } = useParams<{ sessionId?: string }>()
+  const { profile } = useAuth()
 
- const [sessionId, setSessionId] = useState<string | null>(routeSessionId ?? null)
- const [sessionLoading, setSessionLoading] = useState(true)
- const [sessionError, setSessionError] = useState<string | null>(null)
- const hydratedSessionRef = useRef<string | null>(null)
- const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(routeSessionId ?? null)
+  const [sessionLoading, setSessionLoading] = useState(true)
+  const [sessionError, setSessionError] = useState<string | null>(null)
+  const hydratedSessionRef = useRef<string | null>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
- const [messages, setMessages] = useState<PlannerMessage[]>([])
- const [chatInput, setChatInput] = useState('')
- const [isChatting, setIsChatting] = useState(false)
- const chatEndRef = useRef<HTMLDivElement>(null)
+  const [messages, setMessages] = useState<PlannerMessage[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [isChatting, setIsChatting] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
 
- const [isGenerating, setIsGenerating] = useState(false)
- const [generateError, setGenerateError] = useState<string | null>(null)
- const [result, setResult] = useState<PlannerFullResult | null>(null)
- const [activeTab, setActiveTab] = useState<'prd' | 'spec' | 'mermaid' | 'wireframe'>('prd')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
+  const [result, setResult] = useState<PlannerFullResult | null>(null)
+  const [activeTab, setActiveTab] = useState<'prd' | 'spec' | 'mermaid' | 'wireframe'>('prd')
 
- const [selectedModel, setSelectedModel] = useState('auto')
- const [registryModels, setRegistryModels] = useState<Awaited<ReturnType<typeof fetchActiveTextAiModels>>>([])
+  const [selectedModel, setSelectedModel] = useState('auto')
+  const [registryModels, setRegistryModels] = useState<Awaited<ReturnType<typeof fetchActiveTextAiModels>>>([])
 
- const mermaidRef = useRef<HTMLDivElement>(null)
+  const mermaidRef = useRef<HTMLDivElement>(null)
 
- useEffect(() => {
- fetchActiveTextAiModels().then(rows => setRegistryModels(filterActiveTextModels(rows))).catch(() => {})
+  useEffect(() => {
+    fetchActiveTextAiModels().then(rows => setRegistryModels(filterActiveTextModels(rows))).catch(() => {})
   }, [])
 
- useEffect(() => {
- chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
- const bootstrapSession = useCallback(async () => {
- setSessionLoading(true)
- setSessionError(null)
- hydratedSessionRef.current = null
+  const bootstrapSession = useCallback(async () => {
+    setSessionLoading(true)
+    setSessionError(null)
+    hydratedSessionRef.current = null
 
- if (!routeSessionId) {
- const summaries = await fetchPlannerSessionSummaries(supabase, 1)
- if (summaries.length > 0) {
- navigate(`/ai-planner/${summaries[0].id}`, { replace: true })
- return
+    if (!routeSessionId) {
+      const summaries = await fetchPlannerSessionSummaries(supabase, 1)
+      if (summaries.length > 0) {
+        navigate(`/ai-planner/${summaries[0].id}`, { replace: true })
+        return
       }
 
- const created = await createPlannerSession(supabase)
- if (!created.ok) {
- setSessionError(created.message)
- setSessionLoading(false)
- return
+      const created = await createPlannerSession(supabase)
+      if (!created.ok) {
+        setSessionError(created.message)
+        setSessionLoading(false)
+        return
       }
- navigate(`/ai-planner/${created.id}`, { replace: true })
- return
+      navigate(`/ai-planner/${created.id}`, { replace: true })
+      return
     }
 
- const loaded = await fetchPlannerSession(supabase, routeSessionId)
- if (!loaded.ok) {
- if (loaded.message === 'not_found') {
- const created = await createPlannerSession(supabase)
- if (created.ok) {
- navigate(`/ai-planner/${created.id}`, { replace: true })
- return
+    const loaded = await fetchPlannerSession(supabase, routeSessionId)
+    if (!loaded.ok) {
+      if (loaded.message === 'not_found') {
+        const created = await createPlannerSession(supabase)
+        if (created.ok) {
+          navigate(`/ai-planner/${created.id}`, { replace: true })
+          return
         }
- setSessionError(created.message)
+        setSessionError(created.message)
       } else {
- setSessionError(loaded.message)
+        setSessionError(loaded.message)
       }
- setSessionLoading(false)
- return
+      setSessionLoading(false)
+      return
     }
 
- setSessionId(loaded.session.id)
- setMessages(loaded.session.messages)
- setSelectedModel(loaded.session.preferred_model || 'auto')
- setResult(loaded.session.plan_result)
- hydratedSessionRef.current = loaded.session.id
- setSessionLoading(false)
+    setSessionId(loaded.session.id)
+    setMessages(loaded.session.messages)
+    setSelectedModel(loaded.session.preferred_model || 'auto')
+    setResult(loaded.session.plan_result)
+    hydratedSessionRef.current = loaded.session.id
+    setSessionLoading(false)
   }, [navigate, routeSessionId])
 
- useEffect(() => {
- void bootstrapSession()
+  useEffect(() => {
+    void bootstrapSession()
   }, [bootstrapSession])
 
- useEffect(() => {
- if (!sessionId || sessionLoading) return
- if (hydratedSessionRef.current !== sessionId) return
+  useEffect(() => {
+    if (!sessionId || sessionLoading) return
+    if (hydratedSessionRef.current !== sessionId) return
 
- if (saveTimerRef.current) {
- clearTimeout(saveTimerRef.current)
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
     }
 
- saveTimerRef.current = setTimeout(() => {
- void savePlannerSession(supabase, sessionId, {
- messages,
- preferredModel: selectedModel,
- planResult: result,
+    saveTimerRef.current = setTimeout(() => {
+      void savePlannerSession(supabase, sessionId, {
+        messages,
+        preferredModel: selectedModel,
+        planResult: result,
       })
     }, 700)
 
- return () => {
- if (saveTimerRef.current) {
- clearTimeout(saveTimerRef.current)
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
       }
     }
   }, [sessionId, sessionLoading, messages, selectedModel, result])
 
- useEffect(() => {
- let isMounted = true
- if (activeTab === 'mermaid' && result?.mermaidFlow && mermaidRef.current) {
- const cleanMermaid = sanitizeMermaidContent(stripMermaidMarkdown(result.mermaidFlow))
+  useEffect(() => {
+    let isMounted = true
+    if (activeTab === 'mermaid' && result?.mermaidFlow && mermaidRef.current) {
+      const cleanMermaid = sanitizeMermaidContent(stripMermaidMarkdown(result.mermaidFlow))
 
- const renderGraph = async () => {
- try {
- const { svg } = await mermaid.render('mermaid-svg-' + Date.now(), cleanMermaid)
- if (isMounted && mermaidRef.current) {
- mermaidRef.current.innerHTML = svg
+      const renderGraph = async () => {
+        try {
+          const { svg } = await mermaid.render('mermaid-svg-' + Date.now(), cleanMermaid)
+          if (isMounted && mermaidRef.current) {
+            mermaidRef.current.innerHTML = svg
           }
         } catch (err) {
- console.error('Mermaid render error:', err)
- if (isMounted && mermaidRef.current) {
- const errorBox = document.createElement('div')
- errorBox.className = 'w-full rounded-lg bg-danger-soft p-4 text-left text-danger'
+          console.error('Mermaid render error:', err)
+          if (isMounted && mermaidRef.current) {
+            const errorBox = document.createElement('div')
+            errorBox.className = 'w-full rounded-lg bg-danger-soft p-4 text-left text-danger'
 
- const message = document.createElement('p')
- message.className = 'font-medium'
- message.textContent = '다이어그램 렌더링에 실패했습니다. 아래 Mermaid 원본을 확인해 주세요.'
+            const message = document.createElement('p')
+            message.className = 'font-medium'
+            message.textContent = '다이어그램 렌더링에 실패했습니다. 아래 Mermaid 원본을 확인해 주세요.'
 
- const source = document.createElement('pre')
- source.className = 'mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-md bg-surface/80 p-3 text-xs text-fg-muted'
- source.textContent = cleanMermaid
+            const source = document.createElement('pre')
+            source.className = 'mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-md bg-surface/80 p-3 text-xs text-fg-muted'
+            source.textContent = cleanMermaid
 
- errorBox.append(message, source)
- mermaidRef.current.replaceChildren(errorBox)
+            errorBox.append(message, source)
+            mermaidRef.current.replaceChildren(errorBox)
           }
         }
       }
- renderGraph()
+      renderGraph()
     }
- return () => { isMounted = false }
+    return () => { isMounted = false }
   }, [activeTab, result?.mermaidFlow])
 
- const versionRows = useMemo(() => buildModelSelectOptions(registryModels, selectedModel), [registryModels, selectedModel])
- const canGenerate = useMemo(() => canGeneratePlannerPlan(messages), [messages])
- const pmReadySignal = useMemo(() => hasPlannerReadySignal(messages), [messages])
+  const versionRows = useMemo(() => buildModelSelectOptions(registryModels, selectedModel), [registryModels, selectedModel])
+  const canGenerate = useMemo(() => canGeneratePlannerPlan(messages), [messages])
+  const pmReadySignal = useMemo(() => hasPlannerReadySignal(messages), [messages])
 
- const handleSendMessage = async () => {
- if (!chatInput.trim() || isChatting || sessionLoading) return
- const userMsg = chatInput.trim()
- setChatInput('')
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || isChatting || sessionLoading) return
+    const userMsg = chatInput.trim()
+    setChatInput('')
 
- const newMessages: PlannerMessage[] = [...messages, { role: 'user', content: userMsg }]
- setMessages(newMessages)
- setIsChatting(true)
+    const newMessages: PlannerMessage[] = [...messages, { role: 'user', content: userMsg }]
+    setMessages(newMessages)
+    setIsChatting(true)
 
- try {
- const response = await chatWithPlanner(newMessages, selectedModel)
- setMessages([
+    try {
+      const response = await chatWithPlanner(newMessages, selectedModel)
+      setMessages([
         ...newMessages,
         { role: 'assistant', content: response.text, truncated: response.truncated },
       ])
     } catch (err) {
- console.error(err)
- const message =
- err instanceof Error ? err.message : '죄송합니다. 통신 중 오류가 발생했습니다.'
- setMessages([...newMessages, { role: 'assistant', content: message }])
+      console.error(err)
+      const message =
+        err instanceof Error ? err.message : '죄송합니다. 통신 중 오류가 발생했습니다.'
+      setMessages([...newMessages, { role: 'assistant', content: message }])
     } finally {
- setIsChatting(false)
+      setIsChatting(false)
     }
   }
 
- const handleGeneratePlan = async () => {
- if (messages.length === 0 || isGenerating || sessionLoading || !canGenerate) return
- setIsGenerating(true)
- setGenerateError(null)
- setActiveTab('prd')
+  const handleGeneratePlan = async () => {
+    if (messages.length === 0 || isGenerating || sessionLoading || !canGenerate) return
+    setIsGenerating(true)
+    setGenerateError(null)
+    setActiveTab('prd')
 
- try {
- const res = await generateProductPlan(
- messagesForPlannerGeneration(messages),
- selectedModel,
+    try {
+      const res = await generateProductPlan(
+        messagesForPlannerGeneration(messages),
+        selectedModel,
       )
- setResult(res)
+      setResult(res)
     } catch (err) {
- console.error(err)
- const message =
- err instanceof Error
+      console.error(err)
+      const message =
+        err instanceof Error
           ? err.message
           : '기획서 생성 중 오류가 발생했습니다.'
- setGenerateError(message)
+      setGenerateError(message)
     } finally {
- setIsGenerating(false)
+      setIsGenerating(false)
     }
   }
 
- const exportToExcel = () => {
- const specMarkdown = result?.specMarkdown?.trim() ?? ''
- if (!specMarkdown) {
- toast.error('내보낼 기능 명세서가 없습니다. 먼저 기획안을 생성해 주세요.')
- return
+  const exportToExcel = () => {
+    const specMarkdown = result?.specMarkdown?.trim() ?? ''
+    if (!specMarkdown) {
+      toast.error('내보낼 기능 명세서가 없습니다. 먼저 기획안을 생성해 주세요.')
+      return
     }
- const wb = XLSX.utils.book_new()
- const specGrid = markdownSpecToGrid(specMarkdown)
+    const wb = XLSX.utils.book_new()
+    const specGrid = markdownSpecToGrid(specMarkdown)
 
- if (specGrid && hasGridContent(specGrid)) {
- const specSheet = XLSX.utils.aoa_to_sheet(specGrid)
- fitWorksheetColumns(specSheet, specGrid)
- XLSX.utils.book_append_sheet(wb, specSheet, 'Feature Specs')
+    if (specGrid && hasGridContent(specGrid)) {
+      const specSheet = XLSX.utils.aoa_to_sheet(specGrid)
+      fitWorksheetColumns(specSheet, specGrid)
+      XLSX.utils.book_append_sheet(wb, specSheet, 'Feature Specs')
     } else {
- const fallbackGrid = [['Feature Specs'], ...specMarkdown.split(/\r?\n/).map((line) => [line])]
- const fallbackSheet = XLSX.utils.aoa_to_sheet(fallbackGrid)
- fitWorksheetColumns(fallbackSheet, fallbackGrid)
- XLSX.utils.book_append_sheet(wb, fallbackSheet, 'Feature Specs')
+      const fallbackGrid = [['Feature Specs'], ...specMarkdown.split(/\r?\n/).map((line) => [line])]
+      const fallbackSheet = XLSX.utils.aoa_to_sheet(fallbackGrid)
+      fitWorksheetColumns(fallbackSheet, fallbackGrid)
+      XLSX.utils.book_append_sheet(wb, fallbackSheet, 'Feature Specs')
     }
 
- const rawGrid = [['Markdown Source'], [specMarkdown]]
- const rawSheet = XLSX.utils.aoa_to_sheet(rawGrid)
- fitWorksheetColumns(rawSheet, rawGrid)
- XLSX.utils.book_append_sheet(wb, rawSheet, 'Markdown Source')
- XLSX.writeFile(wb, 'feature_specs.xlsx')
+    const rawGrid = [['Markdown Source'], [specMarkdown]]
+    const rawSheet = XLSX.utils.aoa_to_sheet(rawGrid)
+    fitWorksheetColumns(rawSheet, rawGrid)
+    XLSX.utils.book_append_sheet(wb, rawSheet, 'Markdown Source')
+    XLSX.writeFile(wb, 'feature_specs.xlsx')
   }
 
- const exportToDesigner = async () => {
- if (!result) {
- alert('전달할 기획 데이터가 없습니다. 먼저 기획안을 생성해 주세요.')
- return
+  const exportToDesigner = async () => {
+    if (!result) {
+      alert('전달할 기획 데이터가 없습니다. 먼저 기획안을 생성해 주세요.')
+      return
     }
 
- const plannerContext = [
+    const plannerContext = [
       '# PRD',
- result.prdMarkdown,
+      result.prdMarkdown,
       '# 기능 명세',
- result.specMarkdown,
+      result.specMarkdown,
       '# 유저 플로우',
- result.mermaidFlow,
+      result.mermaidFlow,
       '# 와이어프레임',
- result.wireframeHtml,
+      result.wireframeHtml,
     ].join('\n\n')
 
- try {
- await navigator.clipboard.writeText(plannerContext)
- alert('기획 데이터가 클립보드에 복사되었습니다. AI 디자이너로 이동합니다.')
- navigate('/ai-designer')
+    try {
+      await navigator.clipboard.writeText(plannerContext)
+      alert('기획 데이터가 클립보드에 복사되었습니다. AI 디자이너로 이동합니다.')
+      navigate('/ai-designer')
     } catch (error) {
- console.error(error)
- alert('기획 데이터를 클립보드에 복사하지 못했습니다. 브라우저 권한을 확인해 주세요.')
+      console.error(error)
+      alert('기획 데이터를 클립보드에 복사하지 못했습니다. 브라우저 권한을 확인해 주세요.')
     }
   }
 
- if (sessionLoading) {
- return (
+  if (sessionLoading) {
+    return (
       <div className="flex h-full min-h-[50vh] flex-col items-center justify-center bg-bg dark:bg-[#09090b]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent/30 border-t-indigo-600" />
         <p className="mt-3 text-sm text-fg-subtle">기획 세션을 불러오는 중…</p>
@@ -439,22 +439,22 @@ export function AiProductPlannerPage() {
     )
   }
 
- if (sessionError) {
- return (
+  if (sessionError) {
+    return (
       <div className="flex h-full min-h-[50vh] flex-col items-center justify-center bg-bg px-6 dark:bg-[#09090b]">
         <p className="text-sm text-danger">{sessionError}</p>
         <button
- type="button"
- onClick={() => void bootstrapSession()}
- className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent"
+          type="button"
+          onClick={() => void bootstrapSession()}
+          className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent"
         >
- 다시 시도
+          다시 시도
         </button>
       </div>
     )
   }
 
- return (
+  return (
     <div className="flex h-screen flex-col overflow-hidden bg-bg dark:bg-[#09090b] font-sans selection:bg-indigo-500/30">
 
       <div className="flex flex-1 flex-col overflow-hidden relative lg:flex-row">
@@ -474,10 +474,10 @@ export function AiProductPlannerPage() {
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent animate-pulse">
- AI 에이전트들이 기획안을 작성 중입니다
+                  AI 에이전트들이 기획안을 작성 중입니다
                 </p>
                 <p className="mt-2 text-sm text-fg-subtle">
- PRD·기능명세·플로우·와이어프레임을 생성합니다. 1~2분 걸릴 수 있습니다.
+                  PRD·기능명세·플로우·와이어프레임을 생성합니다. 1~2분 걸릴 수 있습니다.
                 </p>
               </div>
             </div>
@@ -487,12 +487,12 @@ export function AiProductPlannerPage() {
                 <p className="text-base font-semibold text-danger">기획안 생성에 실패했습니다</p>
                 <p className="mt-3 text-sm leading-relaxed text-fg-muted">{generateError}</p>
                 <button
- type="button"
- onClick={() => void handleGeneratePlan()}
- disabled={!canGenerate || isChatting}
- className="mt-6 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                  type="button"
+                  onClick={() => void handleGeneratePlan()}
+                  disabled={!canGenerate || isChatting}
+                  className="mt-6 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
- 다시 생성하기
+                  다시 생성하기
                 </button>
               </div>
             </div>
@@ -509,7 +509,7 @@ export function AiProductPlannerPage() {
                     <br/>충분한 논의 후 <span className="font-medium text-fg-muted">기획안 생성</span>을 누르면 이 공간에 산출물이 작성됩니다.
                   </p>
                   <p className="mt-3 text-sm text-fg-subtle">
- 대화는 자동 저장됩니다. 사이드바의 <strong className="font-medium text-fg-muted">기획 세션</strong>에서 이전 기록을 열 수 있습니다.
+                    대화는 자동 저장됩니다. 사이드바의 <strong className="font-medium text-fg-muted">기획 세션</strong>에서 이전 기록을 열 수 있습니다.
                   </p>
                 </div>
               </div>
@@ -524,9 +524,9 @@ export function AiProductPlannerPage() {
                   { id: 'wireframe', label: '🎨 와이어프레임' }
                 ].map(tab => (
                   <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id as typeof activeTab)}
- className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${activeTab === tab.id ? 'bg-surface text-accent shadow-sm border border-border/50' : 'text-fg-subtle hover:text-fg hover:bg-surface-2 border border-transparent'}`}
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                    className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${activeTab === tab.id ? 'bg-surface text-accent shadow-sm border border-border/50' : 'text-fg-subtle hover:text-fg hover:bg-surface-2 border border-transparent'}`}
                   >
                     {tab.label}
                   </button>
@@ -534,18 +534,18 @@ export function AiProductPlannerPage() {
 
                 <div className="ml-auto flex gap-3 pl-4 border-l border-border">
                   <button
- type="button"
- onClick={exportToExcel}
- disabled={!result?.specMarkdown?.trim()}
- title={result?.specMarkdown?.trim() ? '기능 명세서를 Excel 파일로 다운로드' : '내보낼 기능 명세서가 없습니다'}
- className="group relative rounded-lg bg-surface px-4 py-2 text-sm font-medium text-fg-muted shadow-sm border border-border hover:bg-surface-2 hover:text-brand disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-slate-700 transition-all flex items-center gap-2"
+                    type="button"
+                    onClick={exportToExcel}
+                    disabled={!result?.specMarkdown?.trim()}
+                    title={result?.specMarkdown?.trim() ? '기능 명세서를 Excel 파일로 다운로드' : '내보낼 기능 명세서가 없습니다'}
+                    className="group relative rounded-lg bg-surface px-4 py-2 text-sm font-medium text-fg-muted shadow-sm border border-border hover:bg-surface-2 hover:text-brand disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-slate-700 transition-all flex items-center gap-2"
                   >
                     <svg className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
- 명세서 엑셀
+                    명세서 엑셀
                   </button>
                   <button type="button" onClick={() => void exportToDesigner()} disabled={!result} className="group relative rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 transition-all flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95">
                     <svg className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
- 디자이너로 넘기기
+                    디자이너로 넘기기
                   </button>
                 </div>
               </div>
@@ -587,11 +587,11 @@ export function AiProductPlannerPage() {
                         </div>
                         <div className="h-[800px] w-full bg-surface-2 mt-6">
                           <iframe
- srcDoc={getWireframePreview(result?.wireframeHtml)}
- sandbox="allow-scripts"
- referrerPolicy="no-referrer"
- className="w-full h-full border-0 bg-surface"
- title="Wireframe Preview"
+                            srcDoc={getWireframePreview(result?.wireframeHtml)}
+                            sandbox="allow-scripts"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full border-0 bg-surface"
+                            title="Wireframe Preview"
                           />
                         </div>
                       </div>
@@ -612,24 +612,24 @@ export function AiProductPlannerPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-extrabold text-fg tracking-tight">
- AI PM
+                    AI PM
                   </h2>
                   <p className="text-[11px] font-medium text-fg-subtle mt-0.5">대화로 아이디어 스케치</p>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
                 <button
- onClick={handleGeneratePlan}
- disabled={!canGenerate || isGenerating || isChatting}
- className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed group/btn ${
- pmReadySignal
+                  onClick={handleGeneratePlan}
+                  disabled={!canGenerate || isGenerating || isChatting}
+                  className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed group/btn ${
+                    pmReadySignal
                       ? 'bg-brand text-brand-fg ring-2 ring-focus/40 hover:bg-brand-strong'
                       : canGenerate
                         ? 'bg-accent text-white hover:bg-accent'
                         : 'bg-slate-900 text-white'
                   }`}
- title={
- pmReadySignal
+                  title={
+                    pmReadySignal
                       ? 'PM이 준비 완료를 확인했습니다. 지금 기획안을 생성할 수 있습니다.'
                       : canGenerate
                         ? '지금까지의 대화를 바탕으로 기획안을 생성합니다. 생성 후에도 PM과 대화를 이어갈 수 있습니다.'
@@ -637,19 +637,19 @@ export function AiProductPlannerPage() {
                   }
                 >
                   <span className="text-sm group-hover/btn:scale-110 transition-transform">🚀</span>
- 기획안 생성
+                  기획안 생성
                 </button>
                 {pmReadySignal ? (
                   <p className="max-w-[11rem] text-right text-[10px] font-medium leading-snug text-success">
- PM 준비 완료 — 생성을 권장합니다
+                    PM 준비 완료 — 생성을 권장합니다
                   </p>
                 ) : canGenerate ? (
                   <p className="max-w-[11rem] text-right text-[10px] leading-snug text-accent">
- 대화 내용으로 생성 가능 · 이어서 수정·질문도 OK
+                    대화 내용으로 생성 가능 · 이어서 수정·질문도 OK
                   </p>
                 ) : messages.length > 0 ? (
                   <p className="max-w-[11rem] text-right text-[10px] leading-snug text-fg-subtle">
- PM 답변을 받으면 버튼이 활성화됩니다
+                    PM 답변을 받으면 버튼이 활성화됩니다
                   </p>
                 ) : null}
               </div>
@@ -664,19 +664,19 @@ export function AiProductPlannerPage() {
                 </div>
                 <h3 className="text-base font-bold text-fg mb-2">안녕하세요! 담당 기획자입니다.</h3>
                 <p className="text-sm text-fg-subtle leading-relaxed">
- 어떤 프로덕트를 만들고 싶으신가요?<br/>편하게 아이디어를 말씀해주시면,<br/>제가 구체적인 기획안으로 만들어드릴게요.
+                  어떤 프로덕트를 만들고 싶으신가요?<br/>편하게 아이디어를 말씀해주시면,<br/>제가 구체적인 기획안으로 만들어드릴게요.
                 </p>
               </div>
             )}
 
             {messages.map((msg, idx) => {
- const assistantDisplay =
- msg.role === 'assistant' ? plannerAssistantDisplay(msg.content) : null
+              const assistantDisplay =
+                msg.role === 'assistant' ? plannerAssistantDisplay(msg.content) : null
 
- return (
+              return (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[88%] rounded-2xl px-5 py-3.5 text-[15.5px] leading-relaxed shadow-sm ${
- msg.role === 'user'
+                  msg.role === 'user'
                     ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm'
                     : 'bg-surface border border-border text-fg-muted rounded-bl-sm shadow-sm'
                 }`}>
@@ -686,9 +686,9 @@ export function AiProductPlannerPage() {
                     <>
                       {assistantDisplay?.hasThinking ? (
                         <ThinkingProcessPanel
- thinking={assistantDisplay.thinking}
- streaming={false}
- thinkingOpen={false}
+                          thinking={assistantDisplay.thinking}
+                          streaming={false}
+                          thinkingOpen={false}
                         />
                       ) : null}
                       <div className="prose dark:prose-invert max-w-none text-[15.5px] prose-p:my-0 prose-p:leading-relaxed prose-a:text-indigo-500">
@@ -698,7 +698,7 @@ export function AiProductPlannerPage() {
                       </div>
                       {msg.truncated ? (
                         <p className="mt-2 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-xs leading-snug text-warning">
- 답변이 출력 한도에서 잘렸을 수 있습니다. 같은 질문을 다시 보내거나 더 짧게 나눠 요청해 주세요.
+                          답변이 출력 한도에서 잘렸을 수 있습니다. 같은 질문을 다시 보내거나 더 짧게 나눠 요청해 주세요.
                         </p>
                       ) : null}
                     </>
@@ -723,34 +723,34 @@ export function AiProductPlannerPage() {
           <div className="p-5 bg-bg border-t border-border/50 shrink-0">
             <div className="mb-3">
               <ModelSelectRow
- selectedModel={selectedModel}
- modelVersionSelectId="planner-model-select"
- versionRows={versionRows}
- modelSaving={false}
- profileReady={Boolean(profile)}
- onModelChange={(id) => setSelectedModel(id)}
+                selectedModel={selectedModel}
+                modelVersionSelectId="planner-model-select"
+                versionRows={versionRows}
+                modelSaving={false}
+                profileReady={Boolean(profile)}
+                onModelChange={(id) => setSelectedModel(id)}
               />
             </div>
 
             <div className="relative group">
               <textarea
- value={chatInput}
- onChange={(e) => setChatInput(e.target.value)}
- onKeyDown={(e) => {
- if (e.key === 'Enter' && !e.shiftKey) {
- e.preventDefault();
- handleSendMessage();
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
                   }
                 }}
- className="w-full resize-none rounded-2xl border border-border bg-surface pr-12 pl-5 py-4 text-sm text-fg shadow-sm outline-none transition duration-200 focus:border-accent focus:ring-2 focus:ring-focus/40 placeholder:text-fg-subtle"
- placeholder="어떤 기능이 필요할까요?"
- rows={2}
+                className="w-full resize-none rounded-2xl border border-border bg-surface pr-12 pl-5 py-4 text-sm text-fg shadow-sm outline-none transition duration-200 focus:border-accent focus:ring-2 focus:ring-focus/40 placeholder:text-fg-subtle"
+                placeholder="어떤 기능이 필요할까요?"
+                rows={2}
               />
               <button
- onClick={handleSendMessage}
- disabled={!chatInput.trim() || isChatting}
- aria-label="메시지 보내기"
- className="absolute right-3 bottom-3 p-2.5 rounded-xl bg-accent text-white hover:bg-accent disabled:bg-surface-3 disabled:text-fg-subtle transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 shadow-sm"
+                onClick={handleSendMessage}
+                disabled={!chatInput.trim() || isChatting}
+                aria-label="메시지 보내기"
+                className="absolute right-3 bottom-3 p-2.5 rounded-xl bg-accent text-white hover:bg-accent disabled:bg-surface-3 disabled:text-fg-subtle transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 shadow-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h14M12 5l7 7-7 7" /></svg>
               </button>

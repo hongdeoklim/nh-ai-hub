@@ -12,88 +12,88 @@ import { RechartsRenderer } from './RechartsRenderer'
 type MarkdownVariant = 'default' | 'claude' | 'gemini'
 
 function buildMarkdownComponents(variant: MarkdownVariant): Components {
- const isGemini = variant === 'gemini'
- const isClaude = variant === 'claude'
+  const isGemini = variant === 'gemini'
+  const isClaude = variant === 'claude'
 
- const textCls = isGemini
+  const textCls = isGemini
     ? 'text-[14px] text-[#1f1f1f]'
     : isClaude
       ? 'text-[15px] text-fg'
       : 'text-sm text-fg'
 
- const strongCls = isGemini
+  const strongCls = isGemini
     ? 'font-semibold text-[#1f1f1f]'
     : isClaude
       ? 'font-semibold text-fg'
       : 'font-semibold text-fg'
 
- const linkCls = isGemini
+  const linkCls = isGemini
     ? 'font-medium text-[#0b57d0] underline decoration-[#0b57d0]/35 underline-offset-2 hover:decoration-[#0b57d0] dark:text-blue-400'
     : isClaude
       ? 'font-medium text-brand underline underline-offset-2 hover:text-brand'
       : 'font-medium text-success underline underline-offset-2 hover:text-emerald-900'
 
- const codeInlineCls = isGemini
+  const codeInlineCls = isGemini
     ? 'rounded-md bg-[#eef2f8] px-1.5 py-0.5 font-mono text-[0.88em] text-[#1f1f1f]'
     : isClaude
       ? 'rounded bg-surface-3/80 px-1.5 py-0.5 font-mono text-[0.88em]'
       : 'rounded bg-surface-3/80 px-1.5 py-0.5 font-mono text-[0.88em]'
 
- const tableWrapCls = isGemini
+  const tableWrapCls = isGemini
     ? 'my-3 overflow-x-auto rounded-xl border border-[#e3e3e3]'
     : isClaude
       ? 'my-3 overflow-x-auto rounded-xl border border-border'
       : 'my-3 overflow-x-auto rounded-xl border border-border'
 
- const thCls = isGemini
+  const thCls = isGemini
     ? 'border-b border-[#e3e3e3] bg-[#f0f4f9] px-3 py-2 text-left text-[13px] font-semibold text-[#1f1f1f]'
     : isClaude
       ? 'border-b border-border bg-surface-2 px-3 py-2 text-left text-[13px] font-semibold'
       : 'border-b border-border bg-surface-2 px-3 py-2 text-left text-[13px] font-semibold'
 
- const tdCls = isGemini
+  const tdCls = isGemini
     ? 'border-b border-[#e3e3e3] px-3 py-2 align-top text-[13px] text-[#1f1f1f]'
     : isClaude
       ? 'border-b border-border px-3 py-2 align-top text-[13px]'
       : 'border-b border-border px-3 py-2 align-top text-[13px]'
 
- return {
- p: ({ children }) => (
+  return {
+    p: ({ children }) => (
       <p className={`mb-3 last:mb-0 leading-relaxed ${textCls}`}>{children}</p>
     ),
- strong: ({ children }) => <strong className={strongCls}>{children}</strong>,
- em: ({ children }) => <em className="italic">{children}</em>,
- h1: ({ children }) => (
+    strong: ({ children }) => <strong className={strongCls}>{children}</strong>,
+    em: ({ children }) => <em className="italic">{children}</em>,
+    h1: ({ children }) => (
       <h1 className={`mb-3 mt-4 text-xl font-semibold leading-snug first:mt-0 ${textCls}`}>
         {children}
       </h1>
     ),
- h2: ({ children }) => (
+    h2: ({ children }) => (
       <h2 className={`mb-2.5 mt-4 text-lg font-semibold leading-snug first:mt-0 ${textCls}`}>
         {children}
       </h2>
     ),
- h3: ({ children }) => (
+    h3: ({ children }) => (
       <h3 className={`mb-2 mt-3 text-base font-semibold leading-snug first:mt-0 ${textCls}`}>
         {children}
       </h3>
     ),
- h4: ({ children }) => (
+    h4: ({ children }) => (
       <h4 className={`mb-2 mt-3 text-[15px] font-semibold leading-snug first:mt-0 ${textCls}`}>
         {children}
       </h4>
     ),
- ul: ({ children }) => (
+    ul: ({ children }) => (
       <ul className={`my-2 list-disc space-y-1.5 pl-5 ${textCls}`}>{children}</ul>
     ),
- ol: ({ children }) => (
+    ol: ({ children }) => (
       <ol className={`my-2 list-decimal space-y-1.5 pl-5 ${textCls}`}>{children}</ol>
     ),
- li: ({ children }) => <li className="leading-relaxed [&>p]:mb-1">{children}</li>,
- blockquote: ({ children }) => (
+    li: ({ children }) => <li className="leading-relaxed [&>p]:mb-1">{children}</li>,
+    blockquote: ({ children }) => (
       <blockquote
- className={`my-3 border-l-4 pl-3 italic ${
- isGemini
+        className={`my-3 border-l-4 pl-3 italic ${
+          isGemini
             ? 'border-[#c4c7c5] text-[#444746]'
             : isClaude
               ? 'border-brand/30 text-fg-muted'
@@ -103,10 +103,10 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
         {children}
       </blockquote>
     ),
- hr: () => (
+    hr: () => (
       <hr
- className={`my-4 border-0 border-t ${
- isGemini
+        className={`my-4 border-0 border-t ${
+          isGemini
             ? 'border-[#e3e3e3]'
             : isClaude
               ? 'border-border'
@@ -114,28 +114,28 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
         }`}
       />
     ),
- a: ({ href, children }) => (
+    a: ({ href, children }) => (
       <a href={href} target="_blank" rel="noopener noreferrer" className={linkCls}>
         {children}
       </a>
     ),
- code: ({ className, children }) => {
- const isBlock = Boolean(className?.includes('language-'))
+    code: ({ className, children }) => {
+      const isBlock = Boolean(className?.includes('language-'))
       
- if (className === 'language-recharts') {
- const dataString = String(children).replace(/\n$/, '');
- return <RechartsRenderer dataString={dataString} />;
+      if (className === 'language-recharts') {
+        const dataString = String(children).replace(/\n$/, '');
+        return <RechartsRenderer dataString={dataString} />;
       }
 
- if (isBlock) {
- return <code className={`block font-mono text-[13px] ${className ?? ''}`}>{children}</code>
+      if (isBlock) {
+        return <code className={`block font-mono text-[13px] ${className ?? ''}`}>{children}</code>
       }
- return <code className={codeInlineCls}>{children}</code>
+      return <code className={codeInlineCls}>{children}</code>
     },
- pre: ({ children }) => (
+    pre: ({ children }) => (
       <pre
- className={`my-3 max-h-[min(24rem,50vh)] overflow-auto rounded-xl border p-3 font-mono text-[13px] leading-relaxed ${
- isGemini
+        className={`my-3 max-h-[min(24rem,50vh)] overflow-auto rounded-xl border p-3 font-mono text-[13px] leading-relaxed ${
+          isGemini
             ? 'border-[#c4c7c5] bg-[#f8fafd] text-[#1f1f1f]'
             : isClaude
               ? 'border-border bg-stone-950 text-stone-100'
@@ -145,44 +145,44 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
         {children}
       </pre>
     ),
- table: ({ children }) => (
+    table: ({ children }) => (
       <div className={tableWrapCls}>
         <table className="min-w-full border-collapse">{children}</table>
       </div>
     ),
- thead: ({ children }) => <thead>{children}</thead>,
- tbody: ({ children }) => <tbody className="divide-y divide-transparent">{children}</tbody>,
- tr: ({ children }) => <tr className="last:[&>td]:border-b-0">{children}</tr>,
- th: ({ children }) => <th className={thCls}>{children}</th>,
- td: ({ children }) => <td className={tdCls}>{children}</td>,
+    thead: ({ children }) => <thead>{children}</thead>,
+    tbody: ({ children }) => <tbody className="divide-y divide-transparent">{children}</tbody>,
+    tr: ({ children }) => <tr className="last:[&>td]:border-b-0">{children}</tr>,
+    th: ({ children }) => <th className={thCls}>{children}</th>,
+    td: ({ children }) => <td className={tdCls}>{children}</td>,
   }
 }
 
 type ChatMarkdownBlockProps = {
- content: string
- variant?: MarkdownVariant
- citations?: ChatCitationSource[]
+  content: string
+  variant?: MarkdownVariant
+  citations?: ChatCitationSource[]
 }
 
 export function ChatMarkdownBlock({
- content,
- variant = 'claude',
- citations = [],
+  content,
+  variant = 'claude',
+  citations = [],
 }: ChatMarkdownBlockProps) {
- const components = useMemo(() => buildMarkdownComponents(variant), [variant])
- const markdown = useMemo(() => normalizeAiMarkdown(content), [content])
+  const components = useMemo(() => buildMarkdownComponents(variant), [variant])
+  const markdown = useMemo(() => normalizeAiMarkdown(content), [content])
 
- const parts = useMemo(() => {
- if (!citations.length) {
- return [{ kind: 'text' as const, value: markdown }]
+  const parts = useMemo(() => {
+    if (!citations.length) {
+      return [{ kind: 'text' as const, value: markdown }]
     }
- return splitTextByCitationMarkers(markdown, citations)
+    return splitTextByCitationMarkers(markdown, citations)
   }, [markdown, citations])
 
- if (!content.trim()) return null
+  if (!content.trim()) return null
 
- if (parts.length === 1 && parts[0]?.kind === 'text') {
- return (
+  if (parts.length === 1 && parts[0]?.kind === 'text') {
+    return (
       <div className={`chat-markdown chat-markdown-${variant}`}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
           {markdown}
@@ -191,28 +191,28 @@ export function ChatMarkdownBlock({
     )
   }
 
- return (
+  return (
     <div className={`chat-markdown chat-markdown-${variant}`}>
       {parts.map((part, i) => {
- if (part.kind === 'text') {
- if (!part.value.trim()) return null
- return (
+        if (part.kind === 'text') {
+          if (!part.value.trim()) return null
+          return (
             <ReactMarkdown
- key={`md-${i}`}
- remarkPlugins={[remarkGfm]}
- components={components}
+              key={`md-${i}`}
+              remarkPlugins={[remarkGfm]}
+              components={components}
             >
               {part.value}
             </ReactMarkdown>
           )
         }
- return (
+        return (
           <CitationTooltip
- key={`cite-${i}-${part.marker}`}
- marker={part.marker}
- title={part.title}
- snippet={part.snippet}
- variant={variant}
+            key={`cite-${i}-${part.marker}`}
+            marker={part.marker}
+            title={part.title}
+            snippet={part.snippet}
+            variant={variant}
           />
         )
       })}

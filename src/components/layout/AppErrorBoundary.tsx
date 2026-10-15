@@ -1,11 +1,11 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 type AppErrorBoundaryProps = {
- children: ReactNode
+  children: ReactNode
 }
 
 type AppErrorBoundaryState = {
- error: Error | null
+  error: Error | null
 }
 
 /**
@@ -13,42 +13,42 @@ type AppErrorBoundaryState = {
  * 빈 화면(white screen)으로 언마운트된다. 여기서 잡아 안내 화면 + 복구 버튼을 보여준다.
  */
 export class AppErrorBoundary extends Component<
- AppErrorBoundaryProps,
- AppErrorBoundaryState
+  AppErrorBoundaryProps,
+  AppErrorBoundaryState
 > {
- state: AppErrorBoundaryState = { error: null }
+  state: AppErrorBoundaryState = { error: null }
 
- static getDerivedStateFromError(error: Error): AppErrorBoundaryState {
- return { error }
+  static getDerivedStateFromError(error: Error): AppErrorBoundaryState {
+    return { error }
   }
 
- componentDidCatch(error: Error, info: ErrorInfo) {
- console.error('[AppErrorBoundary] 렌더 오류', error, info.componentStack)
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[AppErrorBoundary] 렌더 오류', error, info.componentStack)
   }
 
- private handleReload = () => {
- window.location.reload()
+  private handleReload = () => {
+    window.location.reload()
   }
 
- private handleHome = () => {
- window.location.href = '/'
+  private handleHome = () => {
+    window.location.href = '/'
   }
 
- render() {
- const { error } = this.state
- if (!error) return this.props.children
+  render() {
+    const { error } = this.state
+    if (!error) return this.props.children
 
- return (
+    return (
       <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-bg px-6 py-10 text-center">
         <div className="mx-auto flex w-full max-w-md flex-col items-center rounded-3xl border border-border bg-surface p-8 shadow-sm">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-3xl">
             ⚠️
           </div>
           <h1 className="text-[18px] font-bold text-fg md:text-[20px]">
- 예기치 못한 오류가 발생했습니다
+            예기치 못한 오류가 발생했습니다
           </h1>
           <p className="mt-2 text-[13px] leading-relaxed text-fg-subtle md:text-[14px]">
- 화면을 새로고침하면 대부분 해결됩니다. 문제가 계속되면 관리자에게 문의해 주세요.
+            화면을 새로고침하면 대부분 해결됩니다. 문제가 계속되면 관리자에게 문의해 주세요.
           </p>
 
           {import.meta.env.DEV ? (
@@ -60,18 +60,18 @@ export class AppErrorBoundary extends Component<
 
           <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
             <button
- type="button"
- onClick={this.handleReload}
- className="rounded-xl bg-brand px-5 py-2.5 text-[13px] font-semibold text-brand-fg transition hover:bg-brand-strong md:text-[14px]"
+              type="button"
+              onClick={this.handleReload}
+              className="rounded-xl bg-brand px-5 py-2.5 text-[13px] font-semibold text-brand-fg transition hover:bg-brand-strong md:text-[14px]"
             >
- 새로고침
+              새로고침
             </button>
             <button
- type="button"
- onClick={this.handleHome}
- className="rounded-xl border border-border-strong bg-surface px-5 py-2.5 text-[13px] font-semibold text-fg transition hover:bg-surface-2 md:text-[14px]"
+              type="button"
+              onClick={this.handleHome}
+              className="rounded-xl border border-border-strong bg-surface px-5 py-2.5 text-[13px] font-semibold text-fg transition hover:bg-surface-2 md:text-[14px]"
             >
- 홈으로
+              홈으로
             </button>
           </div>
         </div>

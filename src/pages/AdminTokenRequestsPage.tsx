@@ -4,193 +4,193 @@ import { Link, Navigate } from 'react-router-dom'
 
 import { AdminPageHeader } from '../components/auth/admin/AdminPageHeader'
 import {
- adminBtnPrimary,
- adminBtnSecondary,
- adminPageRoot,
- adminTableWrap,
+  adminBtnPrimary,
+  adminBtnSecondary,
+  adminPageRoot,
+  adminTableWrap,
 } from '../components/auth/admin/admin-ui'
 import { useAuth } from '../components/auth/useAuth'
 import { isAdminProfile } from '../lib/admin-access'
 import { supabase } from '../lib/supabase'
 import { logAdminActivity } from '../services/admin/activity-log'
 import {
- fetchPendingTokenAllocationRequestsAdmin,
- updateTokenAllocationRequestAdmin,
- type TokenAllocationRequestRow,
+  fetchPendingTokenAllocationRequestsAdmin,
+  updateTokenAllocationRequestAdmin,
+  type TokenAllocationRequestRow,
 } from '../services/token-allocation-requests'
 
 function requesterLabel(row: TokenAllocationRequestRow): string {
- const name = row.users?.display_name?.trim()
- const email = row.users?.email?.trim()
- if (name && email) return `${name} (${email})`
- if (name) return name
- if (email) return email
- return row.user_id
+  const name = row.users?.display_name?.trim()
+  const email = row.users?.email?.trim()
+  if (name && email) return `${name} (${email})`
+  if (name) return name
+  if (email) return email
+  return row.user_id
 }
 
 function formatWhen(iso: string): string {
- return new Intl.DateTimeFormat('ko-KR', {
- month: 'short',
- day: 'numeric',
- hour: '2-digit',
- minute: '2-digit',
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(new Date(iso))
 }
 
 export function AdminTokenRequestsPage() {
- const { profile, loading } = useAuth()
- const [rows, setRows] = useState<TokenAllocationRequestRow[]>([])
- const [busyId, setBusyId] = useState<string | null>(null)
- const [loadError, setLoadError] = useState<string | null>(null)
- const [grantAmounts, setGrantAmounts] = useState<Record<string, string>>({})
- const [adminNotes, setAdminNotes] = useState<Record<string, string>>({})
+  const { profile, loading } = useAuth()
+  const [rows, setRows] = useState<TokenAllocationRequestRow[]>([])
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [grantAmounts, setGrantAmounts] = useState<Record<string, string>>({})
+  const [adminNotes, setAdminNotes] = useState<Record<string, string>>({})
 
- const load = useCallback(async () => {
- setLoadError(null)
- const res = await fetchPendingTokenAllocationRequestsAdmin(supabase)
- if (!res.ok) {
- setLoadError(res.message)
- setRows([])
- return
+  const load = useCallback(async () => {
+    setLoadError(null)
+    const res = await fetchPendingTokenAllocationRequestsAdmin(supabase)
+    if (!res.ok) {
+      setLoadError(res.message)
+      setRows([])
+      return
     }
- startTransition(() => {
- setRows(res.rows)
- setGrantAmounts((prev) => {
- const next = { ...prev }
- for (const row of res.rows) {
- if (next[row.id] == null) next[row.id] = '100000'
+    startTransition(() => {
+      setRows(res.rows)
+      setGrantAmounts((prev) => {
+        const next = { ...prev }
+        for (const row of res.rows) {
+          if (next[row.id] == null) next[row.id] = '100000'
         }
- return next
+        return next
       })
     })
   }, [])
 
- useEffect(() => {
- queueMicrotask(() => void load())
+  useEffect(() => {
+    queueMicrotask(() => void load())
   }, [load])
 
- if (loading && !profile) {
- return (
+  if (loading && !profile) {
+    return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-fg-subtle">
- 불러오는 중…
+        불러오는 중…
       </div>
     )
   }
 
- if (!isAdminProfile(profile)) {
- return <Navigate to="/" replace />
+  if (!isAdminProfile(profile)) {
+    return <Navigate to="/" replace />
   }
 
- async function grantTokens(userId: string, delta: number): Promise<string | null> {
- const { data, error: rpcErr } = await supabase.rpc('admin_increment_user_token_limit', {
- p_user_id: userId,
- p_delta: delta,
+  async function grantTokens(userId: string, delta: number): Promise<string | null> {
+    const { data, error: rpcErr } = await supabase.rpc('admin_increment_user_token_limit', {
+      p_user_id: userId,
+      p_delta: delta,
     })
- if (rpcErr) return rpcErr.message
- const payload = data as { ok?: boolean; error?: string } | null
- if (!payload?.ok) return payload?.error ?? '토큰 부여에 실패했습니다.'
- return null
+    if (rpcErr) return rpcErr.message
+    const payload = data as { ok?: boolean; error?: string } | null
+    if (!payload?.ok) return payload?.error ?? '토큰 부여에 실패했습니다.'
+    return null
   }
 
- async function approve(row: TokenAllocationRequestRow) {
- const trimmed = (grantAmounts[row.id] ?? '').trim()
- if (!trimmed) {
- toast.error('승인 시 부여할 토큰량을 입력해 주세요.')
- return
+  async function approve(row: TokenAllocationRequestRow) {
+    const trimmed = (grantAmounts[row.id] ?? '').trim()
+    if (!trimmed) {
+      toast.error('승인 시 부여할 토큰량을 입력해 주세요.')
+      return
     }
- const delta = Number(trimmed)
- if (!Number.isFinite(delta) || delta <= 0 || !Number.isInteger(delta)) {
- toast.error('토큰량은 1 이상의 정수만 입력할 수 있습니다.')
- return
+    const delta = Number(trimmed)
+    if (!Number.isFinite(delta) || delta <= 0 || !Number.isInteger(delta)) {
+      toast.error('토큰량은 1 이상의 정수만 입력할 수 있습니다.')
+      return
     }
 
- const notes = adminNotes[row.id]?.trim() ?? ''
+    const notes = adminNotes[row.id]?.trim() ?? ''
 
- setBusyId(row.id)
- try {
- const grantErr = await grantTokens(row.user_id, delta)
- if (grantErr) {
- toast.error(grantErr)
- return
+    setBusyId(row.id)
+    try {
+      const grantErr = await grantTokens(row.user_id, delta)
+      if (grantErr) {
+        toast.error(grantErr)
+        return
       }
- await logAdminActivity(
+      await logAdminActivity(
         'token_grant',
         `${requesterLabel(row)} — 할당 요청 승인 · 토큰 ${delta.toLocaleString('ko-KR')} 부여`,
       )
 
- const res = await updateTokenAllocationRequestAdmin(supabase, {
- id: row.id,
- status: 'approved',
- admin_notes: notes,
+      const res = await updateTokenAllocationRequestAdmin(supabase, {
+        id: row.id,
+        status: 'approved',
+        admin_notes: notes,
       })
- if (!res.ok) {
- toast.error(res.message)
- return
+      if (!res.ok) {
+        toast.error(res.message)
+        return
       }
- setGrantAmounts((prev) => {
- const next = { ...prev }
- delete next[row.id]
- return next
+      setGrantAmounts((prev) => {
+        const next = { ...prev }
+        delete next[row.id]
+        return next
       })
- setAdminNotes((prev) => {
- const next = { ...prev }
- delete next[row.id]
- return next
+      setAdminNotes((prev) => {
+        const next = { ...prev }
+        delete next[row.id]
+        return next
       })
- await load()
+      await load()
     } finally {
- setBusyId(null)
+      setBusyId(null)
     }
   }
 
- async function reject(row: TokenAllocationRequestRow) {
- const notes = adminNotes[row.id]?.trim() ?? ''
- setBusyId(row.id)
- try {
- const res = await updateTokenAllocationRequestAdmin(supabase, {
- id: row.id,
- status: 'rejected',
- admin_notes: notes,
+  async function reject(row: TokenAllocationRequestRow) {
+    const notes = adminNotes[row.id]?.trim() ?? ''
+    setBusyId(row.id)
+    try {
+      const res = await updateTokenAllocationRequestAdmin(supabase, {
+        id: row.id,
+        status: 'rejected',
+        admin_notes: notes,
       })
- if (!res.ok) {
- toast.error(res.message)
- return
+      if (!res.ok) {
+        toast.error(res.message)
+        return
       }
- setAdminNotes((prev) => {
- const next = { ...prev }
- delete next[row.id]
- return next
+      setAdminNotes((prev) => {
+        const next = { ...prev }
+        delete next[row.id]
+        return next
       })
- await load()
+      await load()
     } finally {
- setBusyId(null)
+      setBusyId(null)
     }
   }
 
- return (
+  return (
     <div className={adminPageRoot}>
       <AdminPageHeader
- title="토큰 할당 요청"
- description="직원이 추가 토큰을 요청하면 여기서 검토합니다. 승인 시 토큰량을 입력하면 한도에 바로 반영됩니다."
- actions={
+        title="토큰 할당 요청"
+        description="직원이 추가 토큰을 요청하면 여기서 검토합니다. 승인 시 토큰량을 입력하면 한도에 바로 반영됩니다."
+        actions={
           <button type="button" onClick={() => void load()} className={adminBtnSecondary}>
- 새로고침
+            새로고침
           </button>
         }
       />
 
       <div className="rounded-lg border border-border bg-bg px-4 py-3 text-sm text-fg-muted">
         <p>
- 승인 시 입력한 토큰량이 요청자의{' '}
+          승인 시 입력한 토큰량이 요청자의{' '}
           <span className="font-medium text-fg">token_limit</span>
- 에 즉시 더해집니다.{' '}
+          에 즉시 더해집니다.{' '}
           <Link
- to="/admin/employees"
- className="font-medium text-accent underline-offset-2 hover:underline"
+            to="/admin/employees"
+            className="font-medium text-accent underline-offset-2 hover:underline"
           >
- 직원 관리
+            직원 관리
           </Link>
- 에서도 일괄 부여할 수 있습니다.
+          에서도 일괄 부여할 수 있습니다.
         </p>
       </div>
 
@@ -203,10 +203,10 @@ export function AdminTokenRequestsPage() {
       {rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
           <p className="text-sm font-medium text-fg-muted">
- 대기 중인 요청이 없습니다
+            대기 중인 요청이 없습니다
           </p>
           <p className="mt-1 text-xs text-fg-subtle">
- 직원이 토큰 부족 시 요청을 보내면 이 목록에 표시됩니다.
+            직원이 토큰 부족 시 요청을 보내면 이 목록에 표시됩니다.
           </p>
         </div>
       ) : (
@@ -228,54 +228,54 @@ export function AdminTokenRequestsPage() {
                   </div>
                   <div className="flex w-full shrink-0 flex-col gap-2 sm:max-w-xs">
                     <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 부여 토큰량
+                      부여 토큰량
                       <input
- type="number"
- min={1}
- step={1}
- value={grantAmounts[row.id] ?? '100000'}
- disabled={busyId === row.id}
- onChange={(e) =>
- setGrantAmounts((prev) => ({
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={grantAmounts[row.id] ?? '100000'}
+                        disabled={busyId === row.id}
+                        onChange={(e) =>
+                          setGrantAmounts((prev) => ({
                             ...prev,
                             [row.id]: e.target.value,
                           }))
                         }
- className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
+                        className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
                       />
                     </label>
                     <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 관리자 메모 (선택)
+                      관리자 메모 (선택)
                       <input
- type="text"
- value={adminNotes[row.id] ?? ''}
- disabled={busyId === row.id}
- onChange={(e) =>
- setAdminNotes((prev) => ({
+                        type="text"
+                        value={adminNotes[row.id] ?? ''}
+                        disabled={busyId === row.id}
+                        onChange={(e) =>
+                          setAdminNotes((prev) => ({
                             ...prev,
                             [row.id]: e.target.value,
                           }))
                         }
- placeholder="승인·거부 사유"
- className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+                        placeholder="승인·거부 사유"
+                        className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                       />
                     </label>
                     <div className="flex gap-2 pt-1">
                       <button
- type="button"
- disabled={busyId === row.id}
- onClick={() => void approve(row)}
- className={adminBtnPrimary}
+                        type="button"
+                        disabled={busyId === row.id}
+                        onClick={() => void approve(row)}
+                        className={adminBtnPrimary}
                       >
                         {busyId === row.id ? '처리 중…' : '승인'}
                       </button>
                       <button
- type="button"
- disabled={busyId === row.id}
- onClick={() => void reject(row)}
- className={adminBtnSecondary}
+                        type="button"
+                        disabled={busyId === row.id}
+                        onClick={() => void reject(row)}
+                        className={adminBtnSecondary}
                       >
- 거부
+                        거부
                       </button>
                     </div>
                   </div>

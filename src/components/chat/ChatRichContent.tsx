@@ -4,8 +4,8 @@ import { useCallback, useMemo, useState } from 'react'
 import type { ChatCitationSource } from '../../types/chat-citations'
 import { ChatMarkdownBlock } from './ChatMarkdownBlock'
 import {
- ChatMediaLightbox,
- type ChatMediaLightboxItem,
+  ChatMediaLightbox,
+  type ChatMediaLightboxItem,
 } from './ChatMediaLightbox'
 
 type ContentSegment =
@@ -21,111 +21,111 @@ const BARE_IMAGE_URL_RE =
   /(https?:\/\/[^\s<>"']+\.(?:png|jpe?g|gif|webp)(?:\?[^\s<>"']*)?)/gi
 
 function parseRichSegments(content: string): ContentSegment[] {
- const segments: ContentSegment[] = []
- let lastIndex = 0
- let match: RegExpExecArray | null
+  const segments: ContentSegment[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
 
- const pushText = (raw: string) => {
- const t = raw
- if (!t) return
+  const pushText = (raw: string) => {
+    const t = raw
+    if (!t) return
 
- let textLast = 0
- const imageParts: ContentSegment[] = []
- MD_IMAGE_RE.lastIndex = 0
- let imgMatch: RegExpExecArray | null
- while ((imgMatch = MD_IMAGE_RE.exec(t)) !== null) {
- const before = t.slice(textLast, imgMatch.index)
- if (before) imageParts.push({ kind: 'text', value: before })
- imageParts.push({
- kind: 'image',
- alt: imgMatch[1] ?? '',
- url: imgMatch[2],
+    let textLast = 0
+    const imageParts: ContentSegment[] = []
+    MD_IMAGE_RE.lastIndex = 0
+    let imgMatch: RegExpExecArray | null
+    while ((imgMatch = MD_IMAGE_RE.exec(t)) !== null) {
+      const before = t.slice(textLast, imgMatch.index)
+      if (before) imageParts.push({ kind: 'text', value: before })
+      imageParts.push({
+        kind: 'image',
+        alt: imgMatch[1] ?? '',
+        url: imgMatch[2],
       })
- textLast = imgMatch.index + imgMatch[0].length
+      textLast = imgMatch.index + imgMatch[0].length
     }
- let tail = t.slice(textLast)
- if (tail) {
- AUDIO_TAG_RE.lastIndex = 0
- const audioMatch = AUDIO_TAG_RE.exec(tail)
- if (audioMatch?.index !== undefined) {
- const beforeAudio = tail.slice(0, audioMatch.index)
- if (beforeAudio) imageParts.push({ kind: 'text', value: beforeAudio })
- imageParts.push({ kind: 'audio', src: audioMatch[1] })
- tail = tail.slice(audioMatch.index + audioMatch[0].length)
+    let tail = t.slice(textLast)
+    if (tail) {
+      AUDIO_TAG_RE.lastIndex = 0
+      const audioMatch = AUDIO_TAG_RE.exec(tail)
+      if (audioMatch?.index !== undefined) {
+        const beforeAudio = tail.slice(0, audioMatch.index)
+        if (beforeAudio) imageParts.push({ kind: 'text', value: beforeAudio })
+        imageParts.push({ kind: 'audio', src: audioMatch[1] })
+        tail = tail.slice(audioMatch.index + audioMatch[0].length)
       }
- if (tail) {
- BARE_IMAGE_URL_RE.lastIndex = 0
- let urlLast = 0
- let urlMatch: RegExpExecArray | null
- while ((urlMatch = BARE_IMAGE_URL_RE.exec(tail)) !== null) {
- const beforeUrl = tail.slice(urlLast, urlMatch.index)
- if (beforeUrl) imageParts.push({ kind: 'text', value: beforeUrl })
- imageParts.push({
- kind: 'image',
- alt: '이미지',
- url: urlMatch[1],
+      if (tail) {
+        BARE_IMAGE_URL_RE.lastIndex = 0
+        let urlLast = 0
+        let urlMatch: RegExpExecArray | null
+        while ((urlMatch = BARE_IMAGE_URL_RE.exec(tail)) !== null) {
+          const beforeUrl = tail.slice(urlLast, urlMatch.index)
+          if (beforeUrl) imageParts.push({ kind: 'text', value: beforeUrl })
+          imageParts.push({
+            kind: 'image',
+            alt: '이미지',
+            url: urlMatch[1],
           })
- urlLast = urlMatch.index + urlMatch[0].length
+          urlLast = urlMatch.index + urlMatch[0].length
         }
- const urlTail = tail.slice(urlLast)
- if (urlTail) imageParts.push({ kind: 'text', value: urlTail })
+        const urlTail = tail.slice(urlLast)
+        if (urlTail) imageParts.push({ kind: 'text', value: urlTail })
       }
     }
 
- if (imageParts.length === 0) {
- segments.push({ kind: 'text', value: t })
+    if (imageParts.length === 0) {
+      segments.push({ kind: 'text', value: t })
     } else {
- segments.push(...imageParts)
+      segments.push(...imageParts)
     }
   }
 
- CODE_FENCE_RE.lastIndex = 0
- while ((match = CODE_FENCE_RE.exec(content)) !== null) {
- pushText(content.slice(lastIndex, match.index))
- segments.push({
- kind: 'code',
- language: (match[1] ?? '').trim(),
- value: match[2].replace(/\n$/, ''),
+  CODE_FENCE_RE.lastIndex = 0
+  while ((match = CODE_FENCE_RE.exec(content)) !== null) {
+    pushText(content.slice(lastIndex, match.index))
+    segments.push({
+      kind: 'code',
+      language: (match[1] ?? '').trim(),
+      value: match[2].replace(/\n$/, ''),
     })
- lastIndex = match.index + match[0].length
+    lastIndex = match.index + match[0].length
   }
- pushText(content.slice(lastIndex))
+  pushText(content.slice(lastIndex))
 
- return segments.length > 0 ? segments : [{ kind: 'text', value: content }]
+  return segments.length > 0 ? segments : [{ kind: 'text', value: content }]
 }
 
 type ChatRichContentProps = {
- content: string
- variant?: 'default' | 'claude' | 'gemini'
- citations?: ChatCitationSource[]
+  content: string
+  variant?: 'default' | 'claude' | 'gemini'
+  citations?: ChatCitationSource[]
 }
 
 function CodeCanvasPanel({
- language,
- code,
- variant,
+  language,
+  code,
+  variant,
 }: {
- language: string
- code: string
- variant: 'default' | 'claude' | 'gemini'
+  language: string
+  code: string
+  variant: 'default' | 'claude' | 'gemini'
 }) {
- const [copied, setCopied] = useState(false)
- const isGemini = variant === 'gemini'
+  const [copied, setCopied] = useState(false)
+  const isGemini = variant === 'gemini'
 
- const handleCopy = useCallback(async () => {
- try {
- await navigator.clipboard.writeText(code)
- setCopied(true)
- window.setTimeout(() => setCopied(false), 1600)
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1600)
     } catch {
- toast.error('복사에 실패했습니다.')
+      toast.error('복사에 실패했습니다.')
     }
   }, [code])
 
- return (
+  return (
     <div
- className={`my-2 overflow-hidden rounded-xl border shadow-sm ${
- isGemini
+      className={`my-2 overflow-hidden rounded-xl border shadow-sm ${
+        isGemini
           ? 'border-[#c4c7c5] bg-[#f8fafd]'
           : variant === 'claude'
           ? 'border-border bg-stone-950'
@@ -137,10 +137,10 @@ function CodeCanvasPanel({
           {language || 'code'}
         </span>
         <button
- type="button"
- onClick={() => void handleCopy()}
- className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
- isGemini
+          type="button"
+          onClick={() => void handleCopy()}
+          className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
+            isGemini
               ? 'text-[#444746] hover:bg-black/5'
               : 'text-fg-subtle hover:bg-surface-2/10'
           }`}
@@ -149,8 +149,8 @@ function CodeCanvasPanel({
         </button>
       </div>
       <pre
- className={`max-h-[min(24rem,50vh)] overflow-auto p-3 text-[13px] leading-relaxed ${
- isGemini ? 'text-[#1f1f1f]' : 'text-emerald-100'
+        className={`max-h-[min(24rem,50vh)] overflow-auto p-3 text-[13px] leading-relaxed ${
+          isGemini ? 'text-[#1f1f1f]' : 'text-emerald-100'
         }`}
       >
         <code>{code}</code>
@@ -160,102 +160,102 @@ function CodeCanvasPanel({
 }
 
 function CitationAwareMarkdown({
- text,
- citations,
- variant,
+  text,
+  citations,
+  variant,
 }: {
- text: string
- citations: ChatCitationSource[]
- variant: 'default' | 'claude' | 'gemini'
+  text: string
+  citations: ChatCitationSource[]
+  variant: 'default' | 'claude' | 'gemini'
 }) {
- return (
+  return (
     <ChatMarkdownBlock content={text} variant={variant} citations={citations} />
   )
 }
 
 export function ChatRichContent({
- content,
- variant = 'claude',
- citations = [],
+  content,
+  variant = 'claude',
+  citations = [],
 }: ChatRichContentProps) {
- const segments = useMemo(() => parseRichSegments(content), [content])
- const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const segments = useMemo(() => parseRichSegments(content), [content])
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
- const imageItems: ChatMediaLightboxItem[] = useMemo(
+  const imageItems: ChatMediaLightboxItem[] = useMemo(
     () =>
- segments
+      segments
         .filter((s): s is Extract<ContentSegment, { kind: 'image' }> =>
- s.kind === 'image',
+          s.kind === 'image',
         )
         .map((s) => ({ src: s.url, alt: s.alt })),
     [segments],
   )
 
- let imageCursor = -1
+  let imageCursor = -1
 
- return (
+  return (
     <div className="space-y-1">
       {segments.map((seg, i) => {
- if (seg.kind === 'text') {
- if (!seg.value.trim()) return null
- return (
+        if (seg.kind === 'text') {
+          if (!seg.value.trim()) return null
+          return (
             <div key={`t-${i}`}>
               <CitationAwareMarkdown
- text={seg.value}
- citations={citations}
- variant={variant}
+                text={seg.value}
+                citations={citations}
+                variant={variant}
               />
             </div>
           )
         }
- if (seg.kind === 'code') {
- return (
+        if (seg.kind === 'code') {
+          return (
             <CodeCanvasPanel
- key={`c-${i}`}
- language={seg.language}
- code={seg.value}
- variant={variant}
+              key={`c-${i}`}
+              language={seg.language}
+              code={seg.value}
+              variant={variant}
             />
           )
         }
- if (seg.kind === 'audio') {
- return (
+        if (seg.kind === 'audio') {
+          return (
             <audio
- key={`a-${i}`}
- controls
- src={seg.src}
- className="my-2 w-full max-w-md"
+              key={`a-${i}`}
+              controls
+              src={seg.src}
+              className="my-2 w-full max-w-md"
             />
           )
         }
- imageCursor += 1
- const imgIdx = imageCursor
- return (
+        imageCursor += 1
+        const imgIdx = imageCursor
+        return (
           <button
- key={`img-${i}`}
- type="button"
- onClick={() => setLightboxIndex(imgIdx)}
- className="group relative my-2 block w-full max-w-md overflow-hidden rounded-xl border border-border/80 bg-surface-2"
+            key={`img-${i}`}
+            type="button"
+            onClick={() => setLightboxIndex(imgIdx)}
+            className="group relative my-2 block w-full max-w-md overflow-hidden rounded-xl border border-border/80 bg-surface-2"
           >
             <img
- src={seg.url}
- alt={seg.alt}
- className="max-h-72 w-full object-contain transition group-hover:brightness-95"
- loading="lazy"
+              src={seg.url}
+              alt={seg.alt}
+              className="max-h-72 w-full object-contain transition group-hover:brightness-95"
+              loading="lazy"
             />
             <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
- 크게 보기
+              크게 보기
             </span>
           </button>
         )
       })}
 
       <ChatMediaLightbox
- open={lightboxIndex !== null && imageItems.length > 0}
- items={imageItems}
- index={lightboxIndex ?? 0}
- onClose={() => setLightboxIndex(null)}
- onIndexChange={setLightboxIndex}
+        open={lightboxIndex !== null && imageItems.length > 0}
+        items={imageItems}
+        index={lightboxIndex ?? 0}
+        onClose={() => setLightboxIndex(null)}
+        onIndexChange={setLightboxIndex}
       />
     </div>
   )

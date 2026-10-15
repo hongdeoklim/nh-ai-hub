@@ -3,15 +3,17 @@ import { toast } from 'sonner'
 
 import { useAuth } from '../components/auth/useAuth'
 import {
- approveCadJob,
- fetchAllowedPrograms,
- fetchMyCadJobs,
- getAgentInstallerUrl,
- rejectCadJob,
- type AllowedProgram,
- type CadJob,
- type CadJobStatus,
+  approveCadJob,
+  fetchAllowedPrograms,
+  fetchMyCadJobs,
+  getAgentInstallerUrl,
+  rejectCadJob,
+  type AllowedProgram,
+  type CadJob,
+  type CadJobStatus,
 } from '../services/cad/cad-jobs'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconRuler } from '../components/common/icons'
 
 /**
  * CAD 에이전트 — 로컬 에이전트 설치 안내 + 작업 큐 모니터.
@@ -22,16 +24,16 @@ import {
 const WORKSPACE_ROOT = 'C:\\NH-AI-HUB-workspace'
 
 const STATUS_META: Record<CadJobStatus, { label: string; cls: string }> = {
- pending: { label: '대기', cls: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-300' },
- pending_approval: { label: '승인 대기', cls: 'border-warning/30 bg-warning-soft text-warning' },
- running: { label: '실행 중', cls: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300' },
- completed: { label: '완료', cls: 'border-success/30 bg-success-soft text-success' },
- failed: { label: '실패', cls: 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300' },
+  pending: { label: '대기', cls: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-300' },
+  pending_approval: { label: '승인 대기', cls: 'border-warning/30 bg-warning-soft text-warning' },
+  running: { label: '실행 중', cls: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300' },
+  completed: { label: '완료', cls: 'border-success/30 bg-success-soft text-success' },
+  failed: { label: '실패', cls: 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300' },
 }
 
 function StatusBadge({ status }: { status: CadJobStatus }) {
- const meta = STATUS_META[status] ?? STATUS_META.pending
- return (
+  const meta = STATUS_META[status] ?? STATUS_META.pending
+  return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${meta.cls}`}>
       {meta.label}
     </span>
@@ -39,73 +41,67 @@ function StatusBadge({ status }: { status: CadJobStatus }) {
 }
 
 export function CadAgentPage() {
- const { profile } = useAuth()
- const isAdmin = profile?.is_admin === true
- const [jobs, setJobs] = useState<CadJob[]>([])
- const [programs, setPrograms] = useState<AllowedProgram[]>([])
- const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
- const [loading, setLoading] = useState(true)
- const [acting, setActing] = useState<string | null>(null)
+  const { profile } = useAuth()
+  const isAdmin = profile?.is_admin === true
+  const [jobs, setJobs] = useState<CadJob[]>([])
+  const [programs, setPrograms] = useState<AllowedProgram[]>([])
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [acting, setActing] = useState<string | null>(null)
 
- const load = useCallback(async () => {
- setLoading(true)
- try {
- const [jobRows, programRows, installerUrl] = await Promise.all([
- fetchMyCadJobs(50).catch((e) => {
- toast.error(`작업 조회 실패: ${e instanceof Error ? e.message : e}`)
- return [] as CadJob[]
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [jobRows, programRows, installerUrl] = await Promise.all([
+        fetchMyCadJobs(50).catch((e) => {
+          toast.error(`작업 조회 실패: ${e instanceof Error ? e.message : e}`)
+          return [] as CadJob[]
         }),
- fetchAllowedPrograms().catch(() => [] as AllowedProgram[]),
- getAgentInstallerUrl().catch(() => null),
+        fetchAllowedPrograms().catch(() => [] as AllowedProgram[]),
+        getAgentInstallerUrl().catch(() => null),
       ])
- setJobs(jobRows)
- setPrograms(programRows)
- setDownloadUrl(installerUrl)
+      setJobs(jobRows)
+      setPrograms(programRows)
+      setDownloadUrl(installerUrl)
     } finally {
- setLoading(false)
+      setLoading(false)
     }
   }, [])
 
- useEffect(() => {
- queueMicrotask(() => void load())
+  useEffect(() => {
+    queueMicrotask(() => void load())
   }, [load])
 
- const handleApprove = useCallback(
- async (id: string, approve: boolean) => {
- if (!profile?.id) return
- setActing(id)
- try {
- if (approve) {
- await approveCadJob(id, profile.id)
- toast.success('작업을 승인했습니다. 에이전트가 곧 실행합니다.')
+  const handleApprove = useCallback(
+    async (id: string, approve: boolean) => {
+      if (!profile?.id) return
+      setActing(id)
+      try {
+        if (approve) {
+          await approveCadJob(id, profile.id)
+          toast.success('작업을 승인했습니다. 에이전트가 곧 실행합니다.')
         } else {
- await rejectCadJob(id, profile.id)
- toast.success('작업을 반려했습니다.')
+          await rejectCadJob(id, profile.id)
+          toast.success('작업을 반려했습니다.')
         }
- await load()
+        await load()
       } catch (e) {
- toast.error(`처리 실패: ${e instanceof Error ? e.message : e}`)
+        toast.error(`처리 실패: ${e instanceof Error ? e.message : e}`)
       } finally {
- setActing(null)
+        setActing(null)
       }
     },
     [profile?.id, load],
   )
 
- return (
+  return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 md:py-10">
-      <header>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-brand md:text-[11px]">
-          <span aria-hidden>📐</span> 자동화 · CAD 에이전트
-        </span>
-        <h1 className="mt-3 text-[22px] font-bold tracking-tight text-fg md:text-[28px]">
- 내 PC의 AutoCAD·SketchUp을 채팅으로 실행하세요
-        </h1>
-        <p className="mt-2 text-[13px] leading-relaxed text-fg-muted md:text-[15px]">
- 로컬 에이전트를 설치하면, AI 채팅에서 요청한 CAD 명령이 안전하게 검증된 뒤
- 내 컴퓨터의 정품 AutoCAD/SketchUp에서 실행됩니다. 도면 데이터는 PC 밖으로 나가지 않습니다.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="자동화 · CAD 에이전트"
+        title="내 PC의 AutoCAD·SketchUp을 채팅으로 실행하세요"
+        description="로컬 에이전트를 설치하면, AI 채팅에서 요청한 CAD 명령이 안전하게 검증된 뒤 내 컴퓨터의 정품 AutoCAD/SketchUp에서 실행됩니다. 도면 데이터는 PC 밖으로 나가지 않습니다."
+        icon={IconRuler}
+      />
 
       {/* 설치 안내 */}
       <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
@@ -118,18 +114,18 @@ export function CadAgentPage() {
         <div className="mt-4 flex flex-wrap items-center gap-3">
           {downloadUrl ? (
             <a
- href={downloadUrl}
- className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-brand-fg transition-colors hover:bg-brand-strong md:text-[14px]"
+              href={downloadUrl}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-brand-fg transition-colors hover:bg-brand-strong md:text-[14px]"
             >
               <span aria-hidden>⬇</span> 설치본 다운로드 (setup.exe)
             </a>
           ) : (
             <span className="inline-flex items-center gap-2 rounded-lg border border-dashed border-border-strong px-4 py-2 text-[12px] text-fg-subtle md:text-[13px]">
- 설치본 준비 중 — 관리자에게 문의하세요.
+              설치본 준비 중 — 관리자에게 문의하세요.
             </span>
           )}
           <span className="text-[12px] text-fg-subtle md:text-[13px]">
- 작업 폴더에 도면(.dwg)을 두고 채팅에서 “도면 열어줘”처럼 요청하세요.
+            작업 폴더에 도면(.dwg)을 두고 채팅에서 “도면 열어줘”처럼 요청하세요.
           </span>
         </div>
       </section>
@@ -138,10 +134,10 @@ export function CadAgentPage() {
       <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
         <h2 className="text-[15px] font-bold text-fg md:text-[17px]">2. 채팅으로 사용하기</h2>
         <p className="mt-2 text-[13px] leading-relaxed text-fg-muted md:text-[14px]">
- 에이전트가 실행 중이면, <strong className="font-semibold text-fg">AI 채팅</strong>에
- 자연어로 요청하면 됩니다. 도면·모델 파일은 작업 폴더
+          에이전트가 실행 중이면, <strong className="font-semibold text-fg">AI 채팅</strong>에
+          자연어로 요청하면 됩니다. 도면·모델 파일은 작업 폴더
           (<code className="rounded bg-surface-2 px-1 py-0.5 text-[12px]">{WORKSPACE_ROOT}</code>)
- 안에 두세요. 요청은 자동으로 안전 검증을 거쳐 아래 작업 큐에 등록되고, 내 PC의 에이전트가 실행합니다.
+          안에 두세요. 요청은 자동으로 안전 검증을 거쳐 아래 작업 큐에 등록되고, 내 PC의 에이전트가 실행합니다.
         </p>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-border p-3">
@@ -171,14 +167,14 @@ export function CadAgentPage() {
       <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-[15px] font-bold text-fg md:text-[17px]">
- 3. 작업 큐 {isAdmin && <span className="text-[12px] font-normal text-fg-subtle md:text-[13px]">(관리자 · 전체)</span>}
+            3. 작업 큐 {isAdmin && <span className="text-[12px] font-normal text-fg-subtle md:text-[13px]">(관리자 · 전체)</span>}
           </h2>
           <button
- type="button"
- onClick={() => void load()}
- className="rounded-lg border border-border px-3 py-1.5 text-[12px] font-medium text-fg-muted transition-colors hover:bg-surface-2 md:text-[13px]"
+            type="button"
+            onClick={() => void load()}
+            className="rounded-lg border border-border px-3 py-1.5 text-[12px] font-medium text-fg-muted transition-colors hover:bg-surface-2 md:text-[13px]"
           >
- 새로고침
+            새로고침
           </button>
         </div>
 
@@ -186,21 +182,21 @@ export function CadAgentPage() {
           <p className="mt-4 text-[13px] text-fg-subtle md:text-[14px]">불러오는 중…</p>
         ) : jobs.length === 0 ? (
           <p className="mt-4 text-[13px] text-fg-subtle md:text-[14px]">
- 아직 등록된 CAD 작업이 없습니다. AI 채팅에서 CAD 명령을 요청해 보세요.
+            아직 등록된 CAD 작업이 없습니다. AI 채팅에서 CAD 명령을 요청해 보세요.
           </p>
         ) : (
           <ul className="mt-4 flex flex-col gap-3">
             {jobs.map((job) => (
               <li
- key={job.id}
- className="flex flex-col gap-2 rounded-xl border border-border p-3"
+                key={job.id}
+                className="flex flex-col gap-2 rounded-xl border border-border p-3"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge status={job.status} />
                   <code className="text-[13px] font-semibold text-fg md:text-[14px]">{job.command}</code>
                   {job.risk_tier === 'destructive' && (
                     <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 md:text-[11px]">
- 파괴적
+                      파괴적
                     </span>
                   )}
                   {job.project_classification === 'confidential' && (
@@ -223,20 +219,20 @@ export function CadAgentPage() {
                 {isAdmin && job.status === 'pending_approval' && (
                   <div className="flex gap-2">
                     <button
- type="button"
- disabled={acting === job.id}
- onClick={() => void handleApprove(job.id, true)}
- className="rounded-lg bg-brand px-3 py-1.5 text-[12px] font-semibold text-brand-fg transition-colors hover:bg-brand-strong disabled:opacity-50 md:text-[13px]"
+                      type="button"
+                      disabled={acting === job.id}
+                      onClick={() => void handleApprove(job.id, true)}
+                      className="rounded-lg bg-brand px-3 py-1.5 text-[12px] font-semibold text-brand-fg transition-colors hover:bg-brand-strong disabled:opacity-50 md:text-[13px]"
                     >
- 승인
+                      승인
                     </button>
                     <button
- type="button"
- disabled={acting === job.id}
- onClick={() => void handleApprove(job.id, false)}
- className="rounded-lg border border-border-strong px-3 py-1.5 text-[12px] font-semibold text-fg-muted transition-colors hover:bg-surface-2 disabled:opacity-50 md:text-[13px]"
+                      type="button"
+                      disabled={acting === job.id}
+                      onClick={() => void handleApprove(job.id, false)}
+                      className="rounded-lg border border-border-strong px-3 py-1.5 text-[12px] font-semibold text-fg-muted transition-colors hover:bg-surface-2 disabled:opacity-50 md:text-[13px]"
                     >
- 반려
+                      반려
                     </button>
                   </div>
                 )}
@@ -256,7 +252,7 @@ export function CadAgentPage() {
                 <code className="text-[13px] font-semibold text-fg md:text-[14px]">{p.command_name}</code>
                 {p.risk_tier === 'destructive' && (
                   <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 md:text-[11px]">
- 승인 필요
+                    승인 필요
                   </span>
                 )}
               </li>

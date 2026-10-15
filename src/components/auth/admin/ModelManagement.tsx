@@ -3,394 +3,394 @@ import { startTransition, useCallback, useEffect, useState, type FormEvent } fro
 import { AdminPageHeader } from './AdminPageHeader'
 import { supabase } from '../../../lib/supabase'
 import {
- createAiModelAdmin,
- deleteAiModelAdmin,
- listAiModelsAdmin,
- sortAiModelRows,
- updateAiModelAdmin,
+  createAiModelAdmin,
+  deleteAiModelAdmin,
+  listAiModelsAdmin,
+  sortAiModelRows,
+  updateAiModelAdmin,
 } from '../../../services/admin/ai-models-admin'
 import {
- AI_MODELS_SYNC_MODEL_ID,
- catalogEntryToFormState,
- LATEST_AI_MODELS_CATALOG,
- syncLatestAiModelsCatalog,
+  AI_MODELS_SYNC_MODEL_ID,
+  catalogEntryToFormState,
+  LATEST_AI_MODELS_CATALOG,
+  syncLatestAiModelsCatalog,
 } from '../../../services/admin/ai-models-catalog-sync'
 import { logAdminActivity } from '../../../services/admin/activity-log'
 import { useAuth } from '../useAuth'
 import {
- AI_MODEL_PROVIDER_LABELS,
- type AiModelProvider,
- type AiModelRow,
- type AiModelType,
+  AI_MODEL_PROVIDER_LABELS,
+  type AiModelProvider,
+  type AiModelRow,
+  type AiModelType,
 } from '../../../types/ai-models'
 
 type ModalMode = 'create' | 'edit'
 
 type FormState = {
- provider: AiModelProvider
- display_name: string
- api_id: string
- model_type: AiModelType
- hint: string
- cost_info: string
- description: string
- is_active: boolean
- sort_order: number
+  provider: AiModelProvider
+  display_name: string
+  api_id: string
+  model_type: AiModelType
+  hint: string
+  cost_info: string
+  description: string
+  is_active: boolean
+  sort_order: number
 }
 
 const INITIAL_FORM: FormState = {
- provider: 'google',
- display_name: '',
- api_id: '',
- model_type: 'text',
- hint: '',
- cost_info: '보통',
- description: '',
- is_active: true,
- sort_order: 500,
+  provider: 'google',
+  display_name: '',
+  api_id: '',
+  model_type: 'text',
+  hint: '',
+  cost_info: '보통',
+  description: '',
+  is_active: true,
+  sort_order: 500,
 }
 
 function costBadgeClass(costInfo: string): string {
- const level = costInfo.trim()
- if (level === '저렴' || level === '초저가') {
- return 'bg-success-soft text-success'
+  const level = costInfo.trim()
+  if (level === '저렴' || level === '초저가') {
+    return 'bg-success-soft text-success'
   }
- if (level === '높음' || level === '프리미엄') {
- return 'bg-warning-soft text-warning'
+  if (level === '높음' || level === '프리미엄') {
+    return 'bg-warning-soft text-warning'
   }
- return 'bg-surface-3/90 text-fg-muted'
+  return 'bg-surface-3/90 text-fg-muted'
 }
 
 function providerBadgeClass(provider: AiModelProvider): string {
- switch (provider) {
- case 'anthropic':
- return 'bg-brand-soft text-brand'
- case 'openai':
- return 'bg-success-soft text-success'
- default:
- return 'bg-blue-100 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200'
+  switch (provider) {
+    case 'anthropic':
+      return 'bg-brand-soft text-brand'
+    case 'openai':
+      return 'bg-success-soft text-success'
+    default:
+      return 'bg-blue-100 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200'
   }
 }
 
 function typeBadgeClass(type: AiModelType): string {
- if (type === 'image') {
- return 'bg-violet-100 text-violet-900 dark:bg-violet-950/50 dark:text-violet-200'
+  if (type === 'image') {
+    return 'bg-violet-100 text-violet-900 dark:bg-violet-950/50 dark:text-violet-200'
   }
- if (type === 'video') {
- return 'bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-200'
+  if (type === 'video') {
+    return 'bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-200'
   }
- return 'bg-surface-2 text-fg'
+  return 'bg-surface-2 text-fg'
 }
 
 function modelTypeLabel(type: AiModelType): string {
- if (type === 'image') return '이미지'
- if (type === 'video') return '동영상'
- return '텍스트'
+  if (type === 'image') return '이미지'
+  if (type === 'video') return '동영상'
+  return '텍스트'
 }
 
 export function ModelManagement() {
- const { profile, session } = useAuth()
- const [rows, setRows] = useState<AiModelRow[]>([])
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState<string | null>(null)
- const [busyId, setBusyId] = useState<string | null>(null)
- const [modalOpen, setModalOpen] = useState(false)
- const [modalMode, setModalMode] = useState<ModalMode>('create')
- const [editingId, setEditingId] = useState<string | null>(null)
- const [form, setForm] = useState<FormState>(INITIAL_FORM)
- const [saveBusy, setSaveBusy] = useState(false)
- const [saveError, setSaveError] = useState<string | null>(null)
- const [aiSyncBusy, setAiSyncBusy] = useState(false)
- const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const { profile, session } = useAuth()
+  const [rows, setRows] = useState<AiModelRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<ModalMode>('create')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [form, setForm] = useState<FormState>(INITIAL_FORM)
+  const [saveBusy, setSaveBusy] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [aiSyncBusy, setAiSyncBusy] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
- const load = useCallback(async () => {
- setError(null)
- setLoading(true)
- try {
- const data = await listAiModelsAdmin()
- startTransition(() => setRows(data))
+  const load = useCallback(async () => {
+    setError(null)
+    setLoading(true)
+    try {
+      const data = await listAiModelsAdmin()
+      startTransition(() => setRows(data))
     } catch (qErr) {
- const message =
- qErr instanceof Error ? qErr.message : '모델 목록을 불러오지 못했습니다.'
- setError(message)
- setRows([])
+      const message =
+        qErr instanceof Error ? qErr.message : '모델 목록을 불러오지 못했습니다.'
+      setError(message)
+      setRows([])
     }
- setLoading(false)
+    setLoading(false)
   }, [])
 
- useEffect(() => {
- queueMicrotask(() => void load())
+  useEffect(() => {
+    queueMicrotask(() => void load())
   }, [load])
 
- useEffect(() => {
- const channel = supabase
+  useEffect(() => {
+    const channel = supabase
       .channel('ai_models_admin_realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'ai_models' },
         () => {
- void load()
+          void load()
         },
       )
       .subscribe()
 
- return () => {
- void supabase.removeChannel(channel)
+    return () => {
+      void supabase.removeChannel(channel)
     }
   }, [load])
 
- function openCreate() {
- setModalMode('create')
- setEditingId(null)
- setForm(INITIAL_FORM)
- setSaveError(null)
- setModalOpen(true)
+  function openCreate() {
+    setModalMode('create')
+    setEditingId(null)
+    setForm(INITIAL_FORM)
+    setSaveError(null)
+    setModalOpen(true)
   }
 
- function openEdit(row: AiModelRow) {
- setModalMode('edit')
- setEditingId(row.id)
- setForm({
- provider: row.provider,
- display_name: row.display_name,
- api_id: row.api_id,
- model_type: row.model_type,
- hint: row.hint ?? '',
- cost_info: row.cost_info ?? '보통',
- description: row.description ?? '',
- is_active: row.is_active,
- sort_order: row.sort_order,
+  function openEdit(row: AiModelRow) {
+    setModalMode('edit')
+    setEditingId(row.id)
+    setForm({
+      provider: row.provider,
+      display_name: row.display_name,
+      api_id: row.api_id,
+      model_type: row.model_type,
+      hint: row.hint ?? '',
+      cost_info: row.cost_info ?? '보통',
+      description: row.description ?? '',
+      is_active: row.is_active,
+      sort_order: row.sort_order,
     })
- setSaveError(null)
- setModalOpen(true)
+    setSaveError(null)
+    setModalOpen(true)
   }
 
- async function handleToggleActive(row: AiModelRow) {
- setBusyId(row.id)
- setError(null)
- const next = !row.is_active
- const { error: uErr } = await supabase
+  async function handleToggleActive(row: AiModelRow) {
+    setBusyId(row.id)
+    setError(null)
+    const next = !row.is_active
+    const { error: uErr } = await supabase
       .from('ai_models')
       .update({ is_active: next })
       .eq('id', row.id)
 
- if (uErr) {
- setError(uErr.message)
+    if (uErr) {
+      setError(uErr.message)
     } else {
- await logAdminActivity(
- next ? 'ai_model_activate' : 'ai_model_deactivate',
+      await logAdminActivity(
+        next ? 'ai_model_activate' : 'ai_model_deactivate',
         `${row.display_name} (${row.api_id})`,
       )
- await load()
+      await load()
     }
- setBusyId(null)
+    setBusyId(null)
   }
 
- async function handleDelete(row: AiModelRow) {
- const confirmed = window.confirm(
+  async function handleDelete(row: AiModelRow) {
+    const confirmed = window.confirm(
       `「${row.display_name}」(${row.api_id}) 모델을 삭제할까요?\n삭제 후에는 복구할 수 없습니다.`,
     )
- if (!confirmed) return
+    if (!confirmed) return
 
- setBusyId(row.id)
- setError(null)
- setSuccessMessage(null)
- try {
- await deleteAiModelAdmin(row.id)
- await logAdminActivity('ai_model_update', `삭제: ${row.display_name} (${row.api_id})`)
- setRows((prev) => prev.filter((item) => item.id !== row.id))
- setSuccessMessage(`「${row.display_name}」 모델을 삭제했습니다.`)
- void load()
+    setBusyId(row.id)
+    setError(null)
+    setSuccessMessage(null)
+    try {
+      await deleteAiModelAdmin(row.id)
+      await logAdminActivity('ai_model_update', `삭제: ${row.display_name} (${row.api_id})`)
+      setRows((prev) => prev.filter((item) => item.id !== row.id))
+      setSuccessMessage(`「${row.display_name}」 모델을 삭제했습니다.`)
+      void load()
     } catch (deleteErr) {
- const message =
- deleteErr instanceof Error ? deleteErr.message : '모델 삭제에 실패했습니다.'
- setError(message)
+      const message =
+        deleteErr instanceof Error ? deleteErr.message : '모델 삭제에 실패했습니다.'
+      setError(message)
     } finally {
- setBusyId(null)
+      setBusyId(null)
     }
   }
 
- async function handleSave(event: FormEvent) {
- event.preventDefault()
- const display_name = form.display_name.trim()
- const api_id = form.api_id.trim()
- const hint = form.hint.trim()
- const cost_info = form.cost_info.trim() || '보통'
- const description = form.description.trim()
+  async function handleSave(event: FormEvent) {
+    event.preventDefault()
+    const display_name = form.display_name.trim()
+    const api_id = form.api_id.trim()
+    const hint = form.hint.trim()
+    const cost_info = form.cost_info.trim() || '보통'
+    const description = form.description.trim()
 
- if (!display_name || !api_id) {
- setSaveError('모델 이름과 API ID는 필수입니다.')
- return
+    if (!display_name || !api_id) {
+      setSaveError('모델 이름과 API ID는 필수입니다.')
+      return
     }
 
- setSaveBusy(true)
- setSaveError(null)
- setError(null)
+    setSaveBusy(true)
+    setSaveError(null)
+    setError(null)
 
- const writeInput = {
- provider: form.provider,
- display_name,
- api_id,
- model_type: form.model_type,
- hint: hint.length > 0 ? hint : null,
- cost_info,
- description: description.length > 0 ? description : null,
- is_active: form.is_active,
- sort_order: form.sort_order,
+    const writeInput = {
+      provider: form.provider,
+      display_name,
+      api_id,
+      model_type: form.model_type,
+      hint: hint.length > 0 ? hint : null,
+      cost_info,
+      description: description.length > 0 ? description : null,
+      is_active: form.is_active,
+      sort_order: form.sort_order,
     }
 
- try {
- const saved =
- modalMode === 'create'
+    try {
+      const saved =
+        modalMode === 'create'
           ? await createAiModelAdmin(writeInput)
           : editingId
             ? await updateAiModelAdmin(editingId, writeInput)
             : null
 
- if (!saved) {
- setSaveError('수정할 모델을 찾지 못했습니다.')
- return
+      if (!saved) {
+        setSaveError('수정할 모델을 찾지 못했습니다.')
+        return
       }
 
- await logAdminActivity(
- modalMode === 'create' ? 'ai_model_create' : 'ai_model_update',
+      await logAdminActivity(
+        modalMode === 'create' ? 'ai_model_create' : 'ai_model_update',
         `${display_name} (${api_id})`,
       )
 
- setRows((prev) =>
- sortAiModelRows(
- modalMode === 'create'
+      setRows((prev) =>
+        sortAiModelRows(
+          modalMode === 'create'
             ? [...prev, saved]
             : prev.map((row) => (row.id === saved.id ? saved : row)),
         ),
       )
- setSuccessMessage(
- modalMode === 'create'
+      setSuccessMessage(
+        modalMode === 'create'
           ? `「${saved.display_name}」 모델을 추가했습니다.`
           : `「${saved.display_name}」 모델을 저장했습니다.`,
       )
- setModalOpen(false)
- void load()
+      setModalOpen(false)
+      void load()
     } catch (saveErr) {
- const message =
- saveErr instanceof Error ? saveErr.message : 'AI 모델 저장에 실패했습니다.'
- setSaveError(message)
- setError(message)
+      const message =
+        saveErr instanceof Error ? saveErr.message : 'AI 모델 저장에 실패했습니다.'
+      setSaveError(message)
+      setError(message)
     } finally {
- setSaveBusy(false)
+      setSaveBusy(false)
     }
   }
 
- async function handleAiSync() {
- if (!profile?.id) {
- setError('로그인 프로필이 필요합니다.')
- return
+  async function handleAiSync() {
+    if (!profile?.id) {
+      setError('로그인 프로필이 필요합니다.')
+      return
     }
 
- setAiSyncBusy(true)
- setError(null)
- setSuccessMessage(null)
- try {
- const result = await syncLatestAiModelsCatalog(supabase, {
- userId: profile.id,
- accessToken: session?.access_token,
- tokenLimit: profile.token_limit,
- currentTokenUsage: profile.current_token_usage,
+    setAiSyncBusy(true)
+    setError(null)
+    setSuccessMessage(null)
+    try {
+      const result = await syncLatestAiModelsCatalog(supabase, {
+        userId: profile.id,
+        accessToken: session?.access_token,
+        tokenLimit: profile.token_limit,
+        currentTokenUsage: profile.current_token_usage,
       })
- if (!result.ok) {
- setError(result.message)
- return
+      if (!result.ok) {
+        setError(result.message)
+        return
       }
 
- const engineLabel =
- result.source === 'gemini'
+      const engineLabel =
+        result.source === 'gemini'
           ? `Gemini 3.5 Flash(${AI_MODELS_SYNC_MODEL_ID})`
           : '공식 검증 카탈로그'
 
- await logAdminActivity(
+      await logAdminActivity(
         'ai_model_update',
         `AI 공식 카탈로그 동기화 (${result.upserted}건 · ${engineLabel}${result.liveGoogleChecked ? ' · Google live 검증' : ''})`,
       )
- await load()
+      await load()
 
- const deactivatedNote =
- result.deactivated > 0
+      const deactivatedNote =
+        result.deactivated > 0
           ? ` 미운영/구버전 ${result.deactivated}건은 비활성화했습니다.`
           : ''
 
- setSuccessMessage(
- result.source === 'gemini'
+      setSuccessMessage(
+        result.source === 'gemini'
           ? `공식 운영 모델 ${result.upserted}건을 반영했습니다.${deactivatedNote}`
           : `공식 검증 카탈로그 ${result.upserted}건을 반영했습니다.${deactivatedNote}`,
       )
 
- if (modalOpen && modalMode === 'create' && !form.display_name.trim()) {
- const firstEntry = LATEST_AI_MODELS_CATALOG[0]
- if (firstEntry) {
- setForm(catalogEntryToFormState(firstEntry))
+      if (modalOpen && modalMode === 'create' && !form.display_name.trim()) {
+        const firstEntry = LATEST_AI_MODELS_CATALOG[0]
+        if (firstEntry) {
+          setForm(catalogEntryToFormState(firstEntry))
         }
       }
     } catch (syncErr) {
- const message =
- syncErr instanceof Error
+      const message =
+        syncErr instanceof Error
           ? syncErr.message
           : 'AI 모델 동기화에 실패했습니다.'
- setError(message)
+      setError(message)
     } finally {
- setAiSyncBusy(false)
+      setAiSyncBusy(false)
     }
   }
 
- return (
+  return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-3 py-4 md:px-4 md:py-6">
       <AdminPageHeader
- title="AI 모델 관리"
- description="채팅 드롭다운과 Edge Function 라우팅에 사용되는 모델 레지스트리를 관리합니다."
- actions={
+        title="AI 모델 관리"
+        description="채팅 드롭다운과 Edge Function 라우팅에 사용되는 모델 레지스트리를 관리합니다."
+        actions={
           <>
             <button
- type="button"
- onClick={() => void handleAiSync()}
- disabled={aiSyncBusy || loading || !profile?.id}
- title={`${AI_MODELS_SYNC_MODEL_ID}로 최신 모델 카탈로그 갱신`}
- className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-900 shadow-sm transition hover:bg-violet-100 active:bg-violet-200/80 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-100 dark:hover:bg-violet-950/60"
+              type="button"
+              onClick={() => void handleAiSync()}
+              disabled={aiSyncBusy || loading || !profile?.id}
+              title={`${AI_MODELS_SYNC_MODEL_ID}로 최신 모델 카탈로그 갱신`}
+              className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-900 shadow-sm transition hover:bg-violet-100 active:bg-violet-200/80 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-100 dark:hover:bg-violet-950/60"
             >
               <svg
- className="h-4 w-4"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
                 />
               </svg>
               {aiSyncBusy ? 'Gemini 3.5 Flash 동기화 중…' : 'AI 최신 동기화'}
             </button>
             <button
- type="button"
- onClick={openCreate}
- className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent active:bg-indigo-800"
+              type="button"
+              onClick={openCreate}
+              className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent active:bg-indigo-800"
             >
             <svg
- className="h-4 w-4"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M12 4v16m8-8H4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
               />
             </svg>
- 새로운 AI 모델 추가
+            새로운 AI 모델 추가
             </button>
           </>
         }
@@ -398,8 +398,8 @@ export function ModelManagement() {
 
       {successMessage ? (
         <div
- role="status"
- className="rounded-xl border border-success/30 bg-success-soft px-4 py-3 text-sm text-emerald-950"
+          role="status"
+          className="rounded-xl border border-success/30 bg-success-soft px-4 py-3 text-sm text-emerald-950"
         >
           {successMessage}
         </div>
@@ -407,8 +407,8 @@ export function ModelManagement() {
 
       {error ? (
         <div
- role="alert"
- className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-red-900"
+          role="alert"
+          className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-red-900"
         >
           {error}
         </div>
@@ -420,28 +420,28 @@ export function ModelManagement() {
             <thead className="bg-bg">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 공급사
+                  공급사
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 모델 이름
+                  모델 이름
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 비용 등급
+                  비용 등급
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 상세 업무 가이드
+                  상세 업무 가이드
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- API ID
+                  API ID
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 타입
+                  타입
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 활성
+                  활성
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 관리
+                  관리
                 </th>
               </tr>
             </thead>
@@ -449,34 +449,34 @@ export function ModelManagement() {
               {loading ? (
                 <tr>
                   <td
- colSpan={8}
- className="px-4 py-10 text-center text-sm text-fg-subtle"
+                    colSpan={8}
+                    className="px-4 py-10 text-center text-sm text-fg-subtle"
                   >
- 모델 목록을 불러오는 중…
+                    모델 목록을 불러오는 중…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td
- colSpan={8}
- className="px-4 py-10 text-center text-sm text-fg-subtle"
+                    colSpan={8}
+                    className="px-4 py-10 text-center text-sm text-fg-subtle"
                   >
                     <p>등록된 AI 모델이 없습니다.</p>
                     <p className="mt-2 text-xs text-fg-subtle">
                       「새로운 AI 모델 추가」로 저장하거나 「AI 최신 동기화」로 카탈로그를
- 불러오세요.
+                      불러오세요.
                     </p>
                   </td>
                 </tr>
               ) : (
- rows.map((row) => (
+                rows.map((row) => (
                   <tr
- key={row.id}
- className="transition hover:bg-surface-2/80"
+                    key={row.id}
+                    className="transition hover:bg-surface-2/80"
                   >
                     <td className="px-4 py-3">
                       <span
- className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${providerBadgeClass(row.provider)}`}
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${providerBadgeClass(row.provider)}`}
                       >
                         {AI_MODEL_PROVIDER_LABELS[row.provider]}
                       </span>
@@ -493,7 +493,7 @@ export function ModelManagement() {
                     </td>
                     <td className="px-4 py-3">
                       <span
- className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${costBadgeClass(row.cost_info?.trim() || '보통')}`}
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${costBadgeClass(row.cost_info?.trim() || '보통')}`}
                       >
                         {row.cost_info?.trim() || '보통'}
                       </span>
@@ -510,28 +510,28 @@ export function ModelManagement() {
                     </td>
                     <td className="px-4 py-3">
                       <span
- className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${typeBadgeClass(row.model_type)}`}
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${typeBadgeClass(row.model_type)}`}
                       >
                         {modelTypeLabel(row.model_type)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <button
- type="button"
- role="switch"
- aria-checked={row.is_active}
- aria-label={`${row.display_name} ${row.is_active ? '비활성화' : '활성화'}`}
- disabled={busyId === row.id}
- onClick={() => void handleToggleActive(row)}
- className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-50 ${
- row.is_active
+                        type="button"
+                        role="switch"
+                        aria-checked={row.is_active}
+                        aria-label={`${row.display_name} ${row.is_active ? '비활성화' : '활성화'}`}
+                        disabled={busyId === row.id}
+                        onClick={() => void handleToggleActive(row)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-50 ${
+                          row.is_active
                             ? 'bg-accent'
                             : 'bg-surface-3'
                         }`}
                       >
                         <span
- className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow transition ${
- row.is_active ? 'translate-x-5' : 'translate-x-0.5'
+                          className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow transition ${
+                            row.is_active ? 'translate-x-5' : 'translate-x-0.5'
                           }`}
                         />
                       </button>
@@ -539,19 +539,19 @@ export function ModelManagement() {
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-1">
                         <button
- type="button"
- onClick={() => openEdit(row)}
- className="rounded-lg px-3 py-1.5 text-xs font-semibold text-accent transition hover:bg-accent-soft"
+                          type="button"
+                          onClick={() => openEdit(row)}
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-accent transition hover:bg-accent-soft"
                         >
- 수정
+                          수정
                         </button>
                         <button
- type="button"
- disabled={busyId === row.id}
- onClick={() => void handleDelete(row)}
- className="rounded-lg px-3 py-1.5 text-xs font-semibold text-danger transition hover:bg-danger-soft disabled:opacity-50"
+                          type="button"
+                          disabled={busyId === row.id}
+                          onClick={() => void handleDelete(row)}
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-danger transition hover:bg-danger-soft disabled:opacity-50"
                         >
- 삭제
+                          삭제
                         </button>
                       </div>
                     </td>
@@ -565,35 +565,35 @@ export function ModelManagement() {
 
       {modalOpen ? (
         <div
- className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:items-center"
- role="presentation"
- onClick={() => !saveBusy && setModalOpen(false)}
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:items-center"
+          role="presentation"
+          onClick={() => !saveBusy && setModalOpen(false)}
         >
           <div
- role="dialog"
- aria-modal="true"
- aria-labelledby="ai-model-modal-title"
- className="flex max-h-[min(85vh,34rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
- onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ai-model-modal-title"
+            className="flex max-h-[min(85vh,34rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="shrink-0 border-b border-border px-5 py-3">
               <h2
- id="ai-model-modal-title"
- className="text-base font-semibold text-fg"
+                id="ai-model-modal-title"
+                className="text-base font-semibold text-fg"
               >
                 {modalMode === 'create' ? '새로운 AI 모델 추가' : 'AI 모델 수정'}
               </h2>
             </div>
 
             <form
- onSubmit={(event) => void handleSave(event)}
- className="flex min-h-0 flex-1 flex-col"
+              onSubmit={(event) => void handleSave(event)}
+              className="flex min-h-0 flex-1 flex-col"
             >
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-3">
               {saveError ? (
                 <div
- role="alert"
- className="rounded-xl border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-red-900"
+                  role="alert"
+                  className="rounded-xl border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-red-900"
                 >
                   {saveError}
                 </div>
@@ -601,17 +601,17 @@ export function ModelManagement() {
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-fg-muted">
- 공급사
+                  공급사
                 </span>
                 <select
- value={form.provider}
- onChange={(event) =>
- setForm((prev) => ({
+                  value={form.provider}
+                  onChange={(event) =>
+                    setForm((prev) => ({
                       ...prev,
- provider: event.target.value as AiModelProvider,
+                      provider: event.target.value as AiModelProvider,
                     }))
                   }
- className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 >
                   <option value="google">Google (Gemini)</option>
                   <option value="openai">OpenAI</option>
@@ -621,50 +621,50 @@ export function ModelManagement() {
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-fg-muted">
- 모델 이름
+                  모델 이름
                 </span>
                 <input
- type="text"
- required
- value={form.display_name}
- onChange={(event) =>
- setForm((prev) => ({ ...prev, display_name: event.target.value }))
+                  type="text"
+                  required
+                  value={form.display_name}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, display_name: event.target.value }))
                   }
- placeholder="예: Gemini 2.5 Flash"
- className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
+                  placeholder="예: Gemini 2.5 Flash"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 />
               </label>
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-fg-muted">
- API ID
+                  API ID
                 </span>
                 <input
- type="text"
- required
- value={form.api_id}
- onChange={(event) =>
- setForm((prev) => ({ ...prev, api_id: event.target.value }))
+                  type="text"
+                  required
+                  value={form.api_id}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, api_id: event.target.value }))
                   }
- placeholder="예: gemini-2.5-flash"
- disabled={modalMode === 'edit'}
- className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2 disabled:cursor-not-allowed disabled:bg-surface-2"
+                  placeholder="예: gemini-2.5-flash"
+                  disabled={modalMode === 'edit'}
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2 disabled:cursor-not-allowed disabled:bg-surface-2"
                 />
               </label>
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-fg-muted">
- 타입
+                  타입
                 </span>
                 <select
- value={form.model_type}
- onChange={(event) =>
- setForm((prev) => ({
+                  value={form.model_type}
+                  onChange={(event) =>
+                    setForm((prev) => ({
                       ...prev,
- model_type: event.target.value as AiModelType,
+                      model_type: event.target.value as AiModelType,
                     }))
                   }
- className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 >
                   <option value="text">텍스트</option>
                   <option value="image">이미지</option>
@@ -674,29 +674,29 @@ export function ModelManagement() {
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-fg-muted">
- 짧은 안내 (컴포저, 선택)
+                  짧은 안내 (컴포저, 선택)
                 </span>
                 <textarea
- rows={2}
- value={form.hint}
- onChange={(event) =>
- setForm((prev) => ({ ...prev, hint: event.target.value }))
+                  rows={2}
+                  value={form.hint}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, hint: event.target.value }))
                   }
- placeholder="컴포저 하단에 표시되는 한 줄 안내"
- className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
+                  placeholder="컴포저 하단에 표시되는 한 줄 안내"
+                  className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 />
               </label>
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-fg-muted">
- 비용 등급
+                  비용 등급
                 </span>
                 <select
- value={form.cost_info}
- onChange={(event) =>
- setForm((prev) => ({ ...prev, cost_info: event.target.value }))
+                  value={form.cost_info}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, cost_info: event.target.value }))
                   }
- className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 >
                   <option value="저렴">저렴</option>
                   <option value="보통">보통</option>
@@ -707,44 +707,44 @@ export function ModelManagement() {
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-fg-muted">
- 상세 업무 가이드
+                  상세 업무 가이드
                 </span>
                 <textarea
- rows={2}
- value={form.description}
- onChange={(event) =>
- setForm((prev) => ({ ...prev, description: event.target.value }))
+                  rows={2}
+                  value={form.description}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, description: event.target.value }))
                   }
- placeholder="모델 드롭다운 호버·관리자 테이블에 표시되는 업무 가이드"
- className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
+                  placeholder="모델 드롭다운 호버·관리자 테이블에 표시되는 업무 가이드"
+                  className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 />
               </label>
 
               <div className="flex flex-wrap items-center gap-4 pb-1">
                 <label className="inline-flex items-center gap-2 text-sm text-fg-muted">
                   <input
- type="checkbox"
- checked={form.is_active}
- onChange={(event) =>
- setForm((prev) => ({ ...prev, is_active: event.target.checked }))
+                    type="checkbox"
+                    checked={form.is_active}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, is_active: event.target.checked }))
                     }
- className="h-4 w-4 rounded border-border-strong text-accent focus:ring-focus/40"
+                    className="h-4 w-4 rounded border-border-strong text-accent focus:ring-focus/40"
                   />
- 활성화
+                  활성화
                 </label>
 
                 <label className="inline-flex items-center gap-2 text-sm text-fg-muted">
                   <span>정렬</span>
                   <input
- type="number"
- value={form.sort_order}
- onChange={(event) =>
- setForm((prev) => ({
+                    type="number"
+                    value={form.sort_order}
+                    onChange={(event) =>
+                      setForm((prev) => ({
                         ...prev,
- sort_order: Number(event.target.value) || 0,
+                        sort_order: Number(event.target.value) || 0,
                       }))
                     }
- className="w-24 rounded-lg border border-border px-2 py-1 text-sm"
+                    className="w-24 rounded-lg border border-border px-2 py-1 text-sm"
                   />
                 </label>
               </div>
@@ -752,17 +752,17 @@ export function ModelManagement() {
 
               <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-surface px-5 py-3">
                 <button
- type="button"
- disabled={saveBusy}
- onClick={() => setModalOpen(false)}
- className="rounded-xl px-4 py-2 text-sm font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
+                  type="button"
+                  disabled={saveBusy}
+                  onClick={() => setModalOpen(false)}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
                 >
- 취소
+                  취소
                 </button>
                 <button
- type="submit"
- disabled={saveBusy}
- className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent disabled:opacity-50"
+                  type="submit"
+                  disabled={saveBusy}
+                  className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent disabled:opacity-50"
                 >
                   {saveBusy ? '저장 중…' : modalMode === 'create' ? '추가' : '저장'}
                 </button>

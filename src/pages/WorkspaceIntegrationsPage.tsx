@@ -1,33 +1,34 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Link } from 'react-router-dom'
 
 import { supabase } from '../lib/supabase'
 import {
- disconnectMicrosoftIntegration,
- fetchMicrosoftIntegrationStatus,
- startMicrosoftIntegrationOAuth,
+  disconnectMicrosoftIntegration,
+  fetchMicrosoftIntegrationStatus,
+  startMicrosoftIntegrationOAuth,
 } from '../services/integrations/microsoft-integration'
 import {
- fetchGoogleIntegrationStatus,
- startGoogleIntegrationOAuth,
- disconnectGoogleIntegration,
+  fetchGoogleIntegrationStatus,
+  startGoogleIntegrationOAuth,
+  disconnectGoogleIntegration,
 } from '../services/integrations/google-integration'
 import type { UploadedDocRow } from '../services/integrations/workspace-tools'
 import {
- invokeGoogleWorkspaceApi,
- invokeMicrosoftGraphApi,
- uploadUserDocument,
+  invokeGoogleWorkspaceApi,
+  invokeMicrosoftGraphApi,
+  uploadUserDocument,
 } from '../services/integrations/workspace-tools'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconLink } from '../components/common/icons'
 
 function JsonBlock({ value }: { value: unknown }) {
- const text =
- value === undefined || value === null
+  const text =
+    value === undefined || value === null
       ? ''
       : typeof value === 'string'
         ? value
         : JSON.stringify(value, null, 2)
- return (
+  return (
     <pre className="max-h-60 overflow-auto rounded-xl border border-border bg-stone-950/90 p-3 text-[11px] leading-snug text-stone-100">
       {text || '(비어 있음)'}
     </pre>
@@ -35,139 +36,128 @@ function JsonBlock({ value }: { value: unknown }) {
 }
 
 function localDatetimeInputToIso(value: string): string | null {
- const v = value.trim()
- if (!v) return null
- const d = new Date(v)
- if (Number.isNaN(d.getTime())) return null
- return d.toISOString()
+  const v = value.trim()
+  if (!v) return null
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toISOString()
 }
 
 const fieldCls =
   'mt-1 w-full rounded-lg border border-border-strong bg-bg px-2 py-1.5 text-[13px]'
 
 export function WorkspaceIntegrationsPage() {
- const [googleConnected, setGoogleConnected] = useState(false)
- const [googleEmail, setGoogleEmail] = useState<string | null>(null)
- const [msConnected, setMsConnected] = useState(false)
- const [msEmail, setMsEmail] = useState<string | null>(null)
- const [busy, setBusy] = useState(false)
- const [googleOut, setGoogleOut] = useState<unknown>(null)
- const [msOut, setMsOut] = useState<unknown>(null)
- const [uploads, setUploads] = useState<UploadedDocRow[]>([])
- const [uploadNote, setUploadNote] = useState('')
- const [googleMailDraft, setGoogleMailDraft] = useState({
- to: '',
- subject: '',
- body: '',
+  const [googleConnected, setGoogleConnected] = useState(false)
+  const [googleEmail, setGoogleEmail] = useState<string | null>(null)
+  const [msConnected, setMsConnected] = useState(false)
+  const [msEmail, setMsEmail] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [googleOut, setGoogleOut] = useState<unknown>(null)
+  const [msOut, setMsOut] = useState<unknown>(null)
+  const [uploads, setUploads] = useState<UploadedDocRow[]>([])
+  const [uploadNote, setUploadNote] = useState('')
+  const [googleMailDraft, setGoogleMailDraft] = useState({
+    to: '',
+    subject: '',
+    body: '',
   })
- const [googleEventDraft, setGoogleEventDraft] = useState({
- summary: '',
- start: '',
- end: '',
- description: '',
+  const [googleEventDraft, setGoogleEventDraft] = useState({
+    summary: '',
+    start: '',
+    end: '',
+    description: '',
   })
- const [microsoftMailDraft, setMicrosoftMailDraft] = useState({
- to: '',
- subject: '',
- body: '',
+  const [microsoftMailDraft, setMicrosoftMailDraft] = useState({
+    to: '',
+    subject: '',
+    body: '',
   })
- const [microsoftEventDraft, setMicrosoftEventDraft] = useState({
- subject: '',
- start: '',
- end: '',
- body: '',
+  const [microsoftEventDraft, setMicrosoftEventDraft] = useState({
+    subject: '',
+    start: '',
+    end: '',
+    body: '',
   })
 
- const loadStatus = useCallback(async () => {
- try {
- const [g, m] = await Promise.all([
- fetchGoogleIntegrationStatus(),
- fetchMicrosoftIntegrationStatus(),
+  const loadStatus = useCallback(async () => {
+    try {
+      const [g, m] = await Promise.all([
+        fetchGoogleIntegrationStatus(),
+        fetchMicrosoftIntegrationStatus(),
       ])
- setGoogleConnected(g.connected)
- setGoogleEmail(g.email)
- setMsConnected(m.connected)
- setMsEmail(m.email)
+      setGoogleConnected(g.connected)
+      setGoogleEmail(g.email)
+      setMsConnected(m.connected)
+      setMsEmail(m.email)
     } catch {
       /* 설정 탭에서 처리 */
     }
   }, [])
 
- const loadUploads = useCallback(async () => {
- const { data } = await supabase
+  const loadUploads = useCallback(async () => {
+    const { data } = await supabase
       .from('user_uploaded_documents')
       .select('id, kind, original_name, storage_object_path, created_at')
       .order('created_at', { ascending: false })
       .limit(30)
- setUploads((data ?? []) as UploadedDocRow[])
+    setUploads((data ?? []) as UploadedDocRow[])
   }, [])
 
- useEffect(() => {
- queueMicrotask(() => {
- void loadStatus()
- void loadUploads()
+  useEffect(() => {
+    queueMicrotask(() => {
+      void loadStatus()
+      void loadUploads()
     })
   }, [loadStatus, loadUploads])
 
- async function runGoogle(action: string, payload?: Record<string, unknown>) {
- setBusy(true)
- setGoogleOut(null)
- try {
- const res = await invokeGoogleWorkspaceApi<{ ok?: boolean; data?: unknown; error?: string }>(
- action,
- payload,
+  async function runGoogle(action: string, payload?: Record<string, unknown>) {
+    setBusy(true)
+    setGoogleOut(null)
+    try {
+      const res = await invokeGoogleWorkspaceApi<{ ok?: boolean; data?: unknown; error?: string }>(
+        action,
+        payload,
       )
- setGoogleOut(res)
- if ((res as { error?: string }).error) {
- toast.error((res as { error: string }).error)
+      setGoogleOut(res)
+      if ((res as { error?: string }).error) {
+        toast.error((res as { error: string }).error)
       }
     } catch (e) {
- toast.error(e instanceof Error ? e.message : String(e))
+      toast.error(e instanceof Error ? e.message : String(e))
     } finally {
- setBusy(false)
+      setBusy(false)
     }
   }
 
- async function runMs(action: string, payload?: Record<string, unknown>) {
- setBusy(true)
- setMsOut(null)
- try {
- const res = await invokeMicrosoftGraphApi<{ ok?: boolean; data?: unknown; error?: string }>(
- action,
- payload,
+  async function runMs(action: string, payload?: Record<string, unknown>) {
+    setBusy(true)
+    setMsOut(null)
+    try {
+      const res = await invokeMicrosoftGraphApi<{ ok?: boolean; data?: unknown; error?: string }>(
+        action,
+        payload,
       )
- setMsOut(res)
- if ((res as { error?: string }).error) {
- toast.error((res as { error: string }).error)
+      setMsOut(res)
+      if ((res as { error?: string }).error) {
+        toast.error((res as { error: string }).error)
       }
     } catch (e) {
- toast.error(e instanceof Error ? e.message : String(e))
+      toast.error(e instanceof Error ? e.message : String(e))
     } finally {
- setBusy(false)
+      setBusy(false)
     }
   }
 
- return (
+  return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-bg">
-      <header className="shrink-0 border-b border-border/90 px-4 py-4 md:px-8 md:py-5">
-        <div className="mx-auto flex max-w-5xl flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-fg md:text-2xl">
- 워크스페이스 연동 도구
-            </h1>
-            <p className="mt-1 max-w-3xl text-sm text-fg-muted">
- Google(Gmail·Calendar·Drive·Sheets·Slides·Docs) 및 Microsoft 365(Graph) API를 Edge에서
- 호출합니다. HWPX·문서는 아래 업로드로 Storage에 보관합니다.
-            </p>
-          </div>
-          <Link
- to="/"
- className="shrink-0 rounded-xl border border-border-strong bg-surface px-4 py-2 text-xs font-semibold text-fg hover:bg-surface-2"
-          >
-            ← 대화로
-          </Link>
-        </div>
-      </header>
+      <div className="mx-auto w-full max-w-5xl px-4 pt-6 md:px-8 md:pt-8">
+        <PageHeader
+          eyebrow="자동화 · 워크스페이스 연동"
+          title="워크스페이스 연동 도구"
+          description="Google(Gmail·Calendar·Drive·Sheets·Slides·Docs) 및 Microsoft 365(Graph) API를 Edge에서 호출합니다. HWPX·문서는 아래 업로드로 Storage에 보관합니다."
+          icon={IconLink}
+        />
+      </div>
 
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 md:px-8 md:py-8">
         {/* 연결 상태 */}
@@ -180,34 +170,34 @@ export function WorkspaceIntegrationsPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {!googleConnected ? (
                 <button
- type="button"
- disabled={busy}
- onClick={() =>
- void startGoogleIntegrationOAuth().catch((e) =>
- toast.error(e instanceof Error ? e.message : String(e)),
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void startGoogleIntegrationOAuth().catch((e) =>
+                      toast.error(e instanceof Error ? e.message : String(e)),
                     )
                   }
- className="rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-50"
+                  className="rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-50"
                 >
- Google 연결
+                  Google 연결
                 </button>
               ) : (
                 <button
- type="button"
- disabled={busy}
- onClick={() =>
- void (async () => {
- try {
- await disconnectGoogleIntegration()
- await loadStatus()
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void (async () => {
+                      try {
+                        await disconnectGoogleIntegration()
+                        await loadStatus()
                       } catch (e) {
- toast.error(e instanceof Error ? e.message : String(e))
+                        toast.error(e instanceof Error ? e.message : String(e))
                       }
                     })()
                   }
- className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface-2"
+                  className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface-2"
                 >
- 연결 해제
+                  연결 해제
                 </button>
               )}
             </div>
@@ -216,11 +206,11 @@ export function WorkspaceIntegrationsPage() {
           <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
             <p className="text-sm font-semibold text-fg">Microsoft 365</p>
             <p className="mt-1 text-xs text-fg-muted">
- Azure 앱 등록 +{' '}
+              Azure 앱 등록 +{' '}
               <code className="rounded bg-surface-2 px-1">
- MICROSOFT_OAUTH_*
+                MICROSOFT_OAUTH_*
               </code>{' '}
- 환경 변수 필요
+              환경 변수 필요
             </p>
             <p className="mt-1 text-xs text-fg-muted">
               {msConnected ? `연결됨 · ${msEmail ?? ''}` : '미연결'}
@@ -228,34 +218,34 @@ export function WorkspaceIntegrationsPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {!msConnected ? (
                 <button
- type="button"
- disabled={busy}
- onClick={() =>
- void startMicrosoftIntegrationOAuth().catch((e) =>
- toast.error(e instanceof Error ? e.message : String(e)),
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void startMicrosoftIntegrationOAuth().catch((e) =>
+                      toast.error(e instanceof Error ? e.message : String(e)),
                     )
                   }
- className="rounded-full bg-sky-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-900 disabled:opacity-50"
+                  className="rounded-full bg-sky-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-900 disabled:opacity-50"
                 >
- Microsoft 연결
+                  Microsoft 연결
                 </button>
               ) : (
                 <button
- type="button"
- disabled={busy}
- onClick={() =>
- void (async () => {
- try {
- await disconnectMicrosoftIntegration()
- await loadStatus()
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void (async () => {
+                      try {
+                        await disconnectMicrosoftIntegration()
+                        await loadStatus()
                       } catch (e) {
- toast.error(e instanceof Error ? e.message : String(e))
+                        toast.error(e instanceof Error ? e.message : String(e))
                       }
                     })()
                   }
- className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface-2"
+                  className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface-2"
                 >
- 연결 해제
+                  연결 해제
                 </button>
               )}
             </div>
@@ -265,196 +255,196 @@ export function WorkspaceIntegrationsPage() {
         {/* Google 액션 */}
         <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
           <p className="text-sm font-semibold text-fg">
- Google API 빠른 실행
+            Google API 빠른 실행
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
- type="button"
- disabled={busy || !googleConnected}
- onClick={() => void runGoogle('gmail.listMessages', { maxResults: 8 })}
- className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
+              type="button"
+              disabled={busy || !googleConnected}
+              onClick={() => void runGoogle('gmail.listMessages', { maxResults: 8 })}
+              className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
             >
- Gmail 목록
+              Gmail 목록
             </button>
             <button
- type="button"
- disabled={busy || !googleConnected}
- onClick={() =>
- void runGoogle('calendar.listEvents', {
- calendarId: 'primary',
- timeMin: new Date().toISOString(),
+              type="button"
+              disabled={busy || !googleConnected}
+              onClick={() =>
+                void runGoogle('calendar.listEvents', {
+                  calendarId: 'primary',
+                  timeMin: new Date().toISOString(),
                 })
               }
- className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
+              className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
             >
- Calendar 오늘 이후
+              Calendar 오늘 이후
             </button>
             <button
- type="button"
- disabled={busy || !googleConnected}
- onClick={() =>
- void runGoogle('drive.listFiles', {
- mimeType:
+              type="button"
+              disabled={busy || !googleConnected}
+              onClick={() =>
+                void runGoogle('drive.listFiles', {
+                  mimeType:
                     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
- pageSize: 15,
+                  pageSize: 15,
                 })
               }
- className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
+              className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
             >
- Drive · PPTX
+              Drive · PPTX
             </button>
             <button
- type="button"
- disabled={busy || !googleConnected}
- onClick={() =>
- void runGoogle('drive.listFiles', {
- mimeType:
+              type="button"
+              disabled={busy || !googleConnected}
+              onClick={() =>
+                void runGoogle('drive.listFiles', {
+                  mimeType:
                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
- pageSize: 15,
+                  pageSize: 15,
                 })
               }
- className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
+              className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
             >
- Drive · XLSX
+              Drive · XLSX
             </button>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <details className="rounded-xl border border-border bg-bg/80 p-3">
               <summary className="cursor-pointer text-xs font-semibold text-fg">
- Gmail 보내기
+                Gmail 보내기
               </summary>
               <div className="mt-2 flex flex-col gap-2">
                 <label className="text-[11px] font-medium text-fg-muted">
- 받는 사람
+                  받는 사람
                   <input
- type="email"
- autoComplete="email"
- value={googleMailDraft.to}
- onChange={(e) =>
- setGoogleMailDraft((p) => ({ ...p, to: e.target.value }))
+                    type="email"
+                    autoComplete="email"
+                    value={googleMailDraft.to}
+                    onChange={(e) =>
+                      setGoogleMailDraft((p) => ({ ...p, to: e.target.value }))
                     }
- className={fieldCls}
- placeholder="name@company.com"
+                    className={fieldCls}
+                    placeholder="name@company.com"
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 제목
+                  제목
                   <input
- value={googleMailDraft.subject}
- onChange={(e) =>
- setGoogleMailDraft((p) => ({ ...p, subject: e.target.value }))
+                    value={googleMailDraft.subject}
+                    onChange={(e) =>
+                      setGoogleMailDraft((p) => ({ ...p, subject: e.target.value }))
                     }
- className={fieldCls}
+                    className={fieldCls}
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 본문
+                  본문
                   <textarea
- rows={3}
- value={googleMailDraft.body}
- onChange={(e) =>
- setGoogleMailDraft((p) => ({ ...p, body: e.target.value }))
+                    rows={3}
+                    value={googleMailDraft.body}
+                    onChange={(e) =>
+                      setGoogleMailDraft((p) => ({ ...p, body: e.target.value }))
                     }
- className={`${fieldCls} resize-y`}
+                    className={`${fieldCls} resize-y`}
                   />
                 </label>
                 <button
- type="button"
- disabled={busy || !googleConnected}
- onClick={() => {
- const to = googleMailDraft.to.trim()
- const subject = googleMailDraft.subject.trim()
- if (!to || !subject) {
- toast.error('받는 사람·제목을 입력하세요.')
- return
+                  type="button"
+                  disabled={busy || !googleConnected}
+                  onClick={() => {
+                    const to = googleMailDraft.to.trim()
+                    const subject = googleMailDraft.subject.trim()
+                    if (!to || !subject) {
+                      toast.error('받는 사람·제목을 입력하세요.')
+                      return
                     }
- void runGoogle('gmail.send', {
- to,
- subject,
- text: googleMailDraft.body,
+                    void runGoogle('gmail.send', {
+                      to,
+                      subject,
+                      text: googleMailDraft.body,
                     })
                   }}
- className="rounded-lg bg-brand px-3 py-1.5 text-[11px] font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-45"
+                  className="rounded-lg bg-brand px-3 py-1.5 text-[11px] font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-45"
                 >
- Gmail 전송
+                  Gmail 전송
                 </button>
               </div>
             </details>
 
             <details className="rounded-xl border border-border bg-bg/80 p-3">
               <summary className="cursor-pointer text-xs font-semibold text-fg">
- Calendar 일정 만들기 (primary)
+                Calendar 일정 만들기 (primary)
               </summary>
               <div className="mt-2 flex flex-col gap-2">
                 <label className="text-[11px] font-medium text-fg-muted">
- 제목
+                  제목
                   <input
- value={googleEventDraft.summary}
- onChange={(e) =>
- setGoogleEventDraft((p) => ({ ...p, summary: e.target.value }))
+                    value={googleEventDraft.summary}
+                    onChange={(e) =>
+                      setGoogleEventDraft((p) => ({ ...p, summary: e.target.value }))
                     }
- className={fieldCls}
- placeholder="회의 제목"
+                    className={fieldCls}
+                    placeholder="회의 제목"
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 시작 (로컬)
+                  시작 (로컬)
                   <input
- type="datetime-local"
- value={googleEventDraft.start}
- onChange={(e) =>
- setGoogleEventDraft((p) => ({ ...p, start: e.target.value }))
+                    type="datetime-local"
+                    value={googleEventDraft.start}
+                    onChange={(e) =>
+                      setGoogleEventDraft((p) => ({ ...p, start: e.target.value }))
                     }
- className={fieldCls}
+                    className={fieldCls}
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 종료 (로컬)
+                  종료 (로컬)
                   <input
- type="datetime-local"
- value={googleEventDraft.end}
- onChange={(e) =>
- setGoogleEventDraft((p) => ({ ...p, end: e.target.value }))
+                    type="datetime-local"
+                    value={googleEventDraft.end}
+                    onChange={(e) =>
+                      setGoogleEventDraft((p) => ({ ...p, end: e.target.value }))
                     }
- className={fieldCls}
+                    className={fieldCls}
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 설명 (선택)
+                  설명 (선택)
                   <textarea
- rows={2}
- value={googleEventDraft.description}
- onChange={(e) =>
- setGoogleEventDraft((p) => ({
+                    rows={2}
+                    value={googleEventDraft.description}
+                    onChange={(e) =>
+                      setGoogleEventDraft((p) => ({
                         ...p,
- description: e.target.value,
+                        description: e.target.value,
                       }))
                     }
- className={`${fieldCls} resize-y`}
+                    className={`${fieldCls} resize-y`}
                   />
                 </label>
                 <button
- type="button"
- disabled={busy || !googleConnected}
- onClick={() => {
- const startIso = localDatetimeInputToIso(googleEventDraft.start)
- const endIso = localDatetimeInputToIso(googleEventDraft.end)
- if (!startIso || !endIso) {
- toast.error('시작·종료 시각을 모두 입력하세요.')
- return
+                  type="button"
+                  disabled={busy || !googleConnected}
+                  onClick={() => {
+                    const startIso = localDatetimeInputToIso(googleEventDraft.start)
+                    const endIso = localDatetimeInputToIso(googleEventDraft.end)
+                    if (!startIso || !endIso) {
+                      toast.error('시작·종료 시각을 모두 입력하세요.')
+                      return
                     }
- void runGoogle('calendar.createEvent', {
- calendarId: 'primary',
- summary: googleEventDraft.summary.trim() || '일정',
- start: startIso,
- end: endIso,
- description: googleEventDraft.description.trim() || undefined,
+                    void runGoogle('calendar.createEvent', {
+                      calendarId: 'primary',
+                      summary: googleEventDraft.summary.trim() || '일정',
+                      start: startIso,
+                      end: endIso,
+                      description: googleEventDraft.description.trim() || undefined,
                     })
                   }}
- className="rounded-lg bg-brand px-3 py-1.5 text-[11px] font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-45"
+                  className="rounded-lg bg-brand px-3 py-1.5 text-[11px] font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-45"
                 >
- 일정 생성
+                  일정 생성
                 </button>
               </div>
             </details>
@@ -468,176 +458,176 @@ export function WorkspaceIntegrationsPage() {
         {/* Microsoft */}
         <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
           <p className="text-sm font-semibold text-fg">
- Microsoft Graph 빠른 실행
+            Microsoft Graph 빠른 실행
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
- type="button"
- disabled={busy || !msConnected}
- onClick={() => void runMs('mail.listMessages', { top: 8 })}
- className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
+              type="button"
+              disabled={busy || !msConnected}
+              onClick={() => void runMs('mail.listMessages', { top: 8 })}
+              className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
             >
- Outlook 메일
+              Outlook 메일
             </button>
             <button
- type="button"
- disabled={busy || !msConnected}
- onClick={() => void runMs('calendar.listEvents', { top: 15 })}
- className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
+              type="button"
+              disabled={busy || !msConnected}
+              onClick={() => void runMs('calendar.listEvents', { top: 15 })}
+              className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
             >
- 일정
+              일정
             </button>
             <button
- type="button"
- disabled={busy || !msConnected}
- onClick={() => void runMs('drive.listRootChildren', { top: 20 })}
- className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
+              type="button"
+              disabled={busy || !msConnected}
+              onClick={() => void runMs('drive.listRootChildren', { top: 20 })}
+              className="rounded-lg border border-border-strong px-2 py-1 text-[11px] font-semibold hover:bg-surface-2 disabled:opacity-45"
             >
- OneDrive 루트
+              OneDrive 루트
             </button>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <details className="rounded-xl border border-border bg-bg/80 p-3">
               <summary className="cursor-pointer text-xs font-semibold text-fg">
- Outlook 메일 보내기
+                Outlook 메일 보내기
               </summary>
               <div className="mt-2 flex flex-col gap-2">
                 <label className="text-[11px] font-medium text-fg-muted">
- 받는 사람
+                  받는 사람
                   <input
- type="email"
- autoComplete="email"
- value={microsoftMailDraft.to}
- onChange={(e) =>
- setMicrosoftMailDraft((p) => ({ ...p, to: e.target.value }))
+                    type="email"
+                    autoComplete="email"
+                    value={microsoftMailDraft.to}
+                    onChange={(e) =>
+                      setMicrosoftMailDraft((p) => ({ ...p, to: e.target.value }))
                     }
- className={fieldCls}
- placeholder="name@company.com"
+                    className={fieldCls}
+                    placeholder="name@company.com"
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 제목
+                  제목
                   <input
- value={microsoftMailDraft.subject}
- onChange={(e) =>
- setMicrosoftMailDraft((p) => ({
+                    value={microsoftMailDraft.subject}
+                    onChange={(e) =>
+                      setMicrosoftMailDraft((p) => ({
                         ...p,
- subject: e.target.value,
+                        subject: e.target.value,
                       }))
                     }
- className={fieldCls}
+                    className={fieldCls}
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 본문
+                  본문
                   <textarea
- rows={3}
- value={microsoftMailDraft.body}
- onChange={(e) =>
- setMicrosoftMailDraft((p) => ({ ...p, body: e.target.value }))
+                    rows={3}
+                    value={microsoftMailDraft.body}
+                    onChange={(e) =>
+                      setMicrosoftMailDraft((p) => ({ ...p, body: e.target.value }))
                     }
- className={`${fieldCls} resize-y`}
+                    className={`${fieldCls} resize-y`}
                   />
                 </label>
                 <button
- type="button"
- disabled={busy || !msConnected}
- onClick={() => {
- const to = microsoftMailDraft.to.trim()
- const subject = microsoftMailDraft.subject.trim()
- if (!to || !subject) {
- toast.error('받는 사람·제목을 입력하세요.')
- return
+                  type="button"
+                  disabled={busy || !msConnected}
+                  onClick={() => {
+                    const to = microsoftMailDraft.to.trim()
+                    const subject = microsoftMailDraft.subject.trim()
+                    if (!to || !subject) {
+                      toast.error('받는 사람·제목을 입력하세요.')
+                      return
                     }
- void runMs('mail.send', {
- to,
- subject,
- text: microsoftMailDraft.body,
+                    void runMs('mail.send', {
+                      to,
+                      subject,
+                      text: microsoftMailDraft.body,
                     })
                   }}
- className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
+                  className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
                 >
- 메일 전송
+                  메일 전송
                 </button>
               </div>
             </details>
 
             <details className="rounded-xl border border-border bg-bg/80 p-3">
               <summary className="cursor-pointer text-xs font-semibold text-fg">
- Outlook 일정 만들기
+                Outlook 일정 만들기
               </summary>
               <div className="mt-2 flex flex-col gap-2">
                 <label className="text-[11px] font-medium text-fg-muted">
- 제목
+                  제목
                   <input
- value={microsoftEventDraft.subject}
- onChange={(e) =>
- setMicrosoftEventDraft((p) => ({
+                    value={microsoftEventDraft.subject}
+                    onChange={(e) =>
+                      setMicrosoftEventDraft((p) => ({
                         ...p,
- subject: e.target.value,
+                        subject: e.target.value,
                       }))
                     }
- className={fieldCls}
+                    className={fieldCls}
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 시작 (로컬)
+                  시작 (로컬)
                   <input
- type="datetime-local"
- value={microsoftEventDraft.start}
- onChange={(e) =>
- setMicrosoftEventDraft((p) => ({
+                    type="datetime-local"
+                    value={microsoftEventDraft.start}
+                    onChange={(e) =>
+                      setMicrosoftEventDraft((p) => ({
                         ...p,
- start: e.target.value,
+                        start: e.target.value,
                       }))
                     }
- className={fieldCls}
+                    className={fieldCls}
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 종료 (로컬)
+                  종료 (로컬)
                   <input
- type="datetime-local"
- value={microsoftEventDraft.end}
- onChange={(e) =>
- setMicrosoftEventDraft((p) => ({ ...p, end: e.target.value }))
+                    type="datetime-local"
+                    value={microsoftEventDraft.end}
+                    onChange={(e) =>
+                      setMicrosoftEventDraft((p) => ({ ...p, end: e.target.value }))
                     }
- className={fieldCls}
+                    className={fieldCls}
                   />
                 </label>
                 <label className="text-[11px] font-medium text-fg-muted">
- 본문 (선택)
+                  본문 (선택)
                   <textarea
- rows={2}
- value={microsoftEventDraft.body}
- onChange={(e) =>
- setMicrosoftEventDraft((p) => ({ ...p, body: e.target.value }))
+                    rows={2}
+                    value={microsoftEventDraft.body}
+                    onChange={(e) =>
+                      setMicrosoftEventDraft((p) => ({ ...p, body: e.target.value }))
                     }
- className={`${fieldCls} resize-y`}
+                    className={`${fieldCls} resize-y`}
                   />
                 </label>
                 <button
- type="button"
- disabled={busy || !msConnected}
- onClick={() => {
- const startIso = localDatetimeInputToIso(microsoftEventDraft.start)
- const endIso = localDatetimeInputToIso(microsoftEventDraft.end)
- if (!startIso || !endIso) {
- toast.error('시작·종료 시각을 모두 입력하세요.')
- return
+                  type="button"
+                  disabled={busy || !msConnected}
+                  onClick={() => {
+                    const startIso = localDatetimeInputToIso(microsoftEventDraft.start)
+                    const endIso = localDatetimeInputToIso(microsoftEventDraft.end)
+                    if (!startIso || !endIso) {
+                      toast.error('시작·종료 시각을 모두 입력하세요.')
+                      return
                     }
- void runMs('calendar.createEvent', {
- subject: microsoftEventDraft.subject.trim() || '일정',
- start: startIso,
- end: endIso,
- body: microsoftEventDraft.body,
- timeZone: 'Asia/Seoul',
+                    void runMs('calendar.createEvent', {
+                      subject: microsoftEventDraft.subject.trim() || '일정',
+                      start: startIso,
+                      end: endIso,
+                      body: microsoftEventDraft.body,
+                      timeZone: 'Asia/Seoul',
                     })
                   }}
- className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
+                  className="rounded-lg bg-sky-800 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-900 disabled:opacity-45"
                 >
- 일정 생성
+                  일정 생성
                 </button>
               </div>
             </details>
@@ -651,43 +641,43 @@ export function WorkspaceIntegrationsPage() {
         {/* 문서 업로드 */}
         <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
           <p className="text-sm font-semibold text-fg">
- 문서 업로드 (HWPX·Office 등)
+            문서 업로드 (HWPX·Office 등)
           </p>
           <p className="mt-1 text-xs text-fg-muted">
- 서버 Storage에 저장 후 메타만 DB에 남깁니다. 본문 추출·AI 연동은 다음 단계에서 파이프라인을
- 붙이면 됩니다.
+            서버 Storage에 저장 후 메타만 DB에 남깁니다. 본문 추출·AI 연동은 다음 단계에서 파이프라인을
+            붙이면 됩니다.
           </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
             <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-fg-muted">
- 파일
+              파일
               <input
- type="file"
- disabled={busy}
- className="text-[13px] text-fg file:mr-2 file:rounded-lg file:border file:border-border-strong file:bg-surface file:px-2 file:py-1"
- onChange={(e) => {
- const f = e.target.files?.[0]
- if (!f) return
- setBusy(true)
- void uploadUserDocument(f, uploadNote)
+                type="file"
+                disabled={busy}
+                className="text-[13px] text-fg file:mr-2 file:rounded-lg file:border file:border-border-strong file:bg-surface file:px-2 file:py-1"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (!f) return
+                  setBusy(true)
+                  void uploadUserDocument(f, uploadNote)
                     .then(async () => {
- await loadUploads()
- toast.success('업로드 완료')
- e.target.value = ''
+                      await loadUploads()
+                      toast.success('업로드 완료')
+                      e.target.value = ''
                     })
                     .catch((err) =>
- toast.error(err instanceof Error ? err.message : String(err)),
+                      toast.error(err instanceof Error ? err.message : String(err)),
                     )
                     .finally(() => setBusy(false))
                 }}
               />
             </label>
             <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-fg-muted">
- 메모(선택)
+              메모(선택)
               <input
- value={uploadNote}
- onChange={(e) => setUploadNote(e.target.value)}
- placeholder="예: ○○ 프로젝트 견적"
- className="rounded-lg border border-border-strong bg-bg px-2 py-1.5 text-[13px]"
+                value={uploadNote}
+                onChange={(e) => setUploadNote(e.target.value)}
+                placeholder="예: ○○ 프로젝트 견적"
+                className="rounded-lg border border-border-strong bg-bg px-2 py-1.5 text-[13px]"
               />
             </label>
           </div>
@@ -704,14 +694,14 @@ export function WorkspaceIntegrationsPage() {
                 {uploads.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="py-4 text-fg-subtle">
- 업로드 내역이 없습니다.
+                      업로드 내역이 없습니다.
                     </td>
                   </tr>
                 ) : (
- uploads.map((u) => (
+                  uploads.map((u) => (
                     <tr
- key={u.id}
- className="border-b border-border"
+                      key={u.id}
+                      className="border-b border-border"
                     >
                       <td className="py-2 pr-2 uppercase text-fg-muted">
                         {u.kind}

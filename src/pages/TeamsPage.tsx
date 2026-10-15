@@ -6,86 +6,83 @@ import { useAuth } from '../components/auth/useAuth'
 import { supabase } from '../lib/supabase'
 import { createTeam, fetchMyTeams } from '../services/teams'
 import type { TeamRow } from '../services/teams'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconUsers } from '../components/common/icons'
 
 export function TeamsPage() {
- const { profile } = useAuth()
- const [teams, setTeams] = useState<TeamRow[]>([])
- const [loading, setLoading] = useState(true)
- const [name, setName] = useState('')
- const [creating, setCreating] = useState(false)
+  const { profile } = useAuth()
+  const [teams, setTeams] = useState<TeamRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [name, setName] = useState('')
+  const [creating, setCreating] = useState(false)
 
- const load = useCallback(async () => {
- setLoading(true)
- try {
- const result = await fetchMyTeams(supabase)
- if (!result.ok) {
- toast.error(result.message)
- setTeams([])
- return
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const result = await fetchMyTeams(supabase)
+      if (!result.ok) {
+        toast.error(result.message)
+        setTeams([])
+        return
       }
- setTeams(result.rows)
+      setTeams(result.rows)
     } finally {
- setLoading(false)
+      setLoading(false)
     }
   }, [])
 
- useEffect(() => {
- queueMicrotask(() => void load())
+  useEffect(() => {
+    queueMicrotask(() => void load())
   }, [load])
 
- async function handleCreate() {
- if (!profile?.id) return
- setCreating(true)
- try {
- const result = await createTeam(supabase, name)
- if (!result.ok) {
- toast.error(result.message)
- return
+  async function handleCreate() {
+    if (!profile?.id) return
+    setCreating(true)
+    try {
+      const result = await createTeam(supabase, name)
+      if (!result.ok) {
+        toast.error(result.message)
+        return
       }
- setName('')
- await load()
- toast.success('팀이 생성되었습니다.')
+      setName('')
+      await load()
+      toast.success('팀이 생성되었습니다.')
     } finally {
- setCreating(false)
+      setCreating(false)
     }
   }
 
- return (
+  return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 md:py-10">
-      <header>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-brand md:text-[11px]">
-          <span aria-hidden>✦</span> 팀 · 공유 채팅
-        </span>
-        <h1 className="mt-3 text-[22px] font-bold tracking-tight text-fg md:text-[28px]">
- 팀과 함께 대화하세요
-        </h1>
-        <p className="mt-1.5 text-[13px] text-fg-muted md:text-[15px]">
- 팀을 만들고 멤버를 이메일로 초대하면, 같은 대화방에서 AI와 협업할 수 있습니다.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="팀 · 현장 · 팀 공유 채팅"
+        title="팀과 함께 대화하세요"
+        description="팀을 만들고 멤버를 이메일로 초대하면, 같은 대화방에서 AI와 협업할 수 있습니다."
+        icon={IconUsers}
+      />
 
       <section className="rounded-2xl border border-border bg-gradient-to-br from-white to-brand-soft/40 px-5 py-5 shadow-sm">
         <h2 className="text-[13px] font-semibold text-fg md:text-[14px]">
- 새 팀 만들기
+          새 팀 만들기
         </h2>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
- value={name}
- disabled={creating || !profile}
- onChange={(e) => setName(e.target.value)}
- onKeyDown={(e) => {
- if (e.key === 'Enter' && name.trim().length >= 1 && !creating) {
- void handleCreate()
+            value={name}
+            disabled={creating || !profile}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && name.trim().length >= 1 && !creating) {
+                void handleCreate()
               }
             }}
- placeholder="팀 이름 (예: 마케팅팀, 3층 신축 TF)"
- className="min-w-0 flex-1 rounded-xl border border-border-strong bg-surface px-3.5 py-2.5 text-[14px] outline-none ring-focus/40 focus:border-brand focus:ring-2"
+            placeholder="팀 이름 (예: 마케팅팀, 3층 신축 TF)"
+            className="min-w-0 flex-1 rounded-xl border border-border-strong bg-surface px-3.5 py-2.5 text-[14px] outline-none ring-focus/40 focus:border-brand focus:ring-2"
           />
           <button
- type="button"
- disabled={creating || !profile || name.trim().length < 1}
- onClick={() => void handleCreate()}
- className="shrink-0 rounded-xl bg-brand px-5 py-2.5 text-[13px] font-semibold text-brand-fg transition hover:bg-brand-strong disabled:opacity-50 md:text-[14px]"
+            type="button"
+            disabled={creating || !profile || name.trim().length < 1}
+            onClick={() => void handleCreate()}
+            className="shrink-0 rounded-xl bg-brand px-5 py-2.5 text-[13px] font-semibold text-brand-fg transition hover:bg-brand-strong disabled:opacity-50 md:text-[14px]"
           >
             {creating ? '생성 중…' : '＋ 팀 생성'}
           </button>
@@ -95,7 +92,7 @@ export function TeamsPage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-[13px] font-semibold text-fg md:text-[14px]">
- 내 팀
+            내 팀
           </h2>
           {!loading && teams.length > 0 ? (
             <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-[11px] font-medium text-fg-subtle md:text-[12px]">
@@ -115,22 +112,22 @@ export function TeamsPage() {
               👥
             </div>
             <p className="text-[13px] font-semibold text-fg md:text-[14px]">
- 아직 소속된 팀이 없습니다
+              아직 소속된 팀이 없습니다
             </p>
             <p className="mt-1 text-[12px] text-fg-subtle md:text-[13px]">
- 위에서 팀을 만들어 멤버를 초대해 보세요.
+              위에서 팀을 만들어 멤버를 초대해 보세요.
             </p>
           </div>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {teams.map((t) => {
- const initial = t.name.trim().charAt(0).toUpperCase() || '팀'
- const isOwner = t.created_by === profile?.id
- return (
+              const initial = t.name.trim().charAt(0).toUpperCase() || '팀'
+              const isOwner = t.created_by === profile?.id
+              return (
                 <li key={t.id}>
                   <Link
- to={`/teams/${t.id}`}
- className="group flex items-center gap-3.5 rounded-2xl border border-border bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+                    to={`/teams/${t.id}`}
+                    className="group flex items-center gap-3.5 rounded-2xl border border-border bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
                   >
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-[16px] font-bold text-white shadow-sm">
                       {initial}
@@ -142,7 +139,7 @@ export function TeamsPage() {
                         </span>
                         {isOwner ? (
                           <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand">
- 내 팀
+                            내 팀
                           </span>
                         ) : null}
                       </span>
@@ -162,7 +159,7 @@ export function TeamsPage() {
       </section>
 
       <p className="text-[11px] text-fg-subtle md:text-[12px]">
- 공유 채팅은 수 초 간격으로 새로 고쳐집니다. 팀을 열어 멤버 초대·대화방을 관리하세요.
+        공유 채팅은 수 초 간격으로 새로 고쳐집니다. 팀을 열어 멤버 초대·대화방을 관리하세요.
       </p>
     </div>
   )

@@ -172,6 +172,48 @@ const CadAgentPage = lazy(() =>
   import('./pages/CadAgentPage').then((m) => ({ default: m.CadAgentPage })),
 )
 
+/**
+ * 사용자 포털 화면 라우트 (MainLayout 하위, lazy). 실제 앱과 DEV 검수 라우트(__ui-check/app/*)가 공유한다.
+ */
+const portalPageRoutes = (
+  <>
+    <Route path="scrapbook" element={<Scrapbook />} />
+    <Route path="ai-slides" element={<AiSlidesPage />} />
+    <Route path="workflows" element={<WorkflowsPage />} />
+    <Route path="marketplace" element={<MarketplacePage />} />
+    <Route path="ai-planner" element={<AiProductPlannerPage />} />
+    <Route path="ai-planner/:sessionId" element={<AiProductPlannerPage />} />
+    <Route path="ai-designer" element={<AiDesignerPage />} />
+    <Route path="ai-sheets" element={<AiSheetsPage />} />
+    <Route path="ai-office" element={<UniverOfficePage />} />
+    <Route path="reference-room" element={<ReferenceRoom />} />
+    <Route path="knowledge-hub" element={<KnowledgeHubPage />} />
+    <Route path="automation-studio" element={<AutomationStudioPage />} />
+    <Route path="cad-agent" element={<CadAgentPage />} />
+    <Route path="teams" element={<TeamsPage />} />
+    <Route path="teams/:teamId" element={<TeamDetailPage />} />
+    <Route
+      path="teams/:teamId/chat/:conversationId"
+      element={<TeamSharedChatPage />}
+    />
+    <Route
+      path="oauth/google-integration"
+      element={<GoogleIntegrationCallback />}
+    />
+    <Route
+      path="workspace-tools"
+      element={<WorkspaceIntegrationsPage />}
+    />
+    <Route path="notebook" element={<NotebookWorkspace />} />
+    <Route path="site-assessment" element={<SiteAssessmentUserPage />} />
+    <Route path="library" element={<LibraryPage />} />
+    <Route
+      path="oauth/microsoft-integration"
+      element={<MicrosoftIntegrationCallback />}
+    />
+  </>
+)
+
 function AuthSpinner() {
   return (
     <div className="app-shell flex min-h-dvh w-full items-center justify-center bg-bg">
@@ -219,40 +261,7 @@ function AppRoutes() {
           <Route path="chat/:threadId" element={<Dashboard />} />
 
           <Route element={<LazyRouteOutlet />}>
-            <Route path="scrapbook" element={<Scrapbook />} />
-            <Route path="ai-slides" element={<AiSlidesPage />} />
-            <Route path="workflows" element={<WorkflowsPage />} />
-            <Route path="marketplace" element={<MarketplacePage />} />
-            <Route path="ai-planner" element={<AiProductPlannerPage />} />
-            <Route path="ai-planner/:sessionId" element={<AiProductPlannerPage />} />
-            <Route path="ai-designer" element={<AiDesignerPage />} />
-            <Route path="ai-sheets" element={<AiSheetsPage />} />
-            <Route path="ai-office" element={<UniverOfficePage />} />
-            <Route path="reference-room" element={<ReferenceRoom />} />
-            <Route path="knowledge-hub" element={<KnowledgeHubPage />} />
-            <Route path="automation-studio" element={<AutomationStudioPage />} />
-            <Route path="cad-agent" element={<CadAgentPage />} />
-            <Route path="teams" element={<TeamsPage />} />
-            <Route path="teams/:teamId" element={<TeamDetailPage />} />
-            <Route
-              path="teams/:teamId/chat/:conversationId"
-              element={<TeamSharedChatPage />}
-            />
-            <Route
-              path="oauth/google-integration"
-              element={<GoogleIntegrationCallback />}
-            />
-            <Route
-              path="workspace-tools"
-              element={<WorkspaceIntegrationsPage />}
-            />
-            <Route path="notebook" element={<NotebookWorkspace />} />
-            <Route path="site-assessment" element={<SiteAssessmentUserPage />} />
-            <Route path="library" element={<LibraryPage />} />
-            <Route
-              path="oauth/microsoft-integration"
-              element={<MicrosoftIntegrationCallback />}
-            />
+            {portalPageRoutes}
           </Route>
         </Route>
 
@@ -320,6 +329,13 @@ function AppRoutes() {
             <Route element={<LazyRouteOutlet />}>
               <Route index element={<DevShellCheckPage />} />
               <Route path="*" element={<DevShellCheckPage />} />
+            </Route>
+          </Route>
+          {/* 포털 화면 레이아웃 검수 — 로그인 없이 /__ui-check/app/<경로> 로 각 화면의 셸·헤더를 확인 (데이터는 로드되지 않음) */}
+          <Route path="__ui-check/app" element={<MainLayout />}>
+            <Route element={<LazyRouteOutlet />}>
+              <Route index element={<DevShellCheckPage />} />
+              {portalPageRoutes}
             </Route>
           </Route>
         </>

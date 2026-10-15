@@ -1,25 +1,25 @@
 import type { ClipboardEvent, FormEvent, KeyboardEvent, ReactNode } from 'react'
 import { toast } from 'sonner'
 import {
- forwardRef,
- useCallback,
- useEffect,
- useImperativeHandle,
- useLayoutEffect,
- useRef,
- useState,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
 } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition'
 import type {
- ChatExperimentalAttachment,
- ChatSendPayload,
+  ChatExperimentalAttachment,
+  ChatSendPayload,
 } from '../../types/chat'
 import {
- COMPOSER_TOOLS,
- getComposerToolMeta,
- type ComposerToolMode,
+  COMPOSER_TOOLS,
+  getComposerToolMeta,
+  type ComposerToolMode,
 } from '../../types/composer-tools'
 import type { AiModelRow } from '../../types/ai-models'
 
@@ -27,20 +27,20 @@ import { compressChatImageFile } from '../../utils/compress-chat-image'
 
 import { ChatAttachmentPreviewStrip } from './ChatAttachmentPreviewStrip'
 import {
- MediaEngineBentoPanel,
- mediaEngineLabel,
+  MediaEngineBentoPanel,
+  mediaEngineLabel,
 } from './MediaEngineBentoPanel'
 
 export type { ChatExperimentalAttachment, ChatSendPayload }
 
 export type ChatInputHandle = {
- focusField: () => void
+  focusField: () => void
   /** 프롬프트 라이브러리 적용 등 입력 교체 시 미리보기·파일 선택 상태 초기화 */
- clearAttachments: () => void
+  clearAttachments: () => void
   /** 사내 자료실 등에서 이미지 파일을 프로그램적으로 추가 (검증 규칙은 파일 선택과 동일) */
- appendImageFiles: (files: File[]) => void
+  appendImageFiles: (files: File[]) => void
   /** 부서 예산 소진(402) 시 컴포저 상단 토스트 */
- showBudgetExhaustedToast: () => void
+  showBudgetExhaustedToast: () => void
 }
 
 const BUDGET_TOAST_MESSAGE =
@@ -49,108 +49,108 @@ const BUDGET_TOAST_MESSAGE =
 const BUDGET_TOAST_DISMISS_MS = 8000
 
 type ChatInputProps = {
- value: string
- onChange: (value: string) => void
- onSend: (payload: ChatSendPayload) => void
- placeholder?: string
+  value: string
+  onChange: (value: string) => void
+  onSend: (payload: ChatSendPayload) => void
+  placeholder?: string
   /** 전송 중 등 입력 컴포저 전체 잠금(텍스트 영역 포함) */
- disabled?: boolean
+  disabled?: boolean
   /** false면 문안 입력은 가능하지만 전송만 막음(프로필 미로드 등) */
- allowSend?: boolean
- variant?: 'default' | 'claude' | 'gemini'
+  allowSend?: boolean
+  variant?: 'default' | 'claude' | 'gemini'
   /** true 이면 이미지 첨부 버튼 비활성(MVP 공유 채팅 등) */
- disableAttachments?: boolean
+  disableAttachments?: boolean
   /** 전송 버튼 바로 왼쪽 영역(모델 선택 등, Cursor 스타일) */
- toolbarBeforeSend?: ReactNode
+  toolbarBeforeSend?: ReactNode
   /** 입력 하단 도구 모음(모델 선택 등) */
- belowInputRow?: ReactNode
+  belowInputRow?: ReactNode
   /** 컴포저 하단 보조 정보(토큰 추정 등) */
- composerMeta?: ReactNode
+  composerMeta?: ReactNode
   /** AI 답변 생성 중 — 전송 버튼 대신 중지 버튼 표시 */
- generating?: boolean
+  generating?: boolean
   /** 스트리밍 중 생성 중지 */
- onStopGenerating?: () => void
+  onStopGenerating?: () => void
   /** 지정 시 + 메뉴에서 문서 업로드·외부 연동 페이지로 이동할 수 있습니다 */
- onOpenWorkspaceTools?: () => void
- onOpenReferenceRoom?: () => void
- onOpenNotebook?: () => void
- onOpenSettings?: () => void
+  onOpenWorkspaceTools?: () => void
+  onOpenReferenceRoom?: () => void
+  onOpenNotebook?: () => void
+  onOpenSettings?: () => void
   /** 심층 연구(AI 앙상블) 모드 */
- deepResearchEnabled?: boolean
- onDeepResearchChange?: (enabled: boolean) => void
+  deepResearchEnabled?: boolean
+  onDeepResearchChange?: (enabled: boolean) => void
   /** [인터넷 검색] — Edge 하이브리드 웹 검색 라우팅 */
- internetSearchEnabled?: boolean
- onInternetSearchChange?: (enabled: boolean) => void
- composerTool?: ComposerToolMode | null
- onComposerToolChange?: (tool: ComposerToolMode | null) => void
+  internetSearchEnabled?: boolean
+  onInternetSearchChange?: (enabled: boolean) => void
+  composerTool?: ComposerToolMode | null
+  onComposerToolChange?: (tool: ComposerToolMode | null) => void
   /** 대시보드에서 선택 중인 AI 모델 — 미디어 라우터 activeModel */
- activeModel?: string
+  activeModel?: string
   /** AI 모델을 ChatInput 내부에서 강제로 변경하고자 할 때 (예: 이미지 생성 등) */
- onActiveModelChange?: (modelId: string) => void
+  onActiveModelChange?: (modelId: string) => void
   /** 이미지/동영상 만들기 → ai-chat mediaRouter */
- onMediaGenerate?: (
- actionType: 'image' | 'video',
- prompt: string,
- mediaModelId: string,
+  onMediaGenerate?: (
+    actionType: 'image' | 'video',
+    prompt: string,
+    mediaModelId: string,
   ) => void | Promise<void>
   /** Supabase ai_models — model_type = image */
- mediaImageEngines?: readonly AiModelRow[]
+  mediaImageEngines?: readonly AiModelRow[]
   /** Supabase ai_models — model_type = video */
- mediaVideoEngines?: readonly AiModelRow[]
- mediaEnginesLoading?: boolean
+  mediaVideoEngines?: readonly AiModelRow[]
+  mediaEnginesLoading?: boolean
   /** textarea 위에 표시 (AI Slides prompt-files 등) */
- aboveTextareaContent?: ReactNode
+  aboveTextareaContent?: ReactNode
   /** AI Slides 등 외부 input-wrapper 안에 임베드 */
- embeddedInSlidesShell?: boolean
+  embeddedInSlidesShell?: boolean
   /** embeddedInSlidesShell과 함께 — 도구·음성 등 숨기고 전송만 */
- slidesMinimalComposer?: boolean
+  slidesMinimalComposer?: boolean
 }
 
 type PendingAttachment = {
- id: string
- previewUrl: string
- imageBase64: string
- mimeType: string
- fileName: string
+  id: string
+  previewUrl: string
+  imageBase64: string
+  mimeType: string
+  fileName: string
 }
 
 function IconSpinner(props: { className?: string }) {
- return (
+  return (
     <svg
- className={`animate-spin ${props.className ?? ''}`}
- fill="none"
- viewBox="0 0 24 24"
- aria-hidden="true"
+      className={`animate-spin ${props.className ?? ''}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <circle
- className="opacity-25"
- cx="12"
- cy="12"
- r="10"
- stroke="currentColor"
- strokeWidth="4"
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
       />
       <path
- className="opacity-75"
- fill="currentColor"
- d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
       />
     </svg>
   )
 }
 
 function randomId() {
- return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 function IconPlus(props: { className?: string }) {
- return (
+  return (
     <svg
- className={props.className}
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+      className={props.className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
     </svg>
@@ -158,50 +158,50 @@ function IconPlus(props: { className?: string }) {
 }
 
 function IconTokenCost(props: { className?: string }) {
- return (
+  return (
     <svg
- className={props.className}
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+      className={props.className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
   )
 }
 
 function IconSliders(props: { className?: string }) {
- return (
+  return (
     <svg
- className={props.className}
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+      className={props.className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
       />
     </svg>
   )
 }
 
 function IconStopSquare(props: { className?: string }) {
- return (
+  return (
     <svg
- className={props.className}
- fill="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+      className={props.className}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <rect x="7" y="7" width="10" height="10" rx="1.5" />
     </svg>
@@ -209,13 +209,13 @@ function IconStopSquare(props: { className?: string }) {
 }
 
 function IconCheck(props: { className?: string }) {
- return (
+  return (
     <svg
- className={props.className}
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+      className={props.className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
     </svg>
@@ -223,396 +223,396 @@ function IconCheck(props: { className?: string }) {
 }
 
 function IconVoiceWave(props: { className?: string }) {
- return (
+  return (
     <svg
- className={props.className}
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+      className={props.className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M2 10v3 M6 6v11 M10 3v18 M14 8v8 M18 5v14 M22 10v3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M2 10v3 M6 6v11 M10 3v18 M14 8v8 M18 5v14 M22 10v3"
       />
     </svg>
   )
 }
 
 export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
- function ChatInput(
+  function ChatInput(
     {
- value,
- onChange,
- onSend,
- placeholder = '업무 관련 질문을 입력하세요…',
- disabled = false,
- allowSend = true,
- variant = 'default',
- disableAttachments = false,
- toolbarBeforeSend,
- belowInputRow,
- composerMeta,
- generating = false,
- onStopGenerating,
- onOpenWorkspaceTools,
- onOpenReferenceRoom,
- onOpenNotebook,
- onOpenSettings,
- deepResearchEnabled = false,
- onDeepResearchChange,
- internetSearchEnabled = false,
- onInternetSearchChange,
- composerTool = null,
- onComposerToolChange,
- onActiveModelChange,
- onMediaGenerate,
- mediaImageEngines = [],
- mediaVideoEngines = [],
- mediaEnginesLoading = false,
- aboveTextareaContent,
- embeddedInSlidesShell = false,
- slidesMinimalComposer = false,
+      value,
+      onChange,
+      onSend,
+      placeholder = '업무 관련 질문을 입력하세요…',
+      disabled = false,
+      allowSend = true,
+      variant = 'default',
+      disableAttachments = false,
+      toolbarBeforeSend,
+      belowInputRow,
+      composerMeta,
+      generating = false,
+      onStopGenerating,
+      onOpenWorkspaceTools,
+      onOpenReferenceRoom,
+      onOpenNotebook,
+      onOpenSettings,
+      deepResearchEnabled = false,
+      onDeepResearchChange,
+      internetSearchEnabled = false,
+      onInternetSearchChange,
+      composerTool = null,
+      onComposerToolChange,
+      onActiveModelChange,
+      onMediaGenerate,
+      mediaImageEngines = [],
+      mediaVideoEngines = [],
+      mediaEnginesLoading = false,
+      aboveTextareaContent,
+      embeddedInSlidesShell = false,
+      slidesMinimalComposer = false,
     }: ChatInputProps,
- ref,
+    ref,
   ) {
- const slidesMinimal = embeddedInSlidesShell && slidesMinimalComposer
- const safeMediaImageEngines = Array.isArray(mediaImageEngines)
+    const slidesMinimal = embeddedInSlidesShell && slidesMinimalComposer
+    const safeMediaImageEngines = Array.isArray(mediaImageEngines)
       ? mediaImageEngines
       : []
- const safeMediaVideoEngines = Array.isArray(mediaVideoEngines)
+    const safeMediaVideoEngines = Array.isArray(mediaVideoEngines)
       ? mediaVideoEngines
       : []
 
- const fileInputRef = useRef<HTMLInputElement>(null)
- const documentInputRef = useRef<HTMLInputElement>(null)
- const textareaRef = useRef<HTMLTextAreaElement>(null)
- const [attachments, setAttachments] = useState<PendingAttachment[]>([])
- const [mediaBusy, setMediaBusy] = useState<'image' | 'video' | null>(null)
- const [mediaEnginePanel, setMediaEnginePanel] = useState<
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const documentInputRef = useRef<HTMLInputElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const [attachments, setAttachments] = useState<PendingAttachment[]>([])
+    const [mediaBusy, setMediaBusy] = useState<'image' | 'video' | null>(null)
+    const [mediaEnginePanel, setMediaEnginePanel] = useState<
       'image' | 'video' | null
     >(null)
- const [selectedImageModelId, setSelectedImageModelId] = useState('')
- const [selectedVideoModelId, setSelectedVideoModelId] = useState('')
- const latestValueRef = useRef(value)
- const speechBaseRef = useRef('')
- const attachWrapRef = useRef<HTMLDivElement>(null)
- const attachButtonRef = useRef<HTMLButtonElement>(null)
- const attachMenuRef = useRef<HTMLDivElement>(null)
- const metaWrapRef = useRef<HTMLDivElement>(null)
- const metaButtonRef = useRef<HTMLButtonElement>(null)
- const metaMenuRef = useRef<HTMLDivElement>(null)
- const toolsWrapRef = useRef<HTMLDivElement>(null)
- const toolsButtonRef = useRef<HTMLButtonElement>(null)
- const toolsMenuRef = useRef<HTMLDivElement>(null)
- const [attachMenuOpen, setAttachMenuOpen] = useState(false)
- const [metaMenuOpen, setMetaMenuOpen] = useState(false)
- const [toolsMenuOpen, setToolsMenuOpen] = useState(false)
- const [attachMenuAnchor, setAttachMenuAnchor] = useState<{
- top: number
- left: number
+    const [selectedImageModelId, setSelectedImageModelId] = useState('')
+    const [selectedVideoModelId, setSelectedVideoModelId] = useState('')
+    const latestValueRef = useRef(value)
+    const speechBaseRef = useRef('')
+    const attachWrapRef = useRef<HTMLDivElement>(null)
+    const attachButtonRef = useRef<HTMLButtonElement>(null)
+    const attachMenuRef = useRef<HTMLDivElement>(null)
+    const metaWrapRef = useRef<HTMLDivElement>(null)
+    const metaButtonRef = useRef<HTMLButtonElement>(null)
+    const metaMenuRef = useRef<HTMLDivElement>(null)
+    const toolsWrapRef = useRef<HTMLDivElement>(null)
+    const toolsButtonRef = useRef<HTMLButtonElement>(null)
+    const toolsMenuRef = useRef<HTMLDivElement>(null)
+    const [attachMenuOpen, setAttachMenuOpen] = useState(false)
+    const [metaMenuOpen, setMetaMenuOpen] = useState(false)
+    const [toolsMenuOpen, setToolsMenuOpen] = useState(false)
+    const [attachMenuAnchor, setAttachMenuAnchor] = useState<{
+      top: number
+      left: number
     } | null>(null)
- const [toolsMenuAnchor, setToolsMenuAnchor] = useState<{
- top: number
- left: number
+    const [toolsMenuAnchor, setToolsMenuAnchor] = useState<{
+      top: number
+      left: number
     } | null>(null)
- const [metaMenuAnchor, setMetaMenuAnchor] = useState<{
- top: number
- left: number
- maxHeight: number
+    const [metaMenuAnchor, setMetaMenuAnchor] = useState<{
+      top: number
+      left: number
+      maxHeight: number
     } | null>(null)
- const [budgetToastVisible, setBudgetToastVisible] = useState(false)
- const budgetToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [budgetToastVisible, setBudgetToastVisible] = useState(false)
+    const budgetToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
- const {
- isSupported: speechSupported,
- isListening,
- transcript,
- startListening,
- stopListening,
+    const {
+      isSupported: speechSupported,
+      isListening,
+      transcript,
+      startListening,
+      stopListening,
     } = useSpeechRecognition({
- onError: (message) => toast.error(message),
+      onError: (message) => toast.error(message),
     })
 
- useEffect(() => {
- if (safeMediaImageEngines.length === 0) return
- setSelectedImageModelId((current) => {
- if (
- current &&
- safeMediaImageEngines.some((row) => row?.api_id === current)
+    useEffect(() => {
+      if (safeMediaImageEngines.length === 0) return
+      setSelectedImageModelId((current) => {
+        if (
+          current &&
+          safeMediaImageEngines.some((row) => row?.api_id === current)
         ) {
- return current
+          return current
         }
- return safeMediaImageEngines[0]?.api_id ?? ''
+        return safeMediaImageEngines[0]?.api_id ?? ''
       })
     }, [safeMediaImageEngines])
 
- useEffect(() => {
- if (safeMediaVideoEngines.length === 0) return
- setSelectedVideoModelId((current) => {
- if (
- current &&
- safeMediaVideoEngines.some((row) => row?.api_id === current)
+    useEffect(() => {
+      if (safeMediaVideoEngines.length === 0) return
+      setSelectedVideoModelId((current) => {
+        if (
+          current &&
+          safeMediaVideoEngines.some((row) => row?.api_id === current)
         ) {
- return current
+          return current
         }
- return safeMediaVideoEngines[0]?.api_id ?? ''
+        return safeMediaVideoEngines[0]?.api_id ?? ''
       })
     }, [safeMediaVideoEngines])
 
- useEffect(() => {
- latestValueRef.current = value
+    useEffect(() => {
+      latestValueRef.current = value
     }, [value])
 
- useEffect(() => {
- if (!isListening) return
- const base = speechBaseRef.current
- if (!transcript) return
- const gap = base.length > 0 && !/\s$/.test(base) ? ' ' : ''
- const merged = `${base}${gap}${transcript}`
- latestValueRef.current = merged
- onChange(merged)
+    useEffect(() => {
+      if (!isListening) return
+      const base = speechBaseRef.current
+      if (!transcript) return
+      const gap = base.length > 0 && !/\s$/.test(base) ? ' ' : ''
+      const merged = `${base}${gap}${transcript}`
+      latestValueRef.current = merged
+      onChange(merged)
     }, [isListening, onChange, transcript])
 
- useEffect(() => {
- if (!attachMenuOpen && !metaMenuOpen && !toolsMenuOpen) return
- function onDocMouseDown(e: MouseEvent) {
- const target = e.target as Node | null
- if (
- attachWrapRef.current?.contains(target) ||
- attachMenuRef.current?.contains(target) ||
- metaWrapRef.current?.contains(target) ||
- metaMenuRef.current?.contains(target) ||
- toolsWrapRef.current?.contains(target) ||
- toolsMenuRef.current?.contains(target)
+    useEffect(() => {
+      if (!attachMenuOpen && !metaMenuOpen && !toolsMenuOpen) return
+      function onDocMouseDown(e: MouseEvent) {
+        const target = e.target as Node | null
+        if (
+          attachWrapRef.current?.contains(target) ||
+          attachMenuRef.current?.contains(target) ||
+          metaWrapRef.current?.contains(target) ||
+          metaMenuRef.current?.contains(target) ||
+          toolsWrapRef.current?.contains(target) ||
+          toolsMenuRef.current?.contains(target)
         ) {
- return
+          return
         }
- setAttachMenuOpen(false)
- setMetaMenuOpen(false)
- setToolsMenuOpen(false)
+        setAttachMenuOpen(false)
+        setMetaMenuOpen(false)
+        setToolsMenuOpen(false)
       }
- function onKeyDown(e: globalThis.KeyboardEvent) {
- if (e.key === 'Escape') {
- setAttachMenuOpen(false)
- setMetaMenuOpen(false)
- setToolsMenuOpen(false)
+      function onKeyDown(e: globalThis.KeyboardEvent) {
+        if (e.key === 'Escape') {
+          setAttachMenuOpen(false)
+          setMetaMenuOpen(false)
+          setToolsMenuOpen(false)
         }
       }
- document.addEventListener('mousedown', onDocMouseDown)
- document.addEventListener('keydown', onKeyDown)
- return () => {
- document.removeEventListener('mousedown', onDocMouseDown)
- document.removeEventListener('keydown', onKeyDown)
+      document.addEventListener('mousedown', onDocMouseDown)
+      document.addEventListener('keydown', onKeyDown)
+      return () => {
+        document.removeEventListener('mousedown', onDocMouseDown)
+        document.removeEventListener('keydown', onKeyDown)
       }
     }, [attachMenuOpen, metaMenuOpen, toolsMenuOpen])
 
- useLayoutEffect(() => {
- if (!attachMenuOpen) {
- setAttachMenuAnchor(null)
- return
+    useLayoutEffect(() => {
+      if (!attachMenuOpen) {
+        setAttachMenuAnchor(null)
+        return
       }
 
- function updatePosition() {
- const button = attachButtonRef.current
- if (!button) return
- const rect = button.getBoundingClientRect()
- setAttachMenuAnchor({ top: rect.top, left: rect.left })
+      function updatePosition() {
+        const button = attachButtonRef.current
+        if (!button) return
+        const rect = button.getBoundingClientRect()
+        setAttachMenuAnchor({ top: rect.top, left: rect.left })
       }
 
- updatePosition()
- window.addEventListener('resize', updatePosition)
- window.addEventListener('scroll', updatePosition, true)
- return () => {
- window.removeEventListener('resize', updatePosition)
- window.removeEventListener('scroll', updatePosition, true)
+      updatePosition()
+      window.addEventListener('resize', updatePosition)
+      window.addEventListener('scroll', updatePosition, true)
+      return () => {
+        window.removeEventListener('resize', updatePosition)
+        window.removeEventListener('scroll', updatePosition, true)
       }
     }, [attachMenuOpen])
 
- useLayoutEffect(() => {
- if (!toolsMenuOpen) {
- setToolsMenuAnchor(null)
- return
+    useLayoutEffect(() => {
+      if (!toolsMenuOpen) {
+        setToolsMenuAnchor(null)
+        return
       }
 
- function updatePosition() {
- const button = toolsButtonRef.current
- if (!button) return
- const rect = button.getBoundingClientRect()
- setToolsMenuAnchor({ top: rect.top, left: rect.left })
+      function updatePosition() {
+        const button = toolsButtonRef.current
+        if (!button) return
+        const rect = button.getBoundingClientRect()
+        setToolsMenuAnchor({ top: rect.top, left: rect.left })
       }
 
- updatePosition()
- window.addEventListener('resize', updatePosition)
- window.addEventListener('scroll', updatePosition, true)
- return () => {
- window.removeEventListener('resize', updatePosition)
- window.removeEventListener('scroll', updatePosition, true)
+      updatePosition()
+      window.addEventListener('resize', updatePosition)
+      window.addEventListener('scroll', updatePosition, true)
+      return () => {
+        window.removeEventListener('resize', updatePosition)
+        window.removeEventListener('scroll', updatePosition, true)
       }
     }, [toolsMenuOpen])
 
- useLayoutEffect(() => {
- if (!metaMenuOpen) {
- setMetaMenuAnchor(null)
- return
+    useLayoutEffect(() => {
+      if (!metaMenuOpen) {
+        setMetaMenuAnchor(null)
+        return
       }
 
- function updatePosition() {
- const button = metaButtonRef.current
- if (!button) return
- const rect = button.getBoundingClientRect()
- const panelWidth = Math.min(window.innerWidth - 24, 448)
- const left = Math.min(
- Math.max(12, rect.left),
- window.innerWidth - panelWidth - 12,
+      function updatePosition() {
+        const button = metaButtonRef.current
+        if (!button) return
+        const rect = button.getBoundingClientRect()
+        const panelWidth = Math.min(window.innerWidth - 24, 448)
+        const left = Math.min(
+          Math.max(12, rect.left),
+          window.innerWidth - panelWidth - 12,
         )
- const topGap = 8
- const maxHeight = Math.max(
- 180,
- Math.min(window.innerHeight * 0.62, rect.top - topGap - 12),
+        const topGap = 8
+        const maxHeight = Math.max(
+          180,
+          Math.min(window.innerHeight * 0.62, rect.top - topGap - 12),
         )
- setMetaMenuAnchor({ top: rect.top, left, maxHeight })
+        setMetaMenuAnchor({ top: rect.top, left, maxHeight })
       }
 
- updatePosition()
- window.addEventListener('resize', updatePosition)
- window.addEventListener('scroll', updatePosition, true)
- return () => {
- window.removeEventListener('resize', updatePosition)
- window.removeEventListener('scroll', updatePosition, true)
+      updatePosition()
+      window.addEventListener('resize', updatePosition)
+      window.addEventListener('scroll', updatePosition, true)
+      return () => {
+        window.removeEventListener('resize', updatePosition)
+        window.removeEventListener('scroll', updatePosition, true)
       }
     }, [metaMenuOpen])
 
- useEffect(() => {
- if (disableAttachments) setAttachMenuOpen(false)
+    useEffect(() => {
+      if (disableAttachments) setAttachMenuOpen(false)
     }, [disableAttachments])
 
- useEffect(() => {
- if (disabled) {
- setAttachMenuOpen(false)
- setMetaMenuOpen(false)
- setToolsMenuOpen(false)
+    useEffect(() => {
+      if (disabled) {
+        setAttachMenuOpen(false)
+        setMetaMenuOpen(false)
+        setToolsMenuOpen(false)
       }
     }, [disabled])
 
- useEffect(() => {
- if (!disableAttachments) return
- setAttachments((prev) => {
- prev.forEach((a) => URL.revokeObjectURL(a.previewUrl))
- return []
+    useEffect(() => {
+      if (!disableAttachments) return
+      setAttachments((prev) => {
+        prev.forEach((a) => URL.revokeObjectURL(a.previewUrl))
+        return []
       })
- if (fileInputRef.current) fileInputRef.current.value = ''
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }, [disableAttachments])
 
- useEffect(() => {
- if (disabled && isListening) {
- stopListening()
+    useEffect(() => {
+      if (disabled && isListening) {
+        stopListening()
       }
     }, [disabled, isListening, stopListening])
 
- const dismissBudgetToast = useCallback(() => {
- if (budgetToastTimerRef.current) {
- clearTimeout(budgetToastTimerRef.current)
- budgetToastTimerRef.current = null
+    const dismissBudgetToast = useCallback(() => {
+      if (budgetToastTimerRef.current) {
+        clearTimeout(budgetToastTimerRef.current)
+        budgetToastTimerRef.current = null
       }
- setBudgetToastVisible(false)
+      setBudgetToastVisible(false)
     }, [])
 
- const showBudgetExhaustedToast = useCallback(() => {
- if (budgetToastTimerRef.current) {
- clearTimeout(budgetToastTimerRef.current)
+    const showBudgetExhaustedToast = useCallback(() => {
+      if (budgetToastTimerRef.current) {
+        clearTimeout(budgetToastTimerRef.current)
       }
- setBudgetToastVisible(true)
- budgetToastTimerRef.current = setTimeout(() => {
- setBudgetToastVisible(false)
- budgetToastTimerRef.current = null
+      setBudgetToastVisible(true)
+      budgetToastTimerRef.current = setTimeout(() => {
+        setBudgetToastVisible(false)
+        budgetToastTimerRef.current = null
       }, BUDGET_TOAST_DISMISS_MS)
     }, [])
 
- useEffect(() => {
- return () => {
- if (budgetToastTimerRef.current) {
- clearTimeout(budgetToastTimerRef.current)
+    useEffect(() => {
+      return () => {
+        if (budgetToastTimerRef.current) {
+          clearTimeout(budgetToastTimerRef.current)
         }
       }
     }, [])
 
- const handleMicToggle = useCallback(() => {
- if (disabled || !speechSupported) return
- if (isListening) {
- stopListening()
- return
+    const handleMicToggle = useCallback(() => {
+      if (disabled || !speechSupported) return
+      if (isListening) {
+        stopListening()
+        return
       }
- speechBaseRef.current = latestValueRef.current
- startListening()
+      speechBaseRef.current = latestValueRef.current
+      startListening()
     }, [disabled, isListening, speechSupported, startListening, stopListening])
 
- useLayoutEffect(() => {
- const el = textareaRef.current
- if (!el) return
+    useLayoutEffect(() => {
+      const el = textareaRef.current
+      if (!el) return
 
- const syncHeight = () => {
- el.style.height = 'auto'
- const computed = window.getComputedStyle(el)
- const lineHeight = Number.parseFloat(computed.lineHeight) || 20
- const verticalPadding =
+      const syncHeight = () => {
+        el.style.height = 'auto'
+        const computed = window.getComputedStyle(el)
+        const lineHeight = Number.parseFloat(computed.lineHeight) || 20
+        const verticalPadding =
           (Number.parseFloat(computed.paddingTop) || 0) +
           (Number.parseFloat(computed.paddingBottom) || 0)
- const verticalBorder =
+        const verticalBorder =
           (Number.parseFloat(computed.borderTopWidth) || 0) +
           (Number.parseFloat(computed.borderBottomWidth) || 0)
- const maxHeight = lineHeight * 6 + verticalPadding + verticalBorder
- const nextHeight = Math.min(el.scrollHeight, maxHeight)
- el.style.height = `${nextHeight}px`
- el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden'
+        const maxHeight = lineHeight * 6 + verticalPadding + verticalBorder
+        const nextHeight = Math.min(el.scrollHeight, maxHeight)
+        el.style.height = `${nextHeight}px`
+        el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden'
       }
 
- syncHeight()
- window.addEventListener('resize', syncHeight)
- return () => window.removeEventListener('resize', syncHeight)
+      syncHeight()
+      window.addEventListener('resize', syncHeight)
+      return () => window.removeEventListener('resize', syncHeight)
     }, [value, disabled])
 
- useImperativeHandle(ref, () => ({
- focusField: () => {
- textareaRef.current?.focus()
+    useImperativeHandle(ref, () => ({
+      focusField: () => {
+        textareaRef.current?.focus()
       },
- showBudgetExhaustedToast,
- clearAttachments: () => {
- setAttachments((prev) => {
- prev.forEach((a) => {
- if (a.previewUrl.startsWith('blob:')) {
- URL.revokeObjectURL(a.previewUrl)
+      showBudgetExhaustedToast,
+      clearAttachments: () => {
+        setAttachments((prev) => {
+          prev.forEach((a) => {
+            if (a.previewUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(a.previewUrl)
             }
           })
- return []
+          return []
         })
- if (fileInputRef.current) fileInputRef.current.value = ''
+        if (fileInputRef.current) fileInputRef.current.value = ''
       },
- appendImageFiles: (files: File[]) => {
- if (disableAttachments || files.length === 0) return
- void (async () => {
- const compressed = await compressChatImageFile(files[0])
- if (!compressed) {
- toast.error(
+      appendImageFiles: (files: File[]) => {
+        if (disableAttachments || files.length === 0) return
+        void (async () => {
+          const compressed = await compressChatImageFile(files[0])
+          if (!compressed) {
+            toast.error(
               'JPG 또는 PNG 이미지만 첨부할 수 있습니다. (최대 1024px, 1MB)',
             )
- return
+            return
           }
- setAttachments((prev) => {
- prev.forEach((a) => {
- if (a.previewUrl.startsWith('blob:')) {
- URL.revokeObjectURL(a.previewUrl)
+          setAttachments((prev) => {
+            prev.forEach((a) => {
+              if (a.previewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(a.previewUrl)
               }
             })
- return [
+            return [
               {
- id: randomId(),
- previewUrl: compressed.previewDataUrl,
- imageBase64: compressed.imageBase64,
- mimeType: compressed.mimeType,
- fileName: compressed.fileName,
+                id: randomId(),
+                previewUrl: compressed.previewDataUrl,
+                imageBase64: compressed.imageBase64,
+                mimeType: compressed.mimeType,
+                fileName: compressed.fileName,
               },
             ]
           })
@@ -620,28 +620,28 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       },
     }), [disableAttachments, showBudgetExhaustedToast])
 
- const ingestCompressedFile = useCallback(
- async (file: File) => {
- const compressed = await compressChatImageFile(file)
- if (!compressed) {
- toast.error(
+    const ingestCompressedFile = useCallback(
+      async (file: File) => {
+        const compressed = await compressChatImageFile(file)
+        if (!compressed) {
+          toast.error(
             `지원하지 않는 형식이거나 압축에 실패했습니다: ${file.name}\nJPG·PNG만 가능하며, 최대 1024px·1MB 이하로 압축됩니다.`,
           )
- return
+          return
         }
- setAttachments((prev) => {
- prev.forEach((a) => {
- if (a.previewUrl.startsWith('blob:')) {
- URL.revokeObjectURL(a.previewUrl)
+        setAttachments((prev) => {
+          prev.forEach((a) => {
+            if (a.previewUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(a.previewUrl)
             }
           })
- return [
+          return [
             {
- id: randomId(),
- previewUrl: compressed.previewDataUrl,
- imageBase64: compressed.imageBase64,
- mimeType: compressed.mimeType,
- fileName: compressed.fileName,
+              id: randomId(),
+              previewUrl: compressed.previewDataUrl,
+              imageBase64: compressed.imageBase64,
+              mimeType: compressed.mimeType,
+              fileName: compressed.fileName,
             },
           ]
         })
@@ -649,252 +649,252 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [],
     )
 
- const handlePickFiles = useCallback(
+    const handlePickFiles = useCallback(
       (list: FileList | null) => {
- if (disableAttachments) return
- setAttachMenuOpen(false)
- if (!list?.length) return
+        if (disableAttachments) return
+        setAttachMenuOpen(false)
+        if (!list?.length) return
 
- const file = list[0]
- void ingestCompressedFile(file).finally(() => {
- if (fileInputRef.current) fileInputRef.current.value = ''
+        const file = list[0]
+        void ingestCompressedFile(file).finally(() => {
+          if (fileInputRef.current) fileInputRef.current.value = ''
         })
       },
       [disableAttachments, ingestCompressedFile],
     )
 
- const handlePaste = useCallback(
+    const handlePaste = useCallback(
       (event: ClipboardEvent<HTMLTextAreaElement>) => {
- if (disableAttachments || disabled) return
+        if (disableAttachments || disabled) return
 
- const data = event.clipboardData
- if (!data) return
+        const data = event.clipboardData
+        if (!data) return
 
- let imageFile: File | null = null
+        let imageFile: File | null = null
 
- if (data.items?.length) {
- for (let i = 0; i < data.items.length; i += 1) {
- const item = data.items[i]
- if (item.kind === 'file' && item.type.startsWith('image/')) {
- imageFile = item.getAsFile()
- if (imageFile) break
+        if (data.items?.length) {
+          for (let i = 0; i < data.items.length; i += 1) {
+            const item = data.items[i]
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+              imageFile = item.getAsFile()
+              if (imageFile) break
             }
           }
         }
 
- if (!imageFile && data.files?.length) {
- const candidate = data.files[0]
- if (candidate.type.startsWith('image/')) {
- imageFile = candidate
+        if (!imageFile && data.files?.length) {
+          const candidate = data.files[0]
+          if (candidate.type.startsWith('image/')) {
+            imageFile = candidate
           }
         }
 
- if (!imageFile) return
+        if (!imageFile) return
 
- event.preventDefault()
- const namedFile =
- imageFile.name.trim().length > 0
+        event.preventDefault()
+        const namedFile =
+          imageFile.name.trim().length > 0
             ? imageFile
             : new File([imageFile], 'pasted-image.png', {
- type: imageFile.type || 'image/png',
+                type: imageFile.type || 'image/png',
               })
- void ingestCompressedFile(namedFile)
+        void ingestCompressedFile(namedFile)
       },
       [disableAttachments, disabled, ingestCompressedFile],
     )
 
- function removeAttachment(id: string) {
- setAttachments((prev) => {
- const target = prev.find((a) => a.id === id)
- if (target?.previewUrl.startsWith('blob:')) {
- URL.revokeObjectURL(target.previewUrl)
+    function removeAttachment(id: string) {
+      setAttachments((prev) => {
+        const target = prev.find((a) => a.id === id)
+        if (target?.previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(target.previewUrl)
         }
- return prev.filter((a) => a.id !== id)
+        return prev.filter((a) => a.id !== id)
       })
     }
 
- const handleMediaAction = useCallback(
- async (actionType: 'image' | 'video'): Promise<boolean> => {
- if (disabled || !allowSend || !onMediaGenerate || mediaBusy || generating) {
- return false
+    const handleMediaAction = useCallback(
+      async (actionType: 'image' | 'video'): Promise<boolean> => {
+        if (disabled || !allowSend || !onMediaGenerate || mediaBusy || generating) {
+          return false
         }
- const text = value.trim()
- if (!text) {
- toast.error(
- actionType === 'image'
+        const text = value.trim()
+        if (!text) {
+          toast.error(
+            actionType === 'image'
               ? '만들고 싶은 이미지를 입력해 주세요.'
               : '만들고 싶은 동영상 장면을 입력해 주세요.',
           )
- return false
+          return false
         }
- const mediaModelId =
- actionType === 'image' ? selectedImageModelId : selectedVideoModelId
- if (!mediaModelId.trim()) {
- toast.error('미디어 엔진을 선택해 주세요.')
- return false
+        const mediaModelId =
+          actionType === 'image' ? selectedImageModelId : selectedVideoModelId
+        if (!mediaModelId.trim()) {
+          toast.error('미디어 엔진을 선택해 주세요.')
+          return false
         }
- setMediaBusy(actionType)
- try {
- await onMediaGenerate(actionType, text, mediaModelId)
- return true
+        setMediaBusy(actionType)
+        try {
+          await onMediaGenerate(actionType, text, mediaModelId)
+          return true
         } finally {
- setMediaBusy(null)
+          setMediaBusy(null)
         }
       },
       [
- allowSend,
- disabled,
- generating,
- mediaBusy,
- onMediaGenerate,
- selectedImageModelId,
- selectedVideoModelId,
- value,
+        allowSend,
+        disabled,
+        generating,
+        mediaBusy,
+        onMediaGenerate,
+        selectedImageModelId,
+        selectedVideoModelId,
+        value,
       ],
     )
 
- function clearAttachments() {
- attachments.forEach((a) => {
- if (a.previewUrl.startsWith('blob:')) {
- URL.revokeObjectURL(a.previewUrl)
+    function clearAttachments() {
+      attachments.forEach((a) => {
+        if (a.previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(a.previewUrl)
         }
       })
- setAttachments([])
+      setAttachments([])
     }
 
- function submitMessage() {
- if (disabled || !allowSend) return
- if (isListening) stopListening()
- const text = value.trim()
- if (!text && attachments.length === 0) return
+    function submitMessage() {
+      if (disabled || !allowSend) return
+      if (isListening) stopListening()
+      const text = value.trim()
+      if (!text && attachments.length === 0) return
 
- if (
- onMediaGenerate &&
+      if (
+        onMediaGenerate &&
         (composerTool === 'image' || composerTool === 'video')
       ) {
- void (async () => {
- const ok = await handleMediaAction(composerTool)
- if (!ok) return
- onComposerToolChange?.(null)
- onChange('')
- clearAttachments()
+        void (async () => {
+          const ok = await handleMediaAction(composerTool)
+          if (!ok) return
+          onComposerToolChange?.(null)
+          onChange('')
+          clearAttachments()
         })()
- return
+        return
       }
 
- const first = attachments[0]
- clearAttachments()
+      const first = attachments[0]
+      clearAttachments()
 
- onSend({
- text: value,
+      onSend({
+        text: value,
         ...(first
           ? {
- imageBase64: first.imageBase64,
- mimeType: first.mimeType,
+              imageBase64: first.imageBase64,
+              mimeType: first.mimeType,
             }
           : {}),
- composerTool: composerTool ?? undefined,
+        composerTool: composerTool ?? undefined,
       })
     }
 
- function handleSubmit(event: FormEvent) {
- event.preventDefault()
- submitMessage()
+    function handleSubmit(event: FormEvent) {
+      event.preventDefault()
+      submitMessage()
     }
 
- function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
- if (event.key === 'Enter' && !event.shiftKey) {
- event.preventDefault()
- submitMessage()
+    function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        submitMessage()
       }
     }
 
- const canSend =
+    const canSend =
       !disabled &&
- allowSend &&
+      allowSend &&
       !mediaBusy &&
       (value.trim().length > 0 || attachments.length > 0)
 
- const isGemini = variant === 'gemini'
- const isClaude = variant === 'claude'
- const isSoftShell = isClaude || isGemini
+    const isGemini = variant === 'gemini'
+    const isClaude = variant === 'claude'
+    const isSoftShell = isClaude || isGemini
 
- const toolbarIdleBtn = isSoftShell
+    const toolbarIdleBtn = isSoftShell
       ? 'text-fg-subtle hover:bg-surface-2'
       : 'text-fg-subtle hover:bg-surface-2'
 
- const showDeepResearchToggle = typeof onDeepResearchChange === 'function'
- const showInternetSearchToggle =
- typeof onInternetSearchChange === 'function'
- const showComposerTools = typeof onComposerToolChange === 'function'
- const activeToolMeta = getComposerToolMeta(composerTool)
+    const showDeepResearchToggle = typeof onDeepResearchChange === 'function'
+    const showInternetSearchToggle =
+      typeof onInternetSearchChange === 'function'
+    const showComposerTools = typeof onComposerToolChange === 'function'
+    const activeToolMeta = getComposerToolMeta(composerTool)
 
- function toggleComposerTool(id: ComposerToolMode) {
- const nextId = composerTool === id ? null : id
- onComposerToolChange?.(nextId)
- if (nextId === 'canvas') {
- onActiveModelChange?.('claude-sonnet-4-6')
+    function toggleComposerTool(id: ComposerToolMode) {
+      const nextId = composerTool === id ? null : id
+      onComposerToolChange?.(nextId)
+      if (nextId === 'canvas') {
+        onActiveModelChange?.('claude-sonnet-4-6')
       } else if (nextId) {
- onActiveModelChange?.('gemini-2.5-pro')
+        onActiveModelChange?.('gemini-2.5-pro')
       }
- closeMenus()
+      closeMenus()
     }
 
- function selectMediaEngine(
- toolId: 'image' | 'video',
- modelId: string,
+    function selectMediaEngine(
+      toolId: 'image' | 'video',
+      modelId: string,
     ) {
- if (toolId === 'image') {
- setSelectedImageModelId(modelId)
+      if (toolId === 'image') {
+        setSelectedImageModelId(modelId)
       } else {
- setSelectedVideoModelId(modelId)
+        setSelectedVideoModelId(modelId)
       }
- onComposerToolChange?.(toolId)
- onDeepResearchChange?.(false)
- setMediaEnginePanel(toolId)
+      onComposerToolChange?.(toolId)
+      onDeepResearchChange?.(false)
+      setMediaEnginePanel(toolId)
     }
 
- function renderMediaComposerTool(tool: (typeof COMPOSER_TOOLS)[number]) {
- if (tool.id !== 'image' && tool.id !== 'video') return null
+    function renderMediaComposerTool(tool: (typeof COMPOSER_TOOLS)[number]) {
+      if (tool.id !== 'image' && tool.id !== 'video') return null
 
- const mediaKind = tool.id
- const engines =
- mediaKind === 'image' ? safeMediaImageEngines : safeMediaVideoEngines
- const selectedModelId =
- mediaKind === 'image' ? selectedImageModelId : selectedVideoModelId
- const active = composerTool === mediaKind
- const panelOpen = mediaEnginePanel === mediaKind
- const busy = mediaBusy === mediaKind
- const engineName = mediaEngineLabel(engines, selectedModelId)
+      const mediaKind = tool.id
+      const engines =
+        mediaKind === 'image' ? safeMediaImageEngines : safeMediaVideoEngines
+      const selectedModelId =
+        mediaKind === 'image' ? selectedImageModelId : selectedVideoModelId
+      const active = composerTool === mediaKind
+      const panelOpen = mediaEnginePanel === mediaKind
+      const busy = mediaBusy === mediaKind
+      const engineName = mediaEngineLabel(engines, selectedModelId)
 
- return (
+      return (
         <div
- key={tool.id}
- className="relative"
- onMouseEnter={() => {
- if (!disabled && !busy) setMediaEnginePanel(mediaKind)
+          key={tool.id}
+          className="relative"
+          onMouseEnter={() => {
+            if (!disabled && !busy) setMediaEnginePanel(mediaKind)
           }}
- onMouseLeave={() => {
- setMediaEnginePanel((current) =>
- current === mediaKind ? null : current,
+          onMouseLeave={() => {
+            setMediaEnginePanel((current) =>
+              current === mediaKind ? null : current,
             )
           }}
         >
           <button
- type="button"
- role="menuitemcheckbox"
- aria-checked={active}
- aria-expanded={panelOpen}
- disabled={disabled || busy}
- className={toolboxMenuItemClass}
- onClick={() => {
- if (busy) return
- setMediaEnginePanel((current) =>
- current === mediaKind ? null : mediaKind,
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={active}
+            aria-expanded={panelOpen}
+            disabled={disabled || busy}
+            className={toolboxMenuItemClass}
+            onClick={() => {
+              if (busy) return
+              setMediaEnginePanel((current) =>
+                current === mediaKind ? null : mediaKind,
               )
- toggleComposerTool(mediaKind)
- if (composerTool !== mediaKind) {
- onDeepResearchChange?.(false)
+              toggleComposerTool(mediaKind)
+              if (composerTool !== mediaKind) {
+                onDeepResearchChange?.(false)
               }
             }}
           >
@@ -923,11 +923,11 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-violet-700 dark:text-violet-300" />
             ) : (
               <svg
- className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg-subtle"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg-subtle"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m9 18 6-6-6-6" />
               </svg>
@@ -937,11 +937,11 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           {panelOpen ? (
             <div className="absolute left-full top-0 z-[210] ml-2 hidden w-[min(22rem,calc(100vw-2rem))] md:block">
               <MediaEngineBentoPanel
- engines={engines}
- selectedModelId={selectedModelId}
- loading={mediaEnginesLoading}
- disabled={disabled || busy}
- onSelect={(modelId) => selectMediaEngine(mediaKind, modelId)}
+                engines={engines}
+                selectedModelId={selectedModelId}
+                loading={mediaEnginesLoading}
+                disabled={disabled || busy}
+                onSelect={(modelId) => selectMediaEngine(mediaKind, modelId)}
               />
             </div>
           ) : null}
@@ -950,150 +950,150 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             ? createPortal(
                 <div className="fixed inset-x-3 bottom-[max(6.5rem,env(safe-area-inset-bottom))] z-[220] md:hidden">
                   <MediaEngineBentoPanel
- engines={engines}
- selectedModelId={selectedModelId}
- loading={mediaEnginesLoading}
- disabled={disabled || busy}
- onSelect={(modelId) => selectMediaEngine(mediaKind, modelId)}
+                    engines={engines}
+                    selectedModelId={selectedModelId}
+                    loading={mediaEnginesLoading}
+                    disabled={disabled || busy}
+                    onSelect={(modelId) => selectMediaEngine(mediaKind, modelId)}
                   />
                 </div>,
- document.body,
+                document.body,
               )
             : null}
         </div>
       )
     }
 
- const toolboxPillClass = isSoftShell
+    const toolboxPillClass = isSoftShell
       ? 'bg-surface-2/95 text-fg-muted hover:bg-surface-3/90'
       : 'bg-surface-2/95 text-fg-muted hover:bg-surface-3/90'
 
- const popupPanelClass = isSoftShell
+    const popupPanelClass = isSoftShell
       ? 'border-border bg-surface'
       : 'border-border bg-surface'
 
- const toolboxMenuItemClass =
+    const toolboxMenuItemClass =
       'flex w-full items-start gap-3 px-3 py-2.5 text-left transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45'
 
- const closeMenus = () => {
- setAttachMenuOpen(false)
- setMetaMenuOpen(false)
- setToolsMenuOpen(false)
- setMediaEnginePanel(null)
+    const closeMenus = () => {
+      setAttachMenuOpen(false)
+      setMetaMenuOpen(false)
+      setToolsMenuOpen(false)
+      setMediaEnginePanel(null)
     }
 
- const metaPanelSurfaceClass = isSoftShell
+    const metaPanelSurfaceClass = isSoftShell
       ? 'border-border/80 bg-bg/95'
       : 'border-border bg-bg/95'
 
- const metaMenuPanel =
- metaMenuOpen && metaMenuAnchor && composerMeta
+    const metaMenuPanel =
+      metaMenuOpen && metaMenuAnchor && composerMeta
         ? createPortal(
             <div
- ref={metaMenuRef}
- role="dialog"
- aria-label="토큰·비용 추정"
- className={`chat-composer-popup-menu fixed z-[200] w-[min(calc(100vw-1.5rem),28rem)] -translate-y-[calc(100%+0.375rem)] rounded-xl border shadow-lg ${popupPanelClass}`}
- style={{
- top: metaMenuAnchor.top,
- left: metaMenuAnchor.left,
+              ref={metaMenuRef}
+              role="dialog"
+              aria-label="토큰·비용 추정"
+              className={`chat-composer-popup-menu fixed z-[200] w-[min(calc(100vw-1.5rem),28rem)] -translate-y-[calc(100%+0.375rem)] rounded-xl border shadow-lg ${popupPanelClass}`}
+              style={{
+                top: metaMenuAnchor.top,
+                left: metaMenuAnchor.left,
               }}
             >
               <div
- className={`composer-meta-rail overflow-y-auto overscroll-contain border-0 px-3 py-2.5 ${metaPanelSurfaceClass}`}
- style={{
- fontSize: '11px',
- lineHeight: 1.35,
- maxHeight: metaMenuAnchor.maxHeight,
+                className={`composer-meta-rail overflow-y-auto overscroll-contain border-0 px-3 py-2.5 ${metaPanelSurfaceClass}`}
+                style={{
+                  fontSize: '11px',
+                  lineHeight: 1.35,
+                  maxHeight: metaMenuAnchor.maxHeight,
                 }}
               >
                 {composerMeta}
               </div>
             </div>,
- document.body,
+            document.body,
           )
         : null
 
- const attachMenuPanel =
- attachMenuOpen && attachMenuAnchor
+    const attachMenuPanel =
+      attachMenuOpen && attachMenuAnchor
         ? createPortal(
             <div
- ref={attachMenuRef}
- role="menu"
- aria-label="첨부"
- className={`chat-composer-popup-menu fixed z-[200] min-w-[15rem] -translate-y-[calc(100%+0.375rem)] overflow-hidden rounded-xl border shadow-lg ${popupPanelClass}`}
- style={{
- top: attachMenuAnchor.top,
- left: attachMenuAnchor.left,
+              ref={attachMenuRef}
+              role="menu"
+              aria-label="첨부"
+              className={`chat-composer-popup-menu fixed z-[200] min-w-[15rem] -translate-y-[calc(100%+0.375rem)] overflow-hidden rounded-xl border shadow-lg ${popupPanelClass}`}
+              style={{
+                top: attachMenuAnchor.top,
+                left: attachMenuAnchor.left,
               }}
             >
               <div className="max-h-[60vh] overflow-y-auto py-1">
                 <button
- type="button"
- role="menuitem"
- className="flex w-full flex-col px-3 py-2.5 text-left hover:bg-surface-2"
- onClick={() => {
- closeMenus()
- queueMicrotask(() => fileInputRef.current?.click())
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full flex-col px-3 py-2.5 text-left hover:bg-surface-2"
+                  onClick={() => {
+                    closeMenus()
+                    queueMicrotask(() => fileInputRef.current?.click())
                   }}
                 >
                   <span className="text-[13px] font-medium text-fg">
- 이미지 첨부
+                    이미지 첨부
                   </span>
                   <span className="mt-0.5 text-[11px] text-fg-subtle">
- JPG, PNG · 최대 1024px · 1MB
+                    JPG, PNG · 최대 1024px · 1MB
                   </span>
                 </button>
                 <button
- type="button"
- role="menuitem"
- disabled={!onOpenWorkspaceTools}
- className={`flex w-full flex-col px-3 py-2.5 text-left ${
- onOpenWorkspaceTools
+                  type="button"
+                  role="menuitem"
+                  disabled={!onOpenWorkspaceTools}
+                  className={`flex w-full flex-col px-3 py-2.5 text-left ${
+                    onOpenWorkspaceTools
                       ? 'hover:bg-surface-2'
                       : 'cursor-not-allowed opacity-60'
                   }`}
- onClick={() => {
- if (!onOpenWorkspaceTools) return
- closeMenus()
- queueMicrotask(() => onOpenWorkspaceTools())
+                  onClick={() => {
+                    if (!onOpenWorkspaceTools) return
+                    closeMenus()
+                    queueMicrotask(() => onOpenWorkspaceTools())
                   }}
                 >
                   <span className="text-[13px] font-medium text-fg">
- 파일·문서 첨부
+                    파일·문서 첨부
                   </span>
                   <span className="mt-0.5 text-[11px] text-fg-subtle">
- Google Drive · Microsoft 365
+                    Google Drive · Microsoft 365
                   </span>
                 </button>
               </div>
             </div>,
- document.body,
+            document.body,
           )
         : null
 
- const composerMetaRail = composerMeta ? (
+    const composerMetaRail = composerMeta ? (
       <aside
- aria-label="입력 보조 정보"
- className={`composer-meta-rail hidden w-full shrink-0 overflow-y-auto overscroll-contain rounded-xl border px-2 py-1.5 shadow-sm md:block md:max-h-none md:w-[10.25rem] md:max-w-[10.25rem] md:self-stretch ${
- isSoftShell
+        aria-label="입력 보조 정보"
+        className={`composer-meta-rail hidden w-full shrink-0 overflow-y-auto overscroll-contain rounded-xl border px-2 py-1.5 shadow-sm md:block md:max-h-none md:w-[10.25rem] md:max-w-[10.25rem] md:self-stretch ${
+          isSoftShell
             ? 'border-border/80 bg-bg/95'
             : 'border-border bg-bg/95'
         }`}
- style={{
- fontSize: '11px',
- lineHeight: 1.35,
+        style={{
+          fontSize: '11px',
+          lineHeight: 1.35,
         }}
       >
         {composerMeta}
       </aside>
     ) : null
 
- return (
+    return (
       <form
- onSubmit={handleSubmit}
- className={`relative mx-auto flex w-full flex-col gap-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] md:pb-0 ${
- embeddedInSlidesShell
+        onSubmit={handleSubmit}
+        className={`relative mx-auto flex w-full flex-col gap-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] md:pb-0 ${
+          embeddedInSlidesShell
             ? 'max-w-none'
             : composerMeta
               ? 'max-w-[calc(48rem+10.25rem+0.625rem)]'
@@ -1102,23 +1102,23 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       >
         {budgetToastVisible ? (
           <div
- role="alert"
- className="absolute bottom-full left-0 right-0 z-50 mb-2 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2.5 text-sm text-red-900 shadow-lg"
+            role="alert"
+            className="absolute bottom-full left-0 right-0 z-50 mb-2 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2.5 text-sm text-red-900 shadow-lg"
           >
             <p className="min-w-0 flex-1 leading-snug">{BUDGET_TOAST_MESSAGE}</p>
             <button
- type="button"
- onClick={dismissBudgetToast}
- className="shrink-0 rounded p-0.5 text-danger hover:bg-danger-soft"
- aria-label="알림 닫기"
+              type="button"
+              onClick={dismissBudgetToast}
+              className="shrink-0 rounded p-0.5 text-danger hover:bg-danger-soft"
+              aria-label="알림 닫기"
             >
               <svg
- className="h-4 w-4"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- strokeWidth={2}
- aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                aria-hidden="true"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
@@ -1128,24 +1128,24 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         {!disableAttachments ? (
           <>
           <input
- ref={fileInputRef}
- type="file"
- accept="image/jpeg,image/png,.jpg,.jpeg,.png"
- className="sr-only"
- tabIndex={-1}
- aria-hidden="true"
- onChange={(e) => handlePickFiles(e.target.files)}
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={(e) => handlePickFiles(e.target.files)}
           />
           <input
- ref={documentInputRef}
- type="file"
- accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
- className="sr-only"
- tabIndex={-1}
- aria-hidden="true"
- onChange={() => {
- toast.info('일반 파일 업로드 기능은 서버 연동 준비 중입니다.')
- if (documentInputRef.current) documentInputRef.current.value = ''
+            ref={documentInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={() => {
+              toast.info('일반 파일 업로드 기능은 서버 연동 준비 중입니다.')
+              if (documentInputRef.current) documentInputRef.current.value = ''
             }}
           />
           </>
@@ -1153,42 +1153,42 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
         {attachments.length > 0 ? (
           <ChatAttachmentPreviewStrip
- layout="composer"
- variant={isGemini ? 'gemini' : isClaude ? 'claude' : 'default'}
- disabled={disabled}
- items={attachments.map((a) => ({
- src: a.previewUrl,
- alt: a.fileName,
- onRemove: () => removeAttachment(a.id),
+            layout="composer"
+            variant={isGemini ? 'gemini' : isClaude ? 'claude' : 'default'}
+            disabled={disabled}
+            items={attachments.map((a) => ({
+              src: a.previewUrl,
+              alt: a.fileName,
+              onRemove: () => removeAttachment(a.id),
             }))}
           />
         ) : null}
 
         <div
- className={`flex w-full flex-col gap-2 ${
- slidesMinimal ? '' : 'md:flex-row md:items-stretch md:gap-2.5'
+          className={`flex w-full flex-col gap-2 ${
+            slidesMinimal ? '' : 'md:flex-row md:items-stretch md:gap-2.5'
           }`}
         >
           <div
- className={`min-w-0 flex-1 ${slidesMinimal ? 'max-w-none' : 'max-w-3xl'}`}
+            className={`min-w-0 flex-1 ${slidesMinimal ? 'max-w-none' : 'max-w-3xl'}`}
           >
         <div
- className={`overflow-visible ${
- embeddedInSlidesShell
+          className={`overflow-visible ${
+            embeddedInSlidesShell
               ? 'rounded-none border-0 bg-transparent shadow-none'
               : `rounded-2xl border shadow-sm transition-shadow ${
- isSoftShell
+                  isSoftShell
                     ? 'border-border/90 bg-surface focus-within:border-stone-300 focus-within:shadow-md dark:focus-within:border-stone-500'
                     : 'border-border bg-surface focus-within:border-slate-300 focus-within:shadow-md dark:focus-within:border-slate-500'
                 }`
           }`}
         >
           <label htmlFor="chat-input-field" className="sr-only">
- 메시지 입력
+            메시지 입력
           </label>
           <div
- className={
- embeddedInSlidesShell
+            className={
+              embeddedInSlidesShell
                 ? 'px-0 pb-0 pt-0'
                 : 'px-3 py-1.5 md:px-3.5 md:py-2'
             }
@@ -1196,25 +1196,25 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             <div className="flex min-w-0 flex-col">
               {aboveTextareaContent}
               <textarea
- ref={textareaRef}
- id="chat-input-field"
- rows={1}
- value={value}
- disabled={disabled}
- onChange={(event) => onChange(event.target.value)}
- placeholder={placeholder}
- className={`box-border min-h-[24px] max-h-[168px] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 text-[16px] leading-relaxed outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
- isSoftShell
+                ref={textareaRef}
+                id="chat-input-field"
+                rows={1}
+                value={value}
+                disabled={disabled}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder={placeholder}
+                className={`box-border min-h-[24px] max-h-[168px] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 text-[16px] leading-relaxed outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
+                  isSoftShell
                     ? 'text-fg placeholder:text-fg-subtle'
                     : 'text-fg placeholder:text-fg-subtle'
                 }`}
- onKeyDown={handleKeyDown}
- onPaste={handlePaste}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
               />
 
               <div
- className={`relative z-10 flex w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 pt-1 ${
- slidesMinimal ? 'justify-end' : 'justify-between'
+                className={`relative z-10 flex w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 pt-1 ${
+                  slidesMinimal ? 'justify-end' : 'justify-between'
                 }`}
               >
             {!slidesMinimal ? (
@@ -1225,13 +1225,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">{activeToolMeta.label}</span>
                     <button
- type="button"
- onClick={(e) => {
- e.stopPropagation()
- onComposerToolChange?.(null)
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onComposerToolChange?.(null)
                       }}
- className="shrink-0 rounded-full p-0.5 hover:bg-violet-200 dark:hover:bg-violet-900 transition"
- title="기능 끄기"
+                      className="shrink-0 rounded-full p-0.5 hover:bg-violet-200 dark:hover:bg-violet-900 transition"
+                      title="기능 끄기"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
@@ -1241,13 +1241,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">Deep Research</span>
                     <button
- type="button"
- onClick={(e) => {
- e.stopPropagation()
- onDeepResearchChange?.(false)
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeepResearchChange?.(false)
                       }}
- className="shrink-0 rounded-full p-0.5 hover:bg-violet-200 dark:hover:bg-violet-900 transition"
- title="기능 끄기"
+                      className="shrink-0 rounded-full p-0.5 hover:bg-violet-200 dark:hover:bg-violet-900 transition"
+                      title="기능 끄기"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
@@ -1257,36 +1257,36 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">인터넷 검색</span>
                     <button
- type="button"
- onClick={(e) => {
- e.stopPropagation()
- onInternetSearchChange?.(false)
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onInternetSearchChange?.(false)
                       }}
- className="shrink-0 rounded-full p-0.5 hover:bg-violet-200 dark:hover:bg-violet-900 transition"
- title="기능 끄기"
+                      className="shrink-0 rounded-full p-0.5 hover:bg-violet-200 dark:hover:bg-violet-900 transition"
+                      title="기능 끄기"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                   </span>
                 ) : null}
                 <button
- ref={toolsButtonRef}
- type="button"
- disabled={disabled}
- onClick={() => {
- setAttachMenuOpen(false)
- setMetaMenuOpen(false)
- setToolsMenuOpen((open) => !open)
+                  ref={toolsButtonRef}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => {
+                    setAttachMenuOpen(false)
+                    setMetaMenuOpen(false)
+                    setToolsMenuOpen((open) => !open)
                   }}
- aria-expanded={toolsMenuOpen}
- aria-haspopup="menu"
- className={`inline-flex h-[30px] shrink-0 items-center gap-1 rounded-full px-2.5 transition disabled:opacity-40 md:px-3 ${
- activeToolMeta || deepResearchEnabled || internetSearchEnabled
+                  aria-expanded={toolsMenuOpen}
+                  aria-haspopup="menu"
+                  className={`inline-flex h-[30px] shrink-0 items-center gap-1 rounded-full px-2.5 transition disabled:opacity-40 md:px-3 ${
+                    activeToolMeta || deepResearchEnabled || internetSearchEnabled
                       ? 'bg-violet-200/90 text-violet-950 dark:bg-violet-900/50 dark:text-violet-50'
                       : toolboxPillClass
                   }`}
- aria-label="도구"
- title="도구 · AI 기능"
+                  aria-label="도구"
+                  title="도구 · AI 기능"
                 >
                   <IconSliders className="h-4 w-4 shrink-0" />
                   <span className="text-[11px] font-medium leading-none">도구</span>
@@ -1294,31 +1294,31 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 {toolsMenuOpen && toolsMenuAnchor
                   ? createPortal(
                       <div
- ref={toolsMenuRef}
- role="menu"
- id="chat-toolbox-menu"
- aria-label="도구"
- className={`chat-composer-popup-menu fixed z-[200] w-[min(19rem,calc(100vw-2rem))] -translate-y-[calc(100%+0.375rem)] overflow-hidden rounded-2xl border shadow-xl ${popupPanelClass}`}
- style={{
- top: toolsMenuAnchor.top,
- left: toolsMenuAnchor.left,
+                        ref={toolsMenuRef}
+                        role="menu"
+                        id="chat-toolbox-menu"
+                        aria-label="도구"
+                        className={`chat-composer-popup-menu fixed z-[200] w-[min(19rem,calc(100vw-2rem))] -translate-y-[calc(100%+0.375rem)] overflow-hidden rounded-2xl border shadow-xl ${popupPanelClass}`}
+                        style={{
+                          top: toolsMenuAnchor.top,
+                          left: toolsMenuAnchor.left,
                         }}
                       >
                     <div className="border-b border-border px-3 py-2.5">
                       <p className="text-[13px] font-semibold text-fg">
- 도구
+                        도구
                       </p>
                     </div>
                     <div className="max-h-[min(24.5rem,50vh)] overflow-y-auto overflow-x-hidden overscroll-contain py-1">
                       {!disableAttachments ? (
                         <>
                         <button
- type="button"
- role="menuitem"
- className={toolboxMenuItemClass}
- onClick={() => {
- closeMenus()
- queueMicrotask(() => fileInputRef.current?.click())
+                          type="button"
+                          role="menuitem"
+                          className={toolboxMenuItemClass}
+                          onClick={() => {
+                            closeMenus()
+                            queueMicrotask(() => fileInputRef.current?.click())
                           }}
                         >
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
@@ -1326,22 +1326,22 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px] font-medium text-fg">
- 이미지 첨부
+                              이미지 첨부
                             </span>
                             <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
- JPG, PNG · 최대 1024px · 1MB
+                              JPG, PNG · 최대 1024px · 1MB
                             </span>
                           </span>
                         </button>
                         <button
- type="button"
- role="menuitem"
- disabled={!onOpenWorkspaceTools}
- className={`${toolboxMenuItemClass} ${!onOpenWorkspaceTools ? 'cursor-not-allowed opacity-60' : ''}`}
- onClick={() => {
- if (!onOpenWorkspaceTools) return
- closeMenus()
- queueMicrotask(() => onOpenWorkspaceTools())
+                          type="button"
+                          role="menuitem"
+                          disabled={!onOpenWorkspaceTools}
+                          className={`${toolboxMenuItemClass} ${!onOpenWorkspaceTools ? 'cursor-not-allowed opacity-60' : ''}`}
+                          onClick={() => {
+                            if (!onOpenWorkspaceTools) return
+                            closeMenus()
+                            queueMicrotask(() => onOpenWorkspaceTools())
                           }}
                         >
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
@@ -1351,20 +1351,20 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px] font-medium text-fg">
- 파일·문서 첨부
+                              파일·문서 첨부
                             </span>
                             <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
- Google Drive · Microsoft 365
+                              Google Drive · Microsoft 365
                             </span>
                           </span>
                         </button>
                         <button
- type="button"
- role="menuitem"
- className={toolboxMenuItemClass}
- onClick={() => {
- closeMenus()
- queueMicrotask(() => documentInputRef.current?.click())
+                          type="button"
+                          role="menuitem"
+                          className={toolboxMenuItemClass}
+                          onClick={() => {
+                            closeMenus()
+                            queueMicrotask(() => documentInputRef.current?.click())
                           }}
                         >
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
@@ -1374,10 +1374,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px] font-medium text-fg">
- 로컬 파일 업로드
+                              로컬 파일 업로드
                             </span>
                             <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
- PDF, DOCX, TXT 등 다양한 포맷 지원
+                              PDF, DOCX, TXT 등 다양한 포맷 지원
                             </span>
                           </span>
                         </button>
@@ -1386,18 +1386,18 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                       ) : null}
                       {showDeepResearchToggle ? (
                         <button
- id="deep-research-toggle"
- type="button"
- role="menuitemcheckbox"
- aria-checked={deepResearchEnabled}
- disabled={disabled}
- className={toolboxMenuItemClass}
- onClick={() => {
- const next = !deepResearchEnabled
- onDeepResearchChange?.(next)
- if (next) {
- onComposerToolChange?.(null)
- onActiveModelChange?.('gemini-2.5-pro')
+                          id="deep-research-toggle"
+                          type="button"
+                          role="menuitemcheckbox"
+                          aria-checked={deepResearchEnabled}
+                          disabled={disabled}
+                          className={toolboxMenuItemClass}
+                          onClick={() => {
+                            const next = !deepResearchEnabled
+                            onDeepResearchChange?.(next)
+                            if (next) {
+                              onComposerToolChange?.(null)
+                              onActiveModelChange?.('gemini-2.5-pro')
                             }
                           }}
                         >
@@ -1408,10 +1408,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px] font-medium text-fg">
- Deep Research
+                              Deep Research
                             </span>
                             <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
- Claude·GPT·Gemini 교차 검증
+                              Claude·GPT·Gemini 교차 검증
                             </span>
                           </span>
                           {deepResearchEnabled ? (
@@ -1422,17 +1422,17 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
                       {showInternetSearchToggle ? (
                         <button
- id="internet-search-toggle"
- type="button"
- role="menuitemcheckbox"
- aria-checked={internetSearchEnabled}
- disabled={disabled}
- className={toolboxMenuItemClass}
- onClick={() => {
- const next = !internetSearchEnabled
- onInternetSearchChange?.(next)
- if (next) {
- onActiveModelChange?.('gemini-2.5-pro')
+                          id="internet-search-toggle"
+                          type="button"
+                          role="menuitemcheckbox"
+                          aria-checked={internetSearchEnabled}
+                          disabled={disabled}
+                          className={toolboxMenuItemClass}
+                          onClick={() => {
+                            const next = !internetSearchEnabled
+                            onInternetSearchChange?.(next)
+                            if (next) {
+                              onActiveModelChange?.('gemini-2.5-pro')
                             }
                           }}
                         >
@@ -1443,10 +1443,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px] font-medium text-fg">
- 인터넷 검색
+                              인터넷 검색
                             </span>
                             <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
- Gemini·Claude·GPT 실시간 웹 정보
+                              Gemini·Claude·GPT 실시간 웹 정보
                             </span>
                           </span>
                           {internetSearchEnabled ? (
@@ -1457,22 +1457,22 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
                       {showComposerTools
                         ? COMPOSER_TOOLS.map((tool) => {
- if (tool.id === 'image' || tool.id === 'video') {
- return renderMediaComposerTool(tool)
+                            if (tool.id === 'image' || tool.id === 'video') {
+                              return renderMediaComposerTool(tool)
                             }
- const active = composerTool === tool.id
- return (
+                            const active = composerTool === tool.id
+                            return (
                               <button
- key={tool.id}
- type="button"
- role="menuitemcheckbox"
- aria-checked={active}
- disabled={disabled}
- className={toolboxMenuItemClass}
- onClick={() => {
- toggleComposerTool(tool.id)
- if (tool.id !== composerTool) {
- onDeepResearchChange?.(false)
+                                key={tool.id}
+                                type="button"
+                                role="menuitemcheckbox"
+                                aria-checked={active}
+                                disabled={disabled}
+                                className={toolboxMenuItemClass}
+                                onClick={() => {
+                                  toggleComposerTool(tool.id)
+                                  if (tool.id !== composerTool) {
+                                    onDeepResearchChange?.(false)
                                   }
                                 }}
                               >
@@ -1505,12 +1505,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
                       {onOpenReferenceRoom ? (
                         <button
- type="button"
- role="menuitem"
- className={toolboxMenuItemClass}
- onClick={() => {
- closeMenus()
- onOpenReferenceRoom()
+                          type="button"
+                          role="menuitem"
+                          className={toolboxMenuItemClass}
+                          onClick={() => {
+                            closeMenus()
+                            onOpenReferenceRoom()
                           }}
                         >
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-brand">
@@ -1527,12 +1527,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
                       {onOpenNotebook ? (
                         <button
- type="button"
- role="menuitem"
- className={toolboxMenuItemClass}
- onClick={() => {
- closeMenus()
- onOpenNotebook()
+                          type="button"
+                          role="menuitem"
+                          className={toolboxMenuItemClass}
+                          onClick={() => {
+                            closeMenus()
+                            onOpenNotebook()
                           }}
                         >
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-brand">
@@ -1548,13 +1548,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                       ) : null}
 
                       <button
- type="button"
- role="menuitem"
- className={toolboxMenuItemClass}
- onClick={() => {
- closeMenus()
- onChange('학습 가이드 작성 요청:\n\n')
- setTimeout(() => textareaRef.current?.focus(), 0)
+                        type="button"
+                        role="menuitem"
+                        className={toolboxMenuItemClass}
+                        onClick={() => {
+                          closeMenus()
+                          onChange('학습 가이드 작성 요청:\n\n')
+                          setTimeout(() => textareaRef.current?.focus(), 0)
                         }}
                       >
                         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-subtle">
@@ -1569,13 +1569,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                       </button>
 
                       <button
- type="button"
- role="menuitem"
- className={toolboxMenuItemClass}
- onClick={() => {
- closeMenus()
- onChange('개인 데이터 분석 요청:\n\n')
- setTimeout(() => textareaRef.current?.focus(), 0)
+                        type="button"
+                        role="menuitem"
+                        className={toolboxMenuItemClass}
+                        onClick={() => {
+                          closeMenus()
+                          onChange('개인 데이터 분석 요청:\n\n')
+                          setTimeout(() => textareaRef.current?.focus(), 0)
                         }}
                       >
                         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-subtle">
@@ -1591,12 +1591,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
                       {onOpenWorkspaceTools ? (
                         <button
- type="button"
- role="menuitem"
- className={toolboxMenuItemClass}
- onClick={() => {
- closeMenus()
- onOpenWorkspaceTools()
+                          type="button"
+                          role="menuitem"
+                          className={toolboxMenuItemClass}
+                          onClick={() => {
+                            closeMenus()
+                            onOpenWorkspaceTools()
                           }}
                         >
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-brand">
@@ -1613,12 +1613,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
                       {onOpenSettings ? (
                         <button
- type="button"
- role="menuitem"
- className={`${toolboxMenuItemClass} border-t border-border`}
- onClick={() => {
- closeMenus()
- onOpenSettings()
+                          type="button"
+                          role="menuitem"
+                          className={`${toolboxMenuItemClass} border-t border-border`}
+                          onClick={() => {
+                            closeMenus()
+                            onOpenSettings()
                           }}
                         >
                           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
@@ -1635,7 +1635,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                       ) : null}
                     </div>
                       </div>,
- document.body,
+                      document.body,
                     )
                   : null}
               </div>
@@ -1643,19 +1643,19 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               {composerMeta ? (
                 <div ref={metaWrapRef} className="relative shrink-0 md:hidden">
                   <button
- ref={metaButtonRef}
- type="button"
- disabled={disabled}
- onClick={() => {
- setAttachMenuOpen(false)
- setToolsMenuOpen(false)
- setMetaMenuOpen((open) => !open)
+                    ref={metaButtonRef}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      setAttachMenuOpen(false)
+                      setToolsMenuOpen(false)
+                      setMetaMenuOpen((open) => !open)
                     }}
- aria-expanded={metaMenuOpen}
- aria-haspopup="dialog"
- className={`inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${toolboxPillClass}`}
- aria-label="토큰·비용 추정"
- title="토큰·비용 추정"
+                    aria-expanded={metaMenuOpen}
+                    aria-haspopup="dialog"
+                    className={`inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${toolboxPillClass}`}
+                    aria-label="토큰·비용 추정"
+                    title="토큰·비용 추정"
                   >
                     <IconTokenCost className="h-4 w-4 shrink-0" />
                   </button>
@@ -1675,42 +1675,42 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
               {!slidesMinimal && speechSupported ? (
                 <button
- type="button"
- disabled={disabled}
- onClick={handleMicToggle}
- className={`relative flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${
- isListening
+                  type="button"
+                  disabled={disabled}
+                  onClick={handleMicToggle}
+                  className={`relative flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${
+                    isListening
                       ? 'animate-pulse bg-danger-soft text-danger ring-2 ring-red-500/60'
                       : `${toolbarIdleBtn} rounded-full`
                   }`}
- aria-label={isListening ? '음성 입력 중지' : '음성 입력'}
- aria-pressed={isListening}
- title={
- isListening
+                  aria-label={isListening ? '음성 입력 중지' : '음성 입력'}
+                  aria-pressed={isListening}
+                  title={
+                    isListening
                       ? '녹음 중 — 다시 누르면 중지'
                       : '음성 입력 (한국어 · Web Speech API)'
                   }
                 >
                   {isListening ? (
                     <span
- className="pointer-events-none absolute inset-0 rounded-full bg-red-500/20 motion-safe:animate-ping"
- aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 rounded-full bg-red-500/20 motion-safe:animate-ping"
+                      aria-hidden="true"
                     />
                   ) : null}
                   <span className="relative inline-flex items-center gap-0.5">
                     {isListening ? (
                       <>
                         <span
- className="h-2.5 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:0ms]"
- aria-hidden="true"
+                          className="h-2.5 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:0ms]"
+                          aria-hidden="true"
                         />
                         <span
- className="h-3.5 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:120ms]"
- aria-hidden="true"
+                          className="h-3.5 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:120ms]"
+                          aria-hidden="true"
                         />
                         <span
- className="h-2 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:240ms]"
- aria-hidden="true"
+                          className="h-2 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:240ms]"
+                          aria-hidden="true"
                         />
                       </>
                     ) : (
@@ -1722,12 +1722,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
               {generating && onStopGenerating ? (
                 <button
- type="button"
- onClick={onStopGenerating}
- aria-label="생성 중지"
- title="생성 중지"
- className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full text-white shadow-sm transition ${
- isGemini
+                  type="button"
+                  onClick={onStopGenerating}
+                  aria-label="생성 중지"
+                  title="생성 중지"
+                  className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full text-white shadow-sm transition ${
+                    isGemini
                       ? 'bg-[#0b57d0] hover:bg-[#0842a0] active:bg-[#063078]'
                       : isSoftShell
                         ? 'bg-brand hover:bg-brand-strong active:bg-brand-strong'
@@ -1738,12 +1738,12 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 </button>
               ) : (
                 <button
- type="submit"
- disabled={!canSend}
- aria-label="전송"
- title="전송 (Enter)"
- className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
- isGemini
+                  type="submit"
+                  disabled={!canSend}
+                  aria-label="전송"
+                  title="전송 (Enter)"
+                  className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                    isGemini
                       ? 'bg-[#0b57d0] hover:bg-[#0842a0] active:bg-[#063078]'
                       : isSoftShell
                         ? 'bg-brand hover:bg-brand-strong active:bg-brand-strong'
@@ -1751,17 +1751,17 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   }`}
                 >
                   <svg
- className="h-3.5 w-3.5 md:h-4 md:w-4"
- fill="none"
- stroke="currentColor"
- strokeWidth={2.25}
- viewBox="0 0 24 24"
- aria-hidden="true"
+                    className="h-3.5 w-3.5 md:h-4 md:w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.25}
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
- strokeLinecap="round"
- strokeLinejoin="round"
- d="M12 17V10m0 0l-3 3m3-3l3 3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 17V10m0 0l-3 3m3-3l3 3"
                     />
                   </svg>
                 </button>

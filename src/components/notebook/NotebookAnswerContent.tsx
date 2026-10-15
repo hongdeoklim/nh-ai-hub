@@ -6,46 +6,46 @@ import { splitTextByCitationMarkers } from '../../utils/citationMarkers'
 import { CitationBadge } from './CitationBadge'
 
 type NotebookAnswerContentProps = {
- content: string
- citations?: NotebookChunkCitation[]
+  content: string
+  citations?: NotebookChunkCitation[]
 }
 
 export function NotebookAnswerContent({
- content,
- citations = [],
+  content,
+  citations = [],
 }: NotebookAnswerContentProps) {
- const chatSources = useMemo(
+  const chatSources = useMemo(
     () => notebookCitationsToChatSources(citations),
     [citations],
   )
 
- const parts = useMemo(
+  const parts = useMemo(
     () => splitTextByCitationMarkers(content, chatSources),
     [content, chatSources],
   )
 
- const citationByIndex = useMemo(() => {
- const map = new Map<number, NotebookChunkCitation>()
- for (const c of citations) {
- map.set(c.index, c)
+  const citationByIndex = useMemo(() => {
+    const map = new Map<number, NotebookChunkCitation>()
+    for (const c of citations) {
+      map.set(c.index, c)
     }
- return map
+    return map
   }, [citations])
 
- return (
+  return (
     <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg">
       {parts.map((part, i) => {
- if (part.kind === 'text') {
- return <span key={`t-${i}`}>{part.value}</span>
+        if (part.kind === 'text') {
+          return <span key={`t-${i}`}>{part.value}</span>
         }
- const numMatch = /\[(\d{1,2})\]/.exec(part.marker)
- const idx = numMatch ? Number.parseInt(numMatch[1], 10) : undefined
- const resolved = idx != null ? citationByIndex.get(idx) : undefined
- return (
+        const numMatch = /\[(\d{1,2})\]/.exec(part.marker)
+        const idx = numMatch ? Number.parseInt(numMatch[1], 10) : undefined
+        const resolved = idx != null ? citationByIndex.get(idx) : undefined
+        return (
           <CitationBadge
- key={`c-${i}-${part.marker}`}
- marker={part.marker}
- citation={resolved}
+            key={`c-${i}-${part.marker}`}
+            marker={part.marker}
+            citation={resolved}
           />
         )
       })}

@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
 interface ScheduledTask {
- id: string
- user_id: string
- cron_expr: string
- prompt: string
- is_active: boolean
- created_at: string
+  id: string
+  user_id: string
+  cron_expr: string
+  prompt: string
+  is_active: boolean
+  created_at: string
 }
 
 const CRON_OPTIONS = [
@@ -21,111 +21,111 @@ const CRON_OPTIONS = [
 ]
 
 export function ScheduledTasksPanel() {
- const [tasks, setTasks] = useState<ScheduledTask[]>([])
- const [loading, setLoading] = useState(true)
- const [isAdding, setIsAdding] = useState(false)
+  const [tasks, setTasks] = useState<ScheduledTask[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isAdding, setIsAdding] = useState(false)
 
- const [newPrompt, setNewPrompt] = useState('')
- const [newCron, setNewCron] = useState(CRON_OPTIONS[0].value)
- const [customCron, setCustomCron] = useState('')
- const [customDatetime, setCustomDatetime] = useState('')
+  const [newPrompt, setNewPrompt] = useState('')
+  const [newCron, setNewCron] = useState(CRON_OPTIONS[0].value)
+  const [customCron, setCustomCron] = useState('')
+  const [customDatetime, setCustomDatetime] = useState('')
 
- const fetchTasks = async () => {
- setLoading(true)
- const { data: user } = await supabase.auth.getUser()
- if (!user.user) return
+  const fetchTasks = async () => {
+    setLoading(true)
+    const { data: user } = await supabase.auth.getUser()
+    if (!user.user) return
 
- const { data } = await supabase
+    const { data } = await supabase
       .from('nh_scheduled_tasks')
       .select('*')
       .eq('user_id', user.user.id)
       .order('created_at', { ascending: false })
 
- if (data) {
- setTasks(data as ScheduledTask[])
+    if (data) {
+      setTasks(data as ScheduledTask[])
     }
- setLoading(false)
+    setLoading(false)
   }
 
- useEffect(() => {
- fetchTasks()
+  useEffect(() => {
+    fetchTasks()
   }, [])
 
- const handleCreate = async (e: React.FormEvent) => {
- e.preventDefault()
- if (!newPrompt.trim()) return
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newPrompt.trim()) return
 
- const { data: user } = await supabase.auth.getUser()
- if (!user.user) return
+    const { data: user } = await supabase.auth.getUser()
+    if (!user.user) return
 
- let finalCron = newCron
- if (newCron === 'custom') {
- finalCron = customCron.trim()
+    let finalCron = newCron
+    if (newCron === 'custom') {
+      finalCron = customCron.trim()
     } else if (newCron === 'datetime') {
- if (!customDatetime) return
- const d = new Date(customDatetime)
- finalCron = `${d.getMinutes()} ${d.getHours()} ${d.getDate()} ${d.getMonth() + 1} *`
+      if (!customDatetime) return
+      const d = new Date(customDatetime)
+      finalCron = `${d.getMinutes()} ${d.getHours()} ${d.getDate()} ${d.getMonth() + 1} *`
     }
 
- if (!finalCron) return
+    if (!finalCron) return
 
- const { data } = await supabase
+    const { data } = await supabase
       .from('nh_scheduled_tasks')
       .insert({
- user_id: user.user.id,
- prompt: newPrompt,
- cron_expr: finalCron,
- is_active: true
+        user_id: user.user.id,
+        prompt: newPrompt,
+        cron_expr: finalCron,
+        is_active: true
       })
       .select()
       .single()
 
- if (data) {
- setTasks([data as ScheduledTask, ...tasks])
- setNewPrompt('')
- setNewCron(CRON_OPTIONS[0].value)
- setCustomCron('')
- setCustomDatetime('')
- setIsAdding(false)
+    if (data) {
+      setTasks([data as ScheduledTask, ...tasks])
+      setNewPrompt('')
+      setNewCron(CRON_OPTIONS[0].value)
+      setCustomCron('')
+      setCustomDatetime('')
+      setIsAdding(false)
     }
   }
 
- const handleToggle = async (id: string, currentStatus: boolean) => {
- const { error } = await supabase
+  const handleToggle = async (id: string, currentStatus: boolean) => {
+    const { error } = await supabase
       .from('nh_scheduled_tasks')
       .update({ is_active: !currentStatus })
       .eq('id', id)
 
- if (!error) {
- setTasks(tasks.map(t => t.id === id ? { ...t, is_active: !currentStatus } : t))
+    if (!error) {
+      setTasks(tasks.map(t => t.id === id ? { ...t, is_active: !currentStatus } : t))
     }
   }
 
- const handleDelete = async (id: string) => {
- const { error } = await supabase
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase
       .from('nh_scheduled_tasks')
       .delete()
       .eq('id', id)
 
- if (!error) {
- setTasks(tasks.filter(t => t.id !== id))
+    if (!error) {
+      setTasks(tasks.filter(t => t.id !== id))
     }
   }
 
- const getCronLabel = (cron: string) => {
- const option = CRON_OPTIONS.find(o => o.value === cron)
- if (option) return option.label
+  const getCronLabel = (cron: string) => {
+    const option = CRON_OPTIONS.find(o => o.value === cron)
+    if (option) return option.label
 
     // Check if it's a specific datetime cron (e.g., M H D M *)
- const parts = cron.split(' ')
- if (parts.length === 5 && parts[4] === '*' && !cron.includes(',') && !cron.includes('-') && !cron.includes('/')) {
- return `${parts[3]}월 ${parts[2]}일 ${parts[1].padStart(2, '0')}:${parts[0].padStart(2, '0')} 실행`
+    const parts = cron.split(' ')
+    if (parts.length === 5 && parts[4] === '*' && !cron.includes(',') && !cron.includes('-') && !cron.includes('/')) {
+      return `${parts[3]}월 ${parts[2]}일 ${parts[1].padStart(2, '0')}:${parts[0].padStart(2, '0')} 실행`
     }
 
- return cron
+    return cron
   }
 
- return (
+  return (
     <section className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-5 pt-1">
       <div className="flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center space-x-3">
@@ -136,13 +136,13 @@ export function ScheduledTasksPanel() {
             </svg>
           </div>
           <h3 className="text-lg font-semibold tracking-tight text-fg">
- 예약된 작업
+            예약된 작업
           </h3>
         </div>
         {!isAdding && (
           <button
- onClick={() => setIsAdding(true)}
- className="flex items-center space-x-1.5 rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+            onClick={() => setIsAdding(true)}
+            className="flex items-center space-x-1.5 rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -158,25 +158,25 @@ export function ScheduledTasksPanel() {
           <div className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-fg-muted">
- 실행할 프롬프트
+                실행할 프롬프트
               </label>
               <textarea
- value={newPrompt}
- onChange={(e) => setNewPrompt(e.target.value)}
- placeholder="예: 이번 주 안전 점검 보고서를 요약해줘."
- className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
- rows={3}
- required
+                value={newPrompt}
+                onChange={(e) => setNewPrompt(e.target.value)}
+                placeholder="예: 이번 주 안전 점검 보고서를 요약해줘."
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+                rows={3}
+                required
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-fg-muted">
- 실행 주기
+                실행 주기
               </label>
               <select
- value={newCron}
- onChange={(e) => setNewCron(e.target.value)}
- className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+                value={newCron}
+                onChange={(e) => setNewCron(e.target.value)}
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
               >
                 {CRON_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -184,37 +184,37 @@ export function ScheduledTasksPanel() {
               </select>
               {newCron === 'datetime' && (
                 <input
- type="datetime-local"
- value={customDatetime}
- onChange={(e) => setCustomDatetime(e.target.value)}
- className="mt-3 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
- required
+                  type="datetime-local"
+                  value={customDatetime}
+                  onChange={(e) => setCustomDatetime(e.target.value)}
+                  className="mt-3 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+                  required
                 />
               )}
               {newCron === 'custom' && (
                 <input
- type="text"
- value={customCron}
- onChange={(e) => setCustomCron(e.target.value)}
- placeholder="Cron 수식 (예: */5 * * * *)"
- className="mt-3 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
- required
+                  type="text"
+                  value={customCron}
+                  onChange={(e) => setCustomCron(e.target.value)}
+                  placeholder="Cron 수식 (예: */5 * * * *)"
+                  className="mt-3 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+                  required
                 />
               )}
             </div>
             <div className="flex justify-end space-x-2 pt-2">
               <button
- type="button"
- onClick={() => setIsAdding(false)}
- className="rounded-lg px-3 py-1.5 text-sm font-medium text-fg-muted hover:bg-surface-2"
+                type="button"
+                onClick={() => setIsAdding(false)}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-fg-muted hover:bg-surface-2"
               >
- 취소
+                취소
               </button>
               <button
- type="submit"
- className="rounded-lg bg-stone-900 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+                type="submit"
+                className="rounded-lg bg-stone-900 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
               >
- 저장
+                저장
               </button>
             </div>
           </div>
@@ -229,12 +229,12 @@ export function ScheduledTasksPanel() {
             <p className="text-sm text-fg-subtle">등록된 예약 작업이 없습니다.</p>
           </div>
         ) : (
- tasks.map(task => (
+          tasks.map(task => (
             <div key={task.id} className={`group relative flex items-start gap-4 rounded-xl border p-4 transition-all ${task.is_active ? 'border-border bg-surface shadow-sm' : 'border-border bg-bg'}`}>
               <div className="mt-1 shrink-0">
                 <button
- onClick={() => handleToggle(task.id, task.is_active)}
- className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${task.is_active ? 'bg-green-500' : 'bg-surface-3'}`}
+                  onClick={() => handleToggle(task.id, task.is_active)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${task.is_active ? 'bg-green-500' : 'bg-surface-3'}`}
                 >
                   <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-surface transition-transform ${task.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
                 </button>
@@ -245,9 +245,9 @@ export function ScheduledTasksPanel() {
                     {getCronLabel(task.cron_expr)}
                   </span>
                   <button
- onClick={() => handleDelete(task.id)}
- className="text-fg-subtle hover:text-red-500 transition-colors"
- title="삭제"
+                    onClick={() => handleDelete(task.id)}
+                    className="text-fg-subtle hover:text-red-500 transition-colors"
+                    title="삭제"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 6h18"></path>

@@ -7,8 +7,8 @@ import { ChatAttachmentPreviewStrip } from './ChatAttachmentPreviewStrip'
 import { AssistantMessageFooter } from './AssistantMessageFooter'
 import { ChatRichContent } from './ChatRichContent'
 import {
- GeminiSparkleIcon,
- GeminiStreamingCursor,
+  GeminiSparkleIcon,
+  GeminiStreamingCursor,
 } from './GeminiSparkleIcon'
 import { ThinkingProcessPanel } from './ThinkingProcessPanel'
 import type { ChatBubble } from './ChatArea'
@@ -27,48 +27,48 @@ export type ParsedMessageSegment =
   | { kind: 'artifact'; artifact: ChatArtifact }
 
 function inferArtifactTitle(content: string, fallback: string): string {
- const h1 = /^#\s+(.+)$/m.exec(content)
- if (h1?.[1]) return h1[1].trim().slice(0, 48)
- const first = content
+  const h1 = /^#\s+(.+)$/m.exec(content)
+  if (h1?.[1]) return h1[1].trim().slice(0, 48)
+  const first = content
     .split('\n')
     .map((l) => l.trim())
     .find((l) => l.length > 0)
- if (first && first.length <= 48) return first
- return fallback
+  if (first && first.length <= 48) return first
+  return fallback
 }
 
 function resolveArtifactType(language: string, body: string): ArtifactType {
- const lang = language.trim().toLowerCase()
- if (lang === 'html' || lang === 'htm') return 'html'
- if (lang === 'markdown' || lang === 'md') return 'markdown'
- if (isMarkdownTableBlock(body)) return 'table'
- return 'code'
+  const lang = language.trim().toLowerCase()
+  if (lang === 'html' || lang === 'htm') return 'html'
+  if (lang === 'markdown' || lang === 'md') return 'markdown'
+  if (isMarkdownTableBlock(body)) return 'table'
+  return 'code'
 }
 
 function shouldPromoteCodeFenceToArtifact(language: string, body: string): boolean {
- const lang = language.trim().toLowerCase()
- if (ARTIFACT_DOC_LANGS.has(lang)) return true
- const lines = body.split('\n').length
- if (lines >= MIN_ARTIFACT_LINES) return true
- if (body.length >= MIN_ARTIFACT_CHARS) return true
- return false
+  const lang = language.trim().toLowerCase()
+  if (ARTIFACT_DOC_LANGS.has(lang)) return true
+  const lines = body.split('\n').length
+  if (lines >= MIN_ARTIFACT_LINES) return true
+  if (body.length >= MIN_ARTIFACT_CHARS) return true
+  return false
 }
 
 function isTableLine(line: string): boolean {
- const t = line.trim()
- return /^\|?.+\|.+/.test(t) || /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(t)
+  const t = line.trim()
+  return /^\|?.+\|.+/.test(t) || /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(t)
 }
 
 function isMarkdownTableBlock(block: string): boolean {
- const lines = block.trim().split('\n').filter((l) => l.trim().length > 0)
- const tableLines = lines.filter(isTableLine)
- return tableLines.length >= MIN_TABLE_ROWS
+  const lines = block.trim().split('\n').filter((l) => l.trim().length > 0)
+  const tableLines = lines.filter(isTableLine)
+  return tableLines.length >= MIN_TABLE_ROWS
 }
 
 function buildArtifactFromFence(language: string, body: string): ChatArtifact {
- const type = resolveArtifactType(language, body)
- const defaultTitle =
- type === 'table'
+  const type = resolveArtifactType(language, body)
+  const defaultTitle =
+    type === 'table'
       ? '표'
       : type === 'html'
         ? 'HTML 문서'
@@ -77,137 +77,137 @@ function buildArtifactFromFence(language: string, body: string): ChatArtifact {
           : language.trim()
             ? `${language.trim()} 코드`
             : '코드'
- return {
- title: inferArtifactTitle(body, defaultTitle),
- content: body,
- type,
+  return {
+    title: inferArtifactTitle(body, defaultTitle),
+    content: body,
+    type,
   }
 }
 
 function splitTextAndTables(
- text: string,
- promoteTables: boolean,
+  text: string,
+  promoteTables: boolean,
 ): ParsedMessageSegment[] {
- if (!text.trim()) return []
+  if (!text.trim()) return []
 
- const lines = text.split('\n')
- const out: ParsedMessageSegment[] = []
- let textBuf: string[] = []
- let tableBuf: string[] = []
+  const lines = text.split('\n')
+  const out: ParsedMessageSegment[] = []
+  let textBuf: string[] = []
+  let tableBuf: string[] = []
 
- const flushText = () => {
- if (textBuf.length === 0) return
- out.push({ kind: 'text', value: textBuf.join('\n') })
- textBuf = []
+  const flushText = () => {
+    if (textBuf.length === 0) return
+    out.push({ kind: 'text', value: textBuf.join('\n') })
+    textBuf = []
   }
 
- const flushTable = () => {
- if (tableBuf.length === 0) return
- if (
- promoteTables &&
- tableBuf.length >= MIN_TABLE_ROWS &&
- isMarkdownTableBlock(tableBuf.join('\n'))
+  const flushTable = () => {
+    if (tableBuf.length === 0) return
+    if (
+      promoteTables &&
+      tableBuf.length >= MIN_TABLE_ROWS &&
+      isMarkdownTableBlock(tableBuf.join('\n'))
     ) {
- const content = tableBuf.join('\n')
- out.push({
- kind: 'artifact',
- artifact: {
- title: inferArtifactTitle(content, '표'),
- content,
- type: 'table',
+      const content = tableBuf.join('\n')
+      out.push({
+        kind: 'artifact',
+        artifact: {
+          title: inferArtifactTitle(content, '표'),
+          content,
+          type: 'table',
         },
       })
     } else {
- textBuf.push(...tableBuf)
+      textBuf.push(...tableBuf)
     }
- tableBuf = []
+    tableBuf = []
   }
 
- for (const line of lines) {
- if (isTableLine(line)) {
- flushText()
- tableBuf.push(line)
+  for (const line of lines) {
+    if (isTableLine(line)) {
+      flushText()
+      tableBuf.push(line)
     } else {
- flushTable()
- textBuf.push(line)
+      flushTable()
+      textBuf.push(line)
     }
   }
- flushTable()
- flushText()
- return out
+  flushTable()
+  flushText()
+  return out
 }
 
 export function parseAssistantMessageForArtifacts(
- content: string,
- options?: { promoteTables?: boolean },
+  content: string,
+  options?: { promoteTables?: boolean },
 ): ParsedMessageSegment[] {
- const promoteTables = options?.promoteTables ?? false
- const segments: ParsedMessageSegment[] = []
- let lastIndex = 0
- let match: RegExpExecArray | null
+  const promoteTables = options?.promoteTables ?? false
+  const segments: ParsedMessageSegment[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
 
- CODE_FENCE_RE.lastIndex = 0
- while ((match = CODE_FENCE_RE.exec(content)) !== null) {
- const before = content.slice(lastIndex, match.index)
- if (before) {
- segments.push(...splitTextAndTables(before, promoteTables))
+  CODE_FENCE_RE.lastIndex = 0
+  while ((match = CODE_FENCE_RE.exec(content)) !== null) {
+    const before = content.slice(lastIndex, match.index)
+    if (before) {
+      segments.push(...splitTextAndTables(before, promoteTables))
     }
 
- const language = match[1] ?? ''
- const body = match[2].replace(/\n$/, '')
+    const language = match[1] ?? ''
+    const body = match[2].replace(/\n$/, '')
 
- if (shouldPromoteCodeFenceToArtifact(language, body)) {
- segments.push({
- kind: 'artifact',
- artifact: buildArtifactFromFence(language, body),
+    if (shouldPromoteCodeFenceToArtifact(language, body)) {
+      segments.push({
+        kind: 'artifact',
+        artifact: buildArtifactFromFence(language, body),
       })
     } else {
- segments.push({ kind: 'text', value: match[0] })
+      segments.push({ kind: 'text', value: match[0] })
     }
 
- lastIndex = match.index + match[0].length
+    lastIndex = match.index + match[0].length
   }
 
- const tail = content.slice(lastIndex)
- if (tail) {
- segments.push(...splitTextAndTables(tail, promoteTables))
+  const tail = content.slice(lastIndex)
+  if (tail) {
+    segments.push(...splitTextAndTables(tail, promoteTables))
   }
 
- if (segments.length === 0) {
- return [{ kind: 'text', value: content }]
+  if (segments.length === 0) {
+    return [{ kind: 'text', value: content }]
   }
 
- return segments
+  return segments
 }
 
 function artifactChipIcon(type: ArtifactType): string {
- switch (type) {
- case 'table':
- return '📊'
- case 'html':
- return '🌐'
- case 'code':
- return '💻'
- default:
- return '📝'
+  switch (type) {
+    case 'table':
+      return '📊'
+    case 'html':
+      return '🌐'
+    case 'code':
+      return '💻'
+    default:
+      return '📝'
   }
 }
 
 function ArtifactChip({
- artifact,
- isClaude,
- onOpen,
+  artifact,
+  isClaude,
+  onOpen,
 }: {
- artifact: ChatArtifact
- isClaude: boolean
- onOpen: () => void
+  artifact: ChatArtifact
+  isClaude: boolean
+  onOpen: () => void
 }) {
- return (
+  return (
     <button
- type="button"
- onClick={onOpen}
- className={`my-2 flex w-full max-w-sm items-center gap-3 rounded-xl border px-3 py-2.5 text-left shadow-sm transition hover:brightness-[0.98] ${
- isClaude
+      type="button"
+      onClick={onOpen}
+      className={`my-2 flex w-full max-w-sm items-center gap-3 rounded-xl border px-3 py-2.5 text-left shadow-sm transition hover:brightness-[0.98] ${
+        isClaude
           ? 'border-brand/30 bg-gradient-to-r from-brand-soft to-stone-50 hover:border-orange-300'
           : 'border-success/30 bg-gradient-to-r from-brand-soft to-slate-50 hover:border-emerald-300'
       }`}
@@ -217,10 +217,10 @@ function ArtifactChip({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-fg-subtle">
- 아티팩트
+          아티팩트
         </span>
         <span className="block truncate text-[15px] font-semibold text-fg">
- 문서 보기: {artifact.title}
+          문서 보기: {artifact.title}
         </span>
       </span>
       <span className="shrink-0 text-fg-subtle">›</span>
@@ -229,44 +229,44 @@ function ArtifactChip({
 }
 
 function AssistantMessageBody({
- content,
- variant,
- citations = [],
+  content,
+  variant,
+  citations = [],
 }: {
- content: string
- variant: ChatUiVariant
- citations?: ChatCitationSource[]
+  content: string
+  variant: ChatUiVariant
+  citations?: ChatCitationSource[]
 }) {
- const { openArtifact } = useChatArtifact()
- const isGemini = variant === 'gemini'
- const richVariant =
- isGemini ? 'gemini' : variant === 'claude' ? 'claude' : 'default'
- const segments = useMemo(
+  const { openArtifact } = useChatArtifact()
+  const isGemini = variant === 'gemini'
+  const richVariant =
+    isGemini ? 'gemini' : variant === 'claude' ? 'claude' : 'default'
+  const segments = useMemo(
     () => parseAssistantMessageForArtifacts(content, { promoteTables: false }),
     [content],
   )
 
- return (
+  return (
     <div className={isGemini ? 'gemini-prose space-y-1' : 'space-y-1'}>
       {segments.map((seg, i) => {
- if (seg.kind === 'text') {
- if (!seg.value.trim()) return null
- return (
+        if (seg.kind === 'text') {
+          if (!seg.value.trim()) return null
+          return (
             <ChatRichContent
- key={`txt-${i}`}
- content={seg.value}
- variant={richVariant}
- citations={citations}
+              key={`txt-${i}`}
+              content={seg.value}
+              variant={richVariant}
+              citations={citations}
             />
           )
         }
 
- return (
+        return (
           <ArtifactChip
- key={`art-${i}-${seg.artifact.title}`}
- artifact={seg.artifact}
- isClaude={variant === 'claude'}
- onOpen={() => openArtifact(seg.artifact)}
+            key={`art-${i}-${seg.artifact.title}`}
+            artifact={seg.artifact}
+            isClaude={variant === 'claude'}
+            onOpen={() => openArtifact(seg.artifact)}
           />
         )
       })}
@@ -275,77 +275,77 @@ function AssistantMessageBody({
 }
 
 function UserMessageActionButtons({
- variant,
- editable,
- copied,
- onCopy,
- onStartEdit,
+  variant,
+  editable,
+  copied,
+  onCopy,
+  onStartEdit,
 }: {
- variant: ChatUiVariant
- editable: boolean
- copied: boolean
- onCopy: () => void
- onStartEdit: () => void
+  variant: ChatUiVariant
+  editable: boolean
+  copied: boolean
+  onCopy: () => void
+  onStartEdit: () => void
 }) {
- const isGemini = variant === 'gemini'
- const isClaude = variant === 'claude'
+  const isGemini = variant === 'gemini'
+  const isClaude = variant === 'claude'
 
- const iconBtnClass = isGemini
+  const iconBtnClass = isGemini
     ? 'rounded-full p-2 text-[#444746] transition hover:bg-[#e9eef6]'
     : isClaude
       ? 'rounded-full p-2 text-fg-subtle transition hover:bg-surface-2 hover:text-fg'
       : 'rounded-full p-2 text-fg-subtle transition hover:bg-surface-2 hover:text-fg'
 
- const copiedClass = isGemini
+  const copiedClass = isGemini
     ? 'text-[#0b57d0] dark:text-blue-400'
     : isClaude
       ? 'text-brand'
       : 'text-success'
 
- return (
+  return (
     <>
       <button
- type="button"
- onClick={() => void onCopy()}
- className={`${iconBtnClass} ${copied ? copiedClass : ''}`}
- aria-label={copied ? '복사됨' : '메시지 복사하기'}
- title={copied ? '복사됨!' : '복사하기'}
+        type="button"
+        onClick={() => void onCopy()}
+        className={`${iconBtnClass} ${copied ? copiedClass : ''}`}
+        aria-label={copied ? '복사됨' : '메시지 복사하기'}
+        title={copied ? '복사됨!' : '복사하기'}
       >
         <svg
- className="h-4 w-4"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
           />
         </svg>
       </button>
       {editable ? (
         <button
- type="button"
- onClick={onStartEdit}
- className={iconBtnClass}
- aria-label="메시지 수정"
- title="수정"
+          type="button"
+          onClick={onStartEdit}
+          className={iconBtnClass}
+          aria-label="메시지 수정"
+          title="수정"
         >
           <svg
- className="h-4 w-4"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
             />
           </svg>
         </button>
@@ -355,70 +355,70 @@ function UserMessageActionButtons({
 }
 
 export type ChatMessageEditSession = {
- id: string
- role: 'user' | 'assistant'
- text: string
+  id: string
+  role: 'user' | 'assistant'
+  text: string
 }
 
 export type ChatMessageProps = {
- msg: ChatBubble
- index: number
- variant?: ChatUiVariant
- messageType?: 'session' | 'team'
- editable: boolean
- isEditing: boolean
- editSession: ChatMessageEditSession | null
- onEditTextChange: (text: string) => void
- onCommitEdit: () => void
- onCancelEdit: () => void
- onStartEdit: () => void
- copiedId: string | null
- onCopy: () => void
- bookmarkDoneId: string | null
- bookmarkBusy: boolean
- onBookmark?: () => void
- showBookmark: boolean
- onRegenerate?: () => void
+  msg: ChatBubble
+  index: number
+  variant?: ChatUiVariant
+  messageType?: 'session' | 'team'
+  editable: boolean
+  isEditing: boolean
+  editSession: ChatMessageEditSession | null
+  onEditTextChange: (text: string) => void
+  onCommitEdit: () => void
+  onCancelEdit: () => void
+  onStartEdit: () => void
+  copiedId: string | null
+  onCopy: () => void
+  bookmarkDoneId: string | null
+  bookmarkBusy: boolean
+  onBookmark?: () => void
+  showBookmark: boolean
+  onRegenerate?: () => void
   /** 잘린 답변 이어서 생성 */
- onContinue?: () => void
- regenerateDisabled?: boolean
+  onContinue?: () => void
+  regenerateDisabled?: boolean
   /** 직전 사용자 질문 (공유·Gmail 등) */
- assistantUserPrompt?: string
- modelLabel?: string
- threadShareUrl?: string
+  assistantUserPrompt?: string
+  modelLabel?: string
+  threadShareUrl?: string
 }
 
 /** NH 스마트 라우터 태스크 → 사용자 표시용 한글 라벨 */
 const ROUTE_TASK_LABELS: Record<string, string> = {
- GENERAL_CHAT: '일반 대화',
- COMPANY_REGULATION_SEARCH: '사내 규정 검색',
- COMPANY_DOCUMENT_RAG: '사내 문서 참조',
- DATA_CRAWLING_MATCHING: '조달·입찰 데이터',
- MATHEMATICAL_ESTIMATION: '견적·수치 연산',
- IMAGE_ANALYSIS_OCR: '이미지 분석·OCR',
- TRAVEL_CONSULTING: '여행·관광 컨설팅',
- LONG_FORM_WRITING: '장문 작성',
- CODE_SYSTEM_DESIGN: '코드·시스템 설계',
- GOOGLE_WORKSPACE: 'Google Workspace',
- BATCH_LOW_COST: '대량·저비용 처리',
- INTERNAL_SPECIALIZED: '사내 특화',
- PUBLIC_DATA_QUERY: '공공데이터 조회',
+  GENERAL_CHAT: '일반 대화',
+  COMPANY_REGULATION_SEARCH: '사내 규정 검색',
+  COMPANY_DOCUMENT_RAG: '사내 문서 참조',
+  DATA_CRAWLING_MATCHING: '조달·입찰 데이터',
+  MATHEMATICAL_ESTIMATION: '견적·수치 연산',
+  IMAGE_ANALYSIS_OCR: '이미지 분석·OCR',
+  TRAVEL_CONSULTING: '여행·관광 컨설팅',
+  LONG_FORM_WRITING: '장문 작성',
+  CODE_SYSTEM_DESIGN: '코드·시스템 설계',
+  GOOGLE_WORKSPACE: 'Google Workspace',
+  BATCH_LOW_COST: '대량·저비용 처리',
+  INTERNAL_SPECIALIZED: '사내 특화',
+  PUBLIC_DATA_QUERY: '공공데이터 조회',
 }
 
 function routeTaskLabel(taskType: string | null): string {
- if (!taskType) return '자동'
- return ROUTE_TASK_LABELS[taskType] ?? taskType
+  if (!taskType) return '자동'
+  return ROUTE_TASK_LABELS[taskType] ?? taskType
 }
 
 /** 밀리초 → "1시간 2분 3초" / "2분 3초" / "7초" */
 export function formatElapsedKo(ms: number): string {
- const totalSec = Math.max(0, Math.floor(ms / 1000))
- const h = Math.floor(totalSec / 3600)
- const m = Math.floor((totalSec % 3600) / 60)
- const s = totalSec % 60
- if (h > 0) return `${h}시간 ${m}분 ${s}초`
- if (m > 0) return `${m}분 ${s}초`
- return `${s}초`
+  const totalSec = Math.max(0, Math.floor(ms / 1000))
+  const h = Math.floor(totalSec / 3600)
+  const m = Math.floor((totalSec % 3600) / 60)
+  const s = totalSec % 60
+  if (h > 0) return `${h}시간 ${m}분 ${s}초`
+  if (m > 0) return `${m}분 ${s}초`
+  return `${s}초`
 }
 
 /**
@@ -426,43 +426,43 @@ export function formatElapsedKo(ms: number): string {
  * 새싹·컬러는 농협 브랜드를 연상시키는 자체 그래픽(공식 로고 아님).
  */
 function StreamingStatusLine({
- sinceIso,
- hasText,
+  sinceIso,
+  hasText,
 }: {
- sinceIso?: string
- hasText: boolean
+  sinceIso?: string
+  hasText: boolean
 }) {
- const [now, setNow] = useState(() => Date.now())
- useEffect(() => {
- const timer = window.setInterval(() => setNow(Date.now()), 1000)
- return () => window.clearInterval(timer)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
   }, [])
- const startMs = sinceIso ? new Date(sinceIso).getTime() : Number.NaN
- const elapsed = Number.isFinite(startMs) ? Math.max(0, now - startMs) : 0
- return (
+  const startMs = sinceIso ? new Date(sinceIso).getTime() : Number.NaN
+  const elapsed = Number.isFinite(startMs) ? Math.max(0, now - startMs) : 0
+  return (
     <div className="mb-2 flex items-center gap-2">
       <span
- className="relative flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-[#0056a4] dark:bg-[#2f7fd0]"
- aria-hidden="true"
+        className="relative flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-[#0056a4] dark:bg-[#2f7fd0]"
+        aria-hidden="true"
       >
         <span className="absolute inset-0 rounded-full bg-[#0056a4]/35 motion-safe:animate-ping dark:bg-[#2f7fd0]/35" />
         <svg
- className="relative h-[13px] w-[13px] text-white"
- viewBox="0 0 24 24"
- fill="none"
- stroke="currentColor"
- strokeWidth={2}
+          className="relative h-[13px] w-[13px] text-white"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
         >
           <path strokeLinecap="round" d="M12 21v-8" />
           <path
- strokeLinecap="round"
- strokeLinejoin="round"
- d="M12 13C12 9 9.5 6 5.5 6c0 4 2.5 7 6.5 7z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 13C12 9 9.5 6 5.5 6c0 4 2.5 7 6.5 7z"
           />
           <path
- strokeLinecap="round"
- strokeLinejoin="round"
- d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6z"
           />
         </svg>
       </span>
@@ -479,136 +479,136 @@ function StreamingStatusLine({
 }
 
 export function ChatMessage({
- msg,
- variant = 'default',
- messageType,
- editable,
- isEditing,
- editSession,
- onEditTextChange,
- onCommitEdit,
- onCancelEdit,
- onStartEdit,
- copiedId,
- onCopy,
- bookmarkDoneId,
- bookmarkBusy,
- onBookmark,
- showBookmark,
- onRegenerate,
- onContinue,
- regenerateDisabled = false,
- assistantUserPrompt = '',
- modelLabel = '',
- threadShareUrl,
+  msg,
+  variant = 'default',
+  messageType,
+  editable,
+  isEditing,
+  editSession,
+  onEditTextChange,
+  onCommitEdit,
+  onCancelEdit,
+  onStartEdit,
+  copiedId,
+  onCopy,
+  bookmarkDoneId,
+  bookmarkBusy,
+  onBookmark,
+  showBookmark,
+  onRegenerate,
+  onContinue,
+  regenerateDisabled = false,
+  assistantUserPrompt = '',
+  modelLabel = '',
+  threadShareUrl,
 }: ChatMessageProps) {
- const isGemini = variant === 'gemini'
- const isClaude = variant === 'claude'
+  const isGemini = variant === 'gemini'
+  const isClaude = variant === 'claude'
 
- const editPrimaryBtnClass = isGemini
+  const editPrimaryBtnClass = isGemini
     ? 'rounded-full bg-[#0b57d0] px-4 py-1.5 text-[13px] font-medium text-white shadow-sm hover:bg-[#0842a0]'
     : isClaude
     ? 'rounded-lg bg-brand px-3 py-1.5 text-[13px] font-semibold text-brand-fg shadow-sm hover:bg-brand-strong'
     : 'rounded-lg bg-brand px-3 py-1.5 text-[13px] font-semibold text-brand-fg shadow-sm hover:bg-brand-strong'
 
- const editGhostBtnClass = isGemini
+  const editGhostBtnClass = isGemini
     ? 'rounded-full border border-[#c4c7c5] bg-surface px-4 py-1.5 text-[13px] font-medium text-[#1f1f1f] hover:bg-[#f8fafd]'
     : isClaude
     ? 'rounded-lg border border-border-strong/90 bg-surface px-3 py-1.5 text-[13px] font-semibold text-fg hover:bg-surface-2'
     : 'rounded-lg border border-border-strong bg-surface px-3 py-1.5 text-[13px] font-semibold text-fg hover:bg-surface-2'
 
- const editFieldClass = isGemini
+  const editFieldClass = isGemini
     ? 'mt-1 min-h-[5rem] w-full resize-y rounded-2xl border border-[#c4c7c5] bg-surface px-4 py-3 text-[15px] leading-relaxed text-[#1f1f1f] outline-none ring-[#0b57d0]/15 focus:border-[#0b57d0] focus:ring-2'
     : isClaude
     ? 'mt-1 min-h-[5rem] w-full resize-y rounded-xl border border-border-strong/80 bg-surface px-3 py-2 text-[15px] leading-relaxed text-fg outline-none ring-focus/40 focus:ring-2'
     : 'mt-1 min-h-[5rem] w-full resize-y rounded-xl border border-border-strong bg-surface px-3 py-2 text-[15px] leading-relaxed text-fg outline-none ring-focus/40 focus:ring-2'
 
- const isAssistant = msg.role === 'assistant'
+  const isAssistant = msg.role === 'assistant'
 
- const assistantDisplay = useMemo(() => {
- if (msg.thinkingContent !== undefined) {
- const hasThinking = msg.thinkingContent.trim().length > 0
- return {
- thinking: msg.thinkingContent,
- answer: msg.content,
- thinkingOpen: Boolean(msg.streaming && !msg.content.trim()),
- showThinkingPanel: hasThinking || Boolean(msg.streaming),
+  const assistantDisplay = useMemo(() => {
+    if (msg.thinkingContent !== undefined) {
+      const hasThinking = msg.thinkingContent.trim().length > 0
+      return {
+        thinking: msg.thinkingContent,
+        answer: msg.content,
+        thinkingOpen: Boolean(msg.streaming && !msg.content.trim()),
+        showThinkingPanel: hasThinking || Boolean(msg.streaming),
       }
     }
- const parsed = parseThinkingContent(msg.content)
- return {
- thinking: parsed.thinking,
- answer: parsed.answer,
- thinkingOpen: Boolean(msg.streaming && parsed.thinkingOpen),
- showThinkingPanel:
- parsed.hasThinking || Boolean(msg.streaming && parsed.thinkingOpen),
+    const parsed = parseThinkingContent(msg.content)
+    return {
+      thinking: parsed.thinking,
+      answer: parsed.answer,
+      thinkingOpen: Boolean(msg.streaming && parsed.thinkingOpen),
+      showThinkingPanel:
+        parsed.hasThinking || Boolean(msg.streaming && parsed.thinkingOpen),
     }
   }, [msg.content, msg.thinkingContent, msg.streaming])
 
- const [userActionsPinned, setUserActionsPinned] = useState(false)
- const userRowRef = useRef<HTMLElement>(null)
- const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [userActionsPinned, setUserActionsPinned] = useState(false)
+  const userRowRef = useRef<HTMLElement>(null)
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
- const clearLongPressTimer = useCallback(() => {
- if (longPressTimerRef.current) {
- clearTimeout(longPressTimerRef.current)
- longPressTimerRef.current = null
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
     }
   }, [])
 
- const handleUserTouchStart = useCallback(() => {
- clearLongPressTimer()
- longPressTimerRef.current = setTimeout(() => {
- setUserActionsPinned(true)
- if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
- navigator.vibrate(12)
+  const handleUserTouchStart = useCallback(() => {
+    clearLongPressTimer()
+    longPressTimerRef.current = setTimeout(() => {
+      setUserActionsPinned(true)
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(12)
       }
     }, 480)
   }, [clearLongPressTimer])
 
- useEffect(() => {
- return () => clearLongPressTimer()
+  useEffect(() => {
+    return () => clearLongPressTimer()
   }, [clearLongPressTimer])
 
- useEffect(() => {
- if (!userActionsPinned) return
- const dismiss = (event: MouseEvent | TouchEvent) => {
- const target = event.target
- if (!(target instanceof Node)) return
- if (userRowRef.current?.contains(target)) return
- setUserActionsPinned(false)
+  useEffect(() => {
+    if (!userActionsPinned) return
+    const dismiss = (event: MouseEvent | TouchEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (userRowRef.current?.contains(target)) return
+      setUserActionsPinned(false)
     }
- document.addEventListener('mousedown', dismiss)
- document.addEventListener('touchstart', dismiss)
- return () => {
- document.removeEventListener('mousedown', dismiss)
- document.removeEventListener('touchstart', dismiss)
+    document.addEventListener('mousedown', dismiss)
+    document.addEventListener('touchstart', dismiss)
+    return () => {
+      document.removeEventListener('mousedown', dismiss)
+      document.removeEventListener('touchstart', dismiss)
     }
   }, [userActionsPinned])
 
- const userBubbleClass = isGemini
+  const userBubbleClass = isGemini
     ? 'max-w-[min(100%,32rem)] rounded-[24px] bg-[#f0f4f9] px-5 py-3 text-[15px] leading-relaxed text-[#1f1f1f] shadow-none md:max-w-xl'
     : isClaude
     ? 'max-w-[min(100%,28rem)] rounded-3xl rounded-br-lg bg-brand-soft px-4 py-3 text-[15px] leading-relaxed text-fg shadow-none md:max-w-xl md:text-[16px]'
     : 'max-w-[min(100%,28rem)] rounded-2xl rounded-br-md bg-brand px-4 py-2.5 leading-relaxed text-brand-fg shadow-sm md:max-w-xl md:py-3'
 
- const assistantShellClass = isGemini
+  const assistantShellClass = isGemini
     ? 'min-w-0 flex-1 py-0.5 text-[14px] text-[#1f1f1f]'
     : isClaude
     ? 'w-full max-w-none px-0 py-1 text-[15px] leading-relaxed text-fg md:text-[16px]'
     : 'w-full max-w-none px-0 py-1 text-sm leading-relaxed text-fg md:text-[17px]'
 
- if (isAssistant) {
- return (
+  if (isAssistant) {
+    return (
       <article
- data-chat-role="assistant"
- className={`flex w-full justify-start ${isGemini ? 'gap-1.5 md:gap-2' : ''}`}
+        data-chat-role="assistant"
+        className={`flex w-full justify-start ${isGemini ? 'gap-1.5 md:gap-2' : ''}`}
       >
         {isGemini ? (
           <div className="shrink-0 self-start pt-0.5">
             <GeminiSparkleIcon
- className="h-8 w-8"
- loading={Boolean(msg.streaming)}
+              className="h-8 w-8"
+              loading={Boolean(msg.streaming)}
             />
           </div>
         ) : null}
@@ -616,29 +616,29 @@ export function ChatMessage({
           {isEditing && editSession ? (
             <>
               <label htmlFor={`edit-${msg.id}`} className="sr-only">
- 메시지 수정
+                메시지 수정
               </label>
               <textarea
- id={`edit-${msg.id}`}
- value={editSession.text}
- onChange={(event) => onEditTextChange(event.target.value)}
- rows={6}
- className={editFieldClass}
+                id={`edit-${msg.id}`}
+                value={editSession.text}
+                onChange={(event) => onEditTextChange(event.target.value)}
+                rows={6}
+                className={editFieldClass}
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
- type="button"
- className={editPrimaryBtnClass}
- onClick={onCommitEdit}
+                  type="button"
+                  className={editPrimaryBtnClass}
+                  onClick={onCommitEdit}
                 >
- 저장
+                  저장
                 </button>
                 <button
- type="button"
- className={editGhostBtnClass}
- onClick={onCancelEdit}
+                  type="button"
+                  className={editGhostBtnClass}
+                  onClick={onCancelEdit}
                 >
- 취소
+                  취소
                 </button>
               </div>
             </>
@@ -647,9 +647,9 @@ export function ChatMessage({
               {msg.routeInfo ? (
                 <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                   <span
- className="inline-flex items-center gap-1 rounded-full border border-border bg-bg px-2.5 py-0.5 text-[11px] font-medium text-fg-muted"
- title={
- msg.routeInfo.auto
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-bg px-2.5 py-0.5 text-[11px] font-medium text-fg-muted"
+                    title={
+                      msg.routeInfo.auto
                         ? 'NH 스마트 라우터가 요청을 분류해 자동으로 모델을 선택했습니다.'
                         : '사용자가 직접 선택한 모델로 처리했습니다.'
                     }
@@ -667,27 +667,27 @@ export function ChatMessage({
               {!isEditing &&
               (assistantDisplay.showThinkingPanel || msg.streaming) ? (
                 <ThinkingProcessPanel
- thinking={assistantDisplay.thinking}
- streaming={Boolean(msg.streaming)}
- thinkingOpen={assistantDisplay.thinkingOpen}
+                  thinking={assistantDisplay.thinking}
+                  streaming={Boolean(msg.streaming)}
+                  thinkingOpen={assistantDisplay.thinkingOpen}
                 />
               ) : null}
 
               {msg.streaming ? (
                 <StreamingStatusLine
- sinceIso={msg.createdAt}
- hasText={assistantDisplay.answer.trim().length > 0}
+                  sinceIso={msg.createdAt}
+                  hasText={assistantDisplay.answer.trim().length > 0}
                 />
               ) : null}
 
               {msg.streaming ? (
- assistantDisplay.answer.trim().length > 0 ? (
- isGemini ? (
+                assistantDisplay.answer.trim().length > 0 ? (
+                  isGemini ? (
                     <div>
                       <AssistantMessageBody
- content={assistantDisplay.answer}
- variant={variant}
- citations={msg.citations}
+                        content={assistantDisplay.answer}
+                        variant={variant}
+                        citations={msg.citations}
                       />
                       <GeminiStreamingCursor />
                     </div>
@@ -695,12 +695,12 @@ export function ChatMessage({
                     <span className="inline-flex flex-wrap items-end gap-0.5 whitespace-pre-wrap">
                       <span>{assistantDisplay.answer}</span>
                       <span
- className={`mb-0.5 inline-block h-3 w-1 animate-pulse rounded-sm ${
- isClaude
+                        className={`mb-0.5 inline-block h-3 w-1 animate-pulse rounded-sm ${
+                          isClaude
                             ? 'bg-brand'
                             : 'bg-brand'
                         }`}
- aria-hidden="true"
+                        aria-hidden="true"
                       />
                     </span>
                   )
@@ -708,20 +708,20 @@ export function ChatMessage({
                   <span className="inline-flex flex-wrap items-end gap-0.5 whitespace-pre-wrap">
                     <span>{assistantDisplay.answer}</span>
                     <span
- className={`mb-0.5 inline-block h-3 w-1 animate-pulse rounded-sm ${
- isClaude
+                      className={`mb-0.5 inline-block h-3 w-1 animate-pulse rounded-sm ${
+                        isClaude
                           ? 'bg-brand'
                           : 'bg-brand'
                       }`}
- aria-hidden="true"
+                      aria-hidden="true"
                     />
                   </span>
                 ) : null
               ) : (
                 <AssistantMessageBody
- content={assistantDisplay.answer}
- variant={variant}
- citations={msg.citations}
+                  content={assistantDisplay.answer}
+                  variant={variant}
+                  citations={msg.citations}
                 />
               )}
             </div>
@@ -730,8 +730,8 @@ export function ChatMessage({
           {msg.deepResearch && !msg.streaming && !isEditing ? (
             <p className="mt-2">
               <span
- className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-tight ${
- isClaude
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-tight ${
+                  isClaude
                     ? 'border-success/30 bg-success-soft/90 text-success'
                     : 'border-success/30 bg-success-soft text-success'
                 }`}
@@ -743,30 +743,30 @@ export function ChatMessage({
 
           {!msg.streaming && assistantDisplay.answer.trim().length > 0 && !isEditing ? (
             <AssistantMessageFooter
- messageId={msg.id}
- variant={variant}
- messageType={messageType}
- time={msg.time}
- answerText={assistantDisplay.answer}
- userPrompt={assistantUserPrompt}
- modelLabel={modelLabel}
- threadShareUrl={threadShareUrl}
- copied={copiedId === msg.id}
- bookmarkDone={bookmarkDoneId === msg.id}
- bookmarkBusy={bookmarkBusy}
- showBookmark={showBookmark}
- onCopy={onCopy}
- onBookmark={onBookmark}
- onRegenerate={onRegenerate}
- onContinue={onContinue}
- regenerateDisabled={regenerateDisabled}
- elapsedMs={msg.elapsedMs}
- usage={msg.usage}
+              messageId={msg.id}
+              variant={variant}
+              messageType={messageType}
+              time={msg.time}
+              answerText={assistantDisplay.answer}
+              userPrompt={assistantUserPrompt}
+              modelLabel={modelLabel}
+              threadShareUrl={threadShareUrl}
+              copied={copiedId === msg.id}
+              bookmarkDone={bookmarkDoneId === msg.id}
+              bookmarkBusy={bookmarkBusy}
+              showBookmark={showBookmark}
+              onCopy={onCopy}
+              onBookmark={onBookmark}
+              onRegenerate={onRegenerate}
+              onContinue={onContinue}
+              regenerateDisabled={regenerateDisabled}
+              elapsedMs={msg.elapsedMs}
+              usage={msg.usage}
             />
           ) : !msg.streaming && msg.content.trim().length === 0 ? (
             <p
- className={`mt-2 text-[13px] tabular-nums ${
- isClaude
+              className={`mt-2 text-[13px] tabular-nums ${
+                isClaude
                   ? 'text-fg-subtle'
                   : 'text-fg-subtle'
               }`}
@@ -779,31 +779,31 @@ export function ChatMessage({
     )
   }
 
- return (
+  return (
     <article
- ref={userRowRef}
- data-chat-role="user"
- className="group flex w-full justify-end"
- onTouchStart={handleUserTouchStart}
- onTouchEnd={clearLongPressTimer}
- onTouchMove={clearLongPressTimer}
- onTouchCancel={clearLongPressTimer}
+      ref={userRowRef}
+      data-chat-role="user"
+      className="group flex w-full justify-end"
+      onTouchStart={handleUserTouchStart}
+      onTouchEnd={clearLongPressTimer}
+      onTouchMove={clearLongPressTimer}
+      onTouchCancel={clearLongPressTimer}
     >
       <div className="flex max-w-full items-center gap-0.5 sm:gap-1">
         {!isEditing && msg.content.trim().length > 0 ? (
           <div
- className={`flex shrink-0 items-center transition-opacity duration-150 ${
- userActionsPinned
+            className={`flex shrink-0 items-center transition-opacity duration-150 ${
+              userActionsPinned
                 ? 'opacity-100'
                 : 'pointer-events-none opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100'
             }`}
           >
             <UserMessageActionButtons
- variant={variant}
- editable={editable}
- copied={copiedId === msg.id}
- onCopy={onCopy}
- onStartEdit={onStartEdit}
+              variant={variant}
+              editable={editable}
+              copied={copiedId === msg.id}
+              onCopy={onCopy}
+              onStartEdit={onStartEdit}
             />
           </div>
         ) : null}
@@ -817,11 +817,11 @@ export function ChatMessage({
 
         {msg.attachmentPreviews && msg.attachmentPreviews.length > 0 ? (
           <ChatAttachmentPreviewStrip
- variant={isGemini ? 'gemini' : isClaude ? 'claude' : 'default'}
- layout="bubble"
- items={msg.attachmentPreviews.map((src, attIdx) => ({
- src,
- alt: `첨부 ${attIdx + 1}`,
+            variant={isGemini ? 'gemini' : isClaude ? 'claude' : 'default'}
+            layout="bubble"
+            items={msg.attachmentPreviews.map((src, attIdx) => ({
+              src,
+              alt: `첨부 ${attIdx + 1}`,
             }))}
           />
         ) : null}
@@ -829,29 +829,29 @@ export function ChatMessage({
         {isEditing && editSession ? (
           <>
             <label htmlFor={`edit-${msg.id}`} className="sr-only">
- 메시지 수정
+              메시지 수정
             </label>
             <textarea
- id={`edit-${msg.id}`}
- value={editSession.text}
- onChange={(event) => onEditTextChange(event.target.value)}
- rows={6}
- className={editFieldClass}
+              id={`edit-${msg.id}`}
+              value={editSession.text}
+              onChange={(event) => onEditTextChange(event.target.value)}
+              rows={6}
+              className={editFieldClass}
             />
             <div className="mt-2 flex flex-wrap gap-2">
               <button
- type="button"
- className={editPrimaryBtnClass}
- onClick={onCommitEdit}
+                type="button"
+                className={editPrimaryBtnClass}
+                onClick={onCommitEdit}
               >
- 저장
+                저장
               </button>
               <button
- type="button"
- className={editGhostBtnClass}
- onClick={onCancelEdit}
+                type="button"
+                className={editGhostBtnClass}
+                onClick={onCancelEdit}
               >
- 취소
+                취소
               </button>
             </div>
           </>
@@ -863,8 +863,8 @@ export function ChatMessage({
 
         <div className="mt-1.5">
           <p
- className={`text-[13px] tabular-nums ${
- isGemini
+            className={`text-[13px] tabular-nums ${
+              isGemini
                 ? 'text-[#444746]'
                 : isClaude
                   ? 'text-fg-muted'

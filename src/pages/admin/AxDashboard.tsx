@@ -2,21 +2,21 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
 interface AxMetrics {
- knowledgeDocCount: number
- knowledgeChunkCount: number
- knowledgeNodeCount: number
- knowledgeEdgeCount: number
- memoryCount: number
- feedbackTotal: number
- feedbackPositive: number
- dpoCount: number
- routerLogCount: number
- routerCorrectCount: number
- tokenTotalToday: number
+  knowledgeDocCount: number
+  knowledgeChunkCount: number
+  knowledgeNodeCount: number
+  knowledgeEdgeCount: number
+  memoryCount: number
+  feedbackTotal: number
+  feedbackPositive: number
+  dpoCount: number
+  routerLogCount: number
+  routerCorrectCount: number
+  tokenTotalToday: number
 }
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
- return (
+  return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <p className="text-[12px] font-semibold uppercase tracking-wider text-fg-subtle">{label}</p>
       <p className="mt-1 text-3xl font-bold tabular-nums text-fg">{value}</p>
@@ -26,9 +26,9 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 }
 
 function ProgressBar({ value, max, color = 'indigo' }: { value: number; max: number; color?: string }) {
- const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
- const colorClass = color === 'green' ? 'bg-green-500' : color === 'amber' ? 'bg-amber-500' : 'bg-accent'
- return (
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
+  const colorClass = color === 'green' ? 'bg-green-500' : color === 'amber' ? 'bg-amber-500' : 'bg-accent'
+  return (
     <div className="mt-2">
       <div className="flex items-center justify-between text-[12px] text-fg-subtle">
         <span>{value.toLocaleString()} / {max.toLocaleString()}</span>
@@ -42,19 +42,19 @@ function ProgressBar({ value, max, color = 'indigo' }: { value: number; max: num
 }
 
 export function AxDashboard() {
- const [metrics, setMetrics] = useState<AxMetrics | null>(null)
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState<string | null>(null)
- const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
+  const [metrics, setMetrics] = useState<AxMetrics | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
 
- async function load() {
- setLoading(true)
- setError(null)
- try {
- const todayStart = new Date()
- todayStart.setHours(0, 0, 0, 0)
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const todayStart = new Date()
+      todayStart.setHours(0, 0, 0, 0)
 
- const [
+      const [
         { count: knowledgeDocCount },
         { count: knowledgeChunkCount },
         { count: knowledgeNodeCount },
@@ -65,88 +65,88 @@ export function AxDashboard() {
         { count: routerCorrectCount },
         { data: tokenRows },
       ] = await Promise.all([
- supabase.from('knowledge_base').select('id', { count: 'exact', head: true }).is('deleted_at', null),
- supabase.from('knowledge_base_chunks').select('id', { count: 'exact', head: true }),
- supabase.from('nh_knowledge_nodes').select('id', { count: 'exact', head: true }),
- supabase.from('nh_knowledge_edges').select('id', { count: 'exact', head: true }),
- supabase.from('user_long_term_memory').select('id', { count: 'exact', head: true }),
- supabase.from('message_feedbacks').select('feedback_type'),
- supabase.from('assistant_router_shadow_logs').select('id', { count: 'exact', head: true }),
- supabase.from('assistant_router_shadow_logs').select('id', { count: 'exact', head: true }).eq('matched', true),
- supabase.from('token_logs').select('total_tokens').gte('created_at', todayStart.toISOString()),
+        supabase.from('knowledge_base').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+        supabase.from('knowledge_base_chunks').select('id', { count: 'exact', head: true }),
+        supabase.from('nh_knowledge_nodes').select('id', { count: 'exact', head: true }),
+        supabase.from('nh_knowledge_edges').select('id', { count: 'exact', head: true }),
+        supabase.from('user_long_term_memory').select('id', { count: 'exact', head: true }),
+        supabase.from('message_feedbacks').select('feedback_type'),
+        supabase.from('assistant_router_shadow_logs').select('id', { count: 'exact', head: true }),
+        supabase.from('assistant_router_shadow_logs').select('id', { count: 'exact', head: true }).eq('matched', true),
+        supabase.from('token_logs').select('total_tokens').gte('created_at', todayStart.toISOString()),
       ])
 
- const feedbackTotal = feedbackRows?.length ?? 0
- const feedbackPositive = feedbackRows?.filter((r) => r.feedback_type === 'thumbs_up' || r.feedback_type === 'positive').length ?? 0
+      const feedbackTotal = feedbackRows?.length ?? 0
+      const feedbackPositive = feedbackRows?.filter((r) => r.feedback_type === 'thumbs_up' || r.feedback_type === 'positive').length ?? 0
 
- let dpoCount = 0
- try {
- const { data: dpoData } = await supabase.rpc('get_dpo_preference_dataset', { p_limit: 1 })
- if (Array.isArray(dpoData)) {
- const { count: fullCount } = await supabase.rpc('get_dpo_preference_dataset', { p_limit: 99999 })
- dpoCount = Array.isArray(fullCount) ? fullCount.length : 0
- const { data: fullDpo } = await supabase.rpc('get_dpo_preference_dataset', { p_limit: 99999 })
- dpoCount = Array.isArray(fullDpo) ? fullDpo.length : 0
+      let dpoCount = 0
+      try {
+        const { data: dpoData } = await supabase.rpc('get_dpo_preference_dataset', { p_limit: 1 })
+        if (Array.isArray(dpoData)) {
+          const { count: fullCount } = await supabase.rpc('get_dpo_preference_dataset', { p_limit: 99999 })
+          dpoCount = Array.isArray(fullCount) ? fullCount.length : 0
+          const { data: fullDpo } = await supabase.rpc('get_dpo_preference_dataset', { p_limit: 99999 })
+          dpoCount = Array.isArray(fullDpo) ? fullDpo.length : 0
         }
       } catch {
- dpoCount = 0
+        dpoCount = 0
       }
 
- const tokenTotalToday = tokenRows?.reduce((sum, r) => sum + (r.total_tokens ?? 0), 0) ?? 0
+      const tokenTotalToday = tokenRows?.reduce((sum, r) => sum + (r.total_tokens ?? 0), 0) ?? 0
 
- setMetrics({
- knowledgeDocCount: knowledgeDocCount ?? 0,
- knowledgeChunkCount: knowledgeChunkCount ?? 0,
- knowledgeNodeCount: knowledgeNodeCount ?? 0,
- knowledgeEdgeCount: knowledgeEdgeCount ?? 0,
- memoryCount: memoryCount ?? 0,
- feedbackTotal,
- feedbackPositive,
- dpoCount,
- routerLogCount: routerLogCount ?? 0,
- routerCorrectCount: routerCorrectCount ?? 0,
- tokenTotalToday,
+      setMetrics({
+        knowledgeDocCount: knowledgeDocCount ?? 0,
+        knowledgeChunkCount: knowledgeChunkCount ?? 0,
+        knowledgeNodeCount: knowledgeNodeCount ?? 0,
+        knowledgeEdgeCount: knowledgeEdgeCount ?? 0,
+        memoryCount: memoryCount ?? 0,
+        feedbackTotal,
+        feedbackPositive,
+        dpoCount,
+        routerLogCount: routerLogCount ?? 0,
+        routerCorrectCount: routerCorrectCount ?? 0,
+        tokenTotalToday,
       })
- setRefreshedAt(new Date())
+      setRefreshedAt(new Date())
     } catch (e: unknown) {
- setError(e instanceof Error ? e.message : '알 수 없는 오류')
+      setError(e instanceof Error ? e.message : '알 수 없는 오류')
     } finally {
- setLoading(false)
+      setLoading(false)
     }
   }
 
- useEffect(() => {
- load()
+  useEffect(() => {
+    load()
   }, [])
 
- const routerAccuracy = metrics && metrics.routerLogCount > 0
+  const routerAccuracy = metrics && metrics.routerLogCount > 0
     ? Math.round((metrics.routerCorrectCount / metrics.routerLogCount) * 100)
     : null
 
- const feedbackQuality = metrics && metrics.feedbackTotal > 0
+  const feedbackQuality = metrics && metrics.feedbackTotal > 0
     ? Math.round((metrics.feedbackPositive / metrics.feedbackTotal) * 100)
     : null
 
- return (
+  return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-fg">AX 고도화 현황</h1>
           <p className="mt-0.5 text-[13px] text-fg-subtle">
- 지식·기억·피드백이 어떻게 축적되고 있는지 확인합니다.
+            지식·기억·피드백이 어떻게 축적되고 있는지 확인합니다.
           </p>
         </div>
         <div className="flex items-center gap-2">
           {refreshedAt && (
             <span className="text-[12px] text-fg-subtle">
- 업데이트: {refreshedAt.toLocaleTimeString('ko-KR')}
+              업데이트: {refreshedAt.toLocaleTimeString('ko-KR')}
             </span>
           )}
           <button
- type="button"
- onClick={load}
- disabled={loading}
- className="rounded-lg border border-border bg-surface px-3 py-1.5 text-[13px] font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
+            type="button"
+            onClick={load}
+            disabled={loading}
+            className="rounded-lg border border-border bg-surface px-3 py-1.5 text-[13px] font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
           >
             {loading ? '로딩 중…' : '새로고침'}
           </button>
@@ -155,7 +155,7 @@ export function AxDashboard() {
 
       {error && (
         <div className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-[13px] text-danger">
- 오류: {error}
+          오류: {error}
         </div>
       )}
 
@@ -166,7 +166,7 @@ export function AxDashboard() {
           {/* 지식 베이스 */}
           <section>
             <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-fg-subtle">
- 지식 베이스 축적
+              지식 베이스 축적
             </h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <StatCard label="문서 수" value={metrics.knowledgeDocCount.toLocaleString()} sub="knowledge_base" />
@@ -179,13 +179,13 @@ export function AxDashboard() {
           {/* 사용자 기억 */}
           <section>
             <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-fg-subtle">
- 사용자 장기 기억
+              사용자 장기 기억
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <StatCard
- label="누적 기억 수"
- value={metrics.memoryCount.toLocaleString()}
- sub="user_long_term_memory"
+                label="누적 기억 수"
+                value={metrics.memoryCount.toLocaleString()}
+                sub="user_long_term_memory"
               />
               <div className="rounded-xl border border-border bg-surface p-4">
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-fg-subtle">기억 유형 안내</p>
@@ -202,13 +202,13 @@ export function AxDashboard() {
           {/* 피드백 & DPO */}
           <section>
             <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-fg-subtle">
- 피드백 및 DPO 학습 데이터
+              피드백 및 DPO 학습 데이터
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <StatCard
- label="전체 피드백"
- value={metrics.feedbackTotal.toLocaleString()}
- sub="message_feedbacks"
+                label="전체 피드백"
+                value={metrics.feedbackTotal.toLocaleString()}
+                sub="message_feedbacks"
               />
               <div className="rounded-xl border border-border bg-surface p-4">
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-fg-subtle">긍정 피드백 비율</p>
@@ -222,9 +222,9 @@ export function AxDashboard() {
                 )}
               </div>
               <StatCard
- label="DPO 페어 수"
- value={metrics.dpoCount.toLocaleString()}
- sub="선호 학습 데이터셋"
+                label="DPO 페어 수"
+                value={metrics.dpoCount.toLocaleString()}
+                sub="선호 학습 데이터셋"
               />
             </div>
           </section>
@@ -232,13 +232,13 @@ export function AxDashboard() {
           {/* 라우터 정확도 */}
           <section>
             <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-fg-subtle">
- 스마트 라우터 정확도
+              스마트 라우터 정확도
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <StatCard
- label="라우터 로그"
- value={metrics.routerLogCount.toLocaleString()}
- sub="assistant_router_shadow_logs"
+                label="라우터 로그"
+                value={metrics.routerLogCount.toLocaleString()}
+                sub="assistant_router_shadow_logs"
               />
               <div className="rounded-xl border border-border bg-surface p-4">
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-fg-subtle">라우팅 적중률</p>
@@ -248,9 +248,9 @@ export function AxDashboard() {
                       {routerAccuracy}%
                     </p>
                     <ProgressBar
- value={metrics.routerCorrectCount}
- max={metrics.routerLogCount}
- color={routerAccuracy >= 80 ? 'green' : routerAccuracy >= 60 ? 'amber' : 'indigo'}
+                      value={metrics.routerCorrectCount}
+                      max={metrics.routerLogCount}
+                      color={routerAccuracy >= 80 ? 'green' : routerAccuracy >= 60 ? 'amber' : 'indigo'}
                     />
                   </>
                 ) : (
@@ -263,12 +263,12 @@ export function AxDashboard() {
           {/* 오늘 토큰 사용량 */}
           <section>
             <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-fg-subtle">
- 오늘 AI 사용량
+              오늘 AI 사용량
             </h2>
             <StatCard
- label="오늘 총 토큰"
- value={metrics.tokenTotalToday.toLocaleString()}
- sub={`기준: ${new Date().toLocaleDateString('ko-KR')} 00:00 이후 token_logs`}
+              label="오늘 총 토큰"
+              value={metrics.tokenTotalToday.toLocaleString()}
+              sub={`기준: ${new Date().toLocaleDateString('ko-KR')} 00:00 이후 token_logs`}
             />
           </section>
 

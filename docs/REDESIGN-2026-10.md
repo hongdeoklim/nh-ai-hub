@@ -70,9 +70,10 @@
 | P0 | `sonner` 명시 의존성, README 재작성, 데드 코드 삭제 | ✅ 구현 |
 | **P1** | **루트 폰트 16px 전환** (§3.1) | ✅ 완료 (2단계 커밋) |
 | P1 | 페이지별 토큰 마이그레이션 (stone/slate/orange → 시맨틱) | ✅ 1차 93파일 완료 · 제외: LibraryPage, ai-sheets, knowledge-graph, CadEditor, UniverOffice (§6.1) |
-| P1 | 각 페이지 `PageHeader`/`EmptyState` 적용 | 제안 (수작업) |
-| P1 | 레거시 라우트 리다이렉트: `/workflows` `/marketplace` `/workspace-tools` → 자동화 스튜디오 탭 | 제안 |
-| P1 | 아이콘 자산: 192/512 PNG 실제 리사이즈, maskable 아이콘 별도 제작, 미사용 PNG 삭제 | 디자인 자산 필요 |
+| P1 | 각 페이지 `PageHeader` 적용 (13개 화면: 스크랩북·팀·지식 허브·자동화·CAD·연동·노트북·현장평가·Slides·자료실·마켓·워크플로우·라이브러리) | ✅ 완료 · `EmptyState` 는 후속 |
+| P1 | 레거시 라우트 `/workflows` `/marketplace` `/workspace-tools` | 유지 결정 — 자동화 스튜디오가 링크하는 **상세 화면**이라 리다이렉트하면 기능 손실. 내비에서만 숨김(`hidden`) |
+| P1 | 아이콘 자산: 1024px 원본 → 192/512/180(apple) 실제 리사이즈, maskable 512 별도 생성, `splash-bg.png`(1MB, 미사용) 삭제 | ✅ 완료 |
+| P1 | `LibraryPage` 토큰화 (네이비+핑크 독자 테마 → 시맨틱 토큰, PageHeader) | ✅ 완료 (레이아웃은 유지) |
 | P2 | 관리자 콘솔 시맨틱 토큰 적용 (현재 그룹화만) | 제안 |
 | P2 | Dashboard/ChatInput 분해 (훅 추출), Playwright 스크린샷 테스트, lint 게이트 전환 | 제안 |
 | P2 | 설치 앱 전용: 데스크톱 PWA 창 컨트롤 오버레이, 오프라인 폴백 페이지 | 제안 |

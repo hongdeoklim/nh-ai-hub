@@ -27,9 +27,10 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <header
-      className={`flex flex-col gap-[12px] md:flex-row md:items-end md:justify-between ${className}`}
+      className={`flex flex-col gap-[12px] md:flex-row md:flex-wrap md:items-end md:justify-between ${className}`}
     >
-      <div className="flex min-w-0 items-start gap-[12px]">
+      {/* 제목 영역은 최소 320px 을 확보하고, 액션이 넓으면 다음 줄로 내려간다 */}
+      <div className="flex min-w-0 flex-1 basis-[320px] items-start gap-[12px]">
         {Icon ? (
           <span
             className="mt-[2px] inline-flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[12px] bg-brand-soft text-brand"
@@ -55,7 +56,7 @@ export function PageHeader({
         </div>
       </div>
       {actions ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-[8px]">{actions}</div>
+        <div className="flex min-w-0 flex-wrap items-center gap-[8px]">{actions}</div>
       ) : null}
     </header>
   )

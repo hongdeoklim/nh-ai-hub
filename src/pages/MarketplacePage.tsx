@@ -2,45 +2,47 @@ import { toast } from 'sonner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
- fetchMarketplaceExtensions,
- installExtension,
- setExtensionEnabled,
- uninstallExtension,
- updateInstallationConfig,
- type ExtensionType,
- type MarketplaceExtension,
+  fetchMarketplaceExtensions,
+  installExtension,
+  setExtensionEnabled,
+  uninstallExtension,
+  updateInstallationConfig,
+  type ExtensionType,
+  type MarketplaceExtension,
 } from '../services/marketplace'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconStore } from '../components/common/icons'
 
 // ── Type metadata ────────────────────────────────────────────────────────────
 
 const TYPE_META: Record<ExtensionType, { label: string; icon: string; color: string; desc: string; badge: string }> = {
- plugin: {
- label: 'Plugin',
- icon: '🔌',
- color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
- desc: 'AI 채팅에서 외부 서비스를 직접 호출합니다.',
- badge: 'API 키 또는 계정 연결 필요',
+  plugin: {
+    label: 'Plugin',
+    icon: '🔌',
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+    desc: 'AI 채팅에서 외부 서비스를 직접 호출합니다.',
+    badge: 'API 키 또는 계정 연결 필요',
   },
- mcp: {
- label: 'MCP',
- icon: '🔗',
- color: 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300',
- desc: '로컬 프로그램(AutoCAD, 한글 등)을 AI와 연결합니다.',
- badge: '로컬 브릿지 서버 설치 필요',
+  mcp: {
+    label: 'MCP',
+    icon: '🔗',
+    color: 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300',
+    desc: '로컬 프로그램(AutoCAD, 한글 등)을 AI와 연결합니다.',
+    badge: '로컬 브릿지 서버 설치 필요',
   },
- skill: {
- label: 'Skill',
- icon: '⚡',
- color: 'bg-warning-soft text-warning',
- desc: '설치 즉시 사용 — AI가 특정 업무 형식으로 답변합니다.',
- badge: '설치 후 바로 사용 가능',
+  skill: {
+    label: 'Skill',
+    icon: '⚡',
+    color: 'bg-warning-soft text-warning',
+    desc: '설치 즉시 사용 — AI가 특정 업무 형식으로 답변합니다.',
+    badge: '설치 후 바로 사용 가능',
   },
- public_data: {
- label: 'Public Data',
- icon: '📡',
- color: 'bg-success-soft text-success',
- desc: '공공기관 API 데이터를 AI 채팅에서 조회합니다.',
- badge: '공공데이터포털 API 키 필요',
+  public_data: {
+    label: 'Public Data',
+    icon: '📡',
+    color: 'bg-success-soft text-success',
+    desc: '공공기관 API 데이터를 AI 채팅에서 조회합니다.',
+    badge: '공공데이터포털 API 키 필요',
   },
 }
 
@@ -55,18 +57,18 @@ const FILTERS: Array<{ id: 'all' | ExtensionType; label: string }> = [
 // ── Config schema helpers ────────────────────────────────────────────────────
 
 interface JsonSchemaProperty {
- type: string
- description?: string
+  type: string
+  description?: string
 }
 
 function getConfigFields(schema: Record<string, unknown>): Array<{ key: string; label: string; type: string; required: boolean }> {
- const props = (schema as { properties?: Record<string, JsonSchemaProperty> }).properties ?? {}
- const required: string[] = (schema as { required?: string[] }).required ?? []
- return Object.entries(props).map(([key, val]) => ({
- key,
- label: val.description ?? key,
- type: val.type ?? 'string',
- required: required.includes(key),
+  const props = (schema as { properties?: Record<string, JsonSchemaProperty> }).properties ?? {}
+  const required: string[] = (schema as { required?: string[] }).required ?? []
+  return Object.entries(props).map(([key, val]) => ({
+    key,
+    label: val.description ?? key,
+    type: val.type ?? 'string',
+    required: required.includes(key),
   }))
 }
 
@@ -126,44 +128,44 @@ const SCOPE_LABELS: Record<string, string> = {
 }
 
 function scopeLabel(scope: string): string {
- return SCOPE_LABELS[scope] ?? scope
+  return SCOPE_LABELS[scope] ?? scope
 }
 
 // ── 타입별 "시작하는 방법" 안내 ──────────────────────────────────────────────
 
 interface HowToStartProps {
- type: ExtensionType
- onGoConfig?: () => void
+  type: ExtensionType
+  onGoConfig?: () => void
 }
 
 function HowToStart({ type, onGoConfig }: HowToStartProps) {
- if (type === 'skill') {
- return (
+  if (type === 'skill') {
+    return (
       <div className="rounded-xl bg-warning-soft p-4">
         <p className="text-sm font-semibold text-warning">⚡ 설치만 하면 바로 사용 가능합니다</p>
         <p className="mt-1.5 text-sm leading-6 text-warning">
- 별도 계정이나 API 키 없이 설치 즉시 AI 채팅에서 사용할 수 있습니다. 설치 후 채팅창에 원하는 내용을 입력해 보세요.
+          별도 계정이나 API 키 없이 설치 즉시 AI 채팅에서 사용할 수 있습니다. 설치 후 채팅창에 원하는 내용을 입력해 보세요.
         </p>
       </div>
     )
   }
- if (type === 'plugin') {
- return (
+  if (type === 'plugin') {
+    return (
       <div className="rounded-xl bg-blue-50 p-4 dark:bg-blue-950/30">
         <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">🔌 플러그인 연결 3단계</p>
         <ol className="mt-2 space-y-1.5 text-sm leading-6 text-blue-700 dark:text-blue-400">
           <li><span className="mr-2 font-bold">1.</span>아래 <strong>설치</strong> 버튼을 누릅니다.</li>
           <li><span className="mr-2 font-bold">2.</span>
             <button onClick={onGoConfig} className="underline font-semibold">설정 탭</button>
- 으로 이동해 API 키 또는 계정 정보를 입력합니다.
+            으로 이동해 API 키 또는 계정 정보를 입력합니다.
           </li>
           <li><span className="mr-2 font-bold">3.</span>AI 채팅에서 서비스를 바로 호출할 수 있습니다.</li>
         </ol>
       </div>
     )
   }
- if (type === 'mcp') {
- return (
+  if (type === 'mcp') {
+    return (
       <div className="rounded-xl bg-violet-50 p-4 dark:bg-violet-950/30">
         <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">🔗 MCP 연결 4단계</p>
         <ol className="mt-2 space-y-1.5 text-sm leading-6 text-violet-700 dark:text-violet-400">
@@ -175,8 +177,8 @@ function HowToStart({ type, onGoConfig }: HowToStartProps) {
       </div>
     )
   }
- if (type === 'public_data') {
- return (
+  if (type === 'public_data') {
+    return (
       <div className="rounded-xl bg-success-soft p-4">
         <p className="text-sm font-semibold text-success">📡 공공데이터 연결 3단계</p>
         <ol className="mt-2 space-y-1.5 text-sm leading-6 text-success">
@@ -187,23 +189,23 @@ function HowToStart({ type, onGoConfig }: HowToStartProps) {
       </div>
     )
   }
- return null
+  return null
 }
 
 // ── 정보 탭 ──────────────────────────────────────────────────────────────────
 
 interface InfoTabProps {
- ext: MarketplaceExtension
- manifest: Record<string, unknown>
- portalUrl: string | null
- docsUrl: string | null
- onGoConfig: () => void
+  ext: MarketplaceExtension
+  manifest: Record<string, unknown>
+  portalUrl: string | null
+  docsUrl: string | null
+  onGoConfig: () => void
 }
 
 function InfoTab({ ext, manifest, portalUrl, docsUrl, onGoConfig }: InfoTabProps) {
- const tools = Array.isArray(manifest.tools) ? (manifest.tools as Array<{ name: string; description: string }>) : []
+  const tools = Array.isArray(manifest.tools) ? (manifest.tools as Array<{ name: string; description: string }>) : []
 
- return (
+  return (
     <div className="space-y-5">
       {/* 한 줄 설명 */}
       <p className="text-sm leading-7 text-fg-muted">{ext.description}</p>
@@ -262,46 +264,46 @@ function InfoTab({ ext, manifest, portalUrl, docsUrl, onGoConfig }: InfoTabProps
 // ── Detail / Config Modal ────────────────────────────────────────────────────
 
 interface DetailModalProps {
- ext: MarketplaceExtension
- onClose: () => void
- onInstall: (config: Record<string, unknown>) => Promise<void>
- onUpdateConfig: (config: Record<string, unknown>) => Promise<void>
- busy: boolean
+  ext: MarketplaceExtension
+  onClose: () => void
+  onInstall: (config: Record<string, unknown>) => Promise<void>
+  onUpdateConfig: (config: Record<string, unknown>) => Promise<void>
+  busy: boolean
 }
 
 function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailModalProps) {
- const meta = TYPE_META[ext.extension_type]
- const fields = getConfigFields(ext.config_schema)
- const hasConfig = fields.length > 0
- const manifest = ext.manifest as Record<string, unknown>
- const prompt = typeof manifest.prompt === 'string' ? manifest.prompt : null
- const portalUrl = typeof manifest.portal_url === 'string' ? manifest.portal_url : null
- const docsUrl = typeof manifest.docs_url === 'string' ? manifest.docs_url : null
+  const meta = TYPE_META[ext.extension_type]
+  const fields = getConfigFields(ext.config_schema)
+  const hasConfig = fields.length > 0
+  const manifest = ext.manifest as Record<string, unknown>
+  const prompt = typeof manifest.prompt === 'string' ? manifest.prompt : null
+  const portalUrl = typeof manifest.portal_url === 'string' ? manifest.portal_url : null
+  const docsUrl = typeof manifest.docs_url === 'string' ? manifest.docs_url : null
 
- const [form, setForm] = useState<Record<string, string>>(() => {
- if (!ext.installation?.config) return {}
- const existing = ext.installation.config as Record<string, string>
- return Object.fromEntries(fields.map((f) => [f.key, String(existing[f.key] ?? '')]))
+  const [form, setForm] = useState<Record<string, string>>(() => {
+    if (!ext.installation?.config) return {}
+    const existing = ext.installation.config as Record<string, string>
+    return Object.fromEntries(fields.map((f) => [f.key, String(existing[f.key] ?? '')]))
   })
- const [tab, setTab] = useState<'info' | 'config' | 'preview'>('info')
+  const [tab, setTab] = useState<'info' | 'config' | 'preview'>('info')
 
- const overlayRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
 
- const handleSubmit = async () => {
- const config: Record<string, unknown> = {}
- for (const f of fields) config[f.key] = form[f.key] ?? ''
- if (ext.installation) {
- await onUpdateConfig(config)
+  const handleSubmit = async () => {
+    const config: Record<string, unknown> = {}
+    for (const f of fields) config[f.key] = form[f.key] ?? ''
+    if (ext.installation) {
+      await onUpdateConfig(config)
     } else {
- await onInstall(config)
+      await onInstall(config)
     }
   }
 
- return (
+  return (
     <div
- ref={overlayRef}
- className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center"
- onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center"
+      onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
     >
       <div className="w-full max-w-lg rounded-t-2xl bg-surface shadow-2xl sm:rounded-2xl">
         {/* Header */}
@@ -321,10 +323,10 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
         <div className="flex gap-0 border-b border-border">
           {(['info', ...(hasConfig ? ['config'] : []), ...(prompt ? ['preview'] : [])] as Array<'info' | 'config' | 'preview'>).map((t) => (
             <button
- key={t}
- type="button"
- onClick={() => setTab(t)}
- className={`px-5 py-3 text-sm font-semibold transition-colors ${tab === t ? 'border-b-2 border-orange-700 text-brand' : 'text-fg-subtle hover:text-fg'}`}
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={`px-5 py-3 text-sm font-semibold transition-colors ${tab === t ? 'border-b-2 border-orange-700 text-brand' : 'text-fg-subtle hover:text-fg'}`}
             >
               {t === 'info' ? '정보' : t === 'config' ? '설정' : '미리보기'}
             </button>
@@ -338,7 +340,7 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
           {tab === 'config' && (
             <div className="space-y-5">
               <p className="text-sm leading-6 text-fg-muted">
- 아래 항목을 입력한 뒤 <strong>저장</strong> 버튼을 누르면 설정이 완료됩니다.
+                아래 항목을 입력한 뒤 <strong>저장</strong> 버튼을 누르면 설정이 완료됩니다.
               </p>
               {fields.map((f) => (
                 <div key={f.key}>
@@ -347,11 +349,11 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
                     {f.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <input
- type={f.key.toLowerCase().includes('token') || f.key.toLowerCase().includes('key') || f.key.toLowerCase().includes('secret') || f.key.toLowerCase().includes('password') ? 'password' : 'text'}
- aria-label={f.label} value={form[f.key] ?? ''}
- onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
- placeholder={f.label}
- className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
+                    type={f.key.toLowerCase().includes('token') || f.key.toLowerCase().includes('key') || f.key.toLowerCase().includes('secret') || f.key.toLowerCase().includes('password') ? 'password' : 'text'}
+                    aria-label={f.label} value={form[f.key] ?? ''}
+                    onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                    placeholder={f.label}
+                    className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
                   />
                 </div>
               ))}
@@ -363,9 +365,9 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
               <div className="rounded-xl bg-warning-soft p-4">
                 <p className="text-sm font-semibold text-warning">💡 이렇게 사용하세요</p>
                 <p className="mt-1 text-sm leading-6 text-warning">
- AI 채팅창에 원하는 내용을 입력하면 아래 형식에 맞게 자동으로 답변합니다.
+                  AI 채팅창에 원하는 내용을 입력하면 아래 형식에 맞게 자동으로 답변합니다.
                   <code className="mx-1 rounded bg-warning-soft px-1.5 py-0.5 text-xs">{'{{중괄호}}'}</code>
- 부분을 실제 내용으로 채워서 요청하세요.
+                  부분을 실제 내용으로 채워서 요청하세요.
                 </p>
               </div>
               <p className="text-xs font-semibold uppercase tracking-wider text-fg-subtle">AI가 사용하는 프롬프트 형식</p>
@@ -379,19 +381,19 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
           <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-fg-muted hover:bg-surface-2">닫기</button>
           {tab === 'config' ? (
             <button
- type="button"
- disabled={busy}
- onClick={() => void handleSubmit()}
- className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
+              type="button"
+              disabled={busy}
+              onClick={() => void handleSubmit()}
+              className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
             >
               {busy ? '저장 중…' : ext.installation ? '설정 저장' : '설치 및 저장'}
             </button>
           ) : !ext.installation ? (
             <button
- type="button"
- disabled={busy}
- onClick={() => void (hasConfig ? setTab('config') : handleSubmit())}
- className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
+              type="button"
+              disabled={busy}
+              onClick={() => void (hasConfig ? setTab('config') : handleSubmit())}
+              className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
             >
               {hasConfig ? '설치 설정하기' : busy ? '설치 중…' : '설치'}
             </button>
@@ -405,22 +407,22 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
 // ── Extension Card ───────────────────────────────────────────────────────────
 
 interface CardProps {
- ext: MarketplaceExtension
- busy: boolean
- onInstall: () => void
- onToggle: () => void
- onUninstall: () => void
- onDetail: () => void
+  ext: MarketplaceExtension
+  busy: boolean
+  onInstall: () => void
+  onToggle: () => void
+  onUninstall: () => void
+  onDetail: () => void
 }
 
 function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }: CardProps) {
- const meta = TYPE_META[ext.extension_type]
- const installed = ext.installation
- const manifest = ext.manifest as Record<string, unknown>
- const icon = typeof manifest.icon === 'string' ? manifest.icon : meta.icon
- const hasConfig = getConfigFields(ext.config_schema).length > 0
+  const meta = TYPE_META[ext.extension_type]
+  const installed = ext.installation
+  const manifest = ext.manifest as Record<string, unknown>
+  const icon = typeof manifest.icon === 'string' ? manifest.icon : meta.icon
+  const hasConfig = getConfigFields(ext.config_schema).length > 0
 
- return (
+  return (
     <article className="flex flex-col rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
@@ -445,47 +447,47 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
- type="button"
- onClick={onDetail}
- className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
+          type="button"
+          onClick={onDetail}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
         >
- 자세히
+          자세히
         </button>
         {!installed ? (
           <button
- type="button"
- disabled={busy}
- onClick={hasConfig ? onDetail : onInstall}
- className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
+            type="button"
+            disabled={busy}
+            onClick={hasConfig ? onDetail : onInstall}
+            className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
           >
             {busy ? '설치 중…' : '설치'}
           </button>
         ) : (
           <>
             <button
- type="button"
- disabled={busy}
- onClick={onToggle}
- className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
+              type="button"
+              disabled={busy}
+              onClick={onToggle}
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
             >
               {busy ? '…' : installed.enabled ? '비활성화' : '활성화'}
             </button>
             {hasConfig && (
               <button
- type="button"
- onClick={onDetail}
- className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
+                type="button"
+                onClick={onDetail}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
               >
- 설정
+                설정
               </button>
             )}
             <button
- type="button"
- disabled={busy}
- onClick={onUninstall}
- className="rounded-lg px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger-soft"
+              type="button"
+              disabled={busy}
+              onClick={onUninstall}
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger-soft"
             >
- 제거
+              제거
             </button>
           </>
         )}
@@ -497,109 +499,109 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export function MarketplacePage() {
- const [extensions, setExtensions] = useState<MarketplaceExtension[]>([])
- const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('all')
- const [search, setSearch] = useState('')
- const [loading, setLoading] = useState(true)
- const [busyId, setBusyId] = useState<string | null>(null)
- const [error, setError] = useState<string | null>(null)
- const [detailExt, setDetailExt] = useState<MarketplaceExtension | null>(null)
+  const [extensions, setExtensions] = useState<MarketplaceExtension[]>([])
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('all')
+  const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [detailExt, setDetailExt] = useState<MarketplaceExtension | null>(null)
 
- const load = useCallback(async () => {
- setLoading(true)
- setError(null)
- try {
- setExtensions(await fetchMarketplaceExtensions())
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      setExtensions(await fetchMarketplaceExtensions())
     } catch (e) {
- setError(e instanceof Error ? e.message : 'Marketplace를 불러오지 못했습니다.')
+      setError(e instanceof Error ? e.message : 'Marketplace를 불러오지 못했습니다.')
     } finally {
- setLoading(false)
+      setLoading(false)
     }
   }, [])
 
- useEffect(() => { queueMicrotask(() => void load()) }, [load])
+  useEffect(() => { queueMicrotask(() => void load()) }, [load])
 
- const visible = useMemo(() => {
- let list = filter === 'all' ? extensions : extensions.filter((x) => x.extension_type === filter)
- const q = search.trim().toLowerCase()
- if (q) list = list.filter((x) => x.name.toLowerCase().includes(q) || x.description.toLowerCase().includes(q) || x.provider.toLowerCase().includes(q))
- return list
+  const visible = useMemo(() => {
+    let list = filter === 'all' ? extensions : extensions.filter((x) => x.extension_type === filter)
+    const q = search.trim().toLowerCase()
+    if (q) list = list.filter((x) => x.name.toLowerCase().includes(q) || x.description.toLowerCase().includes(q) || x.provider.toLowerCase().includes(q))
+    return list
   }, [extensions, filter, search])
 
- const counts = useMemo(() => {
- const map: Record<string, number> = { all: extensions.length }
- for (const x of extensions) map[x.extension_type] = (map[x.extension_type] ?? 0) + 1
- return map
+  const counts = useMemo(() => {
+    const map: Record<string, number> = { all: extensions.length }
+    for (const x of extensions) map[x.extension_type] = (map[x.extension_type] ?? 0) + 1
+    return map
   }, [extensions])
 
- const run = async (id: string, action: () => Promise<void>) => {
- setBusyId(id)
- try {
- await action()
- await load()
+  const run = async (id: string, action: () => Promise<void>) => {
+    setBusyId(id)
+    try {
+      await action()
+      await load()
     } catch (e) {
- toast.error(e instanceof Error ? e.message : '작업에 실패했습니다.')
+      toast.error(e instanceof Error ? e.message : '작업에 실패했습니다.')
     } finally {
- setBusyId(null)
+      setBusyId(null)
     }
   }
 
- const handleInstall = (ext: MarketplaceExtension, config: Record<string, unknown> = {}) =>
- run(ext.id, () => installExtension(ext.id, config))
+  const handleInstall = (ext: MarketplaceExtension, config: Record<string, unknown> = {}) =>
+    run(ext.id, () => installExtension(ext.id, config))
 
- const handleUpdateConfig = (ext: MarketplaceExtension, config: Record<string, unknown>) =>
- run(ext.id, async () => {
- if (ext.installation) {
- await updateInstallationConfig(ext.installation.id, config)
+  const handleUpdateConfig = (ext: MarketplaceExtension, config: Record<string, unknown>) =>
+    run(ext.id, async () => {
+      if (ext.installation) {
+        await updateInstallationConfig(ext.installation.id, config)
       } else {
- await installExtension(ext.id, config)
+        await installExtension(ext.id, config)
       }
     })
 
- const handleToggle = (ext: MarketplaceExtension) =>
- run(ext.id, () => setExtensionEnabled(ext.installation!.id, !ext.installation!.enabled))
+  const handleToggle = (ext: MarketplaceExtension) =>
+    run(ext.id, () => setExtensionEnabled(ext.installation!.id, !ext.installation!.enabled))
 
- const handleUninstall = (ext: MarketplaceExtension) => {
- if (!window.confirm(`"${ext.name}"을(를) 제거하시겠습니까?`)) return Promise.resolve()
- return run(ext.id, () => uninstallExtension(ext.installation!.id))
+  const handleUninstall = (ext: MarketplaceExtension) => {
+    if (!window.confirm(`"${ext.name}"을(를) 제거하시겠습니까?`)) return Promise.resolve()
+    return run(ext.id, () => uninstallExtension(ext.installation!.id))
   }
 
- const installedCount = extensions.filter((x) => x.installation?.enabled).length
+  const installedCount = extensions.filter((x) => x.installation?.enabled).length
 
   // Sync detailExt after reload so modal reflects latest state
- useEffect(() => {
- if (!detailExt) return
- const fresh = extensions.find((x) => x.id === detailExt.id)
- if (fresh) setDetailExt(fresh)
+  useEffect(() => {
+    if (!detailExt) return
+    const fresh = extensions.find((x) => x.id === detailExt.id)
+    if (fresh) setDetailExt(fresh)
   }, [extensions]) // eslint-disable-line react-hooks/exhaustive-deps
 
- return (
+  return (
     <main className="min-h-full overflow-y-auto bg-bg px-4 py-8 md:px-8">
       <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <p className="text-sm font-semibold uppercase tracking-wider text-brand">NH Extension Hub</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-fg">Marketplace</h1>
-            <p className="mt-1 text-sm text-fg-subtle">Plugin, MCP, Skill, Public Data 확장을 설치하고 AI 채팅에서 바로 사용하세요.</p>
-          </div>
-          {installedCount > 0 && (
-            <span className="rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success">
-              {installedCount}개 활성 중
-            </span>
-          )}
-        </div>
+        <PageHeader
+          eyebrow="자동화 · 마켓플레이스"
+          title="Marketplace"
+          description="Plugin, MCP, Skill, Public Data 확장을 설치하고 AI 채팅에서 바로 사용하세요."
+          icon={IconStore}
+          actions={
+            installedCount > 0 ? (
+              <span className="rounded-full bg-success-soft px-[12px] py-[4px] text-sm font-semibold text-success">
+                {installedCount}개 활성 중
+              </span>
+            ) : undefined
+          }
+        />
 
         {/* Type summary */}
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(['plugin', 'mcp', 'skill', 'public_data'] as ExtensionType[]).map((t) => {
- const meta = TYPE_META[t]
- return (
+            const meta = TYPE_META[t]
+            return (
               <button
- key={t}
- type="button"
- onClick={() => setFilter(t)}
- className={`rounded-xl border p-3 text-left transition-all ${filter === t ? 'border-orange-700 bg-brand-soft' : 'border-border bg-surface hover:border-border-strong'}`}
+                key={t}
+                type="button"
+                onClick={() => setFilter(t)}
+                className={`rounded-xl border p-3 text-left transition-all ${filter === t ? 'border-orange-700 bg-brand-soft' : 'border-border bg-surface hover:border-border-strong'}`}
               >
                 <span className="text-xl">{meta.icon}</span>
                 <p className="mt-1 text-sm font-bold text-fg">{meta.label}</p>
@@ -612,19 +614,19 @@ export function MarketplacePage() {
         {/* Search + filters */}
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <input
- type="search"
- value={search}
- onChange={(e) => setSearch(e.target.value)}
- placeholder="확장 검색…"
- className="min-w-48 flex-1 rounded-xl border border-border-strong bg-surface px-4 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="확장 검색…"
+            className="min-w-48 flex-1 rounded-xl border border-border-strong bg-surface px-4 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
           />
           <div className="flex flex-wrap gap-2" role="group" aria-label="Marketplace 필터">
             {FILTERS.map((item) => (
               <button
- key={item.id}
- type="button"
- onClick={() => setFilter(item.id)}
- className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${filter === item.id ? 'border-orange-700 bg-brand text-brand-fg' : 'border-border-strong bg-surface text-fg-muted hover:border-border-strong'}`}
+                key={item.id}
+                type="button"
+                onClick={() => setFilter(item.id)}
+                className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${filter === item.id ? 'border-orange-700 bg-brand text-brand-fg' : 'border-border-strong bg-surface text-fg-muted hover:border-border-strong'}`}
               >
                 {item.label}
                 {counts[item.id] !== undefined && (
@@ -640,7 +642,7 @@ export function MarketplacePage() {
         {loading && (
           <div className="mt-10 flex items-center justify-center gap-2 text-fg-subtle">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-border-strong border-t-orange-700" />
- 불러오는 중…
+            불러오는 중…
           </div>
         )}
         {!loading && visible.length === 0 && (
@@ -656,10 +658,10 @@ export function MarketplacePage() {
             {/* Group by type when showing all */}
             {filter === 'all' ? (
               (['plugin', 'mcp', 'skill', 'public_data'] as ExtensionType[]).map((t) => {
- const group = visible.filter((x) => x.extension_type === t)
- if (group.length === 0) return null
- const meta = TYPE_META[t]
- return (
+                const group = visible.filter((x) => x.extension_type === t)
+                if (group.length === 0) return null
+                const meta = TYPE_META[t]
+                return (
                   <section key={t} className="mt-8">
                     <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-fg-subtle">
                       <span>{meta.icon}</span> {meta.label}
@@ -668,13 +670,13 @@ export function MarketplacePage() {
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                       {group.map((ext) => (
                         <ExtensionCard
- key={ext.id}
- ext={ext}
- busy={busyId === ext.id}
- onInstall={() => void handleInstall(ext)}
- onToggle={() => void handleToggle(ext)}
- onUninstall={() => void handleUninstall(ext)}
- onDetail={() => setDetailExt(ext)}
+                          key={ext.id}
+                          ext={ext}
+                          busy={busyId === ext.id}
+                          onInstall={() => void handleInstall(ext)}
+                          onToggle={() => void handleToggle(ext)}
+                          onUninstall={() => void handleUninstall(ext)}
+                          onDetail={() => setDetailExt(ext)}
                         />
                       ))}
                     </div>
@@ -685,13 +687,13 @@ export function MarketplacePage() {
               <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {visible.map((ext) => (
                   <ExtensionCard
- key={ext.id}
- ext={ext}
- busy={busyId === ext.id}
- onInstall={() => void handleInstall(ext)}
- onToggle={() => void handleToggle(ext)}
- onUninstall={() => void handleUninstall(ext)}
- onDetail={() => setDetailExt(ext)}
+                    key={ext.id}
+                    ext={ext}
+                    busy={busyId === ext.id}
+                    onInstall={() => void handleInstall(ext)}
+                    onToggle={() => void handleToggle(ext)}
+                    onUninstall={() => void handleUninstall(ext)}
+                    onDetail={() => setDetailExt(ext)}
                   />
                 ))}
               </section>
@@ -703,11 +705,11 @@ export function MarketplacePage() {
       {/* Detail Modal */}
       {detailExt && (
         <DetailModal
- ext={detailExt}
- busy={busyId === detailExt.id}
- onClose={() => setDetailExt(null)}
- onInstall={(config) => handleInstall(detailExt, config).then(() => setDetailExt(null))}
- onUpdateConfig={(config) => handleUpdateConfig(detailExt, config)}
+          ext={detailExt}
+          busy={busyId === detailExt.id}
+          onClose={() => setDetailExt(null)}
+          onInstall={(config) => handleInstall(detailExt, config).then(() => setDetailExt(null))}
+          onUpdateConfig={(config) => handleUpdateConfig(detailExt, config)}
         />
       )}
     </main>

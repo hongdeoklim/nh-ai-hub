@@ -29,7 +29,7 @@ npm run dev
 | `npm run deploy:check-env` | 배포 전 환경 변수 점검 |
 | `npm run functions:deploy` | Supabase Edge Functions 배포 |
 
-로그인 없이 UI 를 확인하려면 개발 서버에서 `/__ui-check/shell` (앱 셸 · 디자인 토큰) 과 `/__ui-check` (채팅 말풍선 상태) 를 열어 보세요.
+로그인 없이 UI 를 확인하려면 개발 서버에서 `/__ui-check/shell` (앱 셸 · 디자인 토큰), `/__ui-check` (채팅 말풍선 상태), `/__ui-check/app/<경로>` (예: `/__ui-check/app/scrapbook` — 각 화면의 셸·헤더 레이아웃, 데이터는 로드되지 않음) 를 열어 보세요.
 
 ## 디렉터리
 

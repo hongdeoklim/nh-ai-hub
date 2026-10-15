@@ -4,43 +4,43 @@ import { startTransition, useCallback, useEffect, useState } from 'react'
 import { disablePush, enablePush, isPushSupported } from '../../lib/fcm'
 import { supabase } from '../../lib/supabase'
 import {
- deletePasskey,
- isPasskeySupported,
- listMyPasskeys,
- registerPasskey,
- type PasskeyRow,
+  deletePasskey,
+  isPasskeySupported,
+  listMyPasskeys,
+  registerPasskey,
+  type PasskeyRow,
 } from '../../lib/webauthn'
 import { useAuth } from '../auth/useAuth'
 
 function ConsentToggle({
- checked,
- disabled,
- onToggle,
- labelledBy,
+  checked,
+  disabled,
+  onToggle,
+  labelledBy,
 }: {
- checked: boolean
- disabled?: boolean
- onToggle: (next: boolean) => void
- labelledBy?: string
+  checked: boolean
+  disabled?: boolean
+  onToggle: (next: boolean) => void
+  labelledBy?: string
 }) {
- return (
+  return (
     <button
- type="button"
- role="switch"
- aria-checked={checked}
- aria-labelledby={labelledBy}
- disabled={disabled}
- onClick={() => onToggle(!checked)}
- className={[
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-labelledby={labelledBy}
+      disabled={disabled}
+      onClick={() => onToggle(!checked)}
+      className={[
         'relative inline-flex h-[26px] w-[46px] shrink-0 items-center rounded-full border border-transparent transition',
- checked ? 'bg-brand' : 'bg-surface-3',
- disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:brightness-105',
+        checked ? 'bg-brand' : 'bg-surface-3',
+        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:brightness-105',
       ].join(' ')}
     >
       <span
- className={[
+        className={[
           'inline-block h-[20px] w-[20px] rounded-full bg-surface shadow transition-transform duration-200',
- checked ? 'translate-x-[22px]' : 'translate-x-[3px]',
+          checked ? 'translate-x-[22px]' : 'translate-x-[3px]',
         ].join(' ')}
       />
     </button>
@@ -48,265 +48,265 @@ function ConsentToggle({
 }
 
 function normalizeBlank(s: string): string | null {
- const t = s.trim()
- return t.length ? t : null
+  const t = s.trim()
+  return t.length ? t : null
 }
 
 const inputCls =
   'mt-1 w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2'
 
 export function MyPagePanel() {
- const { profile, refreshProfile } = useAuth()
- const userId = profile?.id
+  const { profile, refreshProfile } = useAuth()
+  const userId = profile?.id
 
- const [displayName, setDisplayName] = useState('')
- const [department, setDepartment] = useState('')
- const [jobRank, setJobRank] = useState('')
- const [jobTitle, setJobTitle] = useState('')
- const [phone, setPhone] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [department, setDepartment] = useState('')
+  const [jobRank, setJobRank] = useState('')
+  const [jobTitle, setJobTitle] = useState('')
+  const [phone, setPhone] = useState('')
 
- const [newPassword, setNewPassword] = useState('')
- const [confirmPassword, setConfirmPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
- const [profileSaving, setProfileSaving] = useState(false)
- const [passwordSaving, setPasswordSaving] = useState(false)
- const [profileMsg, setProfileMsg] = useState<string | null>(null)
- const [passwordMsg, setPasswordMsg] = useState<string | null>(null)
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [profileMsg, setProfileMsg] = useState<string | null>(null)
+  const [passwordMsg, setPasswordMsg] = useState<string | null>(null)
 
- const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
 
- const [pushEnabled, setPushEnabled] = useState(false)
- const [pushSupported, setPushSupported] = useState(true)
- const [pushBusy, setPushBusy] = useState(false)
- const [pushMsg, setPushMsg] = useState<string | null>(null)
- const [passkeys, setPasskeys] = useState<PasskeyRow[]>([])
- const [passkeyBusy, setPasskeyBusy] = useState(false)
- const passkeySupported = isPasskeySupported()
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushSupported, setPushSupported] = useState(true)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushMsg, setPushMsg] = useState<string | null>(null)
+  const [passkeys, setPasskeys] = useState<PasskeyRow[]>([])
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
+  const passkeySupported = isPasskeySupported()
 
- useEffect(() => {
- setPushEnabled(Boolean(profile?.push_consent))
+  useEffect(() => {
+    setPushEnabled(Boolean(profile?.push_consent))
   }, [profile?.push_consent])
 
- useEffect(() => {
- void isPushSupported().then(setPushSupported)
+  useEffect(() => {
+    void isPushSupported().then(setPushSupported)
   }, [])
 
- const loadPasskeys = useCallback(async () => {
- try {
- setPasskeys(await listMyPasskeys())
+  const loadPasskeys = useCallback(async () => {
+    try {
+      setPasskeys(await listMyPasskeys())
     } catch {
       /* 무시 — 목록 조회 실패 */
     }
   }, [])
 
- useEffect(() => {
- if (userId) void loadPasskeys()
+  useEffect(() => {
+    if (userId) void loadPasskeys()
   }, [userId, loadPasskeys])
 
- const handleTogglePush = useCallback(
- async (next: boolean) => {
- if (!userId) return
- setPushBusy(true)
- setPushMsg(null)
- try {
- if (next) {
- const res = await enablePush(userId)
- if (res.ok) {
- setPushEnabled(true)
- setPushMsg('이 기기에서 푸시 알림을 켰습니다.')
+  const handleTogglePush = useCallback(
+    async (next: boolean) => {
+      if (!userId) return
+      setPushBusy(true)
+      setPushMsg(null)
+      try {
+        if (next) {
+          const res = await enablePush(userId)
+          if (res.ok) {
+            setPushEnabled(true)
+            setPushMsg('이 기기에서 푸시 알림을 켰습니다.')
           } else {
- setPushMsg(res.message)
+            setPushMsg(res.message)
           }
         } else {
- const res = await disablePush(userId)
- if (res.ok) {
- setPushEnabled(false)
- setPushMsg('푸시 알림을 껐습니다.')
+          const res = await disablePush(userId)
+          if (res.ok) {
+            setPushEnabled(false)
+            setPushMsg('푸시 알림을 껐습니다.')
           } else {
- setPushMsg(res.message)
+            setPushMsg(res.message)
           }
         }
- await refreshProfile()
+        await refreshProfile()
       } finally {
- setPushBusy(false)
+        setPushBusy(false)
       }
     },
     [userId, refreshProfile],
   )
 
- const handleRegisterPasskey = useCallback(async () => {
- if (!userId) return
- setPasskeyBusy(true)
- try {
- const label = navigator.platform || navigator.userAgent.slice(0, 40) || '이 기기'
- await registerPasskey(label)
+  const handleRegisterPasskey = useCallback(async () => {
+    if (!userId) return
+    setPasskeyBusy(true)
+    try {
+      const label = navigator.platform || navigator.userAgent.slice(0, 40) || '이 기기'
+      await registerPasskey(label)
       // 패스키가 하나라도 생기면 생체 로그인 동의 플래그도 true 로 반영
- await supabase.from('users').update({ biometric_consent: true }).eq('id', userId)
- await Promise.all([loadPasskeys(), refreshProfile()])
- toast.success('이 기기에 지문/생체 로그인이 등록되었습니다.')
+      await supabase.from('users').update({ biometric_consent: true }).eq('id', userId)
+      await Promise.all([loadPasskeys(), refreshProfile()])
+      toast.success('이 기기에 지문/생체 로그인이 등록되었습니다.')
     } catch (e) {
- const msg = e instanceof Error ? e.message : String(e)
+      const msg = e instanceof Error ? e.message : String(e)
       // 사용자가 생체 프롬프트를 취소한 경우는 조용히 넘어감
- if (!/abort|cancel|NotAllowed/i.test(msg)) toast.error(`등록 실패: ${msg}`)
+      if (!/abort|cancel|NotAllowed/i.test(msg)) toast.error(`등록 실패: ${msg}`)
     } finally {
- setPasskeyBusy(false)
+      setPasskeyBusy(false)
     }
   }, [userId, loadPasskeys, refreshProfile])
 
- const handleDeletePasskey = useCallback(
- async (id: string) => {
- setPasskeyBusy(true)
- try {
- await deletePasskey(id)
- const remaining = await listMyPasskeys()
- setPasskeys(remaining)
- if (remaining.length === 0 && userId) {
- await supabase.from('users').update({ biometric_consent: false }).eq('id', userId)
- await refreshProfile()
+  const handleDeletePasskey = useCallback(
+    async (id: string) => {
+      setPasskeyBusy(true)
+      try {
+        await deletePasskey(id)
+        const remaining = await listMyPasskeys()
+        setPasskeys(remaining)
+        if (remaining.length === 0 && userId) {
+          await supabase.from('users').update({ biometric_consent: false }).eq('id', userId)
+          await refreshProfile()
         }
- toast.success('패스키를 삭제했습니다.')
+        toast.success('패스키를 삭제했습니다.')
       } catch (e) {
- toast.error(`삭제 실패: ${e instanceof Error ? e.message : e}`)
+        toast.error(`삭제 실패: ${e instanceof Error ? e.message : e}`)
       } finally {
- setPasskeyBusy(false)
+        setPasskeyBusy(false)
       }
     },
     [userId, refreshProfile],
   )
 
- useEffect(() => {
- const saved = localStorage.getItem('nh_theme') as 'light' | 'dark' | null
- if (saved) {
- setTheme(saved)
+  useEffect(() => {
+    const saved = localStorage.getItem('nh_theme') as 'light' | 'dark' | null
+    if (saved) {
+      setTheme(saved)
     }
   }, [])
 
- const handleThemeChange = useCallback((newTheme: 'light' | 'dark' | 'system') => {
- setTheme(newTheme)
- if (newTheme === 'system') {
- localStorage.removeItem('nh_theme')
- const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
- document.documentElement.classList.toggle('dark', isDark)
+  const handleThemeChange = useCallback((newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme)
+    if (newTheme === 'system') {
+      localStorage.removeItem('nh_theme')
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      document.documentElement.classList.toggle('dark', isDark)
     } else {
- localStorage.setItem('nh_theme', newTheme)
- document.documentElement.classList.toggle('dark', newTheme === 'dark')
+      localStorage.setItem('nh_theme', newTheme)
+      document.documentElement.classList.toggle('dark', newTheme === 'dark')
     }
   }, [])
 
- useEffect(() => {
- if (!profile) return
- queueMicrotask(() => {
- startTransition(() => {
- setDisplayName(profile.display_name ?? '')
- setDepartment(profile.department ?? '')
- setJobRank(profile.job_rank ?? '')
- setJobTitle(profile.job_title ?? '')
- setPhone(profile.phone ?? '')
- setProfileMsg(null)
+  useEffect(() => {
+    if (!profile) return
+    queueMicrotask(() => {
+      startTransition(() => {
+        setDisplayName(profile.display_name ?? '')
+        setDepartment(profile.department ?? '')
+        setJobRank(profile.job_rank ?? '')
+        setJobTitle(profile.job_title ?? '')
+        setPhone(profile.phone ?? '')
+        setProfileMsg(null)
       })
     })
   }, [profile])
 
- const handleSaveProfile = useCallback(async () => {
- if (!userId) {
- toast.error('로그인이 필요합니다.')
- return
+  const handleSaveProfile = useCallback(async () => {
+    if (!userId) {
+      toast.error('로그인이 필요합니다.')
+      return
     }
- setProfileSaving(true)
- setProfileMsg(null)
- try {
- const { error } = await supabase
+    setProfileSaving(true)
+    setProfileMsg(null)
+    try {
+      const { error } = await supabase
         .from('users')
         .update({
- display_name: normalizeBlank(displayName),
- department: normalizeBlank(department),
- job_rank: normalizeBlank(jobRank),
- job_title: normalizeBlank(jobTitle),
- phone: normalizeBlank(phone),
+          display_name: normalizeBlank(displayName),
+          department: normalizeBlank(department),
+          job_rank: normalizeBlank(jobRank),
+          job_title: normalizeBlank(jobTitle),
+          phone: normalizeBlank(phone),
         })
         .eq('id', userId)
 
- if (error) {
- setProfileMsg(error.message)
- return
+      if (error) {
+        setProfileMsg(error.message)
+        return
       }
- await refreshProfile()
- setProfileMsg('프로필을 저장했습니다.')
+      await refreshProfile()
+      setProfileMsg('프로필을 저장했습니다.')
     } finally {
- setProfileSaving(false)
+      setProfileSaving(false)
     }
   }, [
- userId,
- displayName,
- department,
- jobRank,
- jobTitle,
- phone,
- refreshProfile,
+    userId,
+    displayName,
+    department,
+    jobRank,
+    jobTitle,
+    phone,
+    refreshProfile,
   ])
 
- const handleChangePassword = useCallback(async () => {
- setPasswordSaving(true)
- setPasswordMsg(null)
- try {
- if (newPassword.length < 8) {
- setPasswordMsg('비밀번호는 8자 이상으로 설정해 주세요.')
- return
+  const handleChangePassword = useCallback(async () => {
+    setPasswordSaving(true)
+    setPasswordMsg(null)
+    try {
+      if (newPassword.length < 8) {
+        setPasswordMsg('비밀번호는 8자 이상으로 설정해 주세요.')
+        return
       }
- if (newPassword !== confirmPassword) {
- setPasswordMsg('새 비밀번호와 확인이 일치하지 않습니다.')
- return
+      if (newPassword !== confirmPassword) {
+        setPasswordMsg('새 비밀번호와 확인이 일치하지 않습니다.')
+        return
       }
- const { error } = await supabase.auth.updateUser({
- password: newPassword,
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
       })
- if (error) {
- setPasswordMsg(error.message)
- return
+      if (error) {
+        setPasswordMsg(error.message)
+        return
       }
- setNewPassword('')
- setConfirmPassword('')
- setPasswordMsg('비밀번호를 변경했습니다.')
+      setNewPassword('')
+      setConfirmPassword('')
+      setPasswordMsg('비밀번호를 변경했습니다.')
     } finally {
- setPasswordSaving(false)
+      setPasswordSaving(false)
     }
   }, [newPassword, confirmPassword])
 
- if (!userId || !profile) {
- return (
+  if (!userId || !profile) {
+    return (
       <p className="text-[13px] md:text-[14px] text-fg-muted">
- 로그인 후 마이페이지를 이용할 수 있습니다.
+        로그인 후 마이페이지를 이용할 수 있습니다.
       </p>
     )
   }
 
- return (
+  return (
     <div className="space-y-8">
       <section className="space-y-3">
         <p className="font-semibold text-fg">
- 내 정보
+          내 정보
         </p>
         <p className="text-[13px] md:text-[14px] leading-relaxed text-fg-muted">
- 이름·소속 등은 AI 답변 맥락과 사이드바 표시에 활용할 수 있습니다. 로그인 이메일은
- 보안상 여기서 변경하지 않습니다.
+          이름·소속 등은 AI 답변 맥락과 사이드바 표시에 활용할 수 있습니다. 로그인 이메일은
+          보안상 여기서 변경하지 않습니다.
         </p>
 
         <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 로그인 이메일 <span className="font-normal text-fg-subtle">(읽기 전용)</span>
+          로그인 이메일 <span className="font-normal text-fg-subtle">(읽기 전용)</span>
           <input
- type="email"
- readOnly
- value={profile.email}
- className={`${inputCls} cursor-not-allowed bg-surface-2`}
+            type="email"
+            readOnly
+            value={profile.email}
+            className={`${inputCls} cursor-not-allowed bg-surface-2`}
           />
         </label>
 
         <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 화면 테마
+          화면 테마
           <select
- value={theme}
- onChange={(e) => handleThemeChange(e.target.value as any)}
- className={inputCls}
+            value={theme}
+            onChange={(e) => handleThemeChange(e.target.value as any)}
+            className={inputCls}
           >
             <option value="system">시스템 기본값</option>
             <option value="light">라이트 모드</option>
@@ -315,60 +315,60 @@ export function MyPagePanel() {
         </label>
 
         <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 이름
+          이름
           <input
- value={displayName}
- onChange={(e) => setDisplayName(e.target.value)}
- disabled={profileSaving}
- className={inputCls}
- placeholder="홍길동"
- autoComplete="name"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            disabled={profileSaving}
+            className={inputCls}
+            placeholder="홍길동"
+            autoComplete="name"
           />
         </label>
 
         <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 소속
+          소속
           <input
- value={department}
- onChange={(e) => setDepartment(e.target.value)}
- disabled={profileSaving}
- className={inputCls}
- placeholder="예: 디지털전략부"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            disabled={profileSaving}
+            className={inputCls}
+            placeholder="예: 디지털전략부"
           />
         </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 직급
+            직급
             <input
- value={jobRank}
- onChange={(e) => setJobRank(e.target.value)}
- disabled={profileSaving}
- className={inputCls}
- placeholder="예: 과장"
+              value={jobRank}
+              onChange={(e) => setJobRank(e.target.value)}
+              disabled={profileSaving}
+              className={inputCls}
+              placeholder="예: 과장"
             />
           </label>
           <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 직책
+            직책
             <input
- value={jobTitle}
- onChange={(e) => setJobTitle(e.target.value)}
- disabled={profileSaving}
- className={inputCls}
- placeholder="예: 팀장"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              disabled={profileSaving}
+              className={inputCls}
+              placeholder="예: 팀장"
             />
           </label>
         </div>
 
         <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 연락처
+          연락처
           <input
- value={phone}
- onChange={(e) => setPhone(e.target.value)}
- disabled={profileSaving}
- className={inputCls}
- placeholder="내선 또는 휴대전화"
- autoComplete="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            disabled={profileSaving}
+            className={inputCls}
+            placeholder="내선 또는 휴대전화"
+            autoComplete="tel"
           />
         </label>
 
@@ -379,10 +379,10 @@ export function MyPagePanel() {
         ) : null}
 
         <button
- type="button"
- disabled={profileSaving}
- onClick={() => void handleSaveProfile()}
- className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-50"
+          type="button"
+          disabled={profileSaving}
+          onClick={() => void handleSaveProfile()}
+          className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-50"
         >
           {profileSaving ? '저장 중…' : '프로필 저장'}
         </button>
@@ -390,28 +390,28 @@ export function MyPagePanel() {
 
       <section className="space-y-4 border-t border-border pt-6">
         <p className="font-semibold text-fg">
- 알림 · 보안
+          알림 · 보안
         </p>
 
         <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-surface px-4 py-3">
           <div className="min-w-0">
             <p id="mypage-push-label" className="text-[13px] md:text-[14px] font-medium text-fg">
- 푸시 알림 (FCM)
+              푸시 알림 (FCM)
             </p>
             <p className="mt-0.5 text-[13px] md:text-[14px] leading-relaxed text-fg-subtle">
- 공지·중요 알림을 이 기기로 받습니다. 기기·브라우저마다 각각 켜야 합니다.
+              공지·중요 알림을 이 기기로 받습니다. 기기·브라우저마다 각각 켜야 합니다.
             </p>
           </div>
           <ConsentToggle
- checked={pushEnabled}
- disabled={pushBusy || !pushSupported}
- onToggle={(next) => void handleTogglePush(next)}
- labelledBy="mypage-push-label"
+            checked={pushEnabled}
+            disabled={pushBusy || !pushSupported}
+            onToggle={(next) => void handleTogglePush(next)}
+            labelledBy="mypage-push-label"
           />
         </div>
         {!pushSupported ? (
           <p className="text-[13px] md:text-[14px] text-warning">
- 이 브라우저는 웹 푸시를 지원하지 않습니다. 모바일은 홈 화면에 앱을 추가한 뒤 사용하세요.
+            이 브라우저는 웹 푸시를 지원하지 않습니다. 모바일은 홈 화면에 앱을 추가한 뒤 사용하세요.
           </p>
         ) : null}
         {pushMsg ? (
@@ -424,20 +424,20 @@ export function MyPagePanel() {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[13px] md:text-[14px] font-medium text-fg">
- 지문·생체(패스키) 로그인
+                지문·생체(패스키) 로그인
               </p>
               <p className="mt-0.5 text-[13px] md:text-[14px] leading-relaxed text-fg-subtle">
- 이 기기에 등록하면 다음 로그인부터 지문·FaceID·Windows Hello로 로그인할 수 있습니다.
+                이 기기에 등록하면 다음 로그인부터 지문·FaceID·Windows Hello로 로그인할 수 있습니다.
                 {!passkeySupported && ' (이 브라우저는 패스키를 지원하지 않습니다.)'}
               </p>
             </div>
             <button
- type="button"
- disabled={passkeyBusy || !passkeySupported}
- onClick={() => void handleRegisterPasskey()}
- className="shrink-0 rounded-lg bg-brand px-3 py-2 text-[13px] md:text-[14px] font-semibold text-brand-fg transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              disabled={passkeyBusy || !passkeySupported}
+              onClick={() => void handleRegisterPasskey()}
+              className="shrink-0 rounded-lg bg-brand px-3 py-2 text-[13px] md:text-[14px] font-semibold text-brand-fg transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
             >
- 이 기기 등록
+              이 기기 등록
             </button>
           </div>
 
@@ -454,12 +454,12 @@ export function MyPagePanel() {
                     </span>
                   </span>
                   <button
- type="button"
- disabled={passkeyBusy}
- onClick={() => void handleDeletePasskey(pk.id)}
- className="shrink-0 rounded-md border border-border-strong px-2 py-1 text-[12px] text-fg-muted transition hover:bg-surface-2 disabled:opacity-60"
+                    type="button"
+                    disabled={passkeyBusy}
+                    onClick={() => void handleDeletePasskey(pk.id)}
+                    className="shrink-0 rounded-md border border-border-strong px-2 py-1 text-[12px] text-fg-muted transition hover:bg-surface-2 disabled:opacity-60"
                   >
- 삭제
+                    삭제
                   </button>
                 </li>
               ))}
@@ -470,33 +470,33 @@ export function MyPagePanel() {
 
       <section className="space-y-3 border-t border-border pt-6">
         <p className="font-semibold text-fg">
- 비밀번호 변경
+          비밀번호 변경
         </p>
         <p className="text-[13px] md:text-[14px] leading-relaxed text-fg-muted">
- 새 비밀번호는 8자 이상으로 입력하세요. 다른 기기에서도 다음 로그인부터 적용됩니다.
+          새 비밀번호는 8자 이상으로 입력하세요. 다른 기기에서도 다음 로그인부터 적용됩니다.
         </p>
 
         <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 새 비밀번호
+          새 비밀번호
           <input
- type="password"
- value={newPassword}
- onChange={(e) => setNewPassword(e.target.value)}
- disabled={passwordSaving}
- className={inputCls}
- autoComplete="new-password"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            disabled={passwordSaving}
+            className={inputCls}
+            autoComplete="new-password"
           />
         </label>
 
         <label className="block text-[13px] md:text-[14px] font-medium text-fg">
- 새 비밀번호 확인
+          새 비밀번호 확인
           <input
- type="password"
- value={confirmPassword}
- onChange={(e) => setConfirmPassword(e.target.value)}
- disabled={passwordSaving}
- className={inputCls}
- autoComplete="new-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            disabled={passwordSaving}
+            className={inputCls}
+            autoComplete="new-password"
           />
         </label>
 
@@ -507,10 +507,10 @@ export function MyPagePanel() {
         ) : null}
 
         <button
- type="button"
- disabled={passwordSaving}
- onClick={() => void handleChangePassword()}
- className="rounded-full border border-border-strong bg-surface px-5 py-2 text-sm font-semibold text-fg hover:bg-surface-2 disabled:opacity-50"
+          type="button"
+          disabled={passwordSaving}
+          onClick={() => void handleChangePassword()}
+          className="rounded-full border border-border-strong bg-surface px-5 py-2 text-sm font-semibold text-fg hover:bg-surface-2 disabled:opacity-50"
         >
           {passwordSaving ? '처리 중…' : '비밀번호 변경'}
         </button>

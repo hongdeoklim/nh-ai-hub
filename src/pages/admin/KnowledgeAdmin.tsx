@@ -3,58 +3,58 @@ import { startTransition, useCallback, useEffect, useState } from 'react'
 
 import { DriveSyncWidget } from '../../components/automation/DriveSyncWidget'
 import {
- fetchKnowledgeBase,
- type KnowledgeBaseRow,
+  fetchKnowledgeBase,
+  type KnowledgeBaseRow,
 } from '../../services/reference-room/knowledge-base'
 import { supabase } from '../../lib/supabase'
 
 export function KnowledgeAdmin() {
- const [rows, setRows] = useState<KnowledgeBaseRow[]>([])
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState<string | null>(null)
- const [busyId, setBusyId] = useState<string | null>(null)
+  const [rows, setRows] = useState<KnowledgeBaseRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
 
- const load = useCallback(async () => {
- setError(null)
- setLoading(true)
- const res = await fetchKnowledgeBase(supabase)
- if (!res.ok) {
- setError(res.message)
- setRows([])
+  const load = useCallback(async () => {
+    setError(null)
+    setLoading(true)
+    const res = await fetchKnowledgeBase(supabase)
+    if (!res.ok) {
+      setError(res.message)
+      setRows([])
     } else {
- startTransition(() => setRows(res.rows))
+      startTransition(() => setRows(res.rows))
     }
- setLoading(false)
+    setLoading(false)
   }, [])
 
- useEffect(() => {
- queueMicrotask(() => void load())
+  useEffect(() => {
+    queueMicrotask(() => void load())
   }, [load])
 
- async function removeRow(id: string) {
- if (
- typeof window !== 'undefined' &&
+  async function removeRow(id: string) {
+    if (
+      typeof window !== 'undefined' &&
       !window.confirm('이 자료 메타를 삭제할까요?')
     ) {
- return
+      return
     }
- setBusyId(id)
- const { error: dErr } = await supabase.from('knowledge_base').delete().eq('id', id)
- setBusyId(null)
- if (dErr) {
- toast.error(dErr.message)
- return
+    setBusyId(id)
+    const { error: dErr } = await supabase.from('knowledge_base').delete().eq('id', id)
+    setBusyId(null)
+    if (dErr) {
+      toast.error(dErr.message)
+      return
     }
- await load()
+    await load()
   }
 
- return (
+  return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">자료실 관리</h1>
         <p className="mt-1 text-sm text-fg-subtle">
- Google Drive 공유 폴더 동기화와 knowledge_base 메타데이터를
- 관리합니다.
+          Google Drive 공유 폴더 동기화와 knowledge_base 메타데이터를
+          관리합니다.
         </p>
       </div>
 
@@ -82,20 +82,20 @@ export function KnowledgeAdmin() {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-fg-subtle">
- 불러오는 중…
+                    불러오는 중…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-fg-subtle">
- 자료가 없습니다.
+                    자료가 없습니다.
                   </td>
                 </tr>
               ) : (
- rows.map((r) => (
+                rows.map((r) => (
                   <tr
- key={r.id}
- className="hover:bg-surface-2/80"
+                    key={r.id}
+                    className="hover:bg-surface-2/80"
                   >
                     <td className="max-w-[200px] truncate px-4 py-3 font-medium">
                       {r.file_name}
@@ -108,22 +108,22 @@ export function KnowledgeAdmin() {
                     </td>
                     <td className="max-w-[240px] truncate px-4 py-3 font-mono text-xs text-accent">
                       <a
- href={r.file_url}
- target="_blank"
- rel="noreferrer"
- className="underline-offset-2 hover:underline"
+                        href={r.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline-offset-2 hover:underline"
                       >
                         {r.file_url}
                       </a>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
- type="button"
- disabled={busyId === r.id}
- onClick={() => void removeRow(r.id)}
- className="rounded-lg bg-danger px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                        type="button"
+                        disabled={busyId === r.id}
+                        onClick={() => void removeRow(r.id)}
+                        className="rounded-lg bg-danger px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
                       >
- 삭제
+                        삭제
                       </button>
                     </td>
                   </tr>

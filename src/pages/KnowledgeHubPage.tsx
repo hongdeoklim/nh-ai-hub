@@ -2,15 +2,17 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
- fetchIngestQueue,
- fetchKnowledgeHubStats,
- reembedLegacyNodes,
- retryFailedIngest,
- runSearchTest,
- type IngestQueueRow,
- type KnowledgeHubStats,
- type SearchTestMatch,
+  fetchIngestQueue,
+  fetchKnowledgeHubStats,
+  reembedLegacyNodes,
+  retryFailedIngest,
+  runSearchTest,
+  type IngestQueueRow,
+  type KnowledgeHubStats,
+  type SearchTestMatch,
 } from '../services/knowledge-hub'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconBrain } from '../components/common/icons'
 
 /**
  * 글자 크기 표기 규칙 — 이 앱은 `.app-shell` 안에서 p/h1/h2/button/input 등
@@ -20,24 +22,24 @@ import {
  * PC/모바일 구분은 기본값(모바일) + `md:`(768px 이상 PC) 접두사로 표현한다.
  */
 function formatCount(value: number): string {
- if (value < 0) return '—'
- return value.toLocaleString('ko-KR')
+  if (value < 0) return '—'
+  return value.toLocaleString('ko-KR')
 }
 
 function StatCard(props: {
- label: string
- value: number
- sub?: string
- warn?: boolean
+  label: string
+  value: number
+  sub?: string
+  warn?: boolean
 }) {
- return (
+  return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <p className="text-[11px] md:text-[12px] text-fg-subtle">
         {props.label}
       </p>
       <p
- className={`mt-1 text-2xl font-semibold tabular-nums ${
- props.warn
+        className={`mt-1 text-2xl font-semibold tabular-nums ${
+          props.warn
             ? 'text-danger'
             : 'text-fg'
         }`}
@@ -54,25 +56,25 @@ function StatCard(props: {
 }
 
 function QueueStatusBadge({ status }: { status: IngestQueueRow['status'] }) {
- const cls =
- status === 'done'
+  const cls =
+    status === 'done'
       ? 'bg-success-soft text-success'
       : status === 'failed'
         ? 'bg-danger-soft text-danger'
         : status === 'processing'
           ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
           : 'bg-warning-soft text-warning'
- const label =
- status === 'done'
+  const label =
+    status === 'done'
       ? '색인 완료'
       : status === 'failed'
         ? '실패'
         : status === 'processing'
           ? '처리 중'
           : '대기'
- return (
+  return (
     <span
- className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] md:text-[12px] font-medium ${cls}`}
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] md:text-[12px] font-medium ${cls}`}
     >
       {label}
     </span>
@@ -80,149 +82,143 @@ function QueueStatusBadge({ status }: { status: IngestQueueRow['status'] }) {
 }
 
 export function KnowledgeHubPage() {
- const [stats, setStats] = useState<KnowledgeHubStats | null>(null)
- const [statsError, setStatsError] = useState<string | null>(null)
- const [queueRows, setQueueRows] = useState<IngestQueueRow[]>([])
- const [queueError, setQueueError] = useState<string | null>(null)
- const [loading, setLoading] = useState(true)
- const [retryBusy, setRetryBusy] = useState(false)
- const [retryNote, setRetryNote] = useState<string | null>(null)
+  const [stats, setStats] = useState<KnowledgeHubStats | null>(null)
+  const [statsError, setStatsError] = useState<string | null>(null)
+  const [queueRows, setQueueRows] = useState<IngestQueueRow[]>([])
+  const [queueError, setQueueError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [retryBusy, setRetryBusy] = useState(false)
+  const [retryNote, setRetryNote] = useState<string | null>(null)
 
- const [reembedBusy, setReembedBusy] = useState(false)
- const [reembedNote, setReembedNote] = useState<string | null>(null)
+  const [reembedBusy, setReembedBusy] = useState(false)
+  const [reembedNote, setReembedNote] = useState<string | null>(null)
 
- const [searchQuery, setSearchQuery] = useState('')
- const [searchBusy, setSearchBusy] = useState(false)
- const [searchError, setSearchError] = useState<string | null>(null)
- const [searchMatches, setSearchMatches] = useState<SearchTestMatch[] | null>(
- null,
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchBusy, setSearchBusy] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const [searchMatches, setSearchMatches] = useState<SearchTestMatch[] | null>(
+    null,
   )
 
- const reload = useCallback(async () => {
- setLoading(true)
- const [statsResult, queueResult] = await Promise.allSettled([
- fetchKnowledgeHubStats(),
- fetchIngestQueue(50),
+  const reload = useCallback(async () => {
+    setLoading(true)
+    const [statsResult, queueResult] = await Promise.allSettled([
+      fetchKnowledgeHubStats(),
+      fetchIngestQueue(50),
     ])
- if (statsResult.status === 'fulfilled') {
- setStats(statsResult.value)
- setStatsError(null)
+    if (statsResult.status === 'fulfilled') {
+      setStats(statsResult.value)
+      setStatsError(null)
     } else {
- setStatsError(
- statsResult.reason instanceof Error
+      setStatsError(
+        statsResult.reason instanceof Error
           ? statsResult.reason.message
           : '현황을 불러오지 못했습니다.',
       )
     }
- if (queueResult.status === 'fulfilled') {
- setQueueRows(queueResult.value)
- setQueueError(null)
+    if (queueResult.status === 'fulfilled') {
+      setQueueRows(queueResult.value)
+      setQueueError(null)
     } else {
- setQueueError(
- queueResult.reason instanceof Error
+      setQueueError(
+        queueResult.reason instanceof Error
           ? queueResult.reason.message
           : '수집 큐를 불러오지 못했습니다.',
       )
     }
- setLoading(false)
+    setLoading(false)
   }, [])
 
- useEffect(() => {
- void reload()
+  useEffect(() => {
+    void reload()
   }, [reload])
 
- const handleRetryFailed = useCallback(async () => {
- setRetryBusy(true)
- setRetryNote(null)
- try {
- const result = await retryFailedIngest()
- setRetryNote(
+  const handleRetryFailed = useCallback(async () => {
+    setRetryBusy(true)
+    setRetryNote(null)
+    try {
+      const result = await retryFailedIngest()
+      setRetryNote(
         `실패 ${result.resetCount}건을 다시 대기열에 넣고 워커를 실행했습니다.`,
       )
- await reload()
+      await reload()
     } catch (e) {
- setRetryNote(
- e instanceof Error ? `재시도 실패: ${e.message}` : '재시도에 실패했습니다.',
+      setRetryNote(
+        e instanceof Error ? `재시도 실패: ${e.message}` : '재시도에 실패했습니다.',
       )
     } finally {
- setRetryBusy(false)
+      setRetryBusy(false)
     }
   }, [reload])
 
- const handleReembed = useCallback(async () => {
- setReembedBusy(true)
- setReembedNote(null)
- try {
- const result = await reembedLegacyNodes(20)
- setReembedNote(
+  const handleReembed = useCallback(async () => {
+    setReembedBusy(true)
+    setReembedNote(null)
+    try {
+      const result = await reembedLegacyNodes(20)
+      setReembedNote(
         `${result.processed}건 재임베딩 완료` +
           (result.failed > 0 ? `, 실패 ${result.failed}건` : '') +
           ` · 남은 대상 ${result.remaining.toLocaleString('ko-KR')}건`,
       )
- await reload()
+      await reload()
     } catch (e) {
- setReembedNote(
- e instanceof Error
+      setReembedNote(
+        e instanceof Error
           ? `재임베딩 실패: ${e.message}`
           : '재임베딩에 실패했습니다.',
       )
     } finally {
- setReembedBusy(false)
+      setReembedBusy(false)
     }
   }, [reload])
 
- const handleSearchTest = useCallback(async () => {
- const q = searchQuery.trim()
- if (q.length < 2) {
- setSearchError('2자 이상 입력해 주세요.')
- return
+  const handleSearchTest = useCallback(async () => {
+    const q = searchQuery.trim()
+    if (q.length < 2) {
+      setSearchError('2자 이상 입력해 주세요.')
+      return
     }
- setSearchBusy(true)
- setSearchError(null)
- setSearchMatches(null)
- try {
- const matches = await runSearchTest(q)
- setSearchMatches(matches)
+    setSearchBusy(true)
+    setSearchError(null)
+    setSearchMatches(null)
+    try {
+      const matches = await runSearchTest(q)
+      setSearchMatches(matches)
     } catch (e) {
- setSearchError(
- e instanceof Error ? e.message : '검색 테스트에 실패했습니다.',
+      setSearchError(
+        e instanceof Error ? e.message : '검색 테스트에 실패했습니다.',
       )
     } finally {
- setSearchBusy(false)
+      setSearchBusy(false)
     }
   }, [searchQuery])
 
- const failedCount = stats?.queue.failed ?? 0
+  const failedCount = stats?.queue.failed ?? 0
 
- return (
+  return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 md:px-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[20px] md:text-[24px] font-semibold text-fg">
- 지식 허브
-          </h1>
-          <p className="mt-1 text-[12px] md:text-[13px] text-fg-subtle">
- 사내 AI 두뇌의 학습(색인) 현황을 확인하고, 실패한 문서를 재시도하고,
- 검색 품질을 테스트합니다.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
- to="/reference-room"
- className="rounded-lg border border-border bg-surface px-3 py-1.5 text-[12px] md:text-[13px] font-medium text-fg-muted hover:bg-surface-2"
-          >
- 자료실에서 문서 추가
-          </Link>
-          <button
- type="button"
- onClick={() => void reload()}
- disabled={loading}
- className="rounded-lg border border-border bg-surface px-3 py-1.5 text-[12px] md:text-[13px] font-medium text-fg-muted hover:bg-surface-2 disabled:opacity-50"
-          >
-            {loading ? '불러오는 중…' : '새로고침'}
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="지식 · 지식 허브"
+        title="지식 허브"
+        description="사내 AI 두뇌의 학습(색인) 현황을 확인하고, 실패한 문서를 재시도하고, 검색 품질을 테스트합니다."
+        icon={IconBrain}
+        actions={
+          <>
+            <Link to="/reference-room" className="inline-flex h-[36px] items-center gap-[6px] rounded-[10px] border border-border bg-surface px-[12px] text-sm font-medium text-fg transition hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:opacity-50">
+              자료실에서 문서 추가
+            </Link>
+            <button
+              type="button"
+              onClick={() => void reload()}
+              disabled={loading}
+              className="inline-flex h-[36px] items-center gap-[6px] rounded-[10px] border border-border bg-surface px-[12px] text-sm font-medium text-fg transition hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:opacity-50"
+            >
+              {loading ? '불러오는 중…' : '새로고침'}
+            </button>
+          </>
+        }
+      />
 
       {statsError ? (
         <p className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-[12px] md:text-[13px] text-danger">
@@ -233,78 +229,78 @@ export function KnowledgeHubPage() {
       <section aria-label="색인 현황">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <StatCard
- label="자료실 문서"
- value={stats?.kbDocuments ?? -1}
- sub="knowledge_base"
+            label="자료실 문서"
+            value={stats?.kbDocuments ?? -1}
+            sub="knowledge_base"
           />
           <StatCard
- label="사내문서 청크"
- value={stats?.companyChunks ?? -1}
- sub={
- stats && stats.companyChunksNoEmbedding > 0
+            label="사내문서 청크"
+            value={stats?.companyChunks ?? -1}
+            sub={
+              stats && stats.companyChunksNoEmbedding > 0
                 ? `임베딩 누락 ${formatCount(stats.companyChunksNoEmbedding)}건`
                 : 'company_documents'
             }
- warn={Boolean(stats && stats.companyChunksNoEmbedding > 0)}
+            warn={Boolean(stats && stats.companyChunksNoEmbedding > 0)}
           />
           <StatCard
- label="지식 그래프 노드"
- value={stats?.graphNodes ?? -1}
- sub={
- stats && stats.graphNodesNoEmbedding > 0
+            label="지식 그래프 노드"
+            value={stats?.graphNodes ?? -1}
+            sub={
+              stats && stats.graphNodesNoEmbedding > 0
                 ? `임베딩 누락 ${formatCount(stats.graphNodesNoEmbedding)}건`
                 : 'nh_knowledge_nodes'
             }
- warn={Boolean(stats && stats.graphNodesNoEmbedding > 0)}
+            warn={Boolean(stats && stats.graphNodesNoEmbedding > 0)}
           />
           <StatCard
- label="색인 실패 (큐)"
- value={failedCount}
- sub={
- stats
+            label="색인 실패 (큐)"
+            value={failedCount}
+            sub={
+              stats
                 ? `대기 ${formatCount(stats.queue.pending)} · 완료 ${formatCount(stats.queue.done)}`
                 : undefined
             }
- warn={failedCount > 0}
+            warn={failedCount > 0}
           />
           <StatCard
- label="노트북 청크"
- value={stats?.notebookChunks ?? -1}
- sub="document_chunks"
+            label="노트북 청크"
+            value={stats?.notebookChunks ?? -1}
+            sub="document_chunks"
           />
           <StatCard
- label="장기 기억"
- value={stats?.memoryRows ?? -1}
- sub="user_long_term_memory"
+            label="장기 기억"
+            value={stats?.memoryRows ?? -1}
+            sub="user_long_term_memory"
           />
         </div>
       </section>
 
       {stats && stats.graphNodesLegacyEmbedding > 0 ? (
         <section
- aria-label="임베딩 마이그레이션"
- className="rounded-xl border border-warning/30 bg-warning-soft p-4"
+          aria-label="임베딩 마이그레이션"
+          className="rounded-xl border border-warning/30 bg-warning-soft p-4"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-[14px] md:text-[16px] font-semibold text-warning">
- 임베딩 통일 마이그레이션
+                임베딩 통일 마이그레이션
               </h2>
               <p className="mt-1 text-[12px] md:text-[13px] leading-relaxed text-amber-800/90">
- 구형 임베딩 노드{' '}
+                구형 임베딩 노드{' '}
                 <strong className="tabular-nums">
                   {formatCount(stats.graphNodesLegacyEmbedding)}건
                 </strong>
- 이 남아 있습니다. 표준({stats.standardEmbeddingModel})으로
- 재임베딩해야 검색에 다시 포함됩니다. 버튼을 반복 클릭해 0건까지
- 진행하세요.
+                이 남아 있습니다. 표준({stats.standardEmbeddingModel})으로
+                재임베딩해야 검색에 다시 포함됩니다. 버튼을 반복 클릭해 0건까지
+                진행하세요.
               </p>
             </div>
             <button
- type="button"
- onClick={() => void handleReembed()}
- disabled={reembedBusy}
- className="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-[12px] md:text-[13px] font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+              type="button"
+              onClick={() => void handleReembed()}
+              disabled={reembedBusy}
+              className="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-[12px] md:text-[13px] font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
             >
               {reembedBusy ? '재임베딩 중…' : '20건 재임베딩'}
             </button>
@@ -318,32 +314,32 @@ export function KnowledgeHubPage() {
       ) : null}
 
       <section
- aria-label="검색 테스트"
- className="rounded-xl border border-border bg-surface p-4"
+        aria-label="검색 테스트"
+        className="rounded-xl border border-border bg-surface p-4"
       >
         <h2 className="text-[14px] md:text-[16px] font-semibold text-fg">
- 검색 테스트
+          검색 테스트
         </h2>
         <p className="mt-1 text-[12px] md:text-[13px] text-fg-subtle">
- 실제 답변 파이프라인과 동일한 병합 검색으로, 이 질문에 두뇌가 어떤 문서
- 조각을 근거로 찾는지 미리 봅니다.
+          실제 답변 파이프라인과 동일한 병합 검색으로, 이 질문에 두뇌가 어떤 문서
+          조각을 근거로 찾는지 미리 봅니다.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
- type="text"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- onKeyDown={(e) => {
- if (e.key === 'Enter') void handleSearchTest()
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleSearchTest()
             }}
- aria-label="검색 테스트 질문" placeholder="예: 출장비 정산 규정"
- className="min-w-0 flex-1 rounded-lg border border-border-strong bg-surface px-3 py-2 text-[16px] md:text-[14px] text-fg outline-none focus:border-stone-500"
+            aria-label="검색 테스트 질문" placeholder="예: 출장비 정산 규정"
+            className="min-w-0 flex-1 rounded-lg border border-border-strong bg-surface px-3 py-2 text-[16px] md:text-[14px] text-fg outline-none focus:border-stone-500"
           />
           <button
- type="button"
- onClick={() => void handleSearchTest()}
- disabled={searchBusy}
- className="rounded-lg bg-stone-900 px-4 py-2 text-[12px] md:text-[13px] font-semibold text-white hover:bg-stone-700 disabled:opacity-50"
+            type="button"
+            onClick={() => void handleSearchTest()}
+            disabled={searchBusy}
+            className="rounded-lg bg-stone-900 px-4 py-2 text-[12px] md:text-[13px] font-semibold text-white hover:bg-stone-700 disabled:opacity-50"
           >
             {searchBusy ? '검색 중…' : '테스트'}
           </button>
@@ -354,24 +350,24 @@ export function KnowledgeHubPage() {
           </p>
         ) : null}
         {searchMatches !== null ? (
- searchMatches.length === 0 ? (
+          searchMatches.length === 0 ? (
             <p className="mt-3 rounded-lg bg-bg px-3 py-2 text-[12px] md:text-[13px] text-fg-subtle">
- 검색된 문서가 없습니다. 이 주제의 문서가 아직 색인되지 않았다는
- 뜻입니다 — 자료실에 문서를 추가해 보세요.
+              검색된 문서가 없습니다. 이 주제의 문서가 아직 색인되지 않았다는
+              뜻입니다 — 자료실에 문서를 추가해 보세요.
             </p>
           ) : (
             <ul className="mt-3 flex flex-col gap-2">
               {searchMatches.map((m, i) => (
                 <li
- key={`${m.fileName}-${m.chunkIndex}-${i}`}
- className="rounded-lg border border-border bg-bg p-3"
+                  key={`${m.fileName}-${m.chunkIndex}-${i}`}
+                  className="rounded-lg border border-border bg-bg p-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="min-w-0 truncate text-[12px] md:text-[13px] font-medium text-fg">
                       [{i + 1}] {m.fileName}
                     </p>
                     <span className="shrink-0 text-[11px] md:text-[12px] tabular-nums text-fg-subtle">
- 유사도 {m.similarity.toFixed(3)} · 청크 #{m.chunkIndex}
+                      유사도 {m.similarity.toFixed(3)} · 청크 #{m.chunkIndex}
                     </span>
                   </div>
                   <p className="mt-1 line-clamp-3 text-[12px] md:text-[13px] leading-relaxed text-fg-muted">
@@ -385,18 +381,18 @@ export function KnowledgeHubPage() {
       </section>
 
       <section
- aria-label="수집 큐"
- className="rounded-xl border border-border bg-surface p-4"
+        aria-label="수집 큐"
+        className="rounded-xl border border-border bg-surface p-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-[14px] md:text-[16px] font-semibold text-fg">
- 문서 수집 큐
+            문서 수집 큐
           </h2>
           <button
- type="button"
- onClick={() => void handleRetryFailed()}
- disabled={retryBusy || failedCount === 0}
- className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-1.5 text-[12px] md:text-[13px] font-medium text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-40"
+            type="button"
+            onClick={() => void handleRetryFailed()}
+            disabled={retryBusy || failedCount === 0}
+            className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-1.5 text-[12px] md:text-[13px] font-medium text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-40"
           >
             {retryBusy ? '재시도 중…' : `실패 ${failedCount}건 전체 재시도`}
           </button>
@@ -413,15 +409,15 @@ export function KnowledgeHubPage() {
         ) : null}
         {queueRows.length === 0 && !queueError ? (
           <p className="mt-3 text-[12px] md:text-[13px] text-fg-subtle">
- 수집 큐가 비어 있습니다. 자료실에 문서를 올리면 자동으로 이 큐에
- 들어와 색인됩니다.
+            수집 큐가 비어 있습니다. 자료실에 문서를 올리면 자동으로 이 큐에
+            들어와 색인됩니다.
           </p>
         ) : (
           <ul className="mt-3 flex flex-col gap-1.5">
             {queueRows.map((row) => (
               <li
- key={row.id}
- className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border px-3 py-2"
+                key={row.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border px-3 py-2"
               >
                 <QueueStatusBadge status={row.status} />
                 <p className="min-w-0 flex-1 truncate text-[12px] md:text-[13px] text-fg">
@@ -429,10 +425,10 @@ export function KnowledgeHubPage() {
                 </p>
                 <span className="shrink-0 text-[11px] md:text-[12px] text-fg-subtle">
                   {new Date(row.createdAt).toLocaleString('ko-KR', {
- month: 'short',
- day: 'numeric',
- hour: '2-digit',
- minute: '2-digit',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
                   })}
                 </span>
                 {row.status === 'failed' && row.errorMessage ? (

@@ -1,59 +1,59 @@
 import { useEffect, useState } from 'react'
 
 import {
- Area,
- AreaChart,
- CartesianGrid,
- Cell,
- Pie,
- PieChart,
- ResponsiveContainer,
- Tooltip,
- XAxis,
- YAxis,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts'
 
 import { AdminPageHeader } from '../../components/auth/admin/AdminPageHeader'
 import { supabase } from '../../lib/supabase'
 import { adminPageRootWide } from '../../components/auth/admin/admin-ui'
 import {
- activityBadgeClassName,
- resolveActivityAction,
+  activityBadgeClassName,
+  resolveActivityAction,
 } from '../../utils/admin-activity-badge'
 
 type TokenTrendPoint = {
- date: string
- tokens: number
+  date: string
+  tokens: number
 }
 
 type DepartmentShare = {
- name: string
- value: number
- color: string
+  name: string
+  value: number
+  color: string
 }
 
 type RecentLog = {
- id: string
- action_type: string
- description: string
- created_at: string
+  id: string
+  action_type: string
+  description: string
+  created_at: string
 }
 
 type DepartmentBudgetRow = {
- target_department: string
- monthly_limit_usd: number
- current_usage_usd: number
- updated_at: string
+  target_department: string
+  monthly_limit_usd: number
+  current_usage_usd: number
+  updated_at: string
 }
 
 interface DashboardMetrics {
- monthlyTokens: number
- weeklyActiveUsers: number
- monthlyPrompts: number
- totalCostUsd: number
- tokenTrend: TokenTrendPoint[]
- deptShare: DepartmentShare[]
- recentLogs: RecentLog[]
+  monthlyTokens: number
+  weeklyActiveUsers: number
+  monthlyPrompts: number
+  totalCostUsd: number
+  tokenTrend: TokenTrendPoint[]
+  deptShare: DepartmentShare[]
+  recentLogs: RecentLog[]
 }
 
 const DEPT_COLORS = [
@@ -67,48 +67,48 @@ const AREA_STROKE = '#6366f1'
 const AREA_FILL = '#6366f1'
 
 function formatTokens(value: number): string {
- if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
- if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
- return String(value)
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
+  return String(value)
 }
 
 function formatLogTime(iso: string): string {
- return new Intl.DateTimeFormat('ko-KR', {
- month: 'short',
- day: 'numeric',
- hour: '2-digit',
- minute: '2-digit',
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(new Date(iso))
 }
 
 function formatUsd(value: number): string {
- return `$${value.toFixed(2)}`
+  return `$${value.toFixed(2)}`
 }
 
 type ChartTooltipProps = {
- active?: boolean
- payload?: { value: number; name?: string }[]
- label?: string
+  active?: boolean
+  payload?: { value: number; name?: string }[]
+  label?: string
 }
 
 function TokenTrendTooltip({ active, payload, label }: ChartTooltipProps) {
- if (!active || !payload?.length) return null
- const value = payload[0]?.value ?? 0
- return (
+  if (!active || !payload?.length) return null
+  const value = payload[0]?.value ?? 0
+  return (
     <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 shadow-lg">
       <p className="text-xs font-medium text-fg-subtle">날짜 {label}</p>
       <p className="mt-1 text-xs tabular-nums text-white">
- 토큰 {value.toLocaleString('ko-KR')}
+        토큰 {value.toLocaleString('ko-KR')}
       </p>
     </div>
   )
 }
 
 function ShareTooltip({ active, payload }: ChartTooltipProps) {
- if (!active || !payload?.length) return null
- const value = payload[0]?.value ?? 0
- const name = payload[0]?.name ?? ''
- return (
+  if (!active || !payload?.length) return null
+  const value = payload[0]?.value ?? 0
+  const name = payload[0]?.name ?? ''
+  return (
     <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 shadow-lg">
       <p className="text-xs font-medium text-fg-subtle">{name}</p>
       <p className="mt-1 text-xs tabular-nums text-white">비율 {value}%</p>
@@ -117,15 +117,15 @@ function ShareTooltip({ active, payload }: ChartTooltipProps) {
 }
 
 function StatCard({
- label,
- value,
- hint,
+  label,
+  value,
+  hint,
 }: {
- label: string
- value: string
- hint?: string
+  label: string
+  value: string
+  hint?: string
 }) {
- return (
+  return (
     <article className="group relative overflow-hidden rounded-xl border border-border/80 bg-surface p-5 shadow-sm">
       <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent blur-2xl" />
       <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
@@ -144,54 +144,54 @@ function StatCard({
 }
 
 function DepartmentBudgetUsageSection() {
- const [rows, setRows] = useState<DepartmentBudgetRow[]>([])
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState<string | null>(null)
+  const [rows, setRows] = useState<DepartmentBudgetRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
- useEffect(() => {
- let cancelled = false
+  useEffect(() => {
+    let cancelled = false
 
- async function load() {
- setLoading(true)
- setError(null)
- const { data, error: qErr } = await supabase
+    async function load() {
+      setLoading(true)
+      setError(null)
+      const { data, error: qErr } = await supabase
         .from('department_budgets')
         .select('target_department, monthly_limit_usd, current_usage_usd, updated_at')
         .order('target_department', { ascending: true })
 
- if (cancelled) return
+      if (cancelled) return
 
- if (qErr) {
- setError(qErr.message)
- setRows([])
+      if (qErr) {
+        setError(qErr.message)
+        setRows([])
       } else {
- setRows(
+        setRows(
           (data ?? []).map((row) => ({
- target_department: String(row.target_department),
- monthly_limit_usd: Number(row.monthly_limit_usd ?? 0),
- current_usage_usd: Number(row.current_usage_usd ?? 0),
- updated_at: String(row.updated_at ?? ''),
+            target_department: String(row.target_department),
+            monthly_limit_usd: Number(row.monthly_limit_usd ?? 0),
+            current_usage_usd: Number(row.current_usage_usd ?? 0),
+            updated_at: String(row.updated_at ?? ''),
           })),
         )
       }
- setLoading(false)
+      setLoading(false)
     }
 
- void load()
- return () => {
- cancelled = true
+    void load()
+    return () => {
+      cancelled = true
     }
   }, [])
 
- return (
+  return (
     <section aria-label="부서별 예산 사용 현황">
       <article className="overflow-hidden rounded-xl border border-border/80 bg-surface shadow-sm">
         <div className="border-b border-border px-6 py-4">
           <h2 className="text-sm font-semibold text-fg">
- 부서별 예산 사용 현황
+            부서별 예산 사용 현황
           </h2>
           <p className="mt-0.5 text-xs text-fg-subtle">
- department_budgets · 월간 한도 대비 누적 사용(USD)
+            department_budgets · 월간 한도 대비 누적 사용(USD)
           </p>
         </div>
         {loading ? (
@@ -200,15 +200,15 @@ function DepartmentBudgetUsageSection() {
           <p className="px-6 py-8 text-sm text-danger">{error}</p>
         ) : rows.length === 0 ? (
           <p className="px-6 py-8 text-sm text-fg-subtle">
- 등록된 부서 예산 데이터가 없습니다.
+            등록된 부서 예산 데이터가 없습니다.
           </p>
         ) : (
           <ul className="divide-y divide-border">
             {rows.map((row) => {
- const limit = Math.max(row.monthly_limit_usd, 0.0001)
- const pct = Math.min(100, Math.round((row.current_usage_usd / limit) * 100))
- const barTone = pct >= 80 ? 'bg-danger' : 'bg-accent'
- return (
+              const limit = Math.max(row.monthly_limit_usd, 0.0001)
+              const pct = Math.min(100, Math.round((row.current_usage_usd / limit) * 100))
+              const barTone = pct >= 80 ? 'bg-danger' : 'bg-accent'
+              return (
                 <li key={row.target_department} className="px-6 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-medium text-fg">
@@ -232,18 +232,18 @@ function DepartmentBudgetUsageSection() {
 }
 
 async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
- const now = new Date()
- const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
- const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
   // 최근 7일 날짜 목록
- const last7Days = Array.from({ length: 7 }, (_, i) => {
- const d = new Date(now)
- d.setDate(d.getDate() - (6 - i))
- return d
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now)
+    d.setDate(d.getDate() - (6 - i))
+    return d
   })
 
- const [
+  const [
     { data: monthTokenRows },
     { data: wauRows },
     { count: promptCount },
@@ -252,147 +252,147 @@ async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
     { data: trendRows },
   ] = await Promise.all([
     // 이번 달 토큰
- supabase
+    supabase
       .from('token_logs')
       .select('total_tokens')
       .gte('created_at', monthStart.toISOString()),
     // 주간 활성 사용자 (user_id distinct 목적으로 조회)
- supabase
+    supabase
       .from('token_logs')
       .select('user_id')
       .gte('created_at', weekAgo.toISOString()),
     // 이번 달 신규 프롬프트
- supabase
+    supabase
       .from('prompt_templates')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', monthStart.toISOString()),
     // 부서별 비용 (파이차트 + 총계)
- supabase
+    supabase
       .from('department_budgets')
       .select('target_department, current_usage_usd')
       .order('current_usage_usd', { ascending: false }),
     // 최근 시스템 로그
- supabase
+    supabase
       .from('activity_logs')
       .select('id, action_type, description, created_at')
       .order('created_at', { ascending: false })
       .limit(5),
     // 최근 7일 토큰 트렌드
- supabase
+    supabase
       .from('token_logs')
       .select('total_tokens, created_at')
       .gte('created_at', last7Days[0].toISOString()),
   ])
 
- const monthlyTokens = (monthTokenRows ?? []).reduce(
+  const monthlyTokens = (monthTokenRows ?? []).reduce(
     (sum, r) => sum + (Number(r.total_tokens) || 0),
- 0,
+    0,
   )
 
- const wauSet = new Set((wauRows ?? []).map((r) => r.user_id).filter(Boolean))
- const weeklyActiveUsers = wauSet.size
+  const wauSet = new Set((wauRows ?? []).map((r) => r.user_id).filter(Boolean))
+  const weeklyActiveUsers = wauSet.size
 
- const monthlyPrompts = promptCount ?? 0
+  const monthlyPrompts = promptCount ?? 0
 
- const totalCostUsd = (deptBudgets ?? []).reduce(
+  const totalCostUsd = (deptBudgets ?? []).reduce(
     (sum, r) => sum + (Number(r.current_usage_usd) || 0),
- 0,
+    0,
   )
 
   // 파이차트: 각 부서의 current_usage_usd 비율
- const totalForShare = (deptBudgets ?? []).reduce(
+  const totalForShare = (deptBudgets ?? []).reduce(
     (sum, r) => sum + (Number(r.current_usage_usd) || 0),
- 0,
+    0,
   )
- const deptShare: DepartmentShare[] = (deptBudgets ?? [])
+  const deptShare: DepartmentShare[] = (deptBudgets ?? [])
     .filter((r) => Number(r.current_usage_usd) > 0)
     .map((r, i) => ({
- name: String(r.target_department),
- value:
- totalForShare > 0
+      name: String(r.target_department),
+      value:
+        totalForShare > 0
           ? Math.round((Number(r.current_usage_usd) / totalForShare) * 100)
           : 0,
- color: DEPT_COLORS[i % DEPT_COLORS.length],
+      color: DEPT_COLORS[i % DEPT_COLORS.length],
     }))
 
   // 7일 트렌드: 날짜별 집계
- const trendMap = new Map<string, number>()
- for (const d of last7Days) {
- const key = `${d.getMonth() + 1}/${d.getDate()}`
- trendMap.set(key, 0)
+  const trendMap = new Map<string, number>()
+  for (const d of last7Days) {
+    const key = `${d.getMonth() + 1}/${d.getDate()}`
+    trendMap.set(key, 0)
   }
- for (const row of trendRows ?? []) {
- const d = new Date(row.created_at)
- const key = `${d.getMonth() + 1}/${d.getDate()}`
- if (trendMap.has(key)) {
- trendMap.set(key, (trendMap.get(key) ?? 0) + (Number(row.total_tokens) || 0))
+  for (const row of trendRows ?? []) {
+    const d = new Date(row.created_at)
+    const key = `${d.getMonth() + 1}/${d.getDate()}`
+    if (trendMap.has(key)) {
+      trendMap.set(key, (trendMap.get(key) ?? 0) + (Number(row.total_tokens) || 0))
     }
   }
- const tokenTrend: TokenTrendPoint[] = Array.from(trendMap.entries()).map(
+  const tokenTrend: TokenTrendPoint[] = Array.from(trendMap.entries()).map(
     ([date, tokens]) => ({ date, tokens }),
   )
 
- const recentLogs: RecentLog[] = (logRows ?? []).map((r) => ({
- id: String(r.id),
- action_type: String(r.action_type ?? ''),
- description: String(r.description ?? ''),
- created_at: String(r.created_at ?? ''),
+  const recentLogs: RecentLog[] = (logRows ?? []).map((r) => ({
+    id: String(r.id),
+    action_type: String(r.action_type ?? ''),
+    description: String(r.description ?? ''),
+    created_at: String(r.created_at ?? ''),
   }))
 
- return {
- monthlyTokens,
- weeklyActiveUsers,
- monthlyPrompts,
- totalCostUsd,
- tokenTrend,
- deptShare,
- recentLogs,
+  return {
+    monthlyTokens,
+    weeklyActiveUsers,
+    monthlyPrompts,
+    totalCostUsd,
+    tokenTrend,
+    deptShare,
+    recentLogs,
   }
 }
 
 export function ModernAdminDashboard() {
- const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState<string | null>(null)
- const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
 
- async function load() {
- setLoading(true)
- setError(null)
- try {
- const data = await fetchDashboardMetrics()
- setMetrics(data)
- setRefreshedAt(new Date())
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await fetchDashboardMetrics()
+      setMetrics(data)
+      setRefreshedAt(new Date())
     } catch (e) {
- setError(e instanceof Error ? e.message : '알 수 없는 오류')
+      setError(e instanceof Error ? e.message : '알 수 없는 오류')
     } finally {
- setLoading(false)
+      setLoading(false)
     }
   }
 
- useEffect(() => {
- void load()
+  useEffect(() => {
+    void load()
   }, [])
 
- const thisMonth = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
+  const thisMonth = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
 
- return (
+  return (
     <div className={`${adminPageRootWide} space-y-6`}>
       <AdminPageHeader
- title="운영 대시보드"
- description={`토큰·비용·활성 지표 · ${thisMonth} 기준`}
- actions={
+        title="운영 대시보드"
+        description={`토큰·비용·활성 지표 · ${thisMonth} 기준`}
+        actions={
           <div className="flex items-center gap-2">
             {refreshedAt && (
               <span className="text-xs text-fg-subtle">
- 업데이트 {refreshedAt.toLocaleTimeString('ko-KR')}
+                업데이트 {refreshedAt.toLocaleTimeString('ko-KR')}
               </span>
             )}
             <button
- type="button"
- onClick={() => void load()}
- disabled={loading}
- className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:bg-surface-2 disabled:opacity-50"
+              type="button"
+              onClick={() => void load()}
+              disabled={loading}
+              className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:bg-surface-2 disabled:opacity-50"
             >
               {loading ? '로딩 중…' : '새로고침'}
             </button>
@@ -402,36 +402,36 @@ export function ModernAdminDashboard() {
 
       {error && (
         <div className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-xs text-danger">
- 오류: {error}
+          오류: {error}
         </div>
       )}
 
       {loading && !metrics ? (
         <div className="flex h-40 items-center justify-center text-sm text-fg-subtle">
- 데이터 불러오는 중…
+          데이터 불러오는 중…
         </div>
       ) : metrics ? (
         <>
           <section aria-label="핵심 KPI" className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
- label="이번 달 예상 비용"
- value={`$${metrics.totalCostUsd.toFixed(2)}`}
- hint="department_budgets 누적 합산"
+              label="이번 달 예상 비용"
+              value={`$${metrics.totalCostUsd.toFixed(2)}`}
+              hint="department_budgets 누적 합산"
             />
             <StatCard
- label="이번 달 누적 토큰"
- value={formatTokens(metrics.monthlyTokens)}
- hint="token_logs prompt + completion"
+              label="이번 달 누적 토큰"
+              value={formatTokens(metrics.monthlyTokens)}
+              hint="token_logs prompt + completion"
             />
             <StatCard
- label="주간 활성 사용자"
- value={String(metrics.weeklyActiveUsers)}
- hint="최근 7일 token_logs 기준"
+              label="주간 활성 사용자"
+              value={String(metrics.weeklyActiveUsers)}
+              hint="최근 7일 token_logs 기준"
             />
             <StatCard
- label="이번 달 신규 프롬프트"
- value={String(metrics.monthlyPrompts)}
- hint="prompt_templates 생성 수"
+              label="이번 달 신규 프롬프트"
+              value={String(metrics.monthlyPrompts)}
+              hint="prompt_templates 생성 수"
             />
           </section>
 
@@ -439,15 +439,15 @@ export function ModernAdminDashboard() {
             <article className="rounded-xl border border-border/80 bg-surface p-6 shadow-sm lg:col-span-2">
               <div className="mb-4">
                 <h2 className="text-sm font-semibold text-fg">
- 최근 7일 토큰 사용량
+                  최근 7일 토큰 사용량
                 </h2>
                 <p className="mt-0.5 text-xs text-fg-subtle">
- 일별 prompt + completion 합산 추이
+                  일별 prompt + completion 합산 추이
                 </p>
               </div>
               {metrics.tokenTrend.every((p) => p.tokens === 0) ? (
                 <div className="flex h-72 items-center justify-center text-sm text-fg-subtle">
- 최근 7일 토큰 데이터가 없습니다.
+                  최근 7일 토큰 데이터가 없습니다.
                 </div>
               ) : (
                 <div className="h-72 w-full">
@@ -464,13 +464,13 @@ export function ModernAdminDashboard() {
                       <YAxis tick={{ fill: CHART_AXIS, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={formatTokens} width={48} />
                       <Tooltip content={<TokenTrendTooltip />} />
                       <Area
- type="monotone"
- dataKey="tokens"
- stroke={AREA_STROKE}
- strokeWidth={2}
- fill="url(#tokenAreaFill)"
- dot={false}
- activeDot={{ r: 4, strokeWidth: 0, fill: AREA_STROKE }}
+                        type="monotone"
+                        dataKey="tokens"
+                        stroke={AREA_STROKE}
+                        strokeWidth={2}
+                        fill="url(#tokenAreaFill)"
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 0, fill: AREA_STROKE }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -481,15 +481,15 @@ export function ModernAdminDashboard() {
             <article className="rounded-xl border border-border/80 bg-surface p-6 shadow-sm">
               <div className="mb-4">
                 <h2 className="text-sm font-semibold text-fg">
- 부서별 비용 비율
+                  부서별 비용 비율
                 </h2>
                 <p className="mt-0.5 text-xs text-fg-subtle">
- department_budgets current_usage_usd 기준
+                  department_budgets current_usage_usd 기준
                 </p>
               </div>
               {metrics.deptShare.length === 0 ? (
                 <div className="flex h-52 items-center justify-center text-sm text-fg-subtle">
- 부서 예산 데이터가 없습니다.
+                  부서 예산 데이터가 없습니다.
                 </div>
               ) : (
                 <>
@@ -497,15 +497,15 @@ export function ModernAdminDashboard() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
- data={metrics.deptShare}
- dataKey="value"
- nameKey="name"
- cx="50%"
- cy="50%"
- innerRadius={52}
- outerRadius={76}
- paddingAngle={3}
- stroke="none"
+                          data={metrics.deptShare}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={52}
+                          outerRadius={76}
+                          paddingAngle={3}
+                          stroke="none"
                         >
                           {metrics.deptShare.map((entry) => (
                             <Cell key={entry.name} fill={entry.color} />
@@ -518,8 +518,8 @@ export function ModernAdminDashboard() {
                   <ul className="mt-2 space-y-2">
                     {metrics.deptShare.map((dept) => (
                       <li
- key={dept.name}
- className="flex items-center justify-between gap-2 text-xs text-fg-muted"
+                        key={dept.name}
+                        className="flex items-center justify-between gap-2 text-xs text-fg-muted"
                       >
                         <span className="flex min-w-0 items-center gap-2">
                           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: dept.color }} />
@@ -540,24 +540,24 @@ export function ModernAdminDashboard() {
             <article className="overflow-hidden rounded-xl border border-border/80 bg-surface shadow-sm">
               <div className="border-b border-border px-6 py-4">
                 <h2 className="text-sm font-semibold text-fg">
- 최근 시스템 로그
+                  최근 시스템 로그
                 </h2>
                 <p className="mt-0.5 text-xs text-fg-subtle">
- activity_logs 최신 5건
+                  activity_logs 최신 5건
                 </p>
               </div>
               {metrics.recentLogs.length === 0 ? (
                 <p className="px-6 py-8 text-sm text-fg-subtle">
- 최근 로그가 없습니다.
+                  최근 로그가 없습니다.
                 </p>
               ) : (
                 <ul className="divide-y divide-border">
                   {metrics.recentLogs.map((log) => {
- const meta = resolveActivityAction(log.action_type)
- return (
+                    const meta = resolveActivityAction(log.action_type)
+                    return (
                       <li
- key={log.id}
- className="flex flex-wrap items-start gap-3 px-6 py-4 transition hover:bg-surface-2/80"
+                        key={log.id}
+                        className="flex flex-wrap items-start gap-3 px-6 py-4 transition hover:bg-surface-2/80"
                       >
                         <span className={activityBadgeClassName(log.action_type)}>
                           {meta.label}

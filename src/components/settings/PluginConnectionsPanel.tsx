@@ -1,74 +1,74 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
- deletePluginConnection,
- fetchConnectablePlugins,
- savePluginConnection,
- testPluginConnection,
- type ConnectablePlugin,
+  deletePluginConnection,
+  fetchConnectablePlugins,
+  savePluginConnection,
+  testPluginConnection,
+  type ConnectablePlugin,
 } from '../../services/integrations/plugin-connections'
 
 const MODE_LABEL = {
- per_user: '사용자별 연결',
- workspace_install: '관리자 설치형',
- admin_shared: '관리자 공용',
- hybrid: '개인/공용 선택',
+  per_user: '사용자별 연결',
+  workspace_install: '관리자 설치형',
+  admin_shared: '관리자 공용',
+  hybrid: '개인/공용 선택',
 } as const
 
 export function PluginConnectionsPanel() {
- const dialogRef = useRef<HTMLDialogElement>(null)
- const [plugins, setPlugins] = useState<ConnectablePlugin[]>([])
- const [selected, setSelected] = useState<ConnectablePlugin | null>(null)
- const [credential, setCredential] = useState('')
- const [loading, setLoading] = useState(true)
- const [busyId, setBusyId] = useState<string | null>(null)
- const [error, setError] = useState<string | null>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const [plugins, setPlugins] = useState<ConnectablePlugin[]>([])
+  const [selected, setSelected] = useState<ConnectablePlugin | null>(null)
+  const [credential, setCredential] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
- const load = useCallback(async () => {
- setLoading(true)
- setError(null)
- try { setPlugins(await fetchConnectablePlugins()) }
- catch (loadError) { setError(loadError instanceof Error ? loadError.message : '플러그인을 불러오지 못했습니다.') }
- finally { setLoading(false) }
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try { setPlugins(await fetchConnectablePlugins()) }
+    catch (loadError) { setError(loadError instanceof Error ? loadError.message : '플러그인을 불러오지 못했습니다.') }
+    finally { setLoading(false) }
   }, [])
 
- useEffect(() => { queueMicrotask(() => void load()) }, [load])
+  useEffect(() => { queueMicrotask(() => void load()) }, [load])
 
- const openConnect = (plugin: ConnectablePlugin) => {
- setSelected(plugin)
- setCredential('')
- dialogRef.current?.showModal()
+  const openConnect = (plugin: ConnectablePlugin) => {
+    setSelected(plugin)
+    setCredential('')
+    dialogRef.current?.showModal()
   }
 
- const connect = async (event: React.FormEvent) => {
- event.preventDefault()
- if (!selected) return
- setBusyId(selected.id)
- try {
- await savePluginConnection(selected.id, credential)
- dialogRef.current?.close()
- await load()
+  const connect = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!selected) return
+    setBusyId(selected.id)
+    try {
+      await savePluginConnection(selected.id, credential)
+      dialogRef.current?.close()
+      await load()
     } catch (connectError) { setError(connectError instanceof Error ? connectError.message : '연결 저장에 실패했습니다.') }
- finally { setBusyId(null) }
+    finally { setBusyId(null) }
   }
 
- const test = async (plugin: ConnectablePlugin) => {
- setBusyId(plugin.id)
- setError(null)
- try { await testPluginConnection(plugin.id); await load() }
- catch (testError) { setError(testError instanceof Error ? testError.message : '연결 테스트에 실패했습니다.'); await load() }
- finally { setBusyId(null) }
+  const test = async (plugin: ConnectablePlugin) => {
+    setBusyId(plugin.id)
+    setError(null)
+    try { await testPluginConnection(plugin.id); await load() }
+    catch (testError) { setError(testError instanceof Error ? testError.message : '연결 테스트에 실패했습니다.'); await load() }
+    finally { setBusyId(null) }
   }
 
- const disconnect = async (plugin: ConnectablePlugin) => {
- if (!window.confirm(`${plugin.name} 연결을 해제하시겠습니까?`)) return
- setBusyId(plugin.id)
- try { await deletePluginConnection(plugin.id); await load() }
- catch (disconnectError) { setError(disconnectError instanceof Error ? disconnectError.message : '연결 해제에 실패했습니다.') }
- finally { setBusyId(null) }
+  const disconnect = async (plugin: ConnectablePlugin) => {
+    if (!window.confirm(`${plugin.name} 연결을 해제하시겠습니까?`)) return
+    setBusyId(plugin.id)
+    try { await deletePluginConnection(plugin.id); await load() }
+    catch (disconnectError) { setError(disconnectError instanceof Error ? disconnectError.message : '연결 해제에 실패했습니다.') }
+    finally { setBusyId(null) }
   }
 
- return (
+  return (
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm" aria-labelledby="plugin-connections-title">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h2 id="plugin-connections-title" className="text-lg font-bold">MCP·플러그인 연결</h2><p className="mt-1 text-sm text-fg-subtle">관리자가 활성화한 도구를 연결하고 실제 endpoint 호출까지 테스트합니다.</p></div>
@@ -77,9 +77,9 @@ export function PluginConnectionsPanel() {
       {error && <p role="alert" className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-danger">{error}</p>}
       {loading ? <p className="py-8 text-center text-fg-subtle">플러그인 카탈로그 확인 중...</p> : plugins.length === 0 ? <p className="mt-4 rounded-lg bg-bg p-4 text-fg-subtle">현재 관리자가 활성화한 사용자 연결 플러그인이 없습니다.</p> : (
         <ul className="mt-5 grid gap-3 md:grid-cols-2" role="list">{plugins.map((plugin) => {
- const requiresCredential = plugin.auth_type !== 'none'
- const connected = !requiresCredential || Boolean(plugin.connection)
- return <li key={plugin.id} className="rounded-xl border border-border p-4">
+          const requiresCredential = plugin.auth_type !== 'none'
+          const connected = !requiresCredential || Boolean(plugin.connection)
+          return <li key={plugin.id} className="rounded-xl border border-border p-4">
             <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{plugin.name}</h3><p className="mt-1 text-sm text-fg-subtle">{plugin.description || '설명 없음'}</p></div><span className="shrink-0 rounded-full bg-surface-2 px-2 py-1 text-xs">{MODE_LABEL[plugin.connection_mode]}</span></div>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs"><span className={`rounded-full px-2 py-1 font-semibold ${plugin.connection?.status === 'connected' || !requiresCredential ? 'bg-success-soft text-success' : plugin.connection?.status === 'failed' ? 'bg-danger-soft text-danger' : 'bg-warning-soft text-warning'}`}>{!requiresCredential ? '인증 불필요' : plugin.connection?.status === 'connected' ? '연결 확인됨' : plugin.connection?.status === 'failed' ? '테스트 실패' : plugin.connection ? '테스트 필요' : '연결 필요'}</span>{plugin.connection?.credential_hint && <code>{plugin.connection.credential_hint}</code>}</div>
             {plugin.connection?.last_error && <p className="mt-2 text-xs text-danger">{plugin.connection.last_error}</p>}

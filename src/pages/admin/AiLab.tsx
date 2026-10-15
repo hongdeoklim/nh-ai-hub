@@ -3,8 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../components/auth/useAuth'
 import { supabase } from '../../lib/supabase'
 import {
- invokeAiChat,
- type AiToolTraceEntry,
+  invokeAiChat,
+  type AiToolTraceEntry,
 } from '../../services/ai/invoke-chat'
 
 const MODEL_PRESETS = [
@@ -15,135 +15,135 @@ const MODEL_PRESETS = [
 ]
 
 type ActivePluginChip = {
- tool_function_name: string
- name: string
- is_active: boolean
+  tool_function_name: string
+  name: string
+  is_active: boolean
 }
 
 export function AiLab() {
- const { profile } = useAuth()
- const [prompt, setPrompt] = useState('')
- const [reply, setReply] = useState('')
- const [busy, setBusy] = useState(false)
- const [preferredAi, setPreferredAi] = useState(MODEL_PRESETS[1].id)
- const [labMode, setLabMode] = useState<'append' | 'replace'>('append')
- const [labSystem, setLabSystem] = useState(
+  const { profile } = useAuth()
+  const [prompt, setPrompt] = useState('')
+  const [reply, setReply] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [preferredAi, setPreferredAi] = useState(MODEL_PRESETS[1].id)
+  const [labMode, setLabMode] = useState<'append' | 'replace'>('append')
+  const [labSystem, setLabSystem] = useState(
     '당신은 관리자 실험실에서 동작하는 테스트 어시스턴트입니다. 사용자가 날씨·환율을 물으면 활성화된 도구를 사용하세요.',
   )
- const [toolTraces, setToolTraces] = useState<AiToolTraceEntry[]>([])
- const [activePlugins, setActivePlugins] = useState<ActivePluginChip[]>([])
+  const [toolTraces, setToolTraces] = useState<AiToolTraceEntry[]>([])
+  const [activePlugins, setActivePlugins] = useState<ActivePluginChip[]>([])
 
- const loadActivePlugins = useCallback(async () => {
- const { data, error } = await supabase
+  const loadActivePlugins = useCallback(async () => {
+    const { data, error } = await supabase
       .from('plugins')
       .select('name, tool_function_name, is_active')
       .order('name', { ascending: true })
 
- if (error) {
- console.error('[AiLab] plugins 조회 실패', error)
- setActivePlugins([])
- return
+    if (error) {
+      console.error('[AiLab] plugins 조회 실패', error)
+      setActivePlugins([])
+      return
     }
 
- setActivePlugins(
+    setActivePlugins(
       (data ?? []) as ActivePluginChip[],
     )
   }, [])
 
- useEffect(() => {
- queueMicrotask(() => void loadActivePlugins())
+  useEffect(() => {
+    queueMicrotask(() => void loadActivePlugins())
   }, [loadActivePlugins])
 
- const enabledToolNames = useMemo(
+  const enabledToolNames = useMemo(
     () =>
- activePlugins
+      activePlugins
         .filter((p) => p.is_active)
         .map((p) => p.tool_function_name)
         .filter(Boolean),
     [activePlugins],
   )
 
- const run = useCallback(async () => {
- const trimmed = prompt.trim()
- if (!trimmed || !profile) return
- setBusy(true)
- setReply('')
- setToolTraces([])
- try {
- const res = await invokeAiChat({
- supabase,
- messages: [{ role: 'user', content: trimmed }],
- activeModel: preferredAi,
- tokenLimit: profile.token_limit,
- currentTokenUsage: profile.current_token_usage,
- billingUserId: profile.id,
- experimental_lab: {
- system_prompt: labSystem.trim(),
- system_prompt_mode: labMode,
- tool_debug: true,
+  const run = useCallback(async () => {
+    const trimmed = prompt.trim()
+    if (!trimmed || !profile) return
+    setBusy(true)
+    setReply('')
+    setToolTraces([])
+    try {
+      const res = await invokeAiChat({
+        supabase,
+        messages: [{ role: 'user', content: trimmed }],
+        activeModel: preferredAi,
+        tokenLimit: profile.token_limit,
+        currentTokenUsage: profile.current_token_usage,
+        billingUserId: profile.id,
+        experimental_lab: {
+          system_prompt: labSystem.trim(),
+          system_prompt_mode: labMode,
+          tool_debug: true,
         },
- onTextDelta: (d) => {
- setReply((prev) => prev + d)
+        onTextDelta: (d) => {
+          setReply((prev) => prev + d)
         },
- onToolTrace: (entry) => {
- setToolTraces((prev) => [...prev, entry])
+        onToolTrace: (entry) => {
+          setToolTraces((prev) => [...prev, entry])
         },
       })
- if (!res.ok) {
- setReply((prev) =>
- prev ? `${prev}\n\n[오류] ${res.message}` : `[오류] ${res.message}`,
+      if (!res.ok) {
+        setReply((prev) =>
+          prev ? `${prev}\n\n[오류] ${res.message}` : `[오류] ${res.message}`,
         )
- setToolTraces((prev) => [
+        setToolTraces((prev) => [
           ...prev,
           {
- at: new Date().toISOString(),
- phase: 'error',
- message: res.message,
+            at: new Date().toISOString(),
+            phase: 'error',
+            message: res.message,
           },
         ])
       }
     } finally {
- setBusy(false)
- void loadActivePlugins()
+      setBusy(false)
+      void loadActivePlugins()
     }
   }, [
- prompt,
- profile,
- preferredAi,
- labMode,
- labSystem,
- loadActivePlugins,
+    prompt,
+    profile,
+    preferredAi,
+    labMode,
+    labSystem,
+    loadActivePlugins,
   ])
 
- const debugJson = useMemo(
+  const debugJson = useMemo(
     () => JSON.stringify(toolTraces, null, 2),
     [toolTraces],
   )
 
- return (
+  return (
     <div className="mx-auto max-w-[96rem] space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-fg">
- AI 실험실
+            AI 실험실
           </h1>
           <p className="mt-1 text-sm text-fg-subtle">
- 운영 채팅과 분리된 샌드박스 · 플러그인 · Tool Calling 디버그
+            운영 채팅과 분리된 샌드박스 · 플러그인 · Tool Calling 디버그
           </p>
         </div>
         <button
- type="button"
- onClick={() => void loadActivePlugins()}
- className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:bg-surface-2"
+          type="button"
+          onClick={() => void loadActivePlugins()}
+          className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:bg-surface-2"
         >
- 새로고침
+          새로고침
         </button>
       </div>
 
       <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 플러그인 현황
+            플러그인 현황
             <span className="ml-2 font-normal normal-case text-fg-subtle">
               ({activePlugins.filter(p => p.is_active).length}개 활성 / 전체 {activePlugins.length}개)
             </span>
@@ -152,21 +152,21 @@ export function AiLab() {
         <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
           {activePlugins.length === 0 ? (
             <span className="rounded-full bg-surface-2 px-3 py-1 text-xs text-fg-muted">
- 등록된 플러그인 없음
+              등록된 플러그인 없음
             </span>
           ) : (
- activePlugins.map((p) => (
+            activePlugins.map((p) => (
               <span
- key={p.tool_function_name}
- className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
- p.is_active
+                key={p.tool_function_name}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                  p.is_active
                     ? 'bg-success-soft text-success'
                     : 'bg-surface-2 text-fg-subtle'
                 }`}
               >
                 <span
- className={`h-1.5 w-1.5 shrink-0 rounded-full ${
- p.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                    p.is_active ? 'bg-emerald-500' : 'bg-slate-400'
                   }`}
                 />
                 {p.name}
@@ -179,11 +179,11 @@ export function AiLab() {
       <div className="grid gap-6 xl:grid-cols-12">
         <div className="space-y-4 rounded-2xl border border-border bg-surface p-5 shadow-sm xl:col-span-3">
           <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 모델
+            모델
             <select
- value={preferredAi}
- onChange={(e) => setPreferredAi(e.target.value)}
- className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+              value={preferredAi}
+              onChange={(e) => setPreferredAi(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             >
               {MODEL_PRESETS.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -195,66 +195,66 @@ export function AiLab() {
 
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 시스템 프롬프트 덮어쓰기
+              시스템 프롬프트 덮어쓰기
             </p>
             <div className="mt-2 flex gap-2">
               <button
- type="button"
- onClick={() => setLabMode('append')}
- className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
- labMode === 'append'
+                type="button"
+                onClick={() => setLabMode('append')}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
+                  labMode === 'append'
                     ? 'bg-accent text-white'
                     : 'bg-surface-2 text-fg-muted'
                 }`}
               >
- 덧붙이기
+                덧붙이기
               </button>
               <button
- type="button"
- onClick={() => setLabMode('replace')}
- className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
- labMode === 'replace'
+                type="button"
+                onClick={() => setLabMode('replace')}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
+                  labMode === 'replace'
                     ? 'bg-accent text-white'
                     : 'bg-surface-2 text-fg-muted'
                 }`}
               >
- 교체
+                교체
               </button>
             </div>
           </div>
 
           <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 시스템 프롬프트
+            시스템 프롬프트
             <textarea
- value={labSystem}
- onChange={(e) => setLabSystem(e.target.value)}
- rows={10}
- className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-xs leading-relaxed"
+              value={labSystem}
+              onChange={(e) => setLabSystem(e.target.value)}
+              rows={10}
+              className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-xs leading-relaxed"
             />
           </label>
 
           <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
- 테스트 메시지
+            테스트 메시지
             <textarea
- value={prompt}
- onChange={(e) => setPrompt(e.target.value)}
- rows={4}
- placeholder="예: 서울 날씨 알려줘 / USD 환율은?"
- className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={4}
+              placeholder="예: 서울 날씨 알려줘 / USD 환율은?"
+              className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             />
           </label>
 
           <button
- type="button"
- disabled={busy || !prompt.trim() || !profile}
- onClick={() => void run()}
- className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+            type="button"
+            disabled={busy || !prompt.trim() || !profile}
+            onClick={() => void run()}
+            className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {busy ? '스트리밍 중…' : '실험 실행'}
           </button>
 
           <p className="text-xs text-fg-subtle">
- 활성 도구:{' '}
+            활성 도구:{' '}
             {enabledToolNames.length > 0
               ? enabledToolNames.join(', ')
               : '없음'}
@@ -263,7 +263,7 @@ export function AiLab() {
 
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm xl:col-span-5">
           <h2 className="text-sm font-bold text-fg">
- 모델 출력
+            모델 출력
           </h2>
           <div className="mt-3 min-h-[420px] rounded-xl border border-dashed border-border bg-bg/80 p-4 text-sm leading-relaxed whitespace-pre-wrap text-fg">
             {reply || '여기에 스트리밍 결과가 표시됩니다.'}
@@ -273,15 +273,15 @@ export function AiLab() {
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm xl:col-span-4">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-bold text-fg">
- Debug Log · Tool Calling
+              Debug Log · Tool Calling
             </h2>
             <button
- type="button"
- disabled={toolTraces.length === 0}
- onClick={() => setToolTraces([])}
- className="rounded-md px-2 py-1 text-[15px] font-semibold text-fg-subtle hover:bg-surface-2 disabled:opacity-40"
+              type="button"
+              disabled={toolTraces.length === 0}
+              onClick={() => setToolTraces([])}
+              className="rounded-md px-2 py-1 text-[15px] font-semibold text-fg-subtle hover:bg-surface-2 disabled:opacity-40"
             >
- 비우기
+              비우기
             </button>
           </div>
           <pre className="mt-3 max-h-[420px] overflow-auto rounded-xl border border-border bg-slate-950 p-3 font-mono text-xs leading-relaxed text-emerald-300">
