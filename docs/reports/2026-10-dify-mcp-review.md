@@ -80,6 +80,7 @@
 7. **[중] `providerMetadata` 는 무시된다**: AI SDK v6 입력 옵션은 `providerOptions` 이다. 이름만 바꾸면 o3-mini 출력이 1,000~4,000 토큰으로 잘리고 Gemini 캐시 옵션 형식도 틀려 있으므로, `reasoningEffort` 만 남기고 정리해야 한다.
    - ✅ 코드 수정(배포 필요): `providerOptions.openai.reasoningEffort` 만 실제 OpenAI 호출에 넘기고, 출력 상한·잘못된 캐시·DeepSeek 옵션은 제거.
 8. **[중] 권한 검사가 실패 시 열림**: 권한 조회 오류 시 필터를 건너뛰고, DB 조회 도구가 service-role 로 다른 사용자의 토큰 사용량까지 볼 수 있다.
+   - ✅ 코드 수정(배포 필요): 설치·권한 조회 실패 시 플러그인 도구를 노출하지 않음(테이블 미존재는 규칙 없음으로 간주). `token_logs` 는 호출한 사용자 본인 행만 조회. `role` 주체 권한은 아직 미지원.
 9. **[낮음]** 도구 오류가 스트림에 안 나옴, 연동 토큰 평문 저장, 마이그레이션에 프로젝트 ref 하드코딩.
    - ✅ `allMcpMocks` 는 타입에 `false` 전용 안전 표시로 정의해 deno check 오류를 없앰 (목업은 어디서도 로드되지 않음).
 

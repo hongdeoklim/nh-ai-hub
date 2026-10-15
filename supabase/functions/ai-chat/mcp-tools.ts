@@ -813,7 +813,7 @@ export async function routeMcpToolInvocation(
         filter_value?: string
         limit?: number
       }
-      return await executeDbQuery(ctx.admin, parsed)
+      return await executeDbQuery(ctx.admin, parsed, { userId: ctx.userId })
     }
 
     case MCP_CORE_TOOL_NAMES.SEARCH_GOOGLE_DRIVE: {
