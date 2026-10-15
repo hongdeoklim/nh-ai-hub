@@ -27,6 +27,7 @@ import {
 import { ModelSelectRow } from '../components/chat/ChatStartHub'
 import { ThinkingProcessPanel } from '../components/chat/ThinkingProcessPanel'
 import { parseThinkingContent } from '../utils/thinking-content'
+import { firstMarkdownHeading, useHwpxSave } from '../hooks/useHwpxSave'
 
 type PlannerMessage = ModelMessage & { truncated?: boolean }
 
@@ -376,6 +377,17 @@ export function AiProductPlannerPage() {
     }
   }
 
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
+  /** PRD + 기능 명세를 한 문서로 한글(.hwpx) 저장 */
+  const exportToHwpx = () => {
+    if (!result) return
+    const prd = result.prdMarkdown?.trim() ?? ''
+    const spec = result.specMarkdown?.trim() ?? ''
+    const title = firstMarkdownHeading(prd) || 'AI Planner 기획서'
+    const markdown = [prd, spec ? `\n---\n\n# 기능 명세\n\n${spec}` : ''].join('\n')
+    void saveHwpx(markdown, { title, filename: `${title}_기획서` })
+  }
+
   const exportToExcel = () => {
     const specMarkdown = result?.specMarkdown?.trim() ?? ''
     if (!specMarkdown) {
@@ -542,6 +554,16 @@ export function AiProductPlannerPage() {
                   >
                     <svg className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     명세서 엑셀
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exportToHwpx}
+                    disabled={!result?.prdMarkdown?.trim() || hwpxSaving}
+                    title="PRD와 기능 명세서를 한글 문서(.hwpx)로 저장"
+                    className="group relative flex items-center gap-2 rounded-lg border border-brand/30 bg-brand-soft px-4 py-2 text-sm font-semibold text-brand shadow-sm transition-all hover:bg-brand-soft/70 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    {hwpxSaving ? '저장 중…' : '한글(HWPX)'}
                   </button>
                   <button type="button" onClick={() => void exportToDesigner()} disabled={!result} className="group relative rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 transition-all flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95">
                     <svg className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>

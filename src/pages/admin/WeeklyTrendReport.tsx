@@ -5,6 +5,7 @@ import {
   adminBtnSecondary,
   adminPageRootWide,
 } from '../../components/auth/admin/admin-ui'
+import { useHwpxSave } from '../../hooks/useHwpxSave'
 import { supabase } from '../../lib/supabase'
 import {
   normalizeTopKeywords,
@@ -81,6 +82,7 @@ export function WeeklyTrendReport() {
     () => (selected ? normalizeTopKeywords(selected.top_keywords) : []),
     [selected],
   )
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
 
   return (
     <div className={adminPageRootWide}>
@@ -177,6 +179,32 @@ export function WeeklyTrendReport() {
                 >
                   {selected.generated_by_ai ? 'AI 생성' : '규칙 기반'}
                 </span>
+                <button
+                  type="button"
+                  disabled={hwpxSaving}
+                  onClick={() => {
+                    const title = `${formatReportLabel(selected.report_date)} 주간 트렌드 리포트`
+                    const markdown = [
+                      `# ${title}`,
+                      '',
+                      `- **집계 구간**: ${formatPeriod(selected.period_start, selected.period_end)}`,
+                      `- **생성 방식**: ${selected.generated_by_ai ? 'AI 생성' : '규칙 기반'}`,
+                      '',
+                      '## 핵심 키워드 Top 5',
+                      '',
+                      ...(keywords.length ? keywords.map((k) => `${k.rank}. ${k.keyword}`) : ['- (키워드 없음)']),
+                      '',
+                      '## AI 종합 요약',
+                      '',
+                      selected.summary || '(요약 없음)',
+                    ].join('\n')
+                    void saveHwpx(markdown, { title, filename: `주간트렌드_${selected.report_date}` })
+                  }}
+                  className={adminBtnSecondary}
+                  title="한글 문서(.hwpx)로 저장"
+                >
+                  {hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}
+                </button>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

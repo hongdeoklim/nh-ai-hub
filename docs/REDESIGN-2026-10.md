@@ -227,6 +227,14 @@ AI 앱           Planner · Designer · Slides · Sheets   (hidden: AI Office)
 - `src/App.tsx` `portalPageRoutes`·`adminPageRoutes` 추출 + DEV 검수 라우트 `/__ui-check/app/*` (채팅 포함) · `/__ui-check/admin/*`, `DevUiCheckPage` 에 채팅 홈 갤러리 목업
 - `MainLayout` 본문 건너뛰기 링크(`#main-content`), 마이그레이션으로 투명도가 빠진 장식 요소(`bg-accent/10`, `bg-accent/20`) 복원
 
+**9단계 — 한글 문서(.hwpx) 저장**
+- `src/lib/hwpx/hwpx-package.ts` — OWPML(KS X 6101) 패키지 조립. 구조는 nh-travel `docxToHwpx.js`(한글 2024 검증)와 동일: `mimetype`(STORE, 첫 항목)·`version.xml`·`Contents/header.xml|section0.xml|content.hpf`·`settings.xml`·`Preview/PrvText.txt`·`META-INF/*`. A4, 좌우 30mm·상 20mm·하 15mm.
+- `src/lib/hwpx/markdown-to-hwpx.ts` — 마크다운(remark-gfm) → 문단. 제목(H1·H2 하단 괘선), 목록(•◦▪·번호·체크박스, 내어쓰기), 인용(좌측 괘선), 코드 블록(굴림체·음영), GFM 표(비례 열 너비·머리행 반복), 구분선, 하단 쪽번호 `- N -`.
+- `src/lib/hwpx/save-hwpx.ts`, `src/hooks/useHwpxSave.ts` — 지연 로딩(별도 청크 약 8KB gzip) + 저장 토스트. 부제 기본값 `NH-AX-HUB · YYYY-MM-DD`.
+- 저장 버튼 위치: 채팅 답변 더보기 메뉴 「한글(HWPX)로 저장」, 아티팩트 패널, 현장 평가 보고서, AI Planner(PRD+기능 명세), 노트북 통합 보고서, 관리자 주간 트렌드 리포트.
+- 검증: `src/lib/__tests__/markdown-to-hwpx.test.ts`(zip 구조·XML 적격성·ID 범위), 한글 2024 COM 자동화로 샘플·브라우저 생성 파일을 열어 쪽수·본문 텍스트·PDF 렌더 확인.
+- 한글은 문단 테두리를 문단 뒤 간격 바깥에 그리므로 괘선 제목·표·구분선 뒤에는 빈 간격 문단을 둔다.
+
 ---
 
 ## 6. 페이지 마이그레이션 가이드 (후속)

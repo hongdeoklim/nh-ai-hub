@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { PageHeader } from '../components/common/PageHeader'
-import { IconHardHat } from '../components/common/icons'
+import { IconFileText, IconHardHat } from '../components/common/icons'
+import { firstMarkdownHeading, useHwpxSave } from '../hooks/useHwpxSave'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -271,6 +272,29 @@ function ReportView({ record }: { record: AssessmentRecord }) {
   const safetyR  = record.result as SafetyResult
   const qualityR = record.result as QualityResult
   const meta     = record.report_metadata ?? {}
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
+
+  const handleHwpxSave = () => {
+    const reportTitle = isSafety ? '위험성평가 보고서' : '품질검사 보고서'
+    const overall = isSafety
+      ? (RISK_CFG[record.overall_level?.toLowerCase()]?.label ?? record.overall_level)
+      : `${record.overall_level}등급`
+    const body = record.report_text?.trim()
+      ? record.report_text
+      : [
+          `# ${reportTitle}`,
+          '',
+          `- **평가일**: ${fmtDate(record.created_at)}`,
+          `- **종합 결과**: ${overall}`,
+          '',
+          (isSafety ? safetyR.summary : qualityR.summary) ?? '',
+        ].join('\n')
+    const markdown = `${body}\n\n---\n\n> 본 보고서는 AI 분석 결과입니다. 공식 사용 시 전문가 검토가 필요합니다. · 생성일: ${fmtDate(record.created_at)}`
+    void saveHwpx(markdown, {
+      title: firstMarkdownHeading(body) || reportTitle,
+      filename: `${reportTitle}_${fmtDate(record.created_at)}`,
+    })
+  }
 
   const handlePrint = () => {
     const el = printRef.current
@@ -353,6 +377,16 @@ function ReportView({ record }: { record: AssessmentRecord }) {
                 {record.overall_level}등급
               </span>
             )}
+            <button
+              type="button"
+              onClick={handleHwpxSave}
+              disabled={hwpxSaving}
+              className="flex items-center gap-1.5 rounded-lg border border-brand/30 bg-brand-soft px-3 py-2 text-sm font-semibold text-brand hover:bg-brand-soft/70 disabled:opacity-50"
+              title="한글 문서(.hwpx)로 저장"
+            >
+              <IconFileText className="h-4 w-4" />
+              {hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}
+            </button>
             <button
               type="button"
               onClick={handlePrint}

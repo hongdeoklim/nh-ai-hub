@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
+import { useHwpxSave } from '../../hooks/useHwpxSave'
 import type { ArtifactType, ChatArtifact } from '../../store/chat-artifact'
 import {
   contentContainsTable,
@@ -182,9 +183,16 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
     window.setTimeout(() => setDownloadDone(false), 1800)
   }, [artifact.content, artifact.title])
 
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
+  const handleHwpxSave = useCallback(() => {
+    // 코드는 코드 블록으로 감싸 고정폭 글꼴로 보존
+    const markdown = artifact.type === 'code' ? `\`\`\`\n${artifact.content}\n\`\`\`` : artifact.content
+    void saveHwpx(markdown, { title: artifact.title || '문서' })
+  }, [artifact.content, artifact.title, artifact.type, saveHwpx])
+
   return (
     <aside
-      className="flex h-full min-h-0 w-full flex-col border-border bg-[#FAFAF8] shadow-xl md:border-l md:shadow-none"
+      className="flex h-full min-h-0 w-full flex-col border-border bg-bg shadow-xl md:border-l md:shadow-none"
       aria-label="아티팩트 패널"
     >
       <header className="flex shrink-0 items-center gap-2 border-b border-border/90 px-4 py-3 sm:gap-3">
@@ -200,7 +208,7 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
           <button
             type="button"
             onClick={handleCsvDownload}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-success/30 bg-success-soft px-2.5 py-1.5 text-xs font-semibold text-success transition hover:bg-emerald-100 sm:px-3"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-success/30 bg-success-soft px-2.5 py-1.5 text-xs font-semibold text-success transition hover:bg-success-soft/70 sm:px-3"
             aria-label="엑셀 CSV 다운로드"
           >
             <span aria-hidden="true">{downloadDone ? '✓' : '⬇️'}</span>
@@ -210,6 +218,19 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
             <span className="sm:hidden">
               {downloadDone ? '완료!' : 'CSV'}
             </span>
+          </button>
+        ) : null}
+        {artifact.type !== 'html' ? (
+          <button
+            type="button"
+            onClick={handleHwpxSave}
+            disabled={hwpxSaving}
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand/30 bg-brand-soft px-2.5 py-1.5 text-xs font-semibold text-brand transition hover:bg-brand-soft/70 disabled:opacity-50 sm:px-3"
+            aria-label="한글 문서(HWPX)로 저장"
+            title="한글 문서(.hwpx)로 저장"
+          >
+            <span className="hidden sm:inline">{hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}</span>
+            <span className="sm:hidden">{hwpxSaving ? '…' : 'HWPX'}</span>
           </button>
         ) : null}
         <button

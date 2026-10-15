@@ -10,6 +10,7 @@ import {
   type MessageFeedbackRating,
 } from '../../lib/chat-message-feedback'
 import { saveGoodAnswerToKnowledge } from '../../lib/knowledge-from-chat'
+import { firstMarkdownHeading, useHwpxSave } from '../../hooks/useHwpxSave'
 import {
   exportAssistantToGoogleDocs,
   openGmailDraft,
@@ -158,6 +159,7 @@ export function AssistantMessageFooter({
   elapsedMs,
   usage,
 }: AssistantMessageFooterProps) {
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
   const isGemini = variant === 'gemini'
   const [menuOpen, setMenuOpen] = useState(false)
   const [shareDone, setShareDone] = useState(false)
@@ -492,6 +494,19 @@ export function AssistantMessageFooter({
                 }}
               >
                 Docs로 내보내기
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={menuItemCls}
+                disabled={hwpxSaving}
+                onClick={() => {
+                  const title = firstMarkdownHeading(answerText) || userPrompt.slice(0, 48).trim() || 'AI 답변'
+                  void saveHwpx(answerText, { title })
+                  setMenuOpen(false)
+                }}
+              >
+                한글(HWPX)로 저장
               </button>
               <button
                 type="button"

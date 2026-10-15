@@ -1,3 +1,4 @@
+import { useHwpxSave } from '../../hooks/useHwpxSave'
 import type { NotebookPinnedNote } from '../../types/notebook'
 
 type NotebookNotesPanelProps = {
@@ -24,6 +25,7 @@ export function NotebookNotesPanel({
   onMergeReport,
   embedded = false,
 }: NotebookNotesPanelProps) {
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
   const inner = (
     <>
       {!embedded ? (
@@ -76,9 +78,20 @@ export function NotebookNotesPanel({
 
         {mergePreview ? (
           <article className="rounded-xl border border-brand/30 bg-brand-soft/50 p-3">
-            <h3 className="text-sm font-bold text-brand">
-              통합 보고서
-            </h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-brand">
+                통합 보고서
+              </h3>
+              <button
+                type="button"
+                disabled={hwpxSaving}
+                onClick={() => void saveHwpx(mergePreview, { title: '지식 노트 통합 보고서' })}
+                className="shrink-0 rounded-lg border border-brand/30 bg-surface px-2.5 py-1 text-xs font-semibold text-brand hover:bg-brand-soft disabled:opacity-50"
+                title="한글 문서(.hwpx)로 저장"
+              >
+                {hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}
+              </button>
+            </div>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg">
               {mergePreview}
             </p>
