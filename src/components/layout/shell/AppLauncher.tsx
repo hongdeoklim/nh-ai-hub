@@ -34,7 +34,7 @@ function LauncherTile({ item, onNavigate }: { item: NavItem; onNavigate: () => v
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-fg">{item.label}</span>
-        <span className="mt-[2px] line-clamp-2 block text-[11px]! leading-snug text-fg-muted">
+        <span className="mt-[2px] line-clamp-2 block text-[11px] leading-snug text-fg-muted">
           {item.description}
         </span>
       </span>
@@ -69,7 +69,7 @@ function ActionTile({
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-fg">{label}</span>
-        <span className="mt-[2px] line-clamp-2 block text-[11px]! leading-snug text-fg-muted">
+        <span className="mt-[2px] line-clamp-2 block text-[11px] leading-snug text-fg-muted">
           {description}
         </span>
       </span>
@@ -145,7 +145,7 @@ export function AppLauncher({
               <section key={group.id} aria-labelledby={`launcher-${group.id}`} className="mt-[12px]">
                 <h3
                   id={`launcher-${group.id}`}
-                  className="mb-[8px] flex items-center gap-[6px] text-[11px]! font-semibold uppercase tracking-[0.12em] text-fg-subtle"
+                  className="mb-[8px] flex items-center gap-[6px] text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle"
                 >
                   <GroupIcon className="h-[14px] w-[14px]" />
                   {group.label}
@@ -164,7 +164,7 @@ export function AppLauncher({
           <section aria-labelledby="launcher-account" className="mt-[12px]">
             <h3
               id="launcher-account"
-              className="mb-[8px] text-[11px]! font-semibold uppercase tracking-[0.12em] text-fg-subtle"
+              className="mb-[8px] text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle"
             >
               계정 · 지원
             </h3>

@@ -6,7 +6,7 @@
 > 요약
 > 1. 디자인 토큰 체계 신설(NH 그린/블루, 시맨틱 컬러, 다크 모드)과 앱 셸 v2(레일+패널 / 하단 탭 / 앱 런처 / 명령 팔레트 / 계정 메뉴)를 구현했다.
 > 2. 숨겨져 있던 기능(알림, 예약 작업, 플러그인 연결)을 UI 에 연결했고, PWA 메타·매니페스트·스플래시를 정비했다.
-> 3. 가장 큰 기술 부채인 **루트 폰트 27px** 은 승인 사항이라 손대지 않았다. §3.1 의 절차대로 전환하면 760여 개의 `text-[Npx]!` 와 `.app-shell` 역보정 CSS 를 걷어낼 수 있다.
+> 3. 가장 큰 기술 부채인 **루트 폰트 27px** 은 승인 후 §3.1 절차대로 **16px 로 전환 완료**했다. `text-[Npx]!` 767건과 `.app-shell`/`.admin-shell` 역보정 CSS 약 450줄을 제거했고, 93개 파일에 §6 치환표를 적용해 팔레트 클래스 2,228건을 시맨틱 토큰으로 바꿨다.
 
 ---
 
@@ -68,8 +68,9 @@
 | P0 | `window.alert/confirm/prompt` → `ConfirmDialog`/`PromptDialog`/토스트 (셸 영역) | ✅ 셸 적용 · 페이지 잔여 ~25건 |
 | P0 | PWA: viewport·theme-color·color-scheme, 로컬 폰트, 스플래시 450ms, 매니페스트(shortcuts/orientation any/display_override) | ✅ 구현 |
 | P0 | `sonner` 명시 의존성, README 재작성, 데드 코드 삭제 | ✅ 구현 |
-| **P1** | **루트 폰트 16px 전환** (§3.1) — 승인 필요 | ⏳ 승인 대기 |
-| P1 | 페이지별 토큰 마이그레이션 (stone/slate/orange → 시맨틱), `PageHeader` 적용 | 가이드 §4 |
+| **P1** | **루트 폰트 16px 전환** (§3.1) | ✅ 완료 (2단계 커밋) |
+| P1 | 페이지별 토큰 마이그레이션 (stone/slate/orange → 시맨틱) | ✅ 1차 93파일 완료 · 제외: LibraryPage, ai-sheets, knowledge-graph, CadEditor, UniverOffice (§6.1) |
+| P1 | 각 페이지 `PageHeader`/`EmptyState` 적용 | 제안 (수작업) |
 | P1 | 레거시 라우트 리다이렉트: `/workflows` `/marketplace` `/workspace-tools` → 자동화 스튜디오 탭 | 제안 |
 | P1 | 아이콘 자산: 192/512 PNG 실제 리사이즈, maskable 아이콘 별도 제작, 미사용 PNG 삭제 | 디자인 자산 필요 |
 | P2 | 관리자 콘솔 시맨틱 토큰 적용 (현재 그룹화만) | 제안 |
@@ -98,9 +99,9 @@
 브랜드 색을 바꾸려면 `--nh-brand*`, `--nh-accent*` 6개 값만 수정하면 전체 셸에 반영된다.
 레거시 변수(`--text`, `--code-bg`, `--accent` 등)는 새 토큰의 별칭으로 유지해 기존 마크다운/코드 블록 CSS 가 깨지지 않게 했다.
 
-### 3.1 루트 폰트 16px 전환 절차 (승인 후 진행)
+### 3.1 루트 폰트 16px 전환 절차 — ✅ 완료
 
-현재 `:root { font: 27px }` 때문에 rem 유틸이 팽창하고, 이를 상쇄하는 `.app-shell`·`.admin-shell` 역보정 규칙(약 120줄)과 `text-[Npx]!` 761회가 존재한다. 전환하면 Tailwind 기본 스케일이 그대로 맞고 `!` 를 제거할 수 있다.
+`:root { font: 27px }` 때문에 rem 유틸이 팽창하고, 이를 상쇄하는 `.app-shell`·`.admin-shell` 역보정 규칙과 `text-[Npx]!` 767회가 존재했다. 아래 절차를 그대로 수행했으며(스크립트: 루트 16px 치환 + `!` 제거 + `text-actual-N` → `text-[Npx]`), 기본 타이포는 `@layer base` 로 옮겨 유틸리티가 항상 우선하도록 했다. 전환 후 `/__ui-check`, `/__ui-check/shell`, `/login` 에서 확인했고 `tsc`·`vite build` 통과.
 
 1. `src/index.css` 에서 `:root` 의 `font: 27px/145%` → `font: 16px/1.5`, `@media (max-width:1024px){font-size:24px}` 삭제, `letter-spacing: 0.27px` → `0`.
 2. `.app-shell`, `.admin-shell` 블록의 **폰트 사이즈 역보정 규칙만** 삭제(`.app-shell .text-sm {14px}`, `.app-shell .text-\[13px\] {8px}`, `.app-shell .h-8 {32px}` …). 기본 `font-size:16px / line-height` 선언은 유지해도 무해.
@@ -233,8 +234,15 @@ AI 앱           Planner · Designer · Slides · Sheets   (hidden: AI Office)
    | `dark:` 쌍 | 토큰이 다크를 내포하므로 대부분 삭제 |
 
 4. 빈 상태: `<EmptyState icon title description action />`. 확인/입력: `ConfirmDialog`/`PromptDialog`. 성공/실패 알림: `toast`.
-5. 치수: rem 유틸 → px 임의값. 전환(§3.1) 뒤에는 Tailwind 기본 스케일 사용 가능.
+5. 치수: 루트 16px 전환이 끝났으므로 Tailwind 기본 스케일(`h-9`, `gap-3`, `text-sm`)을 그대로 사용한다.
 6. 검수: `/__ui-check/shell` 에서 토큰·컴포넌트, 각 페이지는 390/768/1280 폭에서 확인.
+
+### 6.1 1차 기계 마이그레이션 결과와 잔여 작업
+
+- 스크립트(§6 치환표 + `dark:` 팔레트 변형 삭제)를 93개 파일에 적용: 페이지 전부(아래 제외), 채팅·프롬프트·설정·관리자 컴포넌트.
+- **제외(별도 리디자인 필요)**: `LibraryPage`(네이비+핑크 독자 테마), `components/ai-sheets/*`(Sheets 리본 hex 테마), `components/knowledge-graph/*`, `CadEditorPage`, `UniverOfficePage`.
+- 잔여: hex(`bg-[#…]`) 색상은 손대지 않았다(Gemini 변형 채팅 UI 등). 이후 수작업으로 `PageHeader`/`EmptyState` 적용과 함께 정리한다.
+- 실제 로그인 세션이 필요한 화면(자료실·팀·관리자)은 로컬에서 로그인 후 390/768/1280 폭 육안 검수를 권장한다.
 
 ---
 

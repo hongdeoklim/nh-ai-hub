@@ -2,32 +2,32 @@ import { CitationTooltip } from '../chat/CitationTooltip'
 import type { NotebookChunkCitation } from '../../types/notebook'
 
 type CitationBadgeProps = {
-  marker: string
-  citation?: NotebookChunkCitation
-  variant?: 'default' | 'claude'
+ marker: string
+ citation?: NotebookChunkCitation
+ variant?: 'default' | 'claude'
 }
 
 export function CitationBadge({
-  marker,
-  citation,
-  variant = 'claude',
+ marker,
+ citation,
+ variant = 'claude',
 }: CitationBadgeProps) {
-  const title = citation?.filename ?? marker
-  const snippet = citation
+ const title = citation?.filename ?? marker
+ const snippet = citation
     ? [
-        citation.pageNumber != null ? `p.${citation.pageNumber}` : null,
-        citation.matchedText,
+ citation.pageNumber != null ? `p.${citation.pageNumber}` : null,
+ citation.matchedText,
       ]
         .filter(Boolean)
         .join(' · ')
     : undefined
 
-  return (
+ return (
     <CitationTooltip
-      marker={marker}
-      title={title}
-      snippet={snippet}
-      variant={variant}
+ marker={marker}
+ title={title}
+ snippet={snippet}
+ variant={variant}
     />
   )
 }

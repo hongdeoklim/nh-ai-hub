@@ -40,11 +40,11 @@ export function PageHeader({
         ) : null}
         <div className="min-w-0">
           {eyebrow ? (
-            <p className="text-[11px]! font-semibold uppercase tracking-[0.12em] text-brand">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="truncate text-[20px]! font-semibold tracking-tight text-fg md:text-[24px]!">
+          <h1 className="truncate text-[20px] font-semibold tracking-tight text-fg md:text-[24px]">
             {title}
           </h1>
           {description ? (

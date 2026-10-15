@@ -5,112 +5,112 @@ import { useNavigate } from 'react-router-dom'
 import { AddMyTemplateCard } from '../components/ai-slides/AddMyTemplateCard'
 import { AiSlidesPromptSection } from '../components/ai-slides/AiSlidesPromptSection'
 import {
-  AiSlidesTabNavigation,
-  AiSlidesTabPanel,
-  type AiSlidesTabId,
+ AiSlidesTabNavigation,
+ AiSlidesTabPanel,
+ type AiSlidesTabId,
 } from '../components/ai-slides/AiSlidesTabNavigation'
 import { SlideTemplateScreenshot } from '../components/ai-slides/SlideTemplateScreenshot'
 import { useAuth } from '../components/auth/useAuth'
 import type { ChatSendPayload } from '../components/chat/ChatInput'
 import {
-  AI_SLIDES_STYLE_FILTERS,
-  AI_SLIDES_TEMPLATES,
-  AI_SLIDES_THEME_FILTERS,
-  buildAiSlidesPrompt,
-  type AiSlidesAspectRatio,
-  type AiSlidesGuideMode,
-  type AiSlidesImageEngine,
-  type AiSlidesSortKey,
-  type AiSlidesStyleMode,
-  type AiSlidesTemplate,
+ AI_SLIDES_STYLE_FILTERS,
+ AI_SLIDES_TEMPLATES,
+ AI_SLIDES_THEME_FILTERS,
+ buildAiSlidesPrompt,
+ type AiSlidesAspectRatio,
+ type AiSlidesGuideMode,
+ type AiSlidesImageEngine,
+ type AiSlidesSortKey,
+ type AiSlidesStyleMode,
+ type AiSlidesTemplate,
 } from '../data/ai-slides-catalog'
 import { writeAiSlidesBootstrap } from '../lib/ai-slides-bootstrap'
 import {
-  customTemplateToSlidesTemplate,
-  readCustomAiSlidesTemplates,
-  saveCustomAiSlidesTemplate,
+ customTemplateToSlidesTemplate,
+ readCustomAiSlidesTemplates,
+ saveCustomAiSlidesTemplate,
 } from '../lib/ai-slides-custom-templates'
 import { rememberLastPrivateThread } from '../lib/private-chat-storage'
 import { supabase } from '../lib/supabase'
 import {
-  buildModelSelectOptions,
-  fetchActiveTextAiModels,
-  filterActiveTextModels,
+ buildModelSelectOptions,
+ fetchActiveTextAiModels,
+ filterActiveTextModels,
 } from '../services/ai/ai-models-client'
 
 type ExploreTab = AiSlidesTabId
 
 const selectCls =
-  'rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px]! text-stone-800 outline-none focus:ring-2 focus:ring-orange-500/30 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100'
+  'rounded-lg border border-border-strong/90 bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none focus:ring-2 focus:ring-focus/40'
 
 function TemplateCard({
-  template,
-  selected,
-  onSelect,
-  onApply,
-  applying,
+ template,
+ selected,
+ onSelect,
+ onApply,
+ applying,
 }: {
-  template: AiSlidesTemplate
-  selected: boolean
-  onSelect: () => void
-  onApply: () => void
-  applying: boolean
+ template: AiSlidesTemplate
+ selected: boolean
+ onSelect: () => void
+ onApply: () => void
+ applying: boolean
 }) {
-  return (
+ return (
     <article className="break-inside-avoid">
       <div
-        className={`group flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-stone-900 ${
-          selected
-            ? 'border-orange-500 ring-2 ring-orange-500/30 dark:border-orange-500'
-            : 'border-stone-200/90 hover:border-stone-300 hover:shadow-md dark:border-stone-700 dark:hover:border-stone-600'
+ className={`group flex flex-col overflow-hidden rounded-2xl border bg-surface shadow-sm transition ${
+ selected
+            ? 'border-orange-500 ring-2 ring-focus/40'
+            : 'border-border/90 hover:border-border-strong hover:shadow-md'
         }`}
       >
         <div className="relative aspect-[16/10] w-full overflow-hidden">
           <button
-            type="button"
-            className="block h-full w-full text-left"
-            onClick={onSelect}
+ type="button"
+ className="block h-full w-full text-left"
+ onClick={onSelect}
           >
             {template.thumbnailUrl ? (
               <img
-                src={template.thumbnailUrl}
-                alt={template.titleKo}
-                className="template-screenshot h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
-                loading="lazy"
+ src={template.thumbnailUrl}
+ alt={template.titleKo}
+ className="template-screenshot h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+ loading="lazy"
               />
             ) : (
               <SlideTemplateScreenshot template={template} fillParent />
             )}
           </button>
           {template.isNew ? (
-            <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px]! font-bold uppercase tracking-wide text-white shadow-sm">
-              New
+            <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+ New
             </span>
           ) : null}
           <div className="pointer-events-none absolute inset-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/55 via-black/10 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-            <span className="pointer-events-none min-w-0 truncate text-[12px]! font-semibold text-white drop-shadow">
+            <span className="pointer-events-none min-w-0 truncate text-[12px] font-semibold text-white drop-shadow">
               {template.titleKo}
             </span>
             <button
-              type="button"
-              disabled={applying}
-              onClick={(event) => {
-                event.stopPropagation()
-                onApply()
+ type="button"
+ disabled={applying}
+ onClick={(event) => {
+ event.stopPropagation()
+ onApply()
               }}
-              className="pointer-events-auto h-8 shrink-0 rounded-lg bg-orange-600 px-3 text-[13px]! font-semibold text-white shadow-sm transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+ className="pointer-events-auto h-8 shrink-0 rounded-lg bg-brand px-3 text-[13px] font-semibold text-brand-fg shadow-sm transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Apply
+ Apply
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <p className="min-w-0 truncate text-[12px]! font-medium text-stone-700 dark:text-stone-300">
+          <p className="min-w-0 truncate text-[12px] font-medium text-fg-muted">
             {template.titleKo}
           </p>
           {selected ? (
-            <span className="shrink-0 text-[10px]! font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400">
-              선택됨
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-brand">
+ 선택됨
             </span>
           ) : null}
         </div>
@@ -120,209 +120,209 @@ function TemplateCard({
 }
 
 export function AiSlidesPage() {
-  const navigate = useNavigate()
-  const { profile } = useAuth()
-  const [styleMode, setStyleMode] = useState<AiSlidesStyleMode>('professional')
-  const [imageEngine, setImageEngine] =
-    useState<AiSlidesImageEngine>('gemini-image')
-  const [aspectRatio, setAspectRatio] = useState<AiSlidesAspectRatio>('auto')
-  const [guideMode, setGuideMode] = useState<AiSlidesGuideMode>('standard')
-  const [exploreTab, setExploreTab] = useState<ExploreTab>('explore')
-  const [styleFilter, setStyleFilter] =
-    useState<(typeof AI_SLIDES_STYLE_FILTERS)[number]['id']>('all')
-  const [themeFilter, setThemeFilter] =
-    useState<(typeof AI_SLIDES_THEME_FILTERS)[number]['id']>('all')
-  const [sortKey, setSortKey] = useState<AiSlidesSortKey>('popularity')
-  const [koreanOnly, setKoreanOnly] = useState(true)
-  const [applyingId, setApplyingId] = useState<string | null>(null)
-  const [customTemplates, setCustomTemplates] = useState(() =>
-    readCustomAiSlidesTemplates(),
+ const navigate = useNavigate()
+ const { profile } = useAuth()
+ const [styleMode, setStyleMode] = useState<AiSlidesStyleMode>('professional')
+ const [imageEngine, setImageEngine] =
+ useState<AiSlidesImageEngine>('gemini-image')
+ const [aspectRatio, setAspectRatio] = useState<AiSlidesAspectRatio>('auto')
+ const [guideMode, setGuideMode] = useState<AiSlidesGuideMode>('standard')
+ const [exploreTab, setExploreTab] = useState<ExploreTab>('explore')
+ const [styleFilter, setStyleFilter] =
+ useState<(typeof AI_SLIDES_STYLE_FILTERS)[number]['id']>('all')
+ const [themeFilter, setThemeFilter] =
+ useState<(typeof AI_SLIDES_THEME_FILTERS)[number]['id']>('all')
+ const [sortKey, setSortKey] = useState<AiSlidesSortKey>('popularity')
+ const [koreanOnly, setKoreanOnly] = useState(true)
+ const [applyingId, setApplyingId] = useState<string | null>(null)
+ const [customTemplates, setCustomTemplates] = useState(() =>
+ readCustomAiSlidesTemplates(),
   )
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
-    null,
+ const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+ null,
   )
-  const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(
-    null,
+ const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(
+ null,
   )
-  const promptSectionRef = useRef<HTMLElement>(null)
-  const [draft, setDraft] = useState('')
-  const [selectedModel, setSelectedModel] = useState('auto')
-  const [modelSaving, setModelSaving] = useState(false)
-  const [registryModels, setRegistryModels] = useState<
-    import('../types/ai-models').AiModelRow[]
+ const promptSectionRef = useRef<HTMLElement>(null)
+ const [draft, setDraft] = useState('')
+ const [selectedModel, setSelectedModel] = useState('auto')
+ const [modelSaving, setModelSaving] = useState(false)
+ const [registryModels, setRegistryModels] = useState<
+ import('../types/ai-models').AiModelRow[]
   >([])
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const rows = await fetchActiveTextAiModels()
-        if (!cancelled) {
-          setRegistryModels(filterActiveTextModels(rows))
+ useEffect(() => {
+ let cancelled = false
+ void (async () => {
+ try {
+ const rows = await fetchActiveTextAiModels()
+ if (!cancelled) {
+ setRegistryModels(filterActiveTextModels(rows))
         }
       } catch {
-        if (!cancelled) setRegistryModels([])
+ if (!cancelled) setRegistryModels([])
       }
     })()
-    return () => {
-      cancelled = true
+ return () => {
+ cancelled = true
     }
   }, [])
 
-  useEffect(() => {
-    const preferred = profile?.preferred_ai?.trim()
-    if (preferred) setSelectedModel(preferred)
+ useEffect(() => {
+ const preferred = profile?.preferred_ai?.trim()
+ if (preferred) setSelectedModel(preferred)
   }, [profile?.preferred_ai])
 
-  const versionRows = useMemo(
+ const versionRows = useMemo(
     () => buildModelSelectOptions(registryModels, selectedModel),
     [registryModels, selectedModel],
   )
 
-  const allTemplates = useMemo(() => {
-    const custom = customTemplates.map(customTemplateToSlidesTemplate)
-    return [...custom, ...AI_SLIDES_TEMPLATES]
+ const allTemplates = useMemo(() => {
+ const custom = customTemplates.map(customTemplateToSlidesTemplate)
+ return [...custom, ...AI_SLIDES_TEMPLATES]
   }, [customTemplates])
 
-  const selectedTemplate = useMemo(
+ const selectedTemplate = useMemo(
     () => allTemplates.find((t) => t.id === selectedTemplateId) ?? null,
     [allTemplates, selectedTemplateId],
   )
 
-  const appliedTemplate = useMemo(
+ const appliedTemplate = useMemo(
     () => allTemplates.find((t) => t.id === appliedTemplateId) ?? null,
     [allTemplates, appliedTemplateId],
   )
 
-  const filteredTemplates = useMemo(() => {
-    let list = AI_SLIDES_TEMPLATES.filter((t) => t.styleModes.includes(styleMode))
+ const filteredTemplates = useMemo(() => {
+ let list = AI_SLIDES_TEMPLATES.filter((t) => t.styleModes.includes(styleMode))
 
-    if (styleFilter !== 'all') {
-      list = list.filter((t) => t.style === styleFilter)
+ if (styleFilter !== 'all') {
+ list = list.filter((t) => t.style === styleFilter)
     }
-    if (themeFilter !== 'all') {
-      list = list.filter((t) => t.theme === themeFilter)
+ if (themeFilter !== 'all') {
+ list = list.filter((t) => t.theme === themeFilter)
     }
-    if (koreanOnly) {
-      list = list.filter((t) => t.koreanOnly !== false)
+ if (koreanOnly) {
+ list = list.filter((t) => t.koreanOnly !== false)
     }
 
-    list = [...list].sort((a, b) => {
-      if (sortKey === 'newest') {
-        return Number(b.isNew) - Number(a.isNew) || b.popularity - a.popularity
+ list = [...list].sort((a, b) => {
+ if (sortKey === 'newest') {
+ return Number(b.isNew) - Number(a.isNew) || b.popularity - a.popularity
       }
-      return b.popularity - a.popularity
+ return b.popularity - a.popularity
     })
 
-    return list
+ return list
   }, [styleMode, styleFilter, themeFilter, koreanOnly, sortKey])
 
-  const myTemplates = useMemo(
+ const myTemplates = useMemo(
     () => customTemplates.map(customTemplateToSlidesTemplate),
     [customTemplates],
   )
 
-  const launchSlides = useCallback(
+ const launchSlides = useCallback(
     (template: AiSlidesTemplate, topic: string, autoSend: boolean) => {
-      setApplyingId(template.id)
-      const threadId = crypto.randomUUID()
-      const prompt = buildAiSlidesPrompt(template, {
-        styleMode,
-        guideMode,
-        aspectRatio,
-        imageEngine,
-        topic,
+ setApplyingId(template.id)
+ const threadId = crypto.randomUUID()
+ const prompt = buildAiSlidesPrompt(template, {
+ styleMode,
+ guideMode,
+ aspectRatio,
+ imageEngine,
+ topic,
       })
 
-      writeAiSlidesBootstrap(threadId, {
-        templateId: template.id,
-        templateTitle: template.titleKo,
-        styleMode,
-        guideMode,
-        aspectRatio,
-        imageEngine,
-        prompt,
-        selectedModel,
-        autoSend,
+ writeAiSlidesBootstrap(threadId, {
+ templateId: template.id,
+ templateTitle: template.titleKo,
+ styleMode,
+ guideMode,
+ aspectRatio,
+ imageEngine,
+ prompt,
+ selectedModel,
+ autoSend,
       })
-      rememberLastPrivateThread(threadId)
-      navigate(`/chat/${threadId}`)
+ rememberLastPrivateThread(threadId)
+ navigate(`/chat/${threadId}`)
     },
     [
-      aspectRatio,
-      guideMode,
-      imageEngine,
-      navigate,
-      selectedModel,
-      styleMode,
+ aspectRatio,
+ guideMode,
+ imageEngine,
+ navigate,
+ selectedModel,
+ styleMode,
     ],
   )
 
-  function handleApply(template: AiSlidesTemplate) {
-    setSelectedTemplateId(template.id)
-    setAppliedTemplateId(template.id)
-    queueMicrotask(() => {
-      promptSectionRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
+ function handleApply(template: AiSlidesTemplate) {
+ setSelectedTemplateId(template.id)
+ setAppliedTemplateId(template.id)
+ queueMicrotask(() => {
+ promptSectionRef.current?.scrollIntoView({
+ behavior: 'smooth',
+ block: 'start',
       })
     })
   }
 
-  function handleSend(payload: ChatSendPayload) {
-    const template = appliedTemplate ?? selectedTemplate
-    if (!template) {
-      toast.error('템플릿에서 Apply를 눌러 선택해 주세요.')
-      return
+ function handleSend(payload: ChatSendPayload) {
+ const template = appliedTemplate ?? selectedTemplate
+ if (!template) {
+ toast.error('템플릿에서 Apply를 눌러 선택해 주세요.')
+ return
     }
-    launchSlides(template, payload.text, true)
+ launchSlides(template, payload.text, true)
   }
 
-  async function handleModelChange(nextModel: string) {
-    setSelectedModel(nextModel)
-    const userId = profile?.id
-    if (!userId) return
-    setModelSaving(true)
-    try {
-      await supabase
+ async function handleModelChange(nextModel: string) {
+ setSelectedModel(nextModel)
+ const userId = profile?.id
+ if (!userId) return
+ setModelSaving(true)
+ try {
+ await supabase
         .from('users')
         .update({ preferred_ai: nextModel })
         .eq('id', userId)
     } finally {
-      setModelSaving(false)
+ setModelSaving(false)
     }
   }
 
-  function handleAddCustomTemplate(file: File) {
-    if (!file.type.startsWith('image/')) {
-      toast.error('이미지 파일만 업로드할 수 있습니다.')
-      return
+ function handleAddCustomTemplate(file: File) {
+ if (!file.type.startsWith('image/')) {
+ toast.error('이미지 파일만 업로드할 수 있습니다.')
+ return
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('2MB 이하 이미지를 사용해 주세요.')
-      return
+ if (file.size > 2 * 1024 * 1024) {
+ toast.error('2MB 이하 이미지를 사용해 주세요.')
+ return
     }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = typeof reader.result === 'string' ? reader.result : ''
-      if (!dataUrl) return
-      const baseName = file.name.replace(/\.[^.]+$/, '').trim() || 'My Template'
-      const entry = {
-        id: `custom-${crypto.randomUUID()}`,
-        title: baseName,
-        thumbnailDataUrl: dataUrl,
-        createdAt: new Date().toISOString(),
+ const reader = new FileReader()
+ reader.onload = () => {
+ const dataUrl = typeof reader.result === 'string' ? reader.result : ''
+ if (!dataUrl) return
+ const baseName = file.name.replace(/\.[^.]+$/, '').trim() || 'My Template'
+ const entry = {
+ id: `custom-${crypto.randomUUID()}`,
+ title: baseName,
+ thumbnailDataUrl: dataUrl,
+ createdAt: new Date().toISOString(),
       }
-      saveCustomAiSlidesTemplate(entry)
-      setCustomTemplates(readCustomAiSlidesTemplates())
-      setSelectedTemplateId(entry.id)
-      setExploreTab('my-templates')
+ saveCustomAiSlidesTemplate(entry)
+ setCustomTemplates(readCustomAiSlidesTemplates())
+ setSelectedTemplateId(entry.id)
+ setExploreTab('my-templates')
     }
-    reader.readAsDataURL(file)
+ reader.readAsDataURL(file)
   }
 
-  function renderTemplateWaterfall(templates: AiSlidesTemplate[]) {
-    return (
+ function renderTemplateWaterfall(templates: AiSlidesTemplate[]) {
+ return (
       <div className="waterfall-container">
         <div className="template-waterfall columns-1 gap-4 sm:columns-2 lg:columns-3">
           <div className="mb-4 break-inside-avoid">
@@ -331,11 +331,11 @@ export function AiSlidesPage() {
           {templates.map((template) => (
             <div key={template.id} className="mb-4 break-inside-avoid">
               <TemplateCard
-                template={template}
-                selected={selectedTemplateId === template.id}
-                onSelect={() => setSelectedTemplateId(template.id)}
-                onApply={() => handleApply(template)}
-                applying={applyingId === template.id}
+ template={template}
+ selected={selectedTemplateId === template.id}
+ onSelect={() => setSelectedTemplateId(template.id)}
+ onApply={() => handleApply(template)}
+ applying={applyingId === template.id}
               />
             </div>
           ))}
@@ -344,61 +344,61 @@ export function AiSlidesPage() {
     )
   }
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#FAF9F6] dark:bg-stone-950">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-[13px]! md:px-8 md:pt-[4vh]">
+ return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-bg">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-[13px] md:px-8 md:pt-[4vh]">
         <header className="mb-5">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200/80 bg-orange-50/80 px-3 py-1 text-[10px]! font-semibold uppercase tracking-[0.12em] text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300 md:text-[11px]!">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-brand md:text-[11px]">
             <span aria-hidden>✦</span> NH-AX-HUB · AI Slides
           </span>
-          <h1 className="mt-3 text-[22px]! font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-[28px]!">
-            발표 자료, 템플릿으로 시작하세요
+          <h1 className="mt-3 text-[22px] font-bold tracking-tight text-fg md:text-[28px]">
+ 발표 자료, 템플릿으로 시작하세요
           </h1>
-          <p className="mt-1.5 text-[13px]! text-stone-500 dark:text-stone-400 md:text-[15px]!">
-            원하는 템플릿에서 <span className="font-semibold text-stone-700 dark:text-stone-300">Apply</span>를 누른 뒤 주제를 입력하면 AI가 슬라이드를 만들어 드립니다.
+          <p className="mt-1.5 text-[13px] text-fg-subtle md:text-[15px]">
+ 원하는 템플릿에서 <span className="font-semibold text-fg-muted">Apply</span>를 누른 뒤 주제를 입력하면 AI가 슬라이드를 만들어 드립니다.
           </p>
         </header>
 
         <AiSlidesPromptSection
-          ref={promptSectionRef}
-          styleMode={styleMode}
-          onStyleModeChange={setStyleMode}
-          imageEngine={imageEngine}
-          onImageEngineChange={setImageEngine}
-          aspectRatio={aspectRatio}
-          onAspectRatioChange={setAspectRatio}
-          guideMode={guideMode}
-          onGuideModeChange={setGuideMode}
-          appliedTemplate={appliedTemplate}
-          onClearAppliedTemplate={() => setAppliedTemplateId(null)}
-          draft={draft}
-          onDraftChange={setDraft}
-          onSend={handleSend}
-          profileReady={Boolean(profile)}
-          selectedModel={selectedModel}
-          versionRows={versionRows}
-          modelSaving={modelSaving}
-          onModelChange={(id) => void handleModelChange(id)}
+ ref={promptSectionRef}
+ styleMode={styleMode}
+ onStyleModeChange={setStyleMode}
+ imageEngine={imageEngine}
+ onImageEngineChange={setImageEngine}
+ aspectRatio={aspectRatio}
+ onAspectRatioChange={setAspectRatio}
+ guideMode={guideMode}
+ onGuideModeChange={setGuideMode}
+ appliedTemplate={appliedTemplate}
+ onClearAppliedTemplate={() => setAppliedTemplateId(null)}
+ draft={draft}
+ onDraftChange={setDraft}
+ onSend={handleSend}
+ profileReady={Boolean(profile)}
+ selectedModel={selectedModel}
+ versionRows={versionRows}
+ modelSaving={modelSaving}
+ onModelChange={(id) => void handleModelChange(id)}
         />
 
         <AiSlidesTabNavigation
-          value={exploreTab}
-          onChange={setExploreTab}
-          myTemplatesCount={myTemplates.length}
+ value={exploreTab}
+ onChange={setExploreTab}
+ myTemplatesCount={myTemplates.length}
         />
 
         <AiSlidesTabPanel tabId="explore" activeTab={exploreTab}>
           <div className="explore-content">
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px]!">
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px]">
               <select
-                value={styleFilter}
-                onChange={(e) =>
-                  setStyleFilter(
-                    e.target.value as (typeof AI_SLIDES_STYLE_FILTERS)[number]['id'],
+ value={styleFilter}
+ onChange={(e) =>
+ setStyleFilter(
+ e.target.value as (typeof AI_SLIDES_STYLE_FILTERS)[number]['id'],
                   )
                 }
-                className={selectCls}
-                aria-label="스타일 필터"
+ className={selectCls}
+ aria-label="스타일 필터"
               >
                 {AI_SLIDES_STYLE_FILTERS.map((f) => (
                   <option key={f.id} value={f.id}>
@@ -407,14 +407,14 @@ export function AiSlidesPage() {
                 ))}
               </select>
               <select
-                value={themeFilter}
-                onChange={(e) =>
-                  setThemeFilter(
-                    e.target.value as (typeof AI_SLIDES_THEME_FILTERS)[number]['id'],
+ value={themeFilter}
+ onChange={(e) =>
+ setThemeFilter(
+ e.target.value as (typeof AI_SLIDES_THEME_FILTERS)[number]['id'],
                   )
                 }
-                className={selectCls}
-                aria-label="테마 필터"
+ className={selectCls}
+ aria-label="테마 필터"
               >
                 {AI_SLIDES_THEME_FILTERS.map((f) => (
                   <option key={f.id} value={f.id}>
@@ -423,31 +423,31 @@ export function AiSlidesPage() {
                 ))}
               </select>
               <select
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as AiSlidesSortKey)}
-                className={selectCls}
-                aria-label="정렬"
+ value={sortKey}
+ onChange={(e) => setSortKey(e.target.value as AiSlidesSortKey)}
+ className={selectCls}
+ aria-label="정렬"
               >
                 <option value="popularity">Sort by: Popularity</option>
                 <option value="newest">Sort by: Newest</option>
               </select>
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px]! text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-strong/90 bg-surface px-2.5 py-1.5 text-[13px] text-fg-muted">
                 <input
-                  type="checkbox"
-                  checked={koreanOnly}
-                  onChange={(e) => setKoreanOnly(e.target.checked)}
-                  className="rounded border-stone-400"
+ type="checkbox"
+ checked={koreanOnly}
+ onChange={(e) => setKoreanOnly(e.target.checked)}
+ className="rounded border-border-strong"
                 />
-                My language only
+ My language only
               </label>
             </div>
 
             {renderTemplateWaterfall(filteredTemplates)}
 
             {filteredTemplates.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-stone-300 bg-white/60 px-6 py-12 text-center dark:border-stone-600 dark:bg-stone-900/40">
-                <p className="text-[13px]! text-stone-600 dark:text-stone-400">
-                  선택한 필터에 맞는 템플릿이 없습니다.
+              <div className="rounded-2xl border border-dashed border-border-strong bg-surface/60 px-6 py-12 text-center">
+                <p className="text-[13px] text-fg-muted">
+ 선택한 필터에 맞는 템플릿이 없습니다.
                 </p>
               </div>
             ) : null}
@@ -459,8 +459,8 @@ export function AiSlidesPage() {
             {renderTemplateWaterfall(myTemplates)}
 
             {myTemplates.length === 0 ? (
-              <p className="mt-2 text-center text-[13px]! text-stone-500 dark:text-stone-400">
-                Add My Template 카드에서 썸네일을 업로드하면 My Templates에 표시됩니다.
+              <p className="mt-2 text-center text-[13px] text-fg-subtle">
+ Add My Template 카드에서 썸네일을 업로드하면 My Templates에 표시됩니다.
               </p>
             ) : null}
           </div>

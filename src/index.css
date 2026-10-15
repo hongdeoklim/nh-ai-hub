@@ -99,12 +99,9 @@
   --heading: var(--sans);
   --mono: ui-monospace, Consolas, monospace;
 
-  /*
-   * ⚠ 루트 폰트 27px(≤1024px: 24px) — 레거시 rem 유틸 팽창의 원인.
-   *   16px 전환은 docs/REDESIGN-2026-10.md §3.1 절차에 따라 별도 승인 후 진행.
-   */
-  font: 27px/145% var(--sans);
-  letter-spacing: 0.27px;
+  /* 루트 16px — Tailwind 기본 스케일 (2026-10 전환 완료, docs/REDESIGN-2026-10.md §3.1) */
+  font: 16px/1.5 var(--sans);
+  letter-spacing: 0;
   color-scheme: light;
   color: var(--text);
   background: var(--nh-bg);
@@ -112,10 +109,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 24px;
-  }
 }
 
 :root.dark {
@@ -200,161 +193,6 @@
   box-sizing: border-box;
 }
 
-/* 사용자 포털 — :root(27px) rem·h1(84px) 상속 차단, 체감 60% 컴팩트 */
-.app-shell {
-  font-size: 16px;
-  line-height: 1.45;
-  letter-spacing: 0;
-}
-
-.app-shell h1,
-.app-shell h2,
-.app-shell h3 {
-  margin: 0;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
-  color: inherit;
-  font-weight: 600;
-}
-
-.app-shell h1 {
-  font-size: 20px;
-}
-
-.app-shell h2 {
-  font-size: 18px;
-}
-
-.app-shell h3 {
-  font-size: 16px;
-}
-
-.app-shell p,
-.app-shell li,
-.app-shell td,
-.app-shell th,
-.app-shell label,
-.app-shell button,
-.app-shell input,
-.app-shell select,
-.app-shell textarea {
-  font-size: 16px;
-  line-height: 1.45;
-}
-
-.app-shell code {
-  font-size: 14px;
-  line-height: 1.35;
-  padding: 2px 6px;
-}
-
-.app-shell .text-xs {
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.app-shell .text-sm {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.app-shell .text-base {
-  font-size: 16px;
-  line-height: 1.45;
-}
-
-.app-shell .text-lg {
-  font-size: 18px;
-  line-height: 1.35;
-}
-
-.app-shell .text-xl {
-  font-size: 20px;
-  line-height: 1.35;
-}
-
-.app-shell .text-2xl {
-  font-size: 24px;
-  line-height: 1.25;
-}
-
-.app-shell .text-3xl {
-  font-size: 29px;
-  line-height: 1.25;
-}
-
-.app-shell .text-4xl {
-  font-size: 32px;
-  line-height: 1.2;
-}
-
-.app-shell .text-5xl {
-  font-size: 36px;
-  line-height: 1.2;
-}
-
-.app-shell .text-\[10px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[11px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[11\.5px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[12px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[13px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[13\.5px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[14px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[15px\] {
-  font-size: 9px;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 15px (바로가기 등) */
-.app-shell .text-actual-15 {
-  font-size: 15px;
-  line-height: 1.45;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 10px (첨부 메뉴 보조 문구 등) */
-.app-shell .text-actual-10 {
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 11px (답변 더보기 메뉴 등) */
-.app-shell .text-actual-11 {
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 13px (Gemini 사고 과정 토글 등) */
-.app-shell .text-actual-13 {
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 14px (Gemini 채팅 본문) */
-.app-shell .text-actual-14 {
-  font-size: 14px;
-  line-height: 1.6;
-}
-
 .app-shell .chat-markdown-gemini th,
 .app-shell .chat-markdown-gemini td {
   font-size: 13px;
@@ -376,8 +214,8 @@
 }
 
 .app-shell .chat-markdown-gemini img {
-  max-height: 18rem;
-  border-radius: 0.75rem;
+  max-height: 320px;
+  border-radius: 12px;
 }
 
 @keyframes gemini-avatar-ring-spin {
@@ -659,29 +497,6 @@
 }
 
 
-/* 사이드바 스레드 ⋮ 메뉴 — body 포털(:root 27px rem 상속 차단) */
-.private-chat-thread-menu,
-.private-chat-thread-menu button {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.composer-meta-rail {
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.composer-meta-rail p,
-.composer-meta-rail span {
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.chat-composer-popup-menu {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
 .app-shell .org-prompt-gallery-card h3.org-prompt-gallery-card-title {
   font-size: 13px;
   line-height: 1.25;
@@ -714,301 +529,90 @@
   }
 }
 
-.app-shell .text-\[17px\] {
-  font-size: 10px;
-}
-
-.app-shell .text-\[18px\] {
-  font-size: 11px;
-}
-
-.app-shell .text-\[20px\] {
-  font-size: 12px;
-}
-
-@media (min-width: 640px) {
-  .app-shell .sm\:text-\[12px\] {
-    font-size: 8px;
-  }
-}
-
-@media (min-width: 768px) {
-  .app-shell .md\:text-\[13\.5px\] {
-    font-size: 8px;
-  }
-
-  .app-shell .md\:text-\[20px\] {
-    font-size: 12px;
-  }
-}
-
-.app-shell .h-1\.5 {
-  height: 6px;
-}
-
-.app-shell .w-1\.5 {
-  width: 6px;
-}
-
-.app-shell .h-3 {
-  height: 12px;
-}
-
-.app-shell .w-3 {
-  width: 12px;
-}
-
-.app-shell .h-4 {
-  height: 16px;
-}
-
-.app-shell .w-4 {
-  width: 16px;
-}
-
-.app-shell .h-5 {
-  height: 20px;
-}
-
-.app-shell .w-5 {
-  width: 20px;
-}
-
-.app-shell .h-6 {
-  height: 24px;
-}
-
-.app-shell .w-6 {
-  width: 24px;
-}
-
-.app-shell .h-8 {
-  height: 32px;
-}
-
-.app-shell .w-8 {
-  width: 32px;
-}
-
-.app-shell .h-10 {
-  height: 40px;
-}
-
-.app-shell .w-10 {
-  width: 40px;
-}
-
-.app-shell .h-11 {
-  height: 44px;
-}
-
-.app-shell .w-11 {
-  width: 44px;
-}
-
-.app-shell .h-12 {
-  height: 48px;
-}
-
-.app-shell .w-12 {
-  width: 48px;
-}
-
-.app-shell .size-4 {
-  width: 16px;
-  height: 16px;
-}
-
-.app-shell .size-5 {
-  width: 20px;
-  height: 20px;
-}
-
-.app-shell .size-6 {
-  width: 24px;
-  height: 24px;
-}
-
-/* Admin Control Tower — 전역 :root(27px)·h1(84px) 상속 차단 */
-.admin-shell,
-.admin-sidebar {
-  font-size: 15px;
-  line-height: 1.45;
-  letter-spacing: 0;
-  color: rgb(15 23 42);
-}
-
-.dark .admin-shell,
-.dark .admin-sidebar,
-.admin-shell.dark,
-.admin-sidebar.dark {
-  color: rgb(241 245 249);
-}
-
-.admin-shell h1,
-.admin-sidebar h1 {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0;
-  line-height: 1.35;
-  color: inherit;
-}
-
-.admin-shell h2,
-.admin-sidebar h2 {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0;
-  margin: 0;
-  line-height: 1.35;
-  color: inherit;
-}
-
-.admin-shell h3,
-.admin-sidebar h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0;
-  line-height: 1.35;
-  color: inherit;
-}
-
-.admin-shell p,
-.admin-sidebar p,
-.admin-shell li,
-.admin-sidebar li,
-.admin-shell td,
-.admin-sidebar td,
-.admin-shell th,
-.admin-sidebar th,
-.admin-shell label,
-.admin-sidebar label,
-.admin-shell button,
-.admin-sidebar button,
-.admin-shell input,
-.admin-sidebar input,
-.admin-shell select,
-.admin-sidebar select,
-.admin-shell textarea,
-.admin-sidebar textarea {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.admin-shell code,
-.admin-sidebar code {
-  font-size: 12px;
-  padding: 1px 4px;
-  line-height: 1.35;
-  background: rgb(248 250 252);
-}
-
-.dark .admin-shell code,
-.dark .admin-sidebar code {
-  background: rgb(15 23 42);
-}
-
-/* :root(27px) rem 기준 Tailwind text-* → admin px 보정 */
-.admin-shell .text-xs,
-.admin-sidebar .text-xs {
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.admin-shell .text-sm,
-.admin-sidebar .text-sm {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.admin-shell .text-base,
-.admin-sidebar .text-base {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.admin-shell .text-lg,
-.admin-sidebar .text-lg {
-  font-size: 15px;
-  line-height: 1.35;
-}
-
-.admin-shell .text-xl,
-.admin-sidebar .text-xl {
-  font-size: 15px;
-  line-height: 1.35;
-}
-
-.admin-shell .text-2xl,
-.admin-sidebar .text-2xl {
-  font-size: 17px;
-  line-height: 1.25;
-}
-
-.admin-shell .text-3xl,
-.admin-sidebar .text-3xl {
-  font-size: 18px;
-  line-height: 1.25;
-}
-
-.admin-shell .text-4xl,
-.admin-sidebar .text-4xl {
-  font-size: 20px;
-  line-height: 1.2;
-}
-
-.admin-shell .text-5xl,
-.admin-sidebar .text-5xl {
-  font-size: 21px;
-  line-height: 1.2;
-}
-
-@media (prefers-color-scheme: dark) {
-  .admin-shell,
-  .admin-sidebar {
-    color: rgb(241 245 249);
-  }
-}
-
-/* 노트북 워크스페이스 — app-shell 축소 없이 text-lg / text-sm 체감 유지 */
-.notebook-workspace {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.notebook-workspace .text-lg {
-  font-size: 18px;
-  line-height: 1.35;
-}
-
-.notebook-workspace .text-sm {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.notebook-workspace .text-xs {
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 body {
   margin: 0;
   font-family: var(--sans);
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 600;
-  color: var(--text-h);
-}
+/* ------------------------------------------------------------------
+ * 기본 타이포그래피 — @layer base: Tailwind 유틸리티(text-*, font-*)가 항상 우선한다.
+ *   루트 16px 전환으로 .app-shell / .admin-shell 의 역보정 규칙은 모두 제거됨.
+ * ------------------------------------------------------------------ */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--heading);
+    font-weight: 600;
+    color: inherit;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
 
-code {
-  font-family: var(--mono);
-  border-radius: 4px;
-  color: var(--text-h);
-  background: var(--code-bg);
+  code {
+    font-family: var(--mono);
+    border-radius: 4px;
+    background: var(--code-bg);
+  }
+
+  /* 사용자 포털 */
+  .app-shell {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .app-shell h1 {
+    font-size: 1.25rem;
+  }
+  .app-shell h2 {
+    font-size: 1.125rem;
+  }
+  .app-shell h3 {
+    font-size: 1rem;
+  }
+  .app-shell code {
+    font-size: 0.875rem;
+    line-height: 1.35;
+    padding: 2px 6px;
+  }
+
+  /* 관리자 콘솔 — 컴팩트 기본값 (유틸리티로 덮어쓰기 가능) */
+  .admin-shell,
+  .admin-sidebar {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: rgb(15 23 42);
+  }
+  .dark .admin-shell,
+  .dark .admin-sidebar {
+    color: rgb(241 245 249);
+  }
+  .admin-shell h1,
+  .admin-sidebar h1 {
+    font-size: 0.9375rem;
+  }
+  .admin-shell h2,
+  .admin-shell h3,
+  .admin-sidebar h2,
+  .admin-sidebar h3 {
+    font-size: 0.875rem;
+  }
+  .admin-shell code,
+  .admin-sidebar code {
+    font-size: 0.75rem;
+    padding: 1px 4px;
+    line-height: 1.35;
+    background: rgb(248 250 252);
+  }
+  .dark .admin-shell code,
+  .dark .admin-sidebar code {
+    background: rgb(15 23 42);
+  }
+
+  /* 노트북 워크스페이스 */
+  .notebook-workspace {
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
 }
 
 

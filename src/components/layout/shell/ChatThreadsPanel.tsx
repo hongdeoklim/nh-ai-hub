@@ -298,7 +298,7 @@ export function ChatThreadsPanel({ onNavigate }: ChatThreadsPanelProps) {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[8px] pb-[12px] pt-[10px]">
         {plannerActive ? (
           <section aria-label="기획 세션 목록">
-            <p className="mb-[6px] px-[8px] text-[11px]! font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+            <p className="mb-[6px] px-[8px] text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
               AI Planner · 기획 세션
             </p>
             {visiblePlannerSessions.length === 0 ? (
@@ -325,7 +325,7 @@ export function ChatThreadsPanel({ onNavigate }: ChatThreadsPanelProps) {
                         <IconClipboardList className="h-[16px] w-[16px] shrink-0 text-brand" />
                         <span className="min-w-0 flex-1 truncate">{session.title}</span>
                         {session.has_plan ? (
-                          <span className="shrink-0 rounded-full bg-success-soft px-[6px] py-[1px] text-[10px]! font-semibold text-success">
+                          <span className="shrink-0 rounded-full bg-success-soft px-[6px] py-[1px] text-[10px] font-semibold text-success">
                             PRD
                           </span>
                         ) : null}
@@ -366,7 +366,7 @@ export function ChatThreadsPanel({ onNavigate }: ChatThreadsPanelProps) {
               <>
                 {pinnedThreads.length > 0 ? (
                   <>
-                    <p className="mb-[4px] px-[8px] text-[11px]! font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+                    <p className="mb-[4px] px-[8px] text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                       고정
                     </p>
                     <ThreadList
@@ -382,7 +382,7 @@ export function ChatThreadsPanel({ onNavigate }: ChatThreadsPanelProps) {
                     />
                   </>
                 ) : null}
-                <p className="mb-[4px] mt-[6px] px-[8px] text-[11px]! font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+                <p className="mb-[4px] mt-[6px] px-[8px] text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                   {query.trim() ? '검색 결과' : '최근 대화'}
                 </p>
                 <ThreadList

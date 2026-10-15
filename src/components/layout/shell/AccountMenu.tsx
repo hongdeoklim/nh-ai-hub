@@ -62,7 +62,7 @@ export function AccountMenu({
             {[department, rankTitle].filter(Boolean).join(' · ')}
           </p>
           {profile?.email ? (
-            <p className="truncate text-[11px]! text-fg-subtle">{profile.email}</p>
+            <p className="truncate text-[11px] text-fg-subtle">{profile.email}</p>
           ) : null}
         </div>
       </div>
@@ -89,7 +89,7 @@ export function AccountMenu({
       </div>
 
       <div className="px-[16px] pt-[14px]">
-        <p className="mb-[6px] text-[11px]! font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+        <p className="mb-[6px] text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
           화면 테마
         </p>
         <div role="radiogroup" aria-label="화면 테마" className="grid grid-cols-3 gap-[4px] rounded-[10px] bg-surface-2 p-[4px]">
@@ -126,7 +126,7 @@ export function AccountMenu({
         >
           <IconSettings className="h-[18px] w-[18px] text-fg-muted" />
           설정
-          <span className="ml-auto text-[11px]! text-fg-subtle">프로필 · 연동 · 예약</span>
+          <span className="ml-auto text-[11px] text-fg-subtle">프로필 · 연동 · 예약</span>
         </button>
         <button
           type="button"

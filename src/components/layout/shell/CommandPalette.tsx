@@ -152,7 +152,7 @@ function PaletteBody({ onClose, actions }: Omit<CommandPaletteProps, 'open'>) {
           placeholder="화면 이름, 대화 제목, 작업을 입력하세요"
           className="h-[52px] min-w-0 flex-1 bg-transparent text-base text-fg outline-none placeholder:text-fg-subtle"
         />
-        <kbd className="hidden shrink-0 rounded-[6px] border border-border bg-surface-2 px-[6px] py-[2px] font-sans text-[11px]! text-fg-subtle md:inline-block">
+        <kbd className="hidden shrink-0 rounded-[6px] border border-border bg-surface-2 px-[6px] py-[2px] font-sans text-[11px] text-fg-subtle md:inline-block">
           Esc
         </kbd>
       </div>
@@ -177,7 +177,7 @@ function PaletteBody({ onClose, actions }: Omit<CommandPaletteProps, 'open'>) {
             return (
               <li key={entry.key} role="presentation">
                 {showHeader ? (
-                  <p className="px-[10px] pb-[4px] pt-[8px] text-[11px]! font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+                  <p className="px-[10px] pb-[4px] pt-[8px] text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
                     {entry.section}
                   </p>
                 ) : null}
@@ -204,7 +204,7 @@ function PaletteBody({ onClose, actions }: Omit<CommandPaletteProps, 'open'>) {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-fg">{entry.label}</span>
                     {entry.description ? (
-                      <span className="block truncate text-[11px]! text-fg-subtle">{entry.description}</span>
+                      <span className="block truncate text-[11px] text-fg-subtle">{entry.description}</span>
                     ) : null}
                   </span>
                   {active ? (
@@ -216,7 +216,7 @@ function PaletteBody({ onClose, actions }: Omit<CommandPaletteProps, 'open'>) {
           })
         )}
       </ul>
-      <div className="hidden items-center gap-[12px] border-t border-border px-[14px] py-[8px] text-[11px]! text-fg-subtle md:flex">
+      <div className="hidden items-center gap-[12px] border-t border-border px-[14px] py-[8px] text-[11px] text-fg-subtle md:flex">
         <span>↑↓ 이동</span>
         <span>Enter 실행</span>
         <span>Esc 닫기</span>

@@ -46,7 +46,7 @@ function RailButton({
       }`}
     >
       <Icon className="h-[22px] w-[22px]" />
-      <span className="text-[10px]! font-medium leading-none">{label}</span>
+      <span className="text-[10px] font-medium leading-none">{label}</span>
     </button>
   )
 }
@@ -76,7 +76,7 @@ export function NavRail({
         to="/"
         aria-label="NH-AX-HUB 홈"
         title="NH-AX-HUB"
-        className="mb-[8px] inline-flex h-[40px] w-[40px] items-center justify-center rounded-[12px] bg-gradient-to-br from-brand to-accent text-[13px]! font-extrabold tracking-tight text-white shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"
+        className="mb-[8px] inline-flex h-[40px] w-[40px] items-center justify-center rounded-[12px] bg-gradient-to-br from-brand to-accent text-[13px] font-extrabold tracking-tight text-white shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"
       >
         NH
       </Link>

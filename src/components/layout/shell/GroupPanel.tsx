@@ -45,7 +45,7 @@ export function GroupPanel({ group, onNavigate }: GroupPanelProps) {
                         <span className={`block text-sm leading-snug ${isActive ? 'font-semibold' : 'font-medium'}`}>
                           {item.label}
                         </span>
-                        <span className="mt-[2px] block text-[11px]! leading-snug text-fg-subtle">
+                        <span className="mt-[2px] block text-[11px] leading-snug text-fg-subtle">
                           {item.description}
                         </span>
                       </span>

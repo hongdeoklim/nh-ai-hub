@@ -5,12 +5,12 @@ type AvatarProps = {
 }
 
 const SIZE_CLASS: Record<NonNullable<AvatarProps['size']>, string> = {
-  28: 'h-[28px] w-[28px] text-[12px]!',
-  32: 'h-[32px] w-[32px] text-[13px]!',
-  36: 'h-[36px] w-[36px] text-[14px]!',
-  40: 'h-[40px] w-[40px] text-[15px]!',
-  48: 'h-[48px] w-[48px] text-[18px]!',
-  56: 'h-[56px] w-[56px] text-[20px]!',
+  28: 'h-[28px] w-[28px] text-[12px]',
+  32: 'h-[32px] w-[32px] text-[13px]',
+  36: 'h-[36px] w-[36px] text-[14px]',
+  40: 'h-[40px] w-[40px] text-[15px]',
+  48: 'h-[48px] w-[48px] text-[18px]',
+  56: 'h-[56px] w-[56px] text-[20px]',
 }
 
 /** 이니셜 아바타 — 브랜드 그라데이션 배경 */

@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../components/auth/useAuth'
 import {
-  getLastPrivateThreadId,
-  isValidPrivateChatThreadId,
+ getLastPrivateThreadId,
+ isValidPrivateChatThreadId,
 } from '../lib/private-chat-storage'
 import { supabase } from '../lib/supabase'
 import { ensurePrivateChatsHydrated } from '../services/chat/private-chat-remote'
@@ -13,41 +13,41 @@ import { ensurePrivateChatsHydrated } from '../services/chat/private-chat-remote
  * `/` 접근 시 마지막 개인 채팅 스레드로 보내거나, 없으면 새 UUID 스레드를 만듭니다.
  */
 export function PrivateChatHomeRedirect() {
-  const navigate = useNavigate()
-  const { profile, loading } = useAuth()
+ const navigate = useNavigate()
+ const { profile, loading } = useAuth()
 
-  useLayoutEffect(() => {
-    if (loading) return
+ useLayoutEffect(() => {
+ if (loading) return
 
-    let cancelled = false
+ let cancelled = false
 
-    void (async () => {
-      if (profile?.id) {
-        await ensurePrivateChatsHydrated(supabase, profile.id)
+ void (async () => {
+ if (profile?.id) {
+ await ensurePrivateChatsHydrated(supabase, profile.id)
       }
-      if (cancelled) return
+ if (cancelled) return
 
-      try {
-        const last = getLastPrivateThreadId()?.trim()
-        if (last && isValidPrivateChatThreadId(last)) {
-          navigate(`/chat/${last}`, { replace: true })
-          return
+ try {
+ const last = getLastPrivateThreadId()?.trim()
+ if (last && isValidPrivateChatThreadId(last)) {
+ navigate(`/chat/${last}`, { replace: true })
+ return
         }
       } catch {
         /* ignore */
       }
-      navigate(`/chat/${crypto.randomUUID()}`, { replace: true })
+ navigate(`/chat/${crypto.randomUUID()}`, { replace: true })
     })()
 
-    return () => {
-      cancelled = true
+ return () => {
+ cancelled = true
     }
   }, [navigate, profile?.id, loading])
 
-  return (
+ return (
     <div className="flex min-h-[40vh] flex-1 items-center justify-center bg-bg px-[16px]">
       <p className="text-sm text-fg-muted">
-        대화 화면으로 이동하는 중…
+ 대화 화면으로 이동하는 중…
       </p>
     </div>
   )

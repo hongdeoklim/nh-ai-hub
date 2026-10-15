@@ -34,7 +34,7 @@ export function TokenMeter({ used, limit, loading = false, className = '' }: Tok
           />
         ) : null}
       </div>
-      <p className="mt-[4px] text-[11px]! tabular-nums text-fg-subtle">
+      <p className="mt-[4px] text-[11px] tabular-nums text-fg-subtle">
         {loading ? '프로필 불러오는 중' : `${used.toLocaleString()} / ${limit.toLocaleString()} 사용`}
       </p>
     </div>

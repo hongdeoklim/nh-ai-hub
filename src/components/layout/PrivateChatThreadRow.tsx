@@ -44,7 +44,7 @@ type PrivateChatThreadRowProps = {
 }
 
 const menuItemClass =
-  'flex w-full items-center px-[14px] py-[9px] text-left leading-snug text-fg transition hover:bg-surface-2'
+  'flex w-full items-center px-[14px] py-[9px] text-left text-sm leading-snug text-fg transition hover:bg-surface-2'
 
 export function PrivateChatThreadRow({
   thread,

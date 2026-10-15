@@ -89,7 +89,7 @@ export function AppHeader({
         <div className="min-w-0 flex-1 md:flex-none md:max-w-[32%]">
           <h1 className="truncate text-base font-semibold leading-tight text-fg">{title}</h1>
           {subtitle ? (
-            <p className="hidden truncate text-[11px]! leading-tight text-fg-subtle md:block">{subtitle}</p>
+            <p className="hidden truncate text-[11px] leading-tight text-fg-subtle md:block">{subtitle}</p>
           ) : null}
         </div>
 
@@ -101,7 +101,7 @@ export function AppHeader({
         >
           <IconSearch className="h-[16px] w-[16px] shrink-0" />
           <span className="min-w-0 flex-1 truncate text-left">검색 · 이동 · 명령</span>
-          <kbd className="hidden shrink-0 rounded-[6px] border border-border bg-surface px-[6px] py-[2px] font-sans text-[11px]! text-fg-subtle lg:inline-block">
+          <kbd className="hidden shrink-0 rounded-[6px] border border-border bg-surface px-[6px] py-[2px] font-sans text-[11px] text-fg-subtle lg:inline-block">
             Ctrl K
           </kbd>
         </button>

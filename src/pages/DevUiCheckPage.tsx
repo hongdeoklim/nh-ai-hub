@@ -135,7 +135,7 @@ export function DevUiCheckPage() {
                   const first = UI_CHECK_MODELS[next]?.[0]
                   if (first) setMockModel(first.id)
                 }}
-                className="h-[28px] w-[120px] max-w-[38vw] min-w-0 shrink rounded-full border-0 bg-surface-2 px-2 text-[12px]! font-medium text-fg outline-none transition hover:bg-surface-3 focus-visible:ring-2 focus-visible:ring-focus/40"
+                className="h-[28px] w-[120px] max-w-[38vw] min-w-0 shrink rounded-full border-0 bg-surface-2 px-2 text-[12px] font-medium text-fg outline-none transition hover:bg-surface-3 focus-visible:ring-2 focus-visible:ring-focus/40"
               >
                 <option value="auto">자동 추천</option>
                 <option value="openai">ChatGPT/OpenAI</option>
@@ -151,7 +151,7 @@ export function DevUiCheckPage() {
                   aria-label="모델 버전 선택"
                   value={mockModel}
                   onChange={(e) => setMockModel(e.target.value)}
-                  className="h-[28px] max-w-[38vw] min-w-0 shrink rounded-full border-0 bg-surface-2 px-2 text-[12px]! font-medium text-fg outline-none"
+                  className="h-[28px] max-w-[38vw] min-w-0 shrink rounded-full border-0 bg-surface-2 px-2 text-[12px] font-medium text-fg outline-none"
                 >
                   {(UI_CHECK_MODELS[mockProvider] ?? []).map((m) => (
                     <option key={m.id} value={m.id}>
@@ -220,7 +220,7 @@ export function DevShellCheckPage() {
           {SWATCHES.map((s) => (
             <div key={s.label} className="flex flex-col gap-[6px]">
               <div className={`h-[44px] rounded-[10px] border border-border ${s.className}`} />
-              <span className="text-[11px]! text-fg-muted">{s.label}</span>
+              <span className="text-[11px] text-fg-muted">{s.label}</span>
             </div>
           ))}
         </div>
@@ -229,12 +229,12 @@ export function DevShellCheckPage() {
       <section className="grid gap-[16px] md:grid-cols-2">
         <div className="rounded-[16px] border border-border bg-surface p-[16px] shadow-card">
           <h2 className="text-sm font-semibold text-fg">타이포그래피</h2>
-          <p className="mt-[8px] text-[24px]! font-semibold tracking-tight text-fg">제목 24 · Semibold</p>
-          <p className="text-[20px]! font-semibold text-fg">제목 20 · Semibold</p>
+          <p className="mt-[8px] text-[24px] font-semibold tracking-tight text-fg">제목 24 · Semibold</p>
+          <p className="text-[20px] font-semibold text-fg">제목 20 · Semibold</p>
           <p className="text-base font-medium text-fg">본문 16 · Medium</p>
           <p className="text-sm text-fg-muted">본문 14 · fg-muted</p>
           <p className="text-xs text-fg-subtle">보조 12 · fg-subtle</p>
-          <p className="text-[11px]! font-semibold uppercase tracking-[0.12em] text-brand">EYEBROW 11</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">EYEBROW 11</p>
         </div>
         <div className="rounded-[16px] border border-border bg-surface p-[16px] shadow-card">
           <h2 className="text-sm font-semibold text-fg">토큰 미터</h2>

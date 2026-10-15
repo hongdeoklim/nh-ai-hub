@@ -13,7 +13,7 @@ type BottomTabBarProps = {
 }
 
 const tabBase =
-  'relative flex h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[3px] text-[10px]! font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus/50'
+  'relative flex h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[3px] text-[10px] font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus/50'
 
 function tabClass(active: boolean) {
   return `${tabBase} ${active ? 'text-brand' : 'text-fg-muted active:text-fg'}`

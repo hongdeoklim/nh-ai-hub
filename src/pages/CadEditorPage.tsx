@@ -177,13 +177,13 @@ export function CadEditorPage() {
     <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-3 px-4 py-6 md:py-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200/80 bg-violet-50/80 px-3 py-1 text-[10px]! font-semibold uppercase tracking-[0.12em] text-violet-800 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300 md:text-[11px]!">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200/80 bg-violet-50/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-800 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300 md:text-[11px]">
             <span aria-hidden>✏️</span> CAD 에디터 · 베타
           </span>
-          <h1 className="mt-2 text-[22px]! font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-[28px]!">
+          <h1 className="mt-2 text-[22px] font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-[28px]">
             도면 편집 (DXF)
           </h1>
-          <p className="mt-1 text-[13px]! leading-relaxed text-stone-600 dark:text-stone-400 md:text-[14px]!">
+          <p className="mt-1 text-[13px] leading-relaxed text-stone-600 dark:text-stone-400 md:text-[14px]">
             {activeTool ? `현재: ${activeTool.label} — ${activeTool.hint}. ` : ''}
             휠=줌, 중/우클릭 드래그=이동.
           </p>
@@ -192,7 +192,7 @@ export function CadEditorPage() {
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-[13px]! font-semibold text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800 md:text-[14px]!"
+            className="rounded-lg border border-stone-300 px-3 py-2 text-[13px] font-semibold text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800 md:text-[14px]"
           >
             DXF 열기
           </button>
@@ -201,14 +201,14 @@ export function CadEditorPage() {
             onClick={() => void handleOpenDwg()}
             disabled={converting}
             title="작업 폴더의 DWG를 로컬 에이전트가 DXF로 변환해 엽니다"
-            className="rounded-lg border border-stone-300 px-3 py-2 text-[13px]! font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800 md:text-[14px]!"
+            className="rounded-lg border border-stone-300 px-3 py-2 text-[13px] font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800 md:text-[14px]"
           >
             {converting ? '변환 중…' : 'DWG 열기'}
           </button>
           <button
             type="button"
             onClick={exportDxf}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-[13px]! font-semibold text-white transition-colors hover:bg-violet-700 md:text-[14px]!"
+            className="rounded-lg bg-violet-600 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-violet-700 md:text-[14px]"
           >
             DXF 저장
           </button>
@@ -225,7 +225,7 @@ export function CadEditorPage() {
               type="button"
               title={t.hint}
               onClick={() => setTool(t.id)}
-              className={`rounded-md px-2.5 py-1.5 text-[12px]! font-semibold transition-colors md:text-[13px]! ${
+              className={`rounded-md px-2.5 py-1.5 text-[12px] font-semibold transition-colors md:text-[13px] ${
                 tool === t.id
                   ? 'bg-violet-600 text-white'
                   : 'text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800'
@@ -238,11 +238,11 @@ export function CadEditorPage() {
 
         <div className="h-4 w-px bg-stone-200 dark:bg-stone-700" />
 
-        <label className="flex items-center gap-1.5 text-[12px]! text-stone-600 dark:text-stone-300 md:text-[13px]!">
+        <label className="flex items-center gap-1.5 text-[12px] text-stone-600 dark:text-stone-300 md:text-[13px]">
           <input type="checkbox" checked={endpointSnap} onChange={(e) => setEndpointSnap(e.target.checked)} />
           끝점 스냅
         </label>
-        <label className="flex items-center gap-1.5 text-[12px]! text-stone-600 dark:text-stone-300 md:text-[13px]!">
+        <label className="flex items-center gap-1.5 text-[12px] text-stone-600 dark:text-stone-300 md:text-[13px]">
           <input type="checkbox" checked={gridSnap} onChange={(e) => setGridSnap(e.target.checked)} />
           그리드
         </label>
@@ -252,18 +252,18 @@ export function CadEditorPage() {
           min={0.1}
           onChange={(e) => setGridStep(Math.max(0.1, Number(e.target.value) || 1))}
           aria-label="그리드 간격"
-          className="w-[64px] rounded-md border border-stone-300 px-2 py-1 text-[12px]! dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 md:text-[13px]!"
+          className="w-[64px] rounded-md border border-stone-300 px-2 py-1 text-[12px] dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 md:text-[13px]"
         />
 
         <div className="h-4 w-px bg-stone-200 dark:bg-stone-700" />
 
-        <label className="flex items-center gap-1.5 text-[12px]! text-stone-600 dark:text-stone-300 md:text-[13px]!">
+        <label className="flex items-center gap-1.5 text-[12px] text-stone-600 dark:text-stone-300 md:text-[13px]">
           레이어
           <select
             value={currentLayer}
             onChange={(e) => setCurrentLayer(e.target.value)}
             aria-label="현재 레이어"
-            className="rounded-md border border-stone-300 px-2 py-1 text-[12px]! dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 md:text-[13px]!"
+            className="rounded-md border border-stone-300 px-2 py-1 text-[12px] dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 md:text-[13px]"
           >
             {layers.map((l) => (
               <option key={l} value={l}>{l}</option>
@@ -279,7 +279,7 @@ export function CadEditorPage() {
                 key={m}
                 type="button"
                 onClick={() => setViewMode(m)}
-                className={`px-2.5 py-1.5 text-[12px]! font-semibold transition-colors md:text-[13px]! ${
+                className={`px-2.5 py-1.5 text-[12px] font-semibold transition-colors md:text-[13px] ${
                   viewMode === m
                     ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900'
                     : 'text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800'
@@ -290,7 +290,7 @@ export function CadEditorPage() {
             ))}
           </div>
           {viewMode === '3d' && (
-            <label className="flex items-center gap-1.5 text-[12px]! text-stone-600 dark:text-stone-300 md:text-[13px]!">
+            <label className="flex items-center gap-1.5 text-[12px] text-stone-600 dark:text-stone-300 md:text-[13px]">
               높이
               <input
                 type="range"
@@ -305,7 +305,7 @@ export function CadEditorPage() {
             </label>
           )}
           {viewMode === '3d' && (
-            <label className="flex items-center gap-1.5 text-[12px]! text-stone-600 dark:text-stone-300 md:text-[13px]!">
+            <label className="flex items-center gap-1.5 text-[12px] text-stone-600 dark:text-stone-300 md:text-[13px]">
               <input type="checkbox" checked={solid3d} onChange={(e) => setSolid3d(e.target.checked)} />
               솔리드
             </label>
@@ -314,14 +314,14 @@ export function CadEditorPage() {
             type="button"
             onClick={undo}
             disabled={past.length === 0}
-            className="rounded-md px-2.5 py-1.5 text-[12px]! font-medium text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-40 dark:text-stone-300 dark:hover:bg-stone-800 md:text-[13px]!"
+            className="rounded-md px-2.5 py-1.5 text-[12px] font-medium text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-40 dark:text-stone-300 dark:hover:bg-stone-800 md:text-[13px]"
           >
             ↶ 실행취소
           </button>
           <button
             type="button"
             onClick={() => { commit([]); setBounds(DEFAULT_BOUNDS); setFileName(null) }}
-            className="rounded-md px-2.5 py-1.5 text-[12px]! font-medium text-stone-600 transition-colors hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800 md:text-[13px]!"
+            className="rounded-md px-2.5 py-1.5 text-[12px] font-medium text-stone-600 transition-colors hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800 md:text-[13px]"
           >
             새로 그리기
           </button>
@@ -341,7 +341,7 @@ export function CadEditorPage() {
           {viewMode === '3d' ? (
             <Suspense
               fallback={
-                <div className="flex h-full items-center justify-center text-[13px]! text-stone-500 md:text-[14px]!">
+                <div className="flex h-full items-center justify-center text-[13px] text-stone-500 md:text-[14px]">
                   3D 뷰 불러오는 중…
                 </div>
               }
@@ -363,8 +363,8 @@ export function CadEditorPage() {
           )}
           {entities.length === 0 && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-8 text-center">
-              <div className="text-[36px]! opacity-30" aria-hidden>📐</div>
-              <p className="text-[13px]! font-medium text-stone-500 dark:text-stone-500 md:text-[14px]!">
+              <div className="text-[36px] opacity-30" aria-hidden>📐</div>
+              <p className="text-[13px] font-medium text-stone-500 dark:text-stone-500 md:text-[14px]">
                 DXF를 열거나, 위 도구로 직접 그려보세요
               </p>
             </div>
@@ -374,9 +374,9 @@ export function CadEditorPage() {
         {/* 레이어 패널 */}
         {layers.length > 0 && (
           <aside className="hidden w-[160px] shrink-0 flex-col gap-1 rounded-2xl border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900 sm:flex">
-            <p className="mb-1 text-[11px]! font-semibold uppercase tracking-wide text-stone-400 md:text-[12px]!">레이어</p>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-stone-400 md:text-[12px]">레이어</p>
             {layers.map((l) => (
-              <label key={l} className="flex items-center gap-2 text-[12px]! text-stone-700 dark:text-stone-300 md:text-[13px]!">
+              <label key={l} className="flex items-center gap-2 text-[12px] text-stone-700 dark:text-stone-300 md:text-[13px]">
                 <input
                   type="checkbox"
                   checked={!hiddenLayers.has(l)}
