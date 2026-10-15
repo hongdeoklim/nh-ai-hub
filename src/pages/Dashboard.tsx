@@ -1232,8 +1232,12 @@ export function Dashboard() {
   /** 잘린 답변 이어쓰기: 모델에게 끊긴 지점부터 계속 쓰도록 지시하는 user 턴 */
   const CONTINUE_INSTRUCTION =
     '직전 답변이 출력 한도 때문에 중간에 끊겼습니다. 인사말·요약·이미 작성한 내용의 반복 없이, 끊긴 지점부터 곧바로 이어서 작성하세요.'
-  /** finishReason length/interrupted 시 같은 턴에서 자동으로 이어쓰는 최대 횟수 */
-  const MAX_AUTO_CONTINUES = 2
+  /**
+   * finishReason length/interrupted 시 같은 턴에서 자동으로 이어쓰는 최대 횟수.
+   * 회차마다 별도 요청이라 출력 한도·엣지 함수 시간 제한을 각각 새로 받는다.
+   * 사용자가 '이어서 생성'을 누르지 않아도 긴 답변이 끝까지 나오도록 넉넉히 둔다.
+   */
+  const MAX_AUTO_CONTINUES = 5
 
   async function executeChatTurn(
     item: PendingChatTurn,
@@ -1753,10 +1757,11 @@ export function Dashboard() {
       'auto'
     const modelNow = rawModel.toLowerCase() === 'auto' ? 'auto' : rawModel
 
-    // 끊긴 말풍선까지의 대화 + 이어쓰기 지시
-    const historyThroughAssistant = messages.slice(0, assistantIndex + 1)
-    const apiMessages = [
-      ...buildMessagesForApi(historyThroughAssistant),
+    // 끊긴 말풍선 이전 대화 + 지금까지의 답변 + 이어쓰기 지시 (회차마다 최신 답변으로 다시 구성)
+    const historyBeforeAssistant = buildMessagesForApi(messages.slice(0, assistantIndex))
+    const continueMessages = (answerSoFar: string) => [
+      ...historyBeforeAssistant,
+      { role: 'assistant' as const, content: answerSoFar },
       { role: 'user' as const, content: CONTINUE_INSTRUCTION },
     ]
 
@@ -1777,9 +1782,9 @@ export function Dashboard() {
     )
 
     try {
-      const outcome = await invokeAiChat({
+      const callContinue = () => invokeAiChat({
         supabase,
-        messages: apiMessages,
+        messages: continueMessages(streamRawText),
         activeModel: modelNow,
         providerPreference: selectedProviderRef.current,
         composerTool: null,
@@ -1810,29 +1815,50 @@ export function Dashboard() {
         },
       })
 
+      const usageTotal = { inputTokens: 0, outputTokens: 0 }
+      const addUsage = (result: Awaited<ReturnType<typeof callContinue>>) => {
+        if (!result.ok || !result.usage) return
+        usageTotal.inputTokens += result.usage.inputTokens
+        usageTotal.outputTokens += result.usage.outputTokens
+      }
+      const endedTruncated = (result: Awaited<ReturnType<typeof callContinue>>) =>
+        result.ok &&
+        (result.finishReason === 'length' || result.finishReason === 'interrupted')
+
+      // 버튼 한 번으로 끝까지: 또 잘리면 자동 이어쓰기 한도까지 계속 이어 쓴다
+      let outcome = await callContinue()
+      addUsage(outcome)
+      let rounds = 0
+      while (
+        endedTruncated(outcome) &&
+        rounds < MAX_AUTO_CONTINUES &&
+        !signal.aborted &&
+        threadIdRef.current === turnThreadId
+      ) {
+        rounds += 1
+        outcome = await callContinue()
+        addUsage(outcome)
+      }
+
       if (threadIdRef.current !== turnThreadId) return
       if (signal.aborted) return
 
+      const hasUsage = usageTotal.inputTokens + usageTotal.outputTokens > 0
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId
             ? {
                 ...m,
                 streaming: false,
-                truncated:
-                  outcome.ok &&
-                  (outcome.finishReason === 'length' ||
-                    outcome.finishReason === 'interrupted'),
+                truncated: endedTruncated(outcome),
                 elapsedMs: (m.elapsedMs ?? 0) + (Date.now() - contStartMs),
-                ...(outcome.ok && outcome.usage
+                ...(hasUsage
                   ? {
                       usage: {
                         inputTokens:
-                          (m.usage?.inputTokens ?? 0) +
-                          outcome.usage.inputTokens,
+                          (m.usage?.inputTokens ?? 0) + usageTotal.inputTokens,
                         outputTokens:
-                          (m.usage?.outputTokens ?? 0) +
-                          outcome.usage.outputTokens,
+                          (m.usage?.outputTokens ?? 0) + usageTotal.outputTokens,
                       },
                     }
                   : {}),
