@@ -10,6 +10,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useAppUi } from '../../contexts/AppUiContext'
 import { useIsDesktop, useIsStandaloneApp } from '../../hooks/useDisplayMode'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useTheme } from '../../hooks/useTheme'
 import { isAdminProfile } from '../../lib/admin-access'
 import {
@@ -73,6 +74,7 @@ export function MainLayout() {
   const navigate = useNavigate()
   const isDesktop = useIsDesktop()
   const standalone = useIsStandaloneApp()
+  const online = useOnlineStatus()
   const { isDark, toggle: toggleTheme } = useTheme()
   const { profile, signOut } = useAuth()
   const { requestNewChat, promptPanel, registerOpenSettingsHandler, registerNewChatFallback } =
@@ -364,6 +366,16 @@ export function MainLayout() {
             ) : null
           }
         />
+
+        {!online ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="shrink-0 border-b border-warning/30 bg-warning-soft px-[12px] py-[6px] text-center text-xs font-medium text-warning"
+          >
+            오프라인 상태입니다. 열어 둔 화면은 계속 볼 수 있고, 연결이 복구되면 다시 시도해 주세요.
+          </div>
+        ) : null}
 
         <main
           id="main-content"

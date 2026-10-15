@@ -24,6 +24,7 @@ npm run dev
 | --- | --- |
 | `npm run dev` | 개발 서버 (http://localhost:5173) |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | vitest 단위 테스트 (`src/**/*.test.ts`) |
 | `npm run lint` | ESLint |
 | `npm run build` | 프로덕션 빌드 (타입 체크 포함) |
 | `npm run deploy:check-env` | 배포 전 환경 변수 점검 |

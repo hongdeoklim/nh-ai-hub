@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -5,6 +6,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    // 순수 헬퍼 단위 테스트 (DOM 불필요). 컴포넌트 테스트를 추가할 때 jsdom 환경을 별도 설정한다.
+    include: ['src/**/*.test.ts'],
+    environment: 'node',
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -76,11 +82,36 @@ export default defineConfig({
         ],
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,webmanifest}'],
+        // 무거운 편집기/관리자 청크는 설치 시 프리캐시하지 않고 첫 사용 때 런타임 캐시한다
+        // (프리캐시 21MB → 셸 중심으로 축소: 설치·업데이트 다운로드 감소)
+        globIgnores: [
+          '**/vendor-univer-*.js',
+          '**/vendor-mermaid-*.js',
+          '**/vendor-graph3d-*.js',
+          '**/vendor-d3-*.js',
+          '**/vendor-xlsx-*.js',
+          '**/page-admin-*.js',
+          '**/page-workspace-*.js',
+          '**/page-teams-*.js',
+        ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/functions\//],
         runtimeCaching: [
+          {
+            // 해시가 붙은 빌드 산출물은 불변 → 첫 사용 후 캐시 우선
+            urlPattern: ({ url, request }) =>
+              url.origin === self.location.origin &&
+              url.pathname.startsWith('/assets/') &&
+              (request.destination === 'script' || request.destination === 'style'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'app-assets-on-demand',
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: ({ url }) => url.hostname.includes('supabase.co'),
             handler: 'NetworkOnly',
