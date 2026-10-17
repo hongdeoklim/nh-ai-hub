@@ -35,6 +35,20 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid session" }, 401)
     }
 
+    // 회사 공용 Dify 데이터셋에 직접 문서를 쓰는 함수라 관리자만 허용한다.
+    // (예전에는 로그인만 하면 누구나 호출할 수 있었다. 화면에서는 쓰이지 않는다)
+    const admin = createClient(supabaseUrl, readEnv("SUPABASE_SERVICE_ROLE_KEY"), {
+      auth: { persistSession: false },
+    })
+    const { data: profile } = await admin
+      .from("users")
+      .select("is_admin")
+      .eq("id", userData.user.id)
+      .maybeSingle()
+    if (profile?.is_admin !== true) {
+      return jsonResponse({ error: "관리자만 Dify 데이터셋에 직접 문서를 추가할 수 있습니다." }, 403)
+    }
+
     // 2. Parse request body
     const body = await req.json().catch(() => ({}))
     const title = body.title?.trim()
