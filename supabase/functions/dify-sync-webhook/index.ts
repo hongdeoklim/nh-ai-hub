@@ -17,7 +17,6 @@ async function authorize(req: Request, admin: any, anon: string, service: string
   if (bearer === service) return true
   // pg_net 트리거 등 내부 호출용 shared webhook secret
   const webhookSecret = Deno.env.get("DIFY_SYNC_WEBHOOK_SECRET")
-  console.log("DEBUG webhookSecret length:", webhookSecret?.length, "bearer length:", bearer.length, "match:", webhookSecret === bearer)
   if (webhookSecret && bearer === webhookSecret) return true
   // 관리자 JWT 허용
   const { data } = await createClient(Deno.env.get("SUPABASE_URL") || "", anon).auth.getUser(bearer)

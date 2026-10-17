@@ -28,6 +28,11 @@
    - `extensions.http_post(url:=…, body:=…, headers:=ARRAY[http_header])` 는 pg_net(`net.http_post`)·pgsql-http(`uri`/`content`) 어느 쪽 시그니처와도 맞지 않는다.
    - 맞다면 5분 큐 처리와 Drive 야간 동기화가 매번 실패하고, 시크릿이 설정된 경우 트리거 예외로 `rag-ingest` 저장까지 실패할 수 있다.
    - 수정: `net.http_post(url, body jsonb, headers jsonb)` 로 바꾸고 시크릿은 Vault 에서 읽는다. 먼저 `cron.job_run_details` 에서 실패 기록을 확인한다.
+   - ✅ 마이그레이션 작성(적용 필요): `20261018000000_fix_dify_sync_http_pg_net.sql`.
+     6/13 마이그레이션은 이 트리거를 `net.http_post` 로 올바르게 만들었는데, 6/24 "인증 수정"이 존재하지 않는 형태로 덮어쓴 것이 원인이었다.
+     허용된 내부 함수만 pg_net 으로 비동기 호출하는 `nh_invoke_internal_function()`(일반 역할 실행 불가)로 모으고,
+     시크릿은 Vault(`dify_sync_webhook_secret`) → DB 설정 순으로 읽으며, 트리거는 실패해도 INSERT 를 막지 않는다.
+     두 cron 도 이 함수로 다시 등록한다. 로컬에 PostgreSQL 이 없어 실행 검증은 못 했으므로 스테이징에서 먼저 적용할 것.
 2. **[높음] 회사 문서 상당수가 어디에도 임베딩되지 않는다**
    - 앱이 부르는 `process-document` 함수가 저장소에 없다 (`src/services/notebook/processDocumentClient.ts:17`). 그런데도 성공처럼 처리되어 파일명 노드만 생긴다.
    - HWP/HWPX 원본을 Dify 로 그대로 보내지만 Dify 기본 설정은 HWP 를 읽지 못한다. Drive 동기화는 PDF·DOCX·HWP 를 건너뛴다.
@@ -43,6 +48,7 @@
    - 대화 ID 를 넘기지 않아 매 메시지가 새 Dify 대화였음 → 대화별 conversation_id 유지(새로고침 후에도).
    - 스트림 중 오류를 삼켜 빈 답이 성공으로 반환, 토큰 한도 안내 누락, 중단 시 Promise 미종료, 인용 출처 폐기 → 모두 수정.
 7. **[중] 보안**: Dify 기본 URL 이 평문 `http` 이고, `dify-dataset-sync` 는 로그인만 하면 누구나 데이터셋에 쓸 수 있다.
+   - ✅ `dify-sync-webhook` 이 인증 시크릿 길이를 로그로 남기던 디버그 줄 제거.
 8. **[중] Drive 동기화**: 일부 청크 임베딩이 실패해도 해시가 저장돼 이후 영구히 건너뛴다. cron 은 루트 폴더만 최대 100건 보고, 삭제를 반영하지 않는다.
 
 ### 1.3 권장 방향
