@@ -25,6 +25,11 @@ async function authorize(req: Request, admin: any, anon: string, service: string
   return profile?.is_admin === true
 }
 
+/** 처리 중 임대 시간. 이 시간이 지나도 "processing" 이면 중단된 작업으로 보고 되돌린다 */
+const LEASE_MS = 15 * 60 * 1000
+/** 이 횟수만큼 실패하면 더 시도하지 않는다 */
+const MAX_ATTEMPTS = 5
+
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req)
   if (preflight) return preflight
@@ -47,6 +52,26 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => ({})) as { limit?: number }
   const limit = Math.min(Math.max(Number(body.limit || 10), 1), 50)
+
+  // 멈춘 작업 회수: 함수 시간 초과·중단으로 임대 시간이 지나도 "processing" 에 남은 작업
+  const nowIso = new Date().toISOString()
+  const { data: stuck } = await admin.from("knowledge_sync_jobs")
+    .select("id,knowledge_base_id,operation,attempts")
+    .eq("status", "processing").lt("available_at", nowIso).limit(50)
+  for (const s of (stuck || []) as Array<Pick<SyncJob, "id" | "knowledge_base_id" | "operation" | "attempts">>) {
+    const attempts = s.attempts + 1
+    const giveUp = attempts >= MAX_ATTEMPTS
+    await admin.from("knowledge_sync_jobs").update({
+      status: giveUp ? "failed" : "pending",
+      attempts,
+      available_at: nowIso,
+      last_error: "처리 도중 중단되어 다시 시도합니다 (임대 시간 초과)",
+    }).eq("id", s.id).eq("status", "processing")
+    if (s.operation === "upsert") {
+      await admin.from("knowledge_base").update({ dify_sync_status: giveUp ? "failed" : "pending" }).eq("id", s.knowledge_base_id)
+    }
+  }
+
   const { data: jobs, error } = await admin.from("knowledge_sync_jobs")
     .select("id,knowledge_base_id,operation,attempts,snapshot")
     .eq("status", "pending").lte("available_at", new Date().toISOString())
@@ -55,7 +80,23 @@ Deno.serve(async (req) => {
 
   const results: Array<Record<string, unknown>> = []
   for (const job of (jobs || []) as SyncJob[]) {
-    await admin.from("knowledge_sync_jobs").update({ status: "processing" }).eq("id", job.id).eq("status", "pending")
+    // 원자적 선점: pending 일 때만 processing 으로 바꾼다. 바뀐 행이 없으면 다른 실행(5분 cron 과
+    // 문서 INSERT 트리거가 겹친 경우 등)이 이미 가져간 것이므로 건너뛴다 — 중복 업로드·고아 문서 방지.
+    const { data: claimed, error: claimError } = await admin.from("knowledge_sync_jobs")
+      .update({ status: "processing", available_at: new Date(Date.now() + LEASE_MS).toISOString() })
+      .eq("id", job.id).eq("status", "pending")
+      .select("id")
+    if (claimError) {
+      results.push({ id: job.id, ok: false, error: `선점 실패: ${claimError.message}` })
+      continue
+    }
+    if (!claimed || claimed.length === 0) {
+      results.push({ id: job.id, ok: true, skipped: "claimed_by_another_run" })
+      continue
+    }
+    if (job.operation === "upsert") {
+      await admin.from("knowledge_base").update({ dify_sync_status: "processing" }).eq("id", job.knowledge_base_id)
+    }
     try {
       const snapshot = job.snapshot || {}
       const existingDifyId = snapshot.dify_document_id as string | undefined
@@ -69,11 +110,7 @@ Deno.serve(async (req) => {
       } else {
         const { data: row } = await admin.from("knowledge_base").select("*").eq("id", job.knowledge_base_id).maybeSingle()
         if (!row || row.deleted_at) throw new Error("Knowledge document is missing or deleted.")
-        if (row.dify_document_id) {
-          await fetch(`${difyUrl}/v1/datasets/${datasetId}/documents/${row.dify_document_id}`, {
-            method: "DELETE", headers: { Authorization: `Bearer ${difyKey}` },
-          })
-        }
+        const previousDifyId = row.dify_document_id as string | null
         const bytes = await downloadFromGCS(row.storage_object_path || row.file_url)
         const form = new FormData()
         form.append("data", JSON.stringify({
@@ -92,25 +129,41 @@ Deno.serve(async (req) => {
         })
         if (!response.ok) throw new Error(`Dify upload HTTP ${response.status}: ${await response.text()}`)
         const payload = await response.json()
+        const newDifyId = (payload.document?.id as string | undefined) || null
         await admin.from("knowledge_base").update({
-          dify_document_id: payload.document?.id || null,
+          dify_document_id: newDifyId,
           dify_sync_status: "synced",
           dify_synced_at: new Date().toISOString(),
         }).eq("id", row.id)
+        // 새 문서가 올라간 뒤에만 예전 Dify 문서를 지운다 (업로드 실패 시 기존 문서가 사라지지 않게).
+        // 지우기에 실패해도 동기화 자체는 성공으로 두고 기록만 남긴다.
+        if (previousDifyId && previousDifyId !== newDifyId) {
+          const removed = await fetch(`${difyUrl}/v1/datasets/${datasetId}/documents/${previousDifyId}`, {
+            method: "DELETE", headers: { Authorization: `Bearer ${difyKey}` },
+          }).catch((e) => e as Error)
+          if (removed instanceof Error || (!removed.ok && removed.status !== 404)) {
+            const detail = removed instanceof Error ? removed.message : `HTTP ${removed.status}`
+            console.warn("[dify-sync-webhook] 예전 Dify 문서 삭제 실패", previousDifyId, detail)
+            results.push({ id: job.id, warning: `예전 Dify 문서(${previousDifyId}) 삭제 실패: ${detail}` })
+          }
+        }
       }
       await admin.from("knowledge_sync_jobs").update({ status: "done", processed_at: new Date().toISOString(), last_error: null }).eq("id", job.id)
       results.push({ id: job.id, ok: true, operation: job.operation })
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause)
       const attempts = job.attempts + 1
-      const failed = attempts >= 5
+      const failed = attempts >= MAX_ATTEMPTS
       await admin.from("knowledge_sync_jobs").update({
         status: failed ? "failed" : "pending",
         attempts,
         available_at: new Date(Date.now() + Math.min(3600, 2 ** attempts * 60) * 1000).toISOString(),
         last_error: message,
       }).eq("id", job.id)
-      if (job.operation === "upsert") await admin.from("knowledge_base").update({ dify_sync_status: "failed" }).eq("id", job.knowledge_base_id)
+      // 재시도가 남아 있으면 "대기", 더 시도하지 않을 때만 "실패"로 표시한다
+      if (job.operation === "upsert") {
+        await admin.from("knowledge_base").update({ dify_sync_status: failed ? "failed" : "pending" }).eq("id", job.knowledge_base_id)
+      }
       results.push({ id: job.id, ok: false, error: message })
     }
   }
