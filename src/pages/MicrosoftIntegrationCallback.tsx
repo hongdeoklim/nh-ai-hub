@@ -49,7 +49,7 @@ export function MicrosoftIntegrationCallback() {
 
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2 px-6">
-      <p className="text-center text-sm font-medium text-stone-700 dark:text-stone-300">
+      <p className="text-center text-sm font-medium text-fg-muted">
         {message}
       </p>
     </div>

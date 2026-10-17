@@ -68,7 +68,7 @@ export function ChatMediaLightbox({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/25"
+            className="rounded-full bg-surface/15 px-3 py-1.5 text-sm font-semibold text-white hover:bg-surface-2/25"
           >
             닫기
           </button>
@@ -112,7 +112,7 @@ export function ChatMediaLightbox({
                 onClick={() => onIndexChange(i)}
                 className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition ${
                   i === safeIndex
-                    ? 'border-white ring-2 ring-white/40'
+                    ? 'border-border ring-2 ring-white/40'
                     : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
               >

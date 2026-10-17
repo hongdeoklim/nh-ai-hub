@@ -1,3 +1,4 @@
+import { useHwpxSave } from '../../hooks/useHwpxSave'
 import type { NotebookPinnedNote } from '../../types/notebook'
 
 type NotebookNotesPanelProps = {
@@ -24,17 +25,18 @@ export function NotebookNotesPanel({
   onMergeReport,
   embedded = false,
 }: NotebookNotesPanelProps) {
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
   const inner = (
     <>
       {!embedded ? (
-        <header className="shrink-0 border-b border-stone-200/90 px-4 py-3 dark:border-stone-800">
-          <h2 className="text-lg font-bold text-stone-900 dark:text-stone-50">
+        <header className="shrink-0 border-b border-border/90 px-4 py-3">
+          <h2 className="text-lg font-bold text-fg">
             지식 노트
           </h2>
-          <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
+          <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-fg-subtle">
             Saved Notes
           </p>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+          <p className="mt-1 text-sm text-fg-muted">
             채팅 답변에서 고정한 메모입니다.
           </p>
         </header>
@@ -42,7 +44,7 @@ export function NotebookNotesPanel({
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
         {notes.length === 0 ? (
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-fg-subtle">
             AI 답변의 「📌 노트에 추가」로 카드를 쌓아 보세요.
           </p>
         ) : null}
@@ -50,48 +52,59 @@ export function NotebookNotesPanel({
         {notes.map((note) => (
           <article
             key={note.id}
-            className="rounded-xl border border-stone-200/90 bg-[#FAF9F6] p-3 shadow-sm dark:border-stone-700 dark:bg-stone-950"
+            className="rounded-xl border border-border/90 bg-bg p-3 shadow-sm"
           >
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+              <h3 className="text-sm font-bold text-fg">
                 {note.title}
               </h3>
               <button
                 type="button"
                 onClick={() => onRemoveNote(note.id)}
-                className="shrink-0 rounded px-1.5 py-0.5 text-xs text-stone-500 hover:bg-stone-200/80 dark:hover:bg-stone-800"
+                className="shrink-0 rounded px-1.5 py-0.5 text-xs text-fg-subtle hover:bg-surface-3/80"
                 aria-label="노트 삭제"
               >
                 ✕
               </button>
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-stone-700 dark:text-stone-300">
+            <p className="mt-2 text-sm leading-relaxed text-fg-muted">
               {clip(note.body, 280)}
             </p>
-            <p className="mt-2 text-xs text-stone-400">
+            <p className="mt-2 text-xs text-fg-subtle">
               {new Date(note.pinnedAt).toLocaleString('ko-KR')}
             </p>
           </article>
         ))}
 
         {mergePreview ? (
-          <article className="rounded-xl border border-orange-200 bg-orange-50/50 p-3 dark:border-orange-900 dark:bg-orange-950/30">
-            <h3 className="text-sm font-bold text-orange-950 dark:text-orange-100">
-              통합 보고서
-            </h3>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-stone-800 dark:text-stone-200">
+          <article className="rounded-xl border border-brand/30 bg-brand-soft/50 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-brand">
+                통합 보고서
+              </h3>
+              <button
+                type="button"
+                disabled={hwpxSaving}
+                onClick={() => void saveHwpx(mergePreview, { title: '지식 노트 통합 보고서' })}
+                className="shrink-0 rounded-lg border border-brand/30 bg-surface px-2.5 py-1 text-xs font-semibold text-brand hover:bg-brand-soft disabled:opacity-50"
+                title="한글 문서(.hwpx)로 저장"
+              >
+                {hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}
+              </button>
+            </div>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg">
               {mergePreview}
             </p>
           </article>
         ) : null}
       </div>
 
-      <footer className="shrink-0 border-t border-stone-200/90 p-3 dark:border-stone-800">
+      <footer className="shrink-0 border-t border-border/90 p-3">
         <button
           type="button"
           disabled={notes.length === 0 || merging}
           onClick={onMergeReport}
-          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm font-semibold text-stone-800 hover:bg-stone-50 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800"
+          className="w-full rounded-xl border border-border-strong bg-surface px-3 py-2.5 text-sm font-semibold text-fg hover:bg-surface-2 disabled:opacity-50"
         >
           {merging
             ? '통합 요약 생성 중…'
@@ -108,7 +121,7 @@ export function NotebookNotesPanel({
   }
 
   return (
-    <section className="flex h-full min-h-0 flex-col border-l border-stone-200/90 bg-white/80 dark:border-stone-800 dark:bg-stone-900/60">
+    <section className="flex h-full min-h-0 flex-col border-l border-border/90 bg-surface/80">
       {inner}
     </section>
   )

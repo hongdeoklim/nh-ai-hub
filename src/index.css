@@ -1,84 +1,184 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ------------------------------------------------------------------
+ * Pretendard — 로컬 self-host (오프라인 PWA 대응, CDN 의존 제거)
+ * ------------------------------------------------------------------ */
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Bold.woff2') format('woff2');
+}
+
+/* ------------------------------------------------------------------
+ * NH-AX-HUB 디자인 토큰 (2026-10 개편)
+ *
+ *  · 원시값은 :root / .dark 의 --nh-* 변수에만 둔다.
+ *  · Tailwind 유틸은 아래 @theme inline 매핑을 통해 생성된다.
+ *      bg-bg · bg-surface · bg-surface-2 · bg-surface-3
+ *      text-fg · text-fg-muted · text-fg-subtle
+ *      border-border · border-border-strong
+ *      bg-brand · bg-brand-strong · bg-brand-soft · text-brand · text-brand-fg
+ *      bg-accent · bg-accent-soft · text-accent
+ *      text-success / warning / danger (+ -soft 배경)
+ *      ring-focus · shadow-card · shadow-pop
+ *  · 컴포넌트에서 hex 를 직접 쓰지 말고 위 유틸을 사용한다.
+ * ------------------------------------------------------------------ */
+:root {
+  /* 브랜드 — NH 그린 / NH 블루 */
+  --nh-brand: #0f8a4f;
+  --nh-brand-strong: #0b6e3f;
+  --nh-brand-soft: #e7f5ec;
+  --nh-brand-fg: #ffffff;
+  --nh-accent: #1757b8;
+  --nh-accent-soft: #e8f0fb;
+
+  /* 표면 */
+  --nh-bg: #f5f7f4;
+  --nh-surface: #ffffff;
+  --nh-surface-2: #eef1ed;
+  --nh-surface-3: #e3e8e2;
+  --nh-border: #e1e6e0;
+  --nh-border-strong: #c7cec6;
+
+  /* 텍스트 */
+  --nh-fg: #15201a;
+  --nh-fg-muted: #56655d;
+  --nh-fg-subtle: #87948c;
+
+  /* 상태 */
+  --nh-success: #15803d;
+  --nh-success-soft: #dcfce7;
+  --nh-warning: #b45309;
+  --nh-warning-soft: #fef3c7;
+  --nh-danger: #b91c1c;
+  --nh-danger-soft: #fee2e2;
+  --nh-focus: #1757b8;
+
+  /* 그림자 */
+  --nh-shadow-card: 0 1px 2px rgba(21, 32, 26, 0.06), 0 1px 1px rgba(21, 32, 26, 0.04);
+  --nh-shadow-pop: 0 12px 32px -8px rgba(21, 32, 26, 0.22), 0 2px 8px rgba(21, 32, 26, 0.08);
+
+  /* 레거시 변수 — 마크다운/코드 블록 등 기존 CSS 가 참조. 신규 코드에서 사용 금지 */
+  --text: var(--nh-fg-muted);
+  --text-h: var(--nh-fg);
+  --bg: var(--nh-surface);
+  --border: var(--nh-border);
+  --code-bg: var(--nh-surface-2);
+  --accent: var(--nh-brand);
+  --accent-bg: var(--nh-brand-soft);
+  --accent-border: var(--nh-brand);
+  --shadow: var(--nh-shadow-pop);
+
+  --sans:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --heading: var(--sans);
+  --mono: ui-monospace, Consolas, monospace;
+
+  /* 루트 16px — Tailwind 기본 스케일 (2026-10 전환 완료, docs/REDESIGN-2026-10.md §3.1) */
+  font: 16px/1.5 var(--sans);
+  letter-spacing: 0;
+  color-scheme: light;
+  color: var(--text);
+  background: var(--nh-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root.dark {
+  color-scheme: dark;
+
+  --nh-brand: #34c77b;
+  --nh-brand-strong: #22a864;
+  --nh-brand-soft: rgba(52, 199, 123, 0.14);
+  --nh-brand-fg: #06281a;
+  --nh-accent: #6ba3f2;
+  --nh-accent-soft: rgba(107, 163, 242, 0.16);
+
+  --nh-bg: #0e1211;
+  --nh-surface: #161b19;
+  --nh-surface-2: #1e2522;
+  --nh-surface-3: #273029;
+  --nh-border: #2a332e;
+  --nh-border-strong: #3b463f;
+
+  --nh-fg: #ecf1ee;
+  --nh-fg-muted: #a5b0aa;
+  --nh-fg-subtle: #74807a;
+
+  --nh-success: #4ade80;
+  --nh-success-soft: rgba(74, 222, 128, 0.14);
+  --nh-warning: #fbbf24;
+  --nh-warning-soft: rgba(251, 191, 36, 0.14);
+  --nh-danger: #f87171;
+  --nh-danger-soft: rgba(248, 113, 113, 0.14);
+  --nh-focus: #6ba3f2;
+
+  --nh-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --nh-shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
 @theme {
   --font-sans:
     'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
 }
 
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@theme inline {
+  --color-brand: var(--nh-brand);
+  --color-brand-strong: var(--nh-brand-strong);
+  --color-brand-soft: var(--nh-brand-soft);
+  --color-brand-fg: var(--nh-brand-fg);
+  --color-accent: var(--nh-accent);
+  --color-accent-soft: var(--nh-accent-soft);
 
-  --sans:
-    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  --heading:
-    'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --color-bg: var(--nh-bg);
+  --color-surface: var(--nh-surface);
+  --color-surface-2: var(--nh-surface-2);
+  --color-surface-3: var(--nh-surface-3);
+  --color-border: var(--nh-border);
+  --color-border-strong: var(--nh-border-strong);
 
-  font: 27px/145% var(--sans);
-  letter-spacing: 0.27px;
-  color-scheme: light;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --color-fg: var(--nh-fg);
+  --color-fg-muted: var(--nh-fg-muted);
+  --color-fg-subtle: var(--nh-fg-subtle);
 
-  @media (max-width: 1024px) {
-    font-size: 24px;
-  }
-}
+  --color-success: var(--nh-success);
+  --color-success-soft: var(--nh-success-soft);
+  --color-warning: var(--nh-warning);
+  --color-warning-soft: var(--nh-warning-soft);
+  --color-danger: var(--nh-danger);
+  --color-danger-soft: var(--nh-danger-soft);
+  --color-focus: var(--nh-focus);
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  :root:not(.light) #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-:root.dark {
-  --text: #9ca3af;
-  --text-h: #f3f4f6;
-  --bg: #16171d;
-  --border: #2e303a;
-  --code-bg: #1f2028;
-  --accent: #c084fc;
-  --accent-bg: rgba(192, 132, 252, 0.15);
-  --accent-border: rgba(192, 132, 252, 0.5);
-  --social-bg: rgba(47, 48, 58, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-}
-
-:root.dark #social .button-icon {
-  filter: invert(1) brightness(2);
+  --shadow-card: var(--nh-shadow-card);
+  --shadow-pop: var(--nh-shadow-pop);
 }
 
 #root {
@@ -91,161 +191,6 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-}
-
-/* 사용자 포털 — :root(27px) rem·h1(84px) 상속 차단, 체감 60% 컴팩트 */
-.app-shell {
-  font-size: 16px;
-  line-height: 1.45;
-  letter-spacing: 0;
-}
-
-.app-shell h1,
-.app-shell h2,
-.app-shell h3 {
-  margin: 0;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
-  color: inherit;
-  font-weight: 600;
-}
-
-.app-shell h1 {
-  font-size: 20px;
-}
-
-.app-shell h2 {
-  font-size: 18px;
-}
-
-.app-shell h3 {
-  font-size: 16px;
-}
-
-.app-shell p,
-.app-shell li,
-.app-shell td,
-.app-shell th,
-.app-shell label,
-.app-shell button,
-.app-shell input,
-.app-shell select,
-.app-shell textarea {
-  font-size: 16px;
-  line-height: 1.45;
-}
-
-.app-shell code {
-  font-size: 14px;
-  line-height: 1.35;
-  padding: 2px 6px;
-}
-
-.app-shell .text-xs {
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.app-shell .text-sm {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.app-shell .text-base {
-  font-size: 16px;
-  line-height: 1.45;
-}
-
-.app-shell .text-lg {
-  font-size: 18px;
-  line-height: 1.35;
-}
-
-.app-shell .text-xl {
-  font-size: 20px;
-  line-height: 1.35;
-}
-
-.app-shell .text-2xl {
-  font-size: 24px;
-  line-height: 1.25;
-}
-
-.app-shell .text-3xl {
-  font-size: 29px;
-  line-height: 1.25;
-}
-
-.app-shell .text-4xl {
-  font-size: 32px;
-  line-height: 1.2;
-}
-
-.app-shell .text-5xl {
-  font-size: 36px;
-  line-height: 1.2;
-}
-
-.app-shell .text-\[10px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[11px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[11\.5px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[12px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[13px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[13\.5px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[14px\] {
-  font-size: 8px;
-}
-
-.app-shell .text-\[15px\] {
-  font-size: 9px;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 15px (바로가기 등) */
-.app-shell .text-actual-15 {
-  font-size: 15px;
-  line-height: 1.45;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 10px (첨부 메뉴 보조 문구 등) */
-.app-shell .text-actual-10 {
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 11px (답변 더보기 메뉴 등) */
-.app-shell .text-actual-11 {
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 13px (Gemini 사고 과정 토글 등) */
-.app-shell .text-actual-13 {
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-/* app-shell Tailwind text 보정 우회 — 실제 14px (Gemini 채팅 본문) */
-.app-shell .text-actual-14 {
-  font-size: 14px;
-  line-height: 1.6;
 }
 
 .app-shell .chat-markdown-gemini th,
@@ -269,8 +214,8 @@
 }
 
 .app-shell .chat-markdown-gemini img {
-  max-height: 18rem;
-  border-radius: 0.75rem;
+  max-height: 320px;
+  border-radius: 12px;
 }
 
 @keyframes gemini-avatar-ring-spin {
@@ -552,29 +497,6 @@
 }
 
 
-/* 사이드바 스레드 ⋮ 메뉴 — body 포털(:root 27px rem 상속 차단) */
-.private-chat-thread-menu,
-.private-chat-thread-menu button {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.composer-meta-rail {
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.composer-meta-rail p,
-.composer-meta-rail span {
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.chat-composer-popup-menu {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
 .app-shell .org-prompt-gallery-card h3.org-prompt-gallery-card-title {
   font-size: 13px;
   line-height: 1.25;
@@ -607,361 +529,113 @@
   }
 }
 
-.app-shell .text-\[17px\] {
-  font-size: 10px;
-}
-
-.app-shell .text-\[18px\] {
-  font-size: 11px;
-}
-
-.app-shell .text-\[20px\] {
-  font-size: 12px;
-}
-
-@media (min-width: 640px) {
-  .app-shell .sm\:text-\[12px\] {
-    font-size: 8px;
-  }
-}
-
-@media (min-width: 768px) {
-  .app-shell .md\:text-\[13\.5px\] {
-    font-size: 8px;
-  }
-
-  .app-shell .md\:text-\[20px\] {
-    font-size: 12px;
-  }
-}
-
-.app-shell .h-1\.5 {
-  height: 6px;
-}
-
-.app-shell .w-1\.5 {
-  width: 6px;
-}
-
-.app-shell .h-3 {
-  height: 12px;
-}
-
-.app-shell .w-3 {
-  width: 12px;
-}
-
-.app-shell .h-4 {
-  height: 16px;
-}
-
-.app-shell .w-4 {
-  width: 16px;
-}
-
-.app-shell .h-5 {
-  height: 20px;
-}
-
-.app-shell .w-5 {
-  width: 20px;
-}
-
-.app-shell .h-6 {
-  height: 24px;
-}
-
-.app-shell .w-6 {
-  width: 24px;
-}
-
-.app-shell .h-8 {
-  height: 32px;
-}
-
-.app-shell .w-8 {
-  width: 32px;
-}
-
-.app-shell .h-10 {
-  height: 40px;
-}
-
-.app-shell .w-10 {
-  width: 40px;
-}
-
-.app-shell .h-11 {
-  height: 44px;
-}
-
-.app-shell .w-11 {
-  width: 44px;
-}
-
-.app-shell .h-12 {
-  height: 48px;
-}
-
-.app-shell .w-12 {
-  width: 48px;
-}
-
-.app-shell .size-4 {
-  width: 16px;
-  height: 16px;
-}
-
-.app-shell .size-5 {
-  width: 20px;
-  height: 20px;
-}
-
-.app-shell .size-6 {
-  width: 24px;
-  height: 24px;
-}
-
-/* Admin Control Tower — 전역 :root(27px)·h1(84px) 상속 차단 */
-.admin-shell,
-.admin-sidebar {
-  font-size: 15px;
-  line-height: 1.45;
-  letter-spacing: 0;
-  color: rgb(15 23 42);
-}
-
-.dark .admin-shell,
-.dark .admin-sidebar,
-.admin-shell.dark,
-.admin-sidebar.dark {
-  color: rgb(241 245 249);
-}
-
-.admin-shell h1,
-.admin-sidebar h1 {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0;
-  line-height: 1.35;
-  color: inherit;
-}
-
-.admin-shell h2,
-.admin-sidebar h2 {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0;
-  margin: 0;
-  line-height: 1.35;
-  color: inherit;
-}
-
-.admin-shell h3,
-.admin-sidebar h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0;
-  line-height: 1.35;
-  color: inherit;
-}
-
-.admin-shell p,
-.admin-sidebar p,
-.admin-shell li,
-.admin-sidebar li,
-.admin-shell td,
-.admin-sidebar td,
-.admin-shell th,
-.admin-sidebar th,
-.admin-shell label,
-.admin-sidebar label,
-.admin-shell button,
-.admin-sidebar button,
-.admin-shell input,
-.admin-sidebar input,
-.admin-shell select,
-.admin-sidebar select,
-.admin-shell textarea,
-.admin-sidebar textarea {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.admin-shell code,
-.admin-sidebar code {
-  font-size: 12px;
-  padding: 1px 4px;
-  line-height: 1.35;
-  background: rgb(248 250 252);
-}
-
-.dark .admin-shell code,
-.dark .admin-sidebar code {
-  background: rgb(15 23 42);
-}
-
-/* :root(27px) rem 기준 Tailwind text-* → admin px 보정 */
-.admin-shell .text-xs,
-.admin-sidebar .text-xs {
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.admin-shell .text-sm,
-.admin-sidebar .text-sm {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.admin-shell .text-base,
-.admin-sidebar .text-base {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.admin-shell .text-lg,
-.admin-sidebar .text-lg {
-  font-size: 15px;
-  line-height: 1.35;
-}
-
-.admin-shell .text-xl,
-.admin-sidebar .text-xl {
-  font-size: 15px;
-  line-height: 1.35;
-}
-
-.admin-shell .text-2xl,
-.admin-sidebar .text-2xl {
-  font-size: 17px;
-  line-height: 1.25;
-}
-
-.admin-shell .text-3xl,
-.admin-sidebar .text-3xl {
-  font-size: 18px;
-  line-height: 1.25;
-}
-
-.admin-shell .text-4xl,
-.admin-sidebar .text-4xl {
-  font-size: 20px;
-  line-height: 1.2;
-}
-
-.admin-shell .text-5xl,
-.admin-sidebar .text-5xl {
-  font-size: 21px;
-  line-height: 1.2;
-}
-
-@media (prefers-color-scheme: dark) {
-  .admin-shell,
-  .admin-sidebar {
-    color: rgb(241 245 249);
-  }
-}
-
-/* 노트북 워크스페이스 — app-shell 축소 없이 text-lg / text-sm 체감 유지 */
-.notebook-workspace {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.notebook-workspace .text-lg {
-  font-size: 18px;
-  line-height: 1.35;
-}
-
-.notebook-workspace .text-sm {
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.notebook-workspace .text-xs {
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 body {
   margin: 0;
   font-family: var(--sans);
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
+/* ------------------------------------------------------------------
+ * 기본 타이포그래피 — @layer base: Tailwind 유틸리티(text-*, font-*)가 항상 우선한다.
+ *   루트 16px 전환으로 .app-shell / .admin-shell 의 역보정 규칙은 모두 제거됨.
+ * ------------------------------------------------------------------ */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--heading);
+    font-weight: 600;
+    color: inherit;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
 
-h1 {
-  font-size: 84px;
-  letter-spacing: -2.52px;
-  margin: 48px 0;
-  @media (max-width: 1024px) {
-    font-size: 54px;
-    margin: 30px 0;
+  code {
+    font-family: var(--mono);
+    border-radius: 4px;
+    background: var(--code-bg);
+  }
+
+  /* 사용자 포털 */
+  .app-shell {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .app-shell h1 {
+    font-size: 1.25rem;
+  }
+  .app-shell h2 {
+    font-size: 1.125rem;
+  }
+  .app-shell h3 {
+    font-size: 1rem;
+  }
+  .app-shell code {
+    font-size: 0.875rem;
+    line-height: 1.35;
+    padding: 2px 6px;
+  }
+
+  /* 관리자 콘솔 — 컴팩트 기본값 (유틸리티로 덮어쓰기 가능) */
+  .admin-shell,
+  .admin-sidebar {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: rgb(15 23 42);
+  }
+  .dark .admin-shell,
+  .dark .admin-sidebar {
+    color: rgb(241 245 249);
+  }
+  .admin-shell h1,
+  .admin-sidebar h1 {
+    font-size: 0.9375rem;
+  }
+  .admin-shell h2,
+  .admin-shell h3,
+  .admin-sidebar h2,
+  .admin-sidebar h3 {
+    font-size: 0.875rem;
+  }
+  .admin-shell code,
+  .admin-sidebar code {
+    font-size: 0.75rem;
+    padding: 1px 4px;
+    line-height: 1.35;
+    background: rgb(248 250 252);
+  }
+  .dark .admin-shell code,
+  .dark .admin-sidebar code {
+    background: rgb(15 23 42);
+  }
+
+  /* 노트북 워크스페이스 */
+  .notebook-workspace {
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  /* 키보드 포커스 기본 표시 — 개별 focus-visible:ring 유틸이 없는 요소에도 보이도록 (WCAG 2.4.7) */
+  :where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--nh-focus);
+    outline-offset: 2px;
   }
 }
-h2 {
-  font-size: 36px;
-  line-height: 118%;
-  letter-spacing: -0.36px;
-  margin: 0 0 12px;
-  @media (max-width: 1024px) {
-    font-size: 30px;
+
+
+
+/* 앱 전역 기본 서체 */
+body,
+#root {
+  font-family: var(--sans);
+}
+
+/* 모션 축소 환경 — 장식 애니메이션 전역 억제 */
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .admin-shell * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 22.5px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
-
-/* Google OGB 스타일 — 데스크톱 헤더 좌측 정렬 버퍼 */
-.desktop-ogb-buffer {
-  display: none;
-  flex: 0 0 auto;
-  flex-shrink: 0;
-  width: 0;
-  min-width: 0;
-}
-
-@media (min-width: 768px) {
-  .desktop-ogb-buffer {
-    display: block;
-    width: 3rem;
-    min-width: 3rem;
-    max-width: 3rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .desktop-ogb-buffer {
-    width: 4.5rem;
-    min-width: 4.5rem;
-    max-width: 4.5rem;
-  }
-}
-
-
-/* Force Pretendard globally */
-body, .app-shell, .admin-shell, .admin-sidebar, #root {
-  font-family: 'Pretendard', sans-serif !important;
 }

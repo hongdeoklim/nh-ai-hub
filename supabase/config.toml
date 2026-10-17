@@ -135,6 +135,11 @@ verify_jwt = false
 [functions.plugin-higgsfield-bridge]
 verify_jwt = false
 
+# 날씨 브릿지도 같은 내부 시크릿으로 검증한다. 기본값(verify_jwt=true)이면 ai-chat 의
+# 서버 호출(사용자 JWT 없음)이 게이트웨이에서 401 로 막힌다.
+[functions.plugin-weather-bridge]
+verify_jwt = false
+
 # send-push: OPTIONS preflight arrives without a JWT; the POST handler verifies
 # the caller's user JWT and admin role internally.
 [functions.send-push]

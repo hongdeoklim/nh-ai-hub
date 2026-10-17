@@ -22,14 +22,14 @@ export function AiDesignerGallery({
     <div className="ai-designer-gallery px-3 py-4 md:px-6 md:py-6">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[10px]! font-semibold uppercase tracking-[0.14em] text-orange-800 dark:text-orange-300 md:text-[11px]!">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand md:text-[11px]">
             NH-AX-HUB Designer
           </p>
-          <h2 className="mt-1 text-[17px]! font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-[20px]!">
+          <h2 className="mt-1 text-[17px] font-bold tracking-tight text-fg md:text-[20px]">
             {activeId === 'chat' ? '디자인 템플릿' : categories.find((c) => c.id === activeId)?.label}
           </h2>
         </div>
-        <p className="hidden text-[11px]! text-stone-500 sm:block dark:text-stone-400 md:text-[12px]!">
+        <p className="hidden text-[11px] text-fg-subtle sm:block md:text-[12px]">
           카드를 클릭하면 프롬프트가 입력됩니다
         </p>
       </div>
@@ -42,8 +42,8 @@ export function AiDesignerGallery({
             onClick={() => onSelect(category.id)}
             className={`group overflow-hidden rounded-2xl border text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-stone-900/5 ${
               activeId === category.id
-                ? 'border-orange-500 ring-2 ring-orange-500/30'
-                : 'border-stone-200/90 hover:border-stone-300 dark:border-stone-700 dark:hover:border-stone-600'
+                ? 'border-orange-500 ring-2 ring-focus/40'
+                : 'border-border/90 hover:border-border-strong'
             }`}
           >
             <div
@@ -53,14 +53,14 @@ export function AiDesignerGallery({
                 {category.emoji}
               </span>
               <div>
-                <p className="text-[13px]! font-bold text-stone-900 md:text-[14px]!">{category.label}</p>
+                <p className="text-[13px] font-bold text-fg md:text-[14px]">{category.label}</p>
                 {category.aspectRatio ? (
-                  <p className="mt-0.5 text-[10px]! font-medium text-stone-700/80 md:text-[11px]!">{category.aspectRatio}</p>
+                  <p className="mt-0.5 text-[10px] font-medium text-stone-700/80 md:text-[11px]">{category.aspectRatio}</p>
                 ) : null}
               </div>
             </div>
-            <div className="bg-white px-3 py-2.5 dark:bg-stone-900">
-              <p className="line-clamp-2 text-[11px]! leading-snug text-stone-500 dark:text-stone-400 md:text-[12px]!">
+            <div className="bg-surface px-3 py-2.5">
+              <p className="line-clamp-2 text-[11px] leading-snug text-fg-subtle md:text-[12px]">
                 {category.promptSeed}
               </p>
             </div>

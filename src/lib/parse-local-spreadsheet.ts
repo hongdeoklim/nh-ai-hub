@@ -67,7 +67,6 @@ export async function parseLocalSpreadsheetFile(
 ): Promise<{ workbook: LocalSpreadsheetWorkbook; preview: GoogleSpreadsheetReadResult }> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
 
-  let workbook: XLSX.WorkBook
   if (ext === 'csv') {
     const text = await file.text()
     const matrix = parseCsvText(text)
@@ -84,7 +83,7 @@ export async function parseLocalSpreadsheetFile(
   }
 
   const buffer = await file.arrayBuffer()
-  workbook = XLSX.read(buffer, { type: 'array', cellDates: true })
+  const workbook: XLSX.WorkBook = XLSX.read(buffer, { type: 'array', cellDates: true })
 
   const sheetNames = workbook.SheetNames.length
     ? workbook.SheetNames

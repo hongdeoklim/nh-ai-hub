@@ -67,18 +67,27 @@ export function AiSheetsLandingLayout({
 
   const isLocalFile = linkedSpreadsheet?.source === 'local'
 
-  useEffect(() => {
-    if (linkedSpreadsheet?.source !== 'local') {
+  // 연결된 시트가 바뀌면 로컬 통합 문서·범위·미리보기를 맞춘다 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  const linkSync = {
+    source: linkedSpreadsheet?.source,
+    spreadsheetId: linkedSpreadsheet?.spreadsheetId,
+    range: linkedSpreadsheet?.range,
+  }
+  const [prevLinkSync, setPrevLinkSync] = useState(linkSync)
+  if (
+    prevLinkSync.source !== linkSync.source ||
+    prevLinkSync.spreadsheetId !== linkSync.spreadsheetId ||
+    prevLinkSync.range !== linkSync.range
+  ) {
+    setPrevLinkSync(linkSync)
+    if (linkSync.source !== 'local') {
       setLocalWorkbook(null)
       setActiveSheetName('')
     }
-  }, [linkedSpreadsheet?.source, linkedSpreadsheet?.spreadsheetId])
-
-  useEffect(() => {
-    if (linkedSpreadsheet?.range) {
-      setCanvasRange(linkedSpreadsheet.range)
-    }
-  }, [linkedSpreadsheet?.range])
+    if (linkSync.range) setCanvasRange(linkSync.range)
+    // 구글 시트 연결이 끊기면 이전 미리보기를 비운다
+    if (!linkSync.spreadsheetId && linkSync.source !== 'local') setPreview(null)
+  }
 
   useEffect(() => {
     onPreviewChange?.(preview)
@@ -95,11 +104,9 @@ export function AiSheetsLandingLayout({
   )
 
   useEffect(() => {
-    if (!linkedSpreadsheet?.spreadsheetId || isLocalFile) {
-      if (!isLocalFile) setPreview(null)
-      return
-    }
-    loadGooglePreview(linkedSpreadsheet.spreadsheetId, canvasRange)
+    const spreadsheetId = linkedSpreadsheet?.spreadsheetId
+    if (!spreadsheetId || isLocalFile) return
+    queueMicrotask(() => loadGooglePreview(spreadsheetId, canvasRange))
   }, [
     linkedSpreadsheet?.spreadsheetId,
     canvasRange,
@@ -194,7 +201,7 @@ export function AiSheetsLandingLayout({
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row lg:gap-0">
       <div className="shrink-0 overflow-y-auto lg:w-[min(100%,400px)] lg:max-w-[36%] lg:border-r lg:border-[#edebe9] dark:lg:border-stone-800">
-        <div className="px-4 pb-8 pt-4 text-[13px]! md:px-5 md:pt-3">
+        <div className="px-4 pb-8 pt-4 text-[13px] md:px-5 md:pt-3">
           <AiSheetsHero compact />
 
           <AiSheetsPromptSection
@@ -212,7 +219,7 @@ export function AiSheetsLandingLayout({
           />
 
           <div>
-            <p className="mb-2 text-[13px]! font-medium text-stone-500 dark:text-stone-400">
+            <p className="mb-2 text-[13px] font-medium text-fg-subtle">
               빠른 시작
             </p>
             <div className="flex flex-wrap gap-2">
@@ -221,7 +228,7 @@ export function AiSheetsLandingLayout({
                   key={starter.id}
                   type="button"
                   onClick={() => onStarterClick(starter.prompt)}
-                  className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[13px]! font-medium text-stone-700 transition hover:border-orange-300 hover:bg-orange-50/80 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-orange-700 dark:hover:bg-orange-950/30"
+                  className="rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] font-medium text-fg-muted transition hover:border-orange-300 hover:bg-brand-soft/80"
                 >
                   {starter.label}
                 </button>

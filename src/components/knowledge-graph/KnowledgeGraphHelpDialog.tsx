@@ -16,14 +16,14 @@ function HelpSection({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-xl border border-stone-200/90 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-950/60">
-      <h3 className="flex items-start gap-2 text-sm font-semibold text-stone-900 dark:text-stone-50">
+    <section className="rounded-xl border border-border/90 bg-surface p-4 shadow-sm">
+      <h3 className="flex items-start gap-2 text-sm font-semibold text-fg">
         <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs dark:bg-violet-950/60" aria-hidden>
           {emoji}
         </span>
         <span className="pt-0.5 leading-snug">{title}</span>
       </h3>
-      <div className="mt-3 space-y-2 text-[13px] leading-relaxed text-stone-700 dark:text-stone-300">
+      <div className="mt-3 space-y-2 text-[13px] leading-relaxed text-fg-muted">
         {children}
       </div>
     </section>
@@ -42,11 +42,11 @@ function BulletList({ items }: { items: string[] }) {
 
 function TermRow({ term, desc }: { term: string; desc: string }) {
   return (
-    <div className="flex gap-2 rounded-lg border border-stone-100 bg-stone-50 px-3 py-2 dark:border-stone-700/60 dark:bg-stone-900/50">
+    <div className="flex gap-2 rounded-lg border border-border bg-bg px-3 py-2">
       <span className="shrink-0 rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-800 dark:bg-violet-950/60 dark:text-violet-200">
         {term}
       </span>
-      <span className="text-[13px] text-stone-700 dark:text-stone-300">{desc}</span>
+      <span className="text-[13px] text-fg-muted">{desc}</span>
     </div>
   )
 }
@@ -85,11 +85,11 @@ export function KnowledgeGraphHelpDialog({ open, onClose }: KnowledgeGraphHelpDi
         role="dialog"
         aria-modal="true"
         aria-labelledby="kg-help-title"
-        className="flex max-h-[min(92dvh,46rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-stone-200 bg-[#FAF9F6] shadow-2xl dark:border-stone-700 dark:bg-stone-900 sm:max-h-[min(88dvh,42rem)]"
+        className="flex max-h-[min(92dvh,46rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-bg shadow-2xl sm:max-h-[min(88dvh,42rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="shrink-0 border-b border-stone-200 bg-gradient-to-r from-violet-50 to-indigo-50 px-4 py-4 dark:border-stone-700 dark:from-violet-950/40 dark:to-stone-900 sm:px-5">
+        <div className="shrink-0 border-b border-border bg-gradient-to-r from-violet-50 to-indigo-50 px-4 py-4 dark:from-violet-950/40 sm:px-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
@@ -97,18 +97,18 @@ export function KnowledgeGraphHelpDialog({ open, onClose }: KnowledgeGraphHelpDi
               </p>
               <h2
                 id="kg-help-title"
-                className="mt-1 text-base font-semibold leading-snug text-stone-900 dark:text-stone-50 sm:text-lg"
+                className="mt-1 text-base font-semibold leading-snug text-fg sm:text-lg"
               >
                 사내 지식 그래프 (Knowledge Graph)
               </h2>
-              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+              <p className="mt-1 text-sm text-fg-muted">
                 문서 간 관계를 시각적으로 탐색하는 옵시디언 스타일의 지식 네트워크
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="shrink-0 rounded-lg p-2 text-stone-500 hover:bg-stone-200/80 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+              className="shrink-0 rounded-lg p-2 text-fg-subtle hover:bg-surface-3/80 hover:text-fg"
               aria-label="도움말 닫기"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -125,9 +125,9 @@ export function KnowledgeGraphHelpDialog({ open, onClose }: KnowledgeGraphHelpDi
         >
           <div className="space-y-4">
             {/* 개요 */}
-            <p className="rounded-xl border border-violet-200/80 bg-violet-50/70 px-4 py-3 text-[13px] leading-relaxed text-stone-800 dark:border-violet-900/50 dark:bg-violet-950/30 dark:text-stone-200">
+            <p className="rounded-xl border border-violet-200/80 bg-violet-50/70 px-4 py-3 text-[13px] leading-relaxed text-fg dark:border-violet-900/50 dark:bg-violet-950/30">
               사내 자료실에 등록된 문서들이 서로 어떻게 연결되어 있는지{' '}
-              <strong className="font-semibold text-stone-900 dark:text-stone-50">
+              <strong className="font-semibold text-fg">
                 2D 네트워크 그래프
               </strong>
               로 시각화합니다. 문서를 클릭하면 연결 관계(백링크·아웃링크)와 본문 미리보기를 확인할 수 있습니다.
@@ -179,11 +179,11 @@ export function KnowledgeGraphHelpDialog({ open, onClose }: KnowledgeGraphHelpDi
             </HelpSection>
 
             {/* 팁 */}
-            <section className="rounded-xl border border-amber-300/80 bg-amber-50/80 p-4 dark:border-amber-800/60 dark:bg-amber-950/25">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-950 dark:text-amber-100">
+            <section className="rounded-xl border border-warning/30 bg-warning-soft/80 p-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-warning">
                 <span aria-hidden>💡</span> 활용 팁
               </h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px] leading-relaxed text-amber-950/90 marker:text-amber-700 dark:text-amber-100/90 dark:marker:text-amber-400">
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px] leading-relaxed text-amber-950/90 marker:text-amber-700 dark:marker:text-amber-400">
                 <li>
                   <strong className="font-semibold">허브 노드 탐색:</strong> 엣지가 많이 연결된 크고 밝은 노드가 사내에서 가장 많이 참조되는 핵심 문서입니다. 먼저 이 노드를 확인해 보세요.
                 </li>
@@ -199,7 +199,7 @@ export function KnowledgeGraphHelpDialog({ open, onClose }: KnowledgeGraphHelpDi
         </div>
 
         {/* 푸터 */}
-        <div className="shrink-0 border-t border-stone-200 px-4 py-3 dark:border-stone-700 sm:px-5">
+        <div className="shrink-0 border-t border-border px-4 py-3 sm:px-5">
           <button
             type="button"
             onClick={onClose}

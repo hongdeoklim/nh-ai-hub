@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
+import { isHealthCheckRequest, verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
 
 /**
  * Higgsfield AI 이미지 생성 브릿지 — `nh.plugin.higgsfield` 플러그인의 endpoint_url.
@@ -86,6 +86,11 @@ Deno.serve(async (req) => {
       ok: false,
       error: "Higgsfield API 키가 연결되지 않았습니다. /marketplace 에서 KEY_ID:KEY_SECRET 형식으로 먼저 연결하세요.",
     }, 400)
+  }
+
+  if (isHealthCheckRequest(body)) {
+    // 연결 테스트: 과금되는 이미지 생성은 하지 않고 키 형식만 확인한다
+    return json({ ok: true, health_check: true, note: "API 키 형식을 확인했습니다. 실제 인증은 첫 이미지 생성 때 확인됩니다." })
   }
 
   const prompt = body.arguments?.prompt?.trim()

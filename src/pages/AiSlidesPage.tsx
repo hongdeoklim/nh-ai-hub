@@ -37,11 +37,13 @@ import {
   fetchActiveTextAiModels,
   filterActiveTextModels,
 } from '../services/ai/ai-models-client'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconPresentation } from '../components/common/icons'
 
 type ExploreTab = AiSlidesTabId
 
 const selectCls =
-  'rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px]! text-stone-800 outline-none focus:ring-2 focus:ring-orange-500/30 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100'
+  'rounded-lg border border-border-strong/90 bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none focus:ring-2 focus:ring-focus/40'
 
 function TemplateCard({
   template,
@@ -59,10 +61,10 @@ function TemplateCard({
   return (
     <article className="break-inside-avoid">
       <div
-        className={`group flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-stone-900 ${
+        className={`group flex flex-col overflow-hidden rounded-2xl border bg-surface shadow-sm transition ${
           selected
-            ? 'border-orange-500 ring-2 ring-orange-500/30 dark:border-orange-500'
-            : 'border-stone-200/90 hover:border-stone-300 hover:shadow-md dark:border-stone-700 dark:hover:border-stone-600'
+            ? 'border-orange-500 ring-2 ring-focus/40'
+            : 'border-border/90 hover:border-border-strong hover:shadow-md'
         }`}
       >
         <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -83,12 +85,12 @@ function TemplateCard({
             )}
           </button>
           {template.isNew ? (
-            <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px]! font-bold uppercase tracking-wide text-white shadow-sm">
+            <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               New
             </span>
           ) : null}
           <div className="pointer-events-none absolute inset-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/55 via-black/10 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-            <span className="pointer-events-none min-w-0 truncate text-[12px]! font-semibold text-white drop-shadow">
+            <span className="pointer-events-none min-w-0 truncate text-[12px] font-semibold text-white drop-shadow">
               {template.titleKo}
             </span>
             <button
@@ -98,18 +100,18 @@ function TemplateCard({
                 event.stopPropagation()
                 onApply()
               }}
-              className="pointer-events-auto h-8 shrink-0 rounded-lg bg-orange-600 px-3 text-[13px]! font-semibold text-white shadow-sm transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="pointer-events-auto h-8 shrink-0 rounded-lg bg-brand px-3 text-[13px] font-semibold text-brand-fg shadow-sm transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-50"
             >
               Apply
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <p className="min-w-0 truncate text-[12px]! font-medium text-stone-700 dark:text-stone-300">
+          <p className="min-w-0 truncate text-[12px] font-medium text-fg-muted">
             {template.titleKo}
           </p>
           {selected ? (
-            <span className="shrink-0 text-[10px]! font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400">
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-brand">
               선택됨
             </span>
           ) : null}
@@ -169,10 +171,13 @@ export function AiSlidesPage() {
     }
   }, [])
 
-  useEffect(() => {
-    const preferred = profile?.preferred_ai?.trim()
-    if (preferred) setSelectedModel(preferred)
-  }, [profile?.preferred_ai])
+  // 프로필의 선호 모델이 정해지거나 바뀌면 선택값에 반영한다 (렌더 중 조정)
+  const profilePreferredAi = profile?.preferred_ai?.trim() ?? ''
+  const [syncedPreferredAi, setSyncedPreferredAi] = useState('')
+  if (profilePreferredAi !== syncedPreferredAi) {
+    setSyncedPreferredAi(profilePreferredAi)
+    if (profilePreferredAi) setSelectedModel(profilePreferredAi)
+  }
 
   const versionRows = useMemo(
     () => buildModelSelectOptions(registryModels, selectedModel),
@@ -345,19 +350,15 @@ export function AiSlidesPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#FAF9F6] dark:bg-stone-950">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-[13px]! md:px-8 md:pt-[4vh]">
-        <header className="mb-5">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200/80 bg-orange-50/80 px-3 py-1 text-[10px]! font-semibold uppercase tracking-[0.12em] text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300 md:text-[11px]!">
-            <span aria-hidden>✦</span> NH-AX-HUB · AI Slides
-          </span>
-          <h1 className="mt-3 text-[22px]! font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-[28px]!">
-            발표 자료, 템플릿으로 시작하세요
-          </h1>
-          <p className="mt-1.5 text-[13px]! text-stone-500 dark:text-stone-400 md:text-[15px]!">
-            원하는 템플릿에서 <span className="font-semibold text-stone-700 dark:text-stone-300">Apply</span>를 누른 뒤 주제를 입력하면 AI가 슬라이드를 만들어 드립니다.
-          </p>
-        </header>
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-bg">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-[13px] md:px-8 md:pt-[4vh]">
+        <PageHeader
+          className="mb-5"
+          eyebrow="AI 앱 · AI Slides"
+          title="발표 자료, 템플릿으로 시작하세요"
+          description="원하는 템플릿에서 Apply를 누른 뒤 주제를 입력하면 AI가 슬라이드를 만들어 드립니다."
+          icon={IconPresentation}
+        />
 
         <AiSlidesPromptSection
           ref={promptSectionRef}
@@ -389,7 +390,7 @@ export function AiSlidesPage() {
 
         <AiSlidesTabPanel tabId="explore" activeTab={exploreTab}>
           <div className="explore-content">
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px]!">
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px]">
               <select
                 value={styleFilter}
                 onChange={(e) =>
@@ -431,12 +432,12 @@ export function AiSlidesPage() {
                 <option value="popularity">Sort by: Popularity</option>
                 <option value="newest">Sort by: Newest</option>
               </select>
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-300/90 bg-white px-2.5 py-1.5 text-[13px]! text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-strong/90 bg-surface px-2.5 py-1.5 text-[13px] text-fg-muted">
                 <input
                   type="checkbox"
                   checked={koreanOnly}
                   onChange={(e) => setKoreanOnly(e.target.checked)}
-                  className="rounded border-stone-400"
+                  className="rounded border-border-strong"
                 />
                 My language only
               </label>
@@ -445,8 +446,8 @@ export function AiSlidesPage() {
             {renderTemplateWaterfall(filteredTemplates)}
 
             {filteredTemplates.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-stone-300 bg-white/60 px-6 py-12 text-center dark:border-stone-600 dark:bg-stone-900/40">
-                <p className="text-[13px]! text-stone-600 dark:text-stone-400">
+              <div className="rounded-2xl border border-dashed border-border-strong bg-surface/60 px-6 py-12 text-center">
+                <p className="text-[13px] text-fg-muted">
                   선택한 필터에 맞는 템플릿이 없습니다.
                 </p>
               </div>
@@ -459,7 +460,7 @@ export function AiSlidesPage() {
             {renderTemplateWaterfall(myTemplates)}
 
             {myTemplates.length === 0 ? (
-              <p className="mt-2 text-center text-[13px]! text-stone-500 dark:text-stone-400">
+              <p className="mt-2 text-center text-[13px] text-fg-subtle">
                 Add My Template 카드에서 썸네일을 업로드하면 My Templates에 표시됩니다.
               </p>
             ) : null}

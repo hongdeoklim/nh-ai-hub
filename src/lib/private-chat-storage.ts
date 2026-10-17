@@ -252,7 +252,7 @@ export function listPrivateChatThreads(limit = 30): PrivateChatThreadSummary[] {
     if (!isValidPrivateChatThreadId(threadId)) continue
 
     let title = '새 채팅'
-    let hasPersistableContent = false
+    let hasPersistableContent: boolean
     let sortKey = 0
 
     try {

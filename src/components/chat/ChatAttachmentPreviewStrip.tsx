@@ -48,8 +48,8 @@ export function ChatAttachmentPreviewStrip({
 
   const borderClass =
     variant === 'claude'
-      ? 'border-stone-300/80 dark:border-stone-600'
-      : 'border-white/30'
+      ? 'border-border-strong/80'
+      : 'border-border/30'
 
   return (
     <>
@@ -58,7 +58,7 @@ export function ChatAttachmentPreviewStrip({
         {items.map((item, idx) => (
           <div
             key={`${item.src}-${idx}`}
-            className={`group relative shrink-0 overflow-hidden rounded-xl border bg-stone-100/80 shadow-sm dark:bg-stone-900/60 ${borderClass} ${
+            className={`group relative shrink-0 overflow-hidden rounded-xl border bg-surface-2/80 shadow-sm ${borderClass} ${
               isComposer ? '' : 'justify-self-end'
             }`}
           >
@@ -75,7 +75,7 @@ export function ChatAttachmentPreviewStrip({
                 className="h-full w-full object-cover transition group-hover:brightness-95"
               />
               <span className="pointer-events-none absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/45 to-transparent p-1.5 opacity-0 transition group-hover:opacity-100">
-                <span className="rounded-md bg-black/50 px-2 py-0.5 text-[10px]! font-semibold text-white">
+                <span className="rounded-md bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white">
                   크게 보기
                 </span>
               </span>

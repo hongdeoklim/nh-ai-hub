@@ -30,15 +30,14 @@ function IconChevronDown(props: { className?: string }) {
 function costBadgeClass(costInfo: string): string {
   const level = costInfo.trim()
   if (level === '저렴' || level === '초저가') {
-    return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200'
+    return 'bg-success-soft text-success'
   }
   if (level === '높음' || level === '프리미엄') {
-    return 'bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200'
+    return 'bg-warning-soft text-warning'
   }
-  return 'bg-stone-200/90 text-stone-700 dark:bg-stone-700/80 dark:text-stone-200'
+  return 'bg-surface-3/90 text-fg-muted'
 }
 
-export { costBadgeClass as modelCostBadgeClass }
 
 export type ModelSelectRowProps = {
   selectedModel: string
@@ -82,11 +81,15 @@ export function ModelSelectRow({
     tooltipSource?.hint?.trim() ||
     '안내 준비 중'
 
+  // 닫히면 위치 앵커를 비운다 (렌더 중 조정 — 다시 열 때 이전 위치가 잠깐 보이지 않게)
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (!open) setMenuAnchor(null)
+  }
+
   useLayoutEffect(() => {
-    if (!open) {
-      setMenuAnchor(null)
-      return
-    }
+    if (!open) return
 
     function updatePosition() {
       const button = buttonRef.current
@@ -221,22 +224,22 @@ function ModelSelectDropdown({
         onClick={onOpenToggle}
         onMouseEnter={() => onHover(selectedModel)}
         onMouseLeave={() => onHover(null)}
-        className="inline-flex h-[28px] max-w-[min(48vw,13rem)] min-w-0 shrink items-center gap-1 rounded-full border-0 bg-stone-100/95 py-0 pl-2.5 pr-1.5 text-[12px]! font-medium leading-none text-stone-700 outline-none ring-orange-600/20 transition hover:bg-stone-200/90 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90"
+        className="inline-flex h-[28px] max-w-[min(48vw,13rem)] min-w-0 shrink items-center gap-1 rounded-full border-0 bg-surface-2/95 py-0 pl-2.5 pr-1.5 text-[12px] font-medium leading-none text-fg-muted outline-none ring-focus/40 transition hover:bg-surface-3/90 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span className="min-w-0 truncate">{selected?.label ?? '모델 선택'}</span>
         <span
-          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px]! font-semibold leading-none ${costBadgeClass(selectedCost)}`}
+          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${costBadgeClass(selectedCost)}`}
         >
           {selectedCost}
         </span>
         <IconChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-stone-500 transition dark:text-stone-400 ${open ? 'rotate-180' : ''}`}
+          className={`h-3.5 w-3.5 shrink-0 text-fg-subtle transition ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
       {tooltipText ? (
         <p
-          className={`pointer-events-none absolute bottom-full left-0 z-[60] mb-1.5 max-w-[min(18rem,70vw)] rounded-lg border border-stone-200/90 bg-white px-2.5 py-1.5 text-[11px]! leading-snug text-stone-600 shadow-md dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 ${
+          className={`pointer-events-none absolute bottom-full left-0 z-[60] mb-1.5 max-w-[min(18rem,70vw)] rounded-lg border border-border/90 bg-surface px-2.5 py-1.5 text-[11px] leading-snug text-fg-muted shadow-md ${
             open || hoveredId ? 'opacity-100' : 'opacity-0'
           } transition-opacity duration-150`}
           role="tooltip"
@@ -252,7 +255,7 @@ function ModelSelectDropdown({
               id={listboxId}
               role="listbox"
               aria-labelledby={modelVersionSelectId}
-              className="model-select-dropdown fixed z-[200] min-w-[min(100%,18rem)] w-max max-w-[min(22rem,calc(100vw-2rem))] -translate-y-[calc(100%+0.375rem)] overflow-y-auto overscroll-contain rounded-xl border border-stone-200/90 bg-white py-1 shadow-lg dark:border-stone-700 dark:bg-stone-900"
+              className="model-select-dropdown fixed z-[200] min-w-[min(100%,18rem)] w-max max-w-[min(22rem,calc(100vw-2rem))] -translate-y-[calc(100%+0.375rem)] overflow-y-auto overscroll-contain rounded-xl border border-border/90 bg-surface py-1 shadow-lg"
               style={{
                 top: menuAnchor.top,
                 left: menuAnchor.left,
@@ -279,24 +282,24 @@ function ModelSelectDropdown({
                       onClick={() => onSelect(option.id)}
                       className={`flex w-full flex-col gap-0.5 px-3 py-2 text-left transition ${
                         isSelected
-                          ? 'bg-orange-50/90 dark:bg-orange-950/30'
+                          ? 'bg-brand-soft/90'
                           : isHovered
-                            ? 'bg-stone-50 dark:bg-stone-800/80'
-                            : 'hover:bg-stone-50 dark:hover:bg-stone-800/80'
+                            ? 'bg-bg'
+                            : 'hover:bg-surface-2'
                       }`}
                     >
                       <span className="flex min-w-0 items-center justify-between gap-2">
-                        <span className="min-w-0 truncate text-[12.5px]! font-medium text-stone-800 dark:text-stone-100">
+                        <span className="min-w-0 truncate text-[12.5px] font-medium text-fg">
                           {option.label}
                         </span>
                         <span
-                          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px]! font-semibold leading-none ${costBadgeClass(cost)}`}
+                          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${costBadgeClass(cost)}`}
                         >
                           {cost}
                         </span>
                       </span>
                       {subtext ? (
-                        <span className="line-clamp-2 text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+                        <span className="line-clamp-2 text-[11px] leading-snug text-fg-subtle">
                           {subtext}
                         </span>
                       ) : null}

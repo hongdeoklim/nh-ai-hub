@@ -124,34 +124,34 @@ export function AiLab() {
     <div className="mx-auto max-w-[96rem] space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+          <h1 className="text-2xl font-bold tracking-tight text-fg">
             AI 실험실
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-fg-subtle">
             운영 채팅과 분리된 샌드박스 · 플러그인 · Tool Calling 디버그
           </p>
         </div>
         <button
           type="button"
           onClick={() => void loadActivePlugins()}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+          className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:bg-surface-2"
         >
           새로고침
         </button>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
             플러그인 현황
-            <span className="ml-2 font-normal normal-case text-slate-400">
+            <span className="ml-2 font-normal normal-case text-fg-subtle">
               ({activePlugins.filter(p => p.is_active).length}개 활성 / 전체 {activePlugins.length}개)
             </span>
           </p>
         </div>
         <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
           {activePlugins.length === 0 ? (
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <span className="rounded-full bg-surface-2 px-3 py-1 text-xs text-fg-muted">
               등록된 플러그인 없음
             </span>
           ) : (
@@ -160,8 +160,8 @@ export function AiLab() {
                 key={p.tool_function_name}
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
                   p.is_active
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
-                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                    ? 'bg-success-soft text-success'
+                    : 'bg-surface-2 text-fg-subtle'
                 }`}
               >
                 <span
@@ -177,13 +177,13 @@ export function AiLab() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-12">
-        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 xl:col-span-3">
-          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="space-y-4 rounded-2xl border border-border bg-surface p-5 shadow-sm xl:col-span-3">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
             모델
             <select
               value={preferredAi}
               onChange={(e) => setPreferredAi(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+              className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             >
               {MODEL_PRESETS.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -194,7 +194,7 @@ export function AiLab() {
           </label>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
               시스템 프롬프트 덮어쓰기
             </p>
             <div className="mt-2 flex gap-2">
@@ -203,8 +203,8 @@ export function AiLab() {
                 onClick={() => setLabMode('append')}
                 className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
                   labMode === 'append'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface-2 text-fg-muted'
                 }`}
               >
                 덧붙이기
@@ -214,8 +214,8 @@ export function AiLab() {
                 onClick={() => setLabMode('replace')}
                 className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
                   labMode === 'replace'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface-2 text-fg-muted'
                 }`}
               >
                 교체
@@ -223,24 +223,24 @@ export function AiLab() {
             </div>
           </div>
 
-          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
             시스템 프롬프트
             <textarea
               value={labSystem}
               onChange={(e) => setLabSystem(e.target.value)}
               rows={10}
-              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-xs leading-relaxed dark:border-slate-700 dark:bg-slate-950"
+              className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-xs leading-relaxed"
             />
           </label>
 
-          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
             테스트 메시지
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
               placeholder="예: 서울 날씨 알려줘 / USD 환율은?"
-              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+              className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             />
           </label>
 
@@ -248,12 +248,12 @@ export function AiLab() {
             type="button"
             disabled={busy || !prompt.trim() || !profile}
             onClick={() => void run()}
-            className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+            className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {busy ? '스트리밍 중…' : '실험 실행'}
           </button>
 
-          <p className="text-xs text-slate-400 dark:text-slate-500">
+          <p className="text-xs text-fg-subtle">
             활성 도구:{' '}
             {enabledToolNames.length > 0
               ? enabledToolNames.join(', ')
@@ -261,30 +261,30 @@ export function AiLab() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 xl:col-span-5">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm xl:col-span-5">
+          <h2 className="text-sm font-bold text-fg">
             모델 출력
           </h2>
-          <div className="mt-3 min-h-[420px] rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-4 text-sm leading-relaxed whitespace-pre-wrap text-slate-800 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100">
+          <div className="mt-3 min-h-[420px] rounded-xl border border-dashed border-border bg-bg/80 p-4 text-sm leading-relaxed whitespace-pre-wrap text-fg">
             {reply || '여기에 스트리밍 결과가 표시됩니다.'}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 xl:col-span-4">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm xl:col-span-4">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+            <h2 className="text-sm font-bold text-fg">
               Debug Log · Tool Calling
             </h2>
             <button
               type="button"
               disabled={toolTraces.length === 0}
               onClick={() => setToolTraces([])}
-              className="rounded-md px-2 py-1 text-[15px] font-semibold text-slate-500 hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800"
+              className="rounded-md px-2 py-1 text-[15px] font-semibold text-fg-subtle hover:bg-surface-2 disabled:opacity-40"
             >
               비우기
             </button>
           </div>
-          <pre className="mt-3 max-h-[420px] overflow-auto rounded-xl border border-slate-200 bg-slate-950 p-3 font-mono text-xs leading-relaxed text-emerald-300 dark:border-slate-700">
+          <pre className="mt-3 max-h-[420px] overflow-auto rounded-xl border border-border bg-slate-950 p-3 font-mono text-xs leading-relaxed text-emerald-300">
             {toolTraces.length > 0
               ? debugJson
               : '{\n  "info": "도구 호출 이벤트가 여기에 JSON 으로 쌓입니다."\n}'}

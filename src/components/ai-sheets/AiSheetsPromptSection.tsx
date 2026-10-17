@@ -62,15 +62,15 @@ export const AiSheetsPromptSection = forwardRef<
           <AiSheetsModeAccordion />
         </div>
 
-        <div className="search-input-wrapper input-wrapper w-full overflow-visible rounded-[16px] border border-gray-200 bg-white shadow-[0px_6px_30px_0px_rgba(0,0,0,0.08)] dark:border-[#e6e9eb40] dark:bg-[#333333]">
+        <div className="search-input-wrapper input-wrapper w-full overflow-visible rounded-[16px] border border-border bg-surface shadow-[0px_6px_30px_0px_rgba(0,0,0,0.08)] dark:border-[#e6e9eb40] dark:bg-[#333333]">
           <div className="sheets-template input relative cursor-text px-[12px] pb-[12px] pt-3">
             {linkedSpreadsheet ? (
               <div className="prompt-files mb-2">
-                <div className="inline-flex h-9 max-w-full items-center gap-2 rounded-[10px] border border-gray-200 bg-[#F9FAFB] py-1 pl-2 pr-1 dark:border-stone-600 dark:bg-stone-800/80">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-emerald-100 text-[11px]! font-bold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
+                <div className="inline-flex h-9 max-w-full items-center gap-2 rounded-[10px] border border-border bg-[#F9FAFB] py-1 pl-2 pr-1">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-success-soft text-[11px] font-bold text-success">
                     ▦
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-[13px]! font-medium text-[#0D0D0D] dark:text-stone-50">
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[#0D0D0D]">
                     {linkedSpreadsheet.source === 'local'
                       ? linkedSpreadsheet.fileName ?? linkedSpreadsheet.spreadsheetId
                       : `${linkedSpreadsheet.spreadsheetId.slice(0, 16)}…`}
@@ -82,7 +82,7 @@ export const AiSheetsPromptSection = forwardRef<
                       href={sheetViewUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px]! font-medium text-orange-800 hover:bg-orange-50 dark:text-orange-300 dark:hover:bg-orange-950/40"
+                      className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-brand hover:bg-brand-soft"
                       onClick={(e) => e.stopPropagation()}
                     >
                       열기
@@ -91,7 +91,7 @@ export const AiSheetsPromptSection = forwardRef<
                   <button
                     type="button"
                     onClick={onClearLinkedSpreadsheet}
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[#737373] transition hover:bg-gray-200/80 hover:text-[#0D0D0D] dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-100"
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[#737373] transition hover:bg-surface-3/80 hover:text-[#0D0D0D]"
                     aria-label="연결된 시트 제거"
                   >
                     ×

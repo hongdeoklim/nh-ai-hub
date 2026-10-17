@@ -28,7 +28,7 @@ export function SlideTemplateScreenshot({
         className={`absolute inset-3 flex flex-col overflow-hidden rounded-md border shadow-md ${
           isDark
             ? 'border-stone-600/80 bg-stone-900/95'
-            : 'border-white/80 bg-white/95'
+            : 'border-border/80 bg-surface/95'
         }`}
       >
         <div
@@ -37,20 +37,20 @@ export function SlideTemplateScreenshot({
         />
         <div className="flex min-h-0 flex-1 flex-col p-3">
           <p
-            className={`text-[13px]! font-bold leading-tight ${
-              isDark ? 'text-stone-100' : 'text-stone-900'
+            className={`text-[13px] font-bold leading-tight ${
+              isDark ? 'text-stone-100' : 'text-fg'
             }`}
           >
             {titleKo}
           </p>
           <p
-            className={`mt-0.5 text-[13px]! uppercase tracking-wide ${
-              isDark ? 'text-stone-400' : 'text-stone-500'
+            className={`mt-0.5 text-[13px] uppercase tracking-wide ${
+              isDark ? 'text-fg-subtle' : 'text-fg-subtle'
             }`}
           >
             {style} · slide 01
           </p>
-          <ul className={`mt-2 space-y-1 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+          <ul className={`mt-2 space-y-1 ${isDark ? 'text-fg-subtle' : 'text-fg-muted'}`}>
             {[0.85, 0.7, 0.55].map((w) => (
               <li key={w} className="flex items-center gap-1.5">
                 <span
@@ -58,7 +58,7 @@ export function SlideTemplateScreenshot({
                   style={{ backgroundColor: preview.accent }}
                 />
                 <span
-                  className={`h-1.5 rounded ${isDark ? 'bg-stone-600' : 'bg-stone-200'}`}
+                  className={`h-1.5 rounded ${isDark ? 'bg-stone-600' : 'bg-surface-3'}`}
                   style={{ width: `${w * 100}%` }}
                 />
               </li>
@@ -66,19 +66,19 @@ export function SlideTemplateScreenshot({
           </ul>
           <div className="mt-auto flex gap-2 pt-2">
             <div
-              className={`h-10 flex-1 rounded ${isDark ? 'bg-stone-800' : 'bg-stone-100'}`}
+              className={`h-10 flex-1 rounded ${isDark ? 'bg-stone-800' : 'bg-surface-2'}`}
               style={{
                 background: `linear-gradient(135deg, ${preview.accent}22, ${preview.accent}08)`,
               }}
             />
             <div
-              className={`h-10 w-1/3 rounded ${isDark ? 'bg-stone-800' : 'bg-stone-100'}`}
+              className={`h-10 w-1/3 rounded ${isDark ? 'bg-stone-800' : 'bg-surface-2'}`}
             />
           </div>
         </div>
       </div>
       {template.isNew ? (
-        <span className="absolute right-2 top-2 rounded-full bg-orange-600 px-2 py-0.5 text-[13px]! font-semibold text-white shadow">
+        <span className="absolute right-2 top-2 rounded-full bg-brand px-2 py-0.5 text-[13px] font-semibold text-brand-fg shadow">
           NEW
         </span>
       ) : null}

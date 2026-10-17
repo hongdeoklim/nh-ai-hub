@@ -62,8 +62,8 @@ export function KnowledgeGraphPage() {
         setLoading(true); setError(null)
         const result = await fetchKnowledgeGraphData(5000)
         if (!cancelled) setData(result)
-      } catch (e: any) {
-        if (!cancelled) setError(e.message)
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -76,11 +76,8 @@ export function KnowledgeGraphPage() {
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current)
     const trimmed = searchInput.trim()
-    if (!trimmed) {
-      setSearchQuery('')
-      setSearchData(null)
-      return
-    }
+    // 빈 입력의 검색 결과 초기화는 onChange 에서 바로 처리한다
+    if (!trimmed) return
     searchTimer.current = setTimeout(async () => {
       setSearchLoading(true)
       try {
@@ -251,7 +248,11 @@ export function KnowledgeGraphPage() {
               </svg>
             )}
             <input type="search" placeholder="제목·내용·부서 검색..."
-              value={searchInput} onChange={e => setSearchInput(e.target.value)}
+              value={searchInput} onChange={e => {
+                const next = e.target.value
+                setSearchInput(next)
+                if (!next.trim()) { setSearchQuery(''); setSearchData(null) }
+              }}
               className="w-full rounded-xl border border-white/8 bg-black/30 pl-10 pr-3 py-2 text-[12px] md:text-[13px] text-slate-200 placeholder:text-slate-500 outline-none focus:border-fuchsia-500/50 focus:ring-1 focus:ring-fuchsia-500/20 transition"
             />
           </div>

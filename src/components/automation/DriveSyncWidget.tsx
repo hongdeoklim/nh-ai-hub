@@ -32,7 +32,7 @@ export function DriveSyncWidget({
   }, [])
 
   useEffect(() => {
-    void refreshLastUpdated()
+    queueMicrotask(() => void refreshLastUpdated())
   }, [refreshLastUpdated])
 
   const handleSync = useCallback(async () => {
@@ -79,23 +79,23 @@ export function DriveSyncWidget({
 
   return (
     <div
-      className={`flex max-w-sm flex-col justify-between rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-stone-700 dark:bg-stone-900 ${className}`}
+      className={`flex max-w-sm flex-col justify-between rounded-2xl border border-border bg-surface p-6 shadow-sm ${className}`}
     >
       <div>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-stone-50">
+          <h3 className="text-lg font-bold text-fg">
             구글 드라이브 사내 자료실 동기화
           </h3>
-          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px]! font-semibold uppercase tracking-wide text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200">
+          <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
             관리자 전용
           </span>
         </div>
-        <p className="mb-2 text-sm text-gray-500 dark:text-stone-400">
+        <p className="mb-2 text-sm text-fg-subtle">
           공유 폴더의 연수 일정·사내 규정을 AI 지식 DB에 반영합니다. 한 번
-          동기화하면 <strong className="font-semibold text-stone-700 dark:text-stone-200">전체 임직원 채팅</strong>
+          동기화하면 <strong className="font-semibold text-fg-muted">전체 임직원 채팅</strong>
           에서 RAG 검색으로 활용됩니다.
         </p>
-        <p className="mb-4 text-xs text-stone-500 dark:text-stone-400">
+        <p className="mb-4 text-xs text-fg-subtle">
           {lastUpdatedLoading ? (
             '최근 업데이트 확인 중…'
           ) : lastUpdatedAt ? (
@@ -103,7 +103,7 @@ export function DriveSyncWidget({
               최근 지식 업데이트:{' '}
               <time
                 dateTime={lastUpdatedAt.toISOString()}
-                className="font-medium text-stone-700 dark:text-stone-200"
+                className="font-medium text-fg-muted"
               >
                 {formatCompanyRagLastUpdatedLabel(lastUpdatedAt)}
               </time>
@@ -137,14 +137,14 @@ export function DriveSyncWidget({
           disabled={isSyncing}
           className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
             isSyncing
-              ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-stone-800 dark:text-stone-500'
-              : 'bg-emerald-600 text-white shadow-sm shadow-emerald-100 hover:bg-emerald-700 dark:shadow-none'
+              ? 'cursor-not-allowed bg-surface-2 text-fg-subtle'
+              : 'bg-brand text-brand-fg shadow-sm shadow-emerald-100 hover:bg-brand-strong dark:shadow-none'
           }`}
         >
           {isSyncing ? (
             <>
               <svg
-                className="h-4 w-4 animate-spin text-gray-400"
+                className="h-4 w-4 animate-spin text-fg-subtle"
                 fill="none"
                 viewBox="0 0 24 24"
                 aria-hidden="true"

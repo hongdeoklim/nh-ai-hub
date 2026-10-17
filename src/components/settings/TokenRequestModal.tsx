@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { submitTokenAllocationRequest } from '../../services/token-allocation-requests'
+import { toast } from 'sonner'
 
 type TokenRequestModalProps = {
   open: boolean
@@ -46,7 +47,7 @@ export function TokenRequestModal({
 
   async function submit() {
     if (!userId) {
-      window.alert('로그인이 필요합니다.')
+      toast.error('로그인이 필요합니다.')
       return
     }
     setSending(true)
@@ -56,10 +57,10 @@ export function TokenRequestModal({
         message: text.trim(),
       })
       if (!result.ok) {
-        window.alert(result.message)
+        toast.error(result.message)
         return
       }
-      window.alert('요청이 접수되었습니다. 관리자가 순차적으로 처리합니다.')
+      toast.success('요청이 접수되었습니다. 관리자가 순차적으로 처리합니다.')
       onClose()
     } finally {
       setSending(false)
@@ -78,23 +79,23 @@ export function TokenRequestModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="token-req-title"
-        className="max-h-[min(88dvh,32rem)] w-full max-w-md overflow-hidden rounded-2xl border border-stone-200 bg-[#FAF9F6] shadow-2xl dark:border-stone-700 dark:bg-stone-900"
+        className="max-h-[min(88dvh,32rem)] w-full max-w-md overflow-hidden rounded-2xl border border-border bg-bg shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-stone-200 px-4 py-3 dark:border-stone-700">
+        <div className="border-b border-border px-4 py-3">
           <h2
             id="token-req-title"
-            className="text-base font-semibold text-stone-900 dark:text-stone-50"
+            className="text-base font-semibold text-fg"
           >
             토큰 추가 요청
           </h2>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+          <p className="mt-1 text-sm text-fg-muted">
             토큰이 부족할 때 관리자에게 추가 한도를 요청합니다. 승인되면 알림 없이 한도에
             반영됩니다.
           </p>
         </div>
         <div className="space-y-2 px-4 py-3">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
+          <label className="block text-sm font-medium text-fg-muted">
             요청 사유
           </label>
           <textarea
@@ -102,15 +103,15 @@ export function TokenRequestModal({
             disabled={sending}
             onChange={(e) => setText(e.target.value)}
             rows={6}
-            className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-orange-700/25 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+            className="w-full rounded-xl border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
           />
         </div>
-        <div className="flex justify-end gap-2 border-t border-stone-200 px-4 py-3 dark:border-stone-700">
+        <div className="flex justify-end gap-2 border-t border-border px-4 py-3">
           <button
             type="button"
             disabled={sending}
             onClick={() => onClose()}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2"
           >
             취소
           </button>
@@ -118,7 +119,7 @@ export function TokenRequestModal({
             type="button"
             disabled={sending}
             onClick={() => void submit()}
-            className="rounded-lg bg-orange-800 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-50"
           >
             {sending ? '전송 중…' : '요청하기'}
           </button>

@@ -14,7 +14,7 @@ export function PushComposer() {
   const [result, setResult] = useState<{ tone: 'ok' | 'warn' | 'error'; text: string } | null>(null)
 
   const inputCls =
-    'mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-indigo-900/30'
+    'mt-1 w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none focus:border-accent focus:ring-2 focus:ring-focus/40'
 
   async function handleSend() {
     if (!title.trim() || !body.trim()) {
@@ -64,30 +64,30 @@ export function PushComposer() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">푸시 알림 보내기</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <h1 className="text-2xl font-bold tracking-tight text-fg">푸시 알림 보내기</h1>
+        <p className="mt-1 text-sm text-fg-subtle">
           대상 사용자 전원에게 인앱 알림(종 아이콘)을 보내고, 그중 푸시를 켠 기기에는 FCM 웹 푸시도 함께 발송합니다.
         </p>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+      <div className="space-y-4 rounded-2xl border border-border bg-surface p-6 shadow-sm">
+        <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
           제목
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} className={inputCls} placeholder="예: 정기 점검 안내" />
         </label>
 
-        <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+        <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
           내용
           <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} maxLength={300} className={inputCls} placeholder="알림 본문을 입력하세요." />
         </label>
 
-        <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
-          클릭 시 이동 경로 <span className="font-normal normal-case text-slate-400">(선택, 예: /knowledge-hub)</span>
+        <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
+          클릭 시 이동 경로 <span className="font-normal normal-case text-fg-subtle">(선택, 예: /knowledge-hub)</span>
           <input value={url} onChange={(e) => setUrl(e.target.value)} className={inputCls} placeholder="/" />
         </label>
 
         <div>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">대상</p>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">대상</p>
           <div className="flex flex-wrap gap-2">
             {([['all', '전체'], ['department', '부서'], ['user', '특정 사용자']] as const).map(([mode, label]) => (
               <button
@@ -96,8 +96,8 @@ export function PushComposer() {
                 onClick={() => setTargetMode(mode)}
                 className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
                   targetMode === mode
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface-2 text-fg-muted hover:bg-surface-3'
                 }`}
               >
                 {label}
@@ -118,10 +118,10 @@ export function PushComposer() {
           <p
             className={`rounded-lg px-3 py-2 text-sm ${
               result.tone === 'ok'
-                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+                ? 'bg-success-soft text-success'
                 : result.tone === 'warn'
-                  ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
-                  : 'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200'
+                  ? 'bg-warning-soft text-warning'
+                  : 'bg-danger-soft text-danger'
             }`}
           >
             {result.text}
@@ -132,7 +132,7 @@ export function PushComposer() {
           type="button"
           disabled={sending}
           onClick={() => void handleSend()}
-          className="w-full rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white hover:bg-accent disabled:opacity-50"
         >
           {sending ? '발송 중…' : '푸시 발송'}
         </button>

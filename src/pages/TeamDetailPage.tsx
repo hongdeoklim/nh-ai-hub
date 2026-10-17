@@ -19,6 +19,8 @@ import {
   inviteTeamMemberByEmail,
 } from '../services/teams'
 import type { TeamConversationRow, TeamRow } from '../services/teams'
+import { EmptyState } from '../components/common/EmptyState'
+import { IconChat } from '../components/common/icons'
 
 export function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>()
@@ -130,47 +132,47 @@ export function TeamDetailPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
-      <nav className="text-xs text-stone-600 dark:text-stone-400">
-        <Link to="/teams" className="underline hover:text-stone-900 dark:hover:text-stone-200">
+      <nav className="text-xs text-fg-muted">
+        <Link to="/teams" className="underline hover:text-fg">
           팀 목록
         </Link>
         <span className="mx-1">/</span>
-        <span className="text-stone-900 dark:text-stone-100">상세</span>
+        <span className="text-fg">상세</span>
       </nav>
 
       {loadError ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+        <div className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning">
           {loadError}
         </div>
       ) : null}
 
       {team ? (
         <div className="flex items-center gap-3.5">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-[18px]! font-bold text-white shadow-sm">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-[18px] font-bold text-white shadow-sm">
             {team.name.trim().charAt(0).toUpperCase() || '팀'}
           </span>
           <div className="min-w-0">
-            <h1 className="truncate text-[20px]! md:text-[24px]! font-bold tracking-tight text-stone-900 dark:text-stone-50">
+            <h1 className="truncate text-[20px] md:text-[24px] font-bold tracking-tight text-fg">
               {team.name}
             </h1>
-            <p className="mt-0.5 text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">
+            <p className="mt-0.5 text-[13px] md:text-[14px] text-fg-muted">
               팀 멤버를 초대하고, 공유 채팅방을 만들 수 있습니다.
             </p>
           </div>
         </div>
       ) : (
         !loadError && (
-          <p className="text-sm text-stone-500">팀 정보를 불러오는 중…</p>
+          <p className="text-sm text-fg-subtle">팀 정보를 불러오는 중…</p>
         )
       )}
 
-      <section className="rounded-2xl border border-stone-200 bg-white px-4 py-4 dark:border-stone-700 dark:bg-stone-900">
-        <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+      <section className="rounded-2xl border border-border bg-surface px-4 py-4">
+        <h2 className="text-sm font-semibold text-fg">
           멤버 초대 (이메일)
         </h2>
-        <p className="mt-2 text-[13px]! text-stone-600 dark:text-stone-400">
+        <p className="mt-2 text-[13px] text-fg-muted">
           이미 가입되어 사용자 프로필(
-          <code className="text-[12px]!">public.users</code>) 에 있는 이메일만 초대할 수
+          <code className="text-[12px]">public.users</code>) 에 있는 이메일만 초대할 수
           있습니다.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -180,13 +182,13 @@ export function TeamDetailPage() {
             disabled={inviting || !teamId}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="min-w-0 flex-1 rounded-xl border border-stone-300 bg-[#FAF9F6] px-3 py-2 text-sm outline-none ring-orange-700/25 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+            className="min-w-0 flex-1 rounded-xl border border-border-strong bg-bg px-3 py-2 text-sm outline-none ring-focus/40 focus:ring-2"
           />
           <button
             type="button"
             disabled={inviting || email.trim().length < 4}
             onClick={() => void handleInvite()}
-            className="rounded-xl bg-stone-800 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-900 disabled:opacity-50 dark:bg-stone-700"
+            className="rounded-xl bg-stone-800 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-900 disabled:opacity-50"
           >
             {inviting ? '추가 중…' : '초대'}
           </button>
@@ -194,35 +196,37 @@ export function TeamDetailPage() {
       </section>
 
       <section className="flex items-center justify-between gap-4">
-        <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+        <h2 className="text-sm font-semibold text-fg">
           공유 채팅
         </h2>
         <button
           type="button"
           disabled={!teamId || !profile}
           onClick={() => openModal()}
-          className="rounded-full bg-orange-800 px-4 py-2 text-[13px]! font-semibold text-white hover:bg-orange-900 disabled:opacity-50 dark:bg-orange-900"
+          className="rounded-full bg-brand px-4 py-2 text-[13px] font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-50"
         >
           새 공유 채팅
         </button>
       </section>
 
       {conversations.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-stone-300 px-4 py-6 text-center text-sm text-stone-500 dark:border-stone-600">
-          아직 채팅이 없습니다. 위 버튼으로 방을 만들고 동료를 선택하세요.
-        </p>
+        <EmptyState
+          icon={IconChat}
+          title="아직 채팅이 없습니다"
+          description="위 버튼으로 방을 만들고 동료를 선택하세요."
+        />
       ) : (
-        <ul className="divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white dark:divide-stone-700 dark:border-stone-700 dark:bg-stone-900">
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
           {conversations.map((c) => (
             <li key={c.id}>
               <Link
-                className="block px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-800"
+                className="block px-4 py-3 hover:bg-surface-2"
                 to={`/teams/${teamId}/chat/${c.id}`}
               >
-                <span className="font-medium text-stone-900 dark:text-stone-100">
+                <span className="font-medium text-fg">
                   {c.title}
                 </span>
-                <span className="mt-1 block text-xs text-stone-500">
+                <span className="mt-1 block text-xs text-fg-subtle">
                   업데이트 {new Date(c.updated_at).toLocaleString('ko-KR')}
                 </span>
               </Link>
@@ -240,26 +244,26 @@ export function TeamDetailPage() {
           <div
             role="dialog"
             aria-modal="true"
-            className="max-h-[min(88dvh,28rem)] w-full max-w-md overflow-auto rounded-2xl border border-stone-200 bg-[#FAF9F6] shadow-2xl dark:border-stone-700 dark:bg-stone-900"
+            className="max-h-[min(88dvh,28rem)] w-full max-w-md overflow-auto rounded-2xl border border-border bg-bg shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-stone-200 px-4 py-3 dark:border-stone-700">
-              <p className="text-base font-semibold text-stone-900 dark:text-stone-50">
+            <div className="border-b border-border px-4 py-3">
+              <p className="text-base font-semibold text-fg">
                 새 공유 채팅
               </p>
-              <p className="mt-1 text-[12px]! text-stone-600 dark:text-stone-400">
+              <p className="mt-1 text-[12px] text-fg-muted">
                 참가자로 선택한 사람만 메시지를 주고받을 수 있습니다. 팀 채팅 화면에 들어오면 해당
                 팀의 다른 멤버는 스스로 참가할 수 있습니다(MVP 정책).
               </p>
             </div>
             <div className="space-y-3 px-4 py-3">
-              <label className="block text-[12px]! font-medium text-stone-700 dark:text-stone-300">
+              <label className="block text-[12px] font-medium text-fg-muted">
                 방 제목
               </label>
               <input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+                className="w-full rounded-lg border border-border-strong px-3 py-2 text-sm"
               />
               <ParticipantPicker
                 teamId={teamId}
@@ -272,7 +276,7 @@ export function TeamDetailPage() {
                   type="button"
                   disabled={creating}
                   onClick={() => setModalOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
+                  className="rounded-lg px-3 py-2 text-sm text-fg-muted hover:bg-surface-2"
                 >
                   취소
                 </button>
@@ -280,7 +284,7 @@ export function TeamDetailPage() {
                   type="button"
                   disabled={creating || selectedIds.length === 0}
                   onClick={() => void handleCreateConversation()}
-                  className="rounded-lg bg-orange-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-orange-900"
+                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50"
                 >
                   {creating ? '생성 중…' : '만들기'}
                 </button>
@@ -339,17 +343,17 @@ function ParticipantPicker({
     }
   }, [teamId, pickVersion, setSelected])
 
-  if (loading) return <p className="text-sm text-stone-500">멤버 목록 로드…</p>
+  if (loading) return <p className="text-sm text-fg-subtle">멤버 목록 로드…</p>
 
   return (
     <fieldset className="space-y-2">
-      <legend className="text-[12px]! font-medium text-stone-700 dark:text-stone-300">
+      <legend className="text-[12px] font-medium text-fg-muted">
         참가자 선택
       </legend>
       {rows.map((r) => (
         <label
           key={r.user_id}
-          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 hover:bg-white/70 dark:hover:bg-stone-800"
+          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 hover:bg-surface-2/70"
         >
           <input
             type="checkbox"
@@ -361,7 +365,7 @@ function ParticipantPicker({
               }))
             }
           />
-          <span className="text-sm text-stone-800 dark:text-stone-200">
+          <span className="text-sm text-fg">
             {r.email}
           </span>
         </label>

@@ -113,7 +113,6 @@ function evalExpression(
 
   if (!/^[\d+\-*/().\s]+$/.test(replaced)) return '#ERROR!'
   try {
-    // eslint-disable-next-line no-new-func
     const result = Function(`"use strict"; return (${replaced});`)()
     if (typeof result === 'number' && Number.isFinite(result)) {
       return String(Math.round(result * 1e9) / 1e9)

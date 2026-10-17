@@ -27,7 +27,7 @@ export function GeminiSparkleIcon({
         />
       ) : null}
       <div
-        className={`relative flex items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_1px_2px_rgba(60,64,67,0.12)] ring-1 ring-[#e3e3e3] dark:bg-stone-900 dark:shadow-none dark:ring-stone-700 ${
+        className={`relative flex items-center justify-center overflow-hidden rounded-full bg-surface shadow-[0_1px_2px_rgba(60,64,67,0.12)] ring-1 ring-[#e3e3e3] dark:shadow-none ${
           loading ? 'absolute inset-[2px]' : 'h-full w-full'
         }`}
       >

@@ -6,8 +6,6 @@ import { AiDesignerGallery } from '../components/ai-designer/AiDesignerGallery'
 import { useAuth } from '../components/auth/useAuth'
 import { ChatInput, type ChatSendPayload } from '../components/chat/ChatInput'
 import { ModelSelectRow } from '../components/chat/ChatStartHub'
-import { AccountHeaderActions } from '../components/layout/AccountHeaderActions'
-import { useAppUi } from '../contexts/AppUiContext'
 import {
   AI_DESIGNER_CATEGORIES,
   buildDesignerPrompt,
@@ -25,8 +23,7 @@ import {
 
 export function AiDesignerPage() {
   const navigate = useNavigate()
-  const { profile, signOut } = useAuth()
-  const { openSettings } = useAppUi()
+  const { profile } = useAuth()
   const chatInputRef = useRef<ComponentRef<typeof ChatInput>>(null)
 
   const [activeCategory, setActiveCategory] = useState<AiDesignerCategoryId>('chat')
@@ -51,10 +48,13 @@ export function AiDesignerPage() {
     }
   }, [])
 
-  useEffect(() => {
-    const preferred = profile?.preferred_ai?.trim()
-    if (preferred) setSelectedModel(preferred)
-  }, [profile?.preferred_ai])
+  // 프로필의 선호 모델이 정해지거나 바뀌면 선택값에 반영한다 (렌더 중 조정)
+  const profilePreferredAi = profile?.preferred_ai?.trim() ?? ''
+  const [syncedPreferredAi, setSyncedPreferredAi] = useState('')
+  if (profilePreferredAi !== syncedPreferredAi) {
+    setSyncedPreferredAi(profilePreferredAi)
+    if (profilePreferredAi) setSelectedModel(profilePreferredAi)
+  }
 
   const versionRows = useMemo(
     () => buildModelSelectOptions(registryModels, selectedModel),
@@ -118,38 +118,22 @@ export function AiDesignerPage() {
       : `${getDesignerCategory(activeCategory).label} 디자인 설명을 입력하세요.`
 
   return (
-    <div className="main-inner chat-agent flex min-h-0 flex-1 flex-col overflow-hidden bg-[#FAF9F6] dark:bg-stone-950">
-      <header className="hidden shrink-0 items-center gap-1 border-b border-stone-200/90 bg-[#FAF9F6]/95 px-2 py-1 backdrop-blur-md dark:border-stone-800/60 dark:bg-[#050508]/55 md:flex md:px-3 md:py-1.5">
-        <h1 className="min-w-0">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="text-left text-[14px]! font-semibold leading-none tracking-tight text-stone-900 transition hover:text-orange-800 dark:text-stone-50 dark:hover:text-orange-200"
-            aria-label="홈 · 새 채팅"
-          >
-            NH-AX-HUB
-          </button>
-        </h1>
-        <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-[14px]! font-semibold text-orange-900 dark:bg-orange-950/50 dark:text-orange-200">
-          AI Designer
-        </span>
-        <AccountHeaderActions onOpenSettings={openSettings} onSignOut={signOut} />
-      </header>
+    <div className="main-inner chat-agent flex min-h-0 flex-1 flex-col overflow-hidden bg-bg">
 
       <section
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
         aria-label="AI Designer"
       >
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-transparent gemini-zero-dark-bg text-stone-900 dark:text-stone-100">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-transparent gemini-zero-dark-bg text-fg">
           {!draft.trim() ? (
             <div className="mx-auto w-full max-w-3xl px-4 pt-8 text-center md:pt-12">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200/80 bg-orange-50/80 px-3 py-1 text-[11px]! font-semibold uppercase tracking-[0.12em] text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
                 <span aria-hidden>✦</span> AI Designer
               </span>
-              <h2 className="mt-4 text-[24px]! font-bold leading-tight tracking-tight text-stone-900 dark:text-stone-50 md:text-[32px]!">
+              <h2 className="mt-4 text-[24px] font-bold leading-tight tracking-tight text-fg md:text-[32px]">
                 {userGreetingName}님, 안녕하세요
               </h2>
-              <p className="mt-2 text-[14px]! text-stone-500 dark:text-stone-400 md:text-[16px]!">
+              <p className="mt-2 text-[14px] text-fg-subtle md:text-[16px]">
                 아래에서 유형을 고르거나, 만들고 싶은 디자인을 바로 설명해 주세요.
               </p>
             </div>
@@ -170,7 +154,7 @@ export function AiDesignerPage() {
           </div>
         </div>
 
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 shrink-0 border-t border-stone-200/90 bg-[#FAF9F6]/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md gemini-zero-dark-composer dark:border-stone-800/80 md:pointer-events-auto md:relative md:inset-x-auto md:bottom-auto md:z-0 md:bg-transparent md:px-6 md:pb-4 md:pt-2 md:backdrop-blur-none">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 shrink-0 border-t border-border/90 bg-bg px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md gemini-zero-dark-composer md:pointer-events-auto md:relative md:inset-x-auto md:bottom-auto md:z-0 md:bg-transparent md:px-6 md:pb-4 md:pt-2 md:backdrop-blur-none">
           <div className="pointer-events-auto">
             <ChatInput
               ref={chatInputRef}

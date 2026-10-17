@@ -33,13 +33,13 @@ function ConsentToggle({
       onClick={() => onToggle(!checked)}
       className={[
         'relative inline-flex h-[26px] w-[46px] shrink-0 items-center rounded-full border border-transparent transition',
-        checked ? 'bg-orange-700' : 'bg-stone-300 dark:bg-stone-600',
+        checked ? 'bg-brand' : 'bg-surface-3',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:brightness-105',
       ].join(' ')}
     >
       <span
         className={[
-          'inline-block h-[20px] w-[20px] rounded-full bg-white shadow transition-transform duration-200',
+          'inline-block h-[20px] w-[20px] rounded-full bg-surface shadow transition-transform duration-200',
           checked ? 'translate-x-[22px]' : 'translate-x-[3px]',
         ].join(' ')}
       />
@@ -53,7 +53,7 @@ function normalizeBlank(s: string): string | null {
 }
 
 const inputCls =
-  'mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-orange-700/20 focus:ring-2 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100'
+  'mt-1 w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2'
 
 export function MyPagePanel() {
   const { profile, refreshProfile } = useAuth()
@@ -73,7 +73,9 @@ export function MyPagePanel() {
   const [profileMsg, setProfileMsg] = useState<string | null>(null)
   const [passwordMsg, setPasswordMsg] = useState<string | null>(null)
 
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
+    () => (localStorage.getItem('nh_theme') as 'light' | 'dark' | null) ?? 'system',
+  )
 
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushSupported, setPushSupported] = useState(true)
@@ -83,9 +85,13 @@ export function MyPagePanel() {
   const [passkeyBusy, setPasskeyBusy] = useState(false)
   const passkeySupported = isPasskeySupported()
 
-  useEffect(() => {
-    setPushEnabled(Boolean(profile?.push_consent))
-  }, [profile?.push_consent])
+  // 프로필의 푸시 동의값이 바뀌면 토글에 반영한다 (렌더 중 조정)
+  const profilePushConsent = Boolean(profile?.push_consent)
+  const [syncedPushConsent, setSyncedPushConsent] = useState<boolean | null>(null)
+  if (profilePushConsent !== syncedPushConsent) {
+    setSyncedPushConsent(profilePushConsent)
+    setPushEnabled(profilePushConsent)
+  }
 
   useEffect(() => {
     void isPushSupported().then(setPushSupported)
@@ -100,7 +106,7 @@ export function MyPagePanel() {
   }, [])
 
   useEffect(() => {
-    if (userId) void loadPasskeys()
+    if (userId) queueMicrotask(() => void loadPasskeys())
   }, [userId, loadPasskeys])
 
   const handleTogglePush = useCallback(
@@ -173,13 +179,6 @@ export function MyPagePanel() {
     },
     [userId, refreshProfile],
   )
-
-  useEffect(() => {
-    const saved = localStorage.getItem('nh_theme') as 'light' | 'dark' | null
-    if (saved) {
-      setTheme(saved)
-    }
-  }, [])
 
   const handleThemeChange = useCallback((newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme)
@@ -274,7 +273,7 @@ export function MyPagePanel() {
 
   if (!userId || !profile) {
     return (
-      <p className="text-[13px]! md:text-[14px]! text-stone-600 dark:text-stone-400">
+      <p className="text-[13px] md:text-[14px] text-fg-muted">
         로그인 후 마이페이지를 이용할 수 있습니다.
       </p>
     )
@@ -283,29 +282,29 @@ export function MyPagePanel() {
   return (
     <div className="space-y-8">
       <section className="space-y-3">
-        <p className="font-semibold text-stone-900 dark:text-stone-100">
+        <p className="font-semibold text-fg">
           내 정보
         </p>
-        <p className="text-[13px]! md:text-[14px]! leading-relaxed text-stone-600 dark:text-stone-400">
+        <p className="text-[13px] md:text-[14px] leading-relaxed text-fg-muted">
           이름·소속 등은 AI 답변 맥락과 사이드바 표시에 활용할 수 있습니다. 로그인 이메일은
           보안상 여기서 변경하지 않습니다.
         </p>
 
-        <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
-          로그인 이메일 <span className="font-normal text-stone-500">(읽기 전용)</span>
+        <label className="block text-[13px] md:text-[14px] font-medium text-fg">
+          로그인 이메일 <span className="font-normal text-fg-subtle">(읽기 전용)</span>
           <input
             type="email"
             readOnly
             value={profile.email}
-            className={`${inputCls} cursor-not-allowed bg-stone-100 dark:bg-stone-900`}
+            className={`${inputCls} cursor-not-allowed bg-surface-2`}
           />
         </label>
 
-        <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[13px] md:text-[14px] font-medium text-fg">
           화면 테마
           <select
             value={theme}
-            onChange={(e) => handleThemeChange(e.target.value as any)}
+            onChange={(e) => handleThemeChange(e.target.value as 'light' | 'dark' | 'system')}
             className={inputCls}
           >
             <option value="system">시스템 기본값</option>
@@ -314,7 +313,7 @@ export function MyPagePanel() {
           </select>
         </label>
 
-        <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[13px] md:text-[14px] font-medium text-fg">
           이름
           <input
             value={displayName}
@@ -326,7 +325,7 @@ export function MyPagePanel() {
           />
         </label>
 
-        <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[13px] md:text-[14px] font-medium text-fg">
           소속
           <input
             value={department}
@@ -338,7 +337,7 @@ export function MyPagePanel() {
         </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+          <label className="block text-[13px] md:text-[14px] font-medium text-fg">
             직급
             <input
               value={jobRank}
@@ -348,7 +347,7 @@ export function MyPagePanel() {
               placeholder="예: 과장"
             />
           </label>
-          <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+          <label className="block text-[13px] md:text-[14px] font-medium text-fg">
             직책
             <input
               value={jobTitle}
@@ -360,7 +359,7 @@ export function MyPagePanel() {
           </label>
         </div>
 
-        <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[13px] md:text-[14px] font-medium text-fg">
           연락처
           <input
             value={phone}
@@ -373,7 +372,7 @@ export function MyPagePanel() {
         </label>
 
         {profileMsg ? (
-          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px]! md:text-[14px]! text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
+          <p className="rounded-lg border border-border bg-surface px-3 py-2 text-[13px] md:text-[14px] text-fg-muted">
             {profileMsg}
           </p>
         ) : null}
@@ -382,23 +381,23 @@ export function MyPagePanel() {
           type="button"
           disabled={profileSaving}
           onClick={() => void handleSaveProfile()}
-          className="rounded-full bg-orange-800 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-900 disabled:opacity-50"
+          className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-50"
         >
           {profileSaving ? '저장 중…' : '프로필 저장'}
         </button>
       </section>
 
-      <section className="space-y-4 border-t border-stone-200 pt-6 dark:border-stone-700">
-        <p className="font-semibold text-stone-900 dark:text-stone-100">
+      <section className="space-y-4 border-t border-border pt-6">
+        <p className="font-semibold text-fg">
           알림 · 보안
         </p>
 
-        <div className="flex items-start justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-700 dark:bg-stone-950">
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-surface px-4 py-3">
           <div className="min-w-0">
-            <p id="mypage-push-label" className="text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+            <p id="mypage-push-label" className="text-[13px] md:text-[14px] font-medium text-fg">
               푸시 알림 (FCM)
             </p>
-            <p className="mt-0.5 text-[13px]! md:text-[14px]! leading-relaxed text-stone-500 dark:text-stone-400">
+            <p className="mt-0.5 text-[13px] md:text-[14px] leading-relaxed text-fg-subtle">
               공지·중요 알림을 이 기기로 받습니다. 기기·브라우저마다 각각 켜야 합니다.
             </p>
           </div>
@@ -410,23 +409,23 @@ export function MyPagePanel() {
           />
         </div>
         {!pushSupported ? (
-          <p className="text-[13px]! md:text-[14px]! text-amber-700 dark:text-amber-400">
+          <p className="text-[13px] md:text-[14px] text-warning">
             이 브라우저는 웹 푸시를 지원하지 않습니다. 모바일은 홈 화면에 앱을 추가한 뒤 사용하세요.
           </p>
         ) : null}
         {pushMsg ? (
-          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px]! md:text-[14px]! text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
+          <p className="rounded-lg border border-border bg-surface px-3 py-2 text-[13px] md:text-[14px] text-fg-muted">
             {pushMsg}
           </p>
         ) : null}
 
-        <div className="rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-700 dark:bg-stone-950">
+        <div className="rounded-xl border border-border bg-surface px-4 py-3">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+              <p className="text-[13px] md:text-[14px] font-medium text-fg">
                 지문·생체(패스키) 로그인
               </p>
-              <p className="mt-0.5 text-[13px]! md:text-[14px]! leading-relaxed text-stone-500 dark:text-stone-400">
+              <p className="mt-0.5 text-[13px] md:text-[14px] leading-relaxed text-fg-subtle">
                 이 기기에 등록하면 다음 로그인부터 지문·FaceID·Windows Hello로 로그인할 수 있습니다.
                 {!passkeySupported && ' (이 브라우저는 패스키를 지원하지 않습니다.)'}
               </p>
@@ -435,19 +434,19 @@ export function MyPagePanel() {
               type="button"
               disabled={passkeyBusy || !passkeySupported}
               onClick={() => void handleRegisterPasskey()}
-              className="shrink-0 rounded-lg bg-orange-700 px-3 py-2 text-[13px]! md:text-[14px]! font-semibold text-white transition hover:bg-orange-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="shrink-0 rounded-lg bg-brand px-3 py-2 text-[13px] md:text-[14px] font-semibold text-brand-fg transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
             >
               이 기기 등록
             </button>
           </div>
 
           {passkeys.length > 0 && (
-            <ul className="mt-3 flex flex-col gap-2 border-t border-stone-200 pt-3 dark:border-stone-700">
+            <ul className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
               {passkeys.map((pk) => (
-                <li key={pk.id} className="flex items-center justify-between gap-3 text-[13px]! md:text-[14px]!">
-                  <span className="min-w-0 truncate text-stone-700 dark:text-stone-300">
+                <li key={pk.id} className="flex items-center justify-between gap-3 text-[13px] md:text-[14px]">
+                  <span className="min-w-0 truncate text-fg-muted">
                     🔑 {pk.device_label || '등록된 기기'}
-                    <span className="ml-2 text-stone-400">
+                    <span className="ml-2 text-fg-subtle">
                       {pk.last_used_at
                         ? `최근 사용 ${new Date(pk.last_used_at).toLocaleDateString('ko-KR')}`
                         : `등록 ${new Date(pk.created_at).toLocaleDateString('ko-KR')}`}
@@ -457,7 +456,7 @@ export function MyPagePanel() {
                     type="button"
                     disabled={passkeyBusy}
                     onClick={() => void handleDeletePasskey(pk.id)}
-                    className="shrink-0 rounded-md border border-stone-300 px-2 py-1 text-[12px]! text-stone-600 transition hover:bg-stone-50 disabled:opacity-60 dark:border-stone-600 dark:text-stone-400 dark:hover:bg-stone-900"
+                    className="shrink-0 rounded-md border border-border-strong px-2 py-1 text-[12px] text-fg-muted transition hover:bg-surface-2 disabled:opacity-60"
                   >
                     삭제
                   </button>
@@ -468,15 +467,15 @@ export function MyPagePanel() {
         </div>
       </section>
 
-      <section className="space-y-3 border-t border-stone-200 pt-6 dark:border-stone-700">
-        <p className="font-semibold text-stone-900 dark:text-stone-100">
+      <section className="space-y-3 border-t border-border pt-6">
+        <p className="font-semibold text-fg">
           비밀번호 변경
         </p>
-        <p className="text-[13px]! md:text-[14px]! leading-relaxed text-stone-600 dark:text-stone-400">
+        <p className="text-[13px] md:text-[14px] leading-relaxed text-fg-muted">
           새 비밀번호는 8자 이상으로 입력하세요. 다른 기기에서도 다음 로그인부터 적용됩니다.
         </p>
 
-        <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[13px] md:text-[14px] font-medium text-fg">
           새 비밀번호
           <input
             type="password"
@@ -488,7 +487,7 @@ export function MyPagePanel() {
           />
         </label>
 
-        <label className="block text-[13px]! md:text-[14px]! font-medium text-stone-800 dark:text-stone-200">
+        <label className="block text-[13px] md:text-[14px] font-medium text-fg">
           새 비밀번호 확인
           <input
             type="password"
@@ -501,7 +500,7 @@ export function MyPagePanel() {
         </label>
 
         {passwordMsg ? (
-          <p className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px]! md:text-[14px]! text-stone-700 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-300">
+          <p className="rounded-lg border border-border bg-surface px-3 py-2 text-[13px] md:text-[14px] text-fg-muted">
             {passwordMsg}
           </p>
         ) : null}
@@ -510,7 +509,7 @@ export function MyPagePanel() {
           type="button"
           disabled={passwordSaving}
           onClick={() => void handleChangePassword()}
-          className="rounded-full border border-stone-400 bg-white px-5 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-50 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800"
+          className="rounded-full border border-border-strong bg-surface px-5 py-2 text-sm font-semibold text-fg hover:bg-surface-2 disabled:opacity-50"
         >
           {passwordSaving ? '처리 중…' : '비밀번호 변경'}
         </button>

@@ -11,7 +11,7 @@ import {
 } from './SheetsRibbonDropdown'
 import './sheets-designer.css'
 
-export const RIBBON_TABS = [
+const RIBBON_TABS = [
   '홈',
   '삽입',
   '페이지 레이아웃',

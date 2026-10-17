@@ -5,6 +5,7 @@ import {
   adminBtnSecondary,
   adminPageRootWide,
 } from '../../components/auth/admin/admin-ui'
+import { useHwpxSave } from '../../hooks/useHwpxSave'
 import { supabase } from '../../lib/supabase'
 import {
   normalizeTopKeywords,
@@ -81,6 +82,7 @@ export function WeeklyTrendReport() {
     () => (selected ? normalizeTopKeywords(selected.top_keywords) : []),
     [selected],
   )
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
 
   return (
     <div className={adminPageRootWide}>
@@ -95,7 +97,7 @@ export function WeeklyTrendReport() {
       />
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <div className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-xs text-danger">
           {error}
           {error.includes('weekly_ai_reports') ? (
             <p className="mt-1 text-[17px] opacity-90">
@@ -106,14 +108,14 @@ export function WeeklyTrendReport() {
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="px-2 py-1.5 text-[17px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <aside className="rounded-lg border border-border bg-surface p-2 shadow-sm">
+          <p className="px-2 py-1.5 text-[17px] font-semibold uppercase tracking-wide text-fg-subtle">
             역대 리포트
           </p>
           {loading ? (
-            <p className="px-2 py-4 text-xs text-slate-500">불러오는 중…</p>
+            <p className="px-2 py-4 text-xs text-fg-subtle">불러오는 중…</p>
           ) : rows.length === 0 ? (
-            <p className="px-2 py-4 text-xs leading-relaxed text-slate-500">
+            <p className="px-2 py-4 text-xs leading-relaxed text-fg-subtle">
               아직 생성된 리포트가 없습니다.
               <br />
               Edge Function을 수동 실행해 첫 리포트를 만드세요.
@@ -130,15 +132,15 @@ export function WeeklyTrendReport() {
                       className={[
                         'w-full rounded-md px-2.5 py-2 text-left transition',
                         active
-                          ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500'
-                          : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-fg-muted hover:bg-surface-2',
                       ].join(' ')}
                     >
                       <p className="text-xs font-semibold">{formatReportLabel(row.report_date)}</p>
                       <p
                         className={[
                           'mt-0.5 text-[15px]',
-                          active ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400',
+                          active ? 'text-indigo-100' : 'text-fg-subtle',
                         ].join(' ')}
                       >
                         {formatPeriod(row.period_start, row.period_end)}
@@ -153,17 +155,17 @@ export function WeeklyTrendReport() {
 
         <section className="min-w-0 space-y-3">
           {!selected ? (
-            <div className="flex min-h-[280px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white p-6 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex min-h-[280px] items-center justify-center rounded-lg border border-dashed border-border-strong bg-surface p-6 text-xs text-fg-subtle">
               {loading ? '리포트를 불러오는 중…' : '좌측에서 주간 리포트를 선택하세요.'}
             </div>
           ) : (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  <p className="text-sm font-semibold text-fg">
                     {formatReportLabel(selected.report_date)} 리포트
                   </p>
-                  <p className="text-[17px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[17px] text-fg-subtle">
                     집계 구간: {formatPeriod(selected.period_start, selected.period_end)}
                   </p>
                 </div>
@@ -172,22 +174,48 @@ export function WeeklyTrendReport() {
                     'rounded-full px-2 py-0.5 text-[15px] font-semibold',
                     selected.generated_by_ai
                       ? 'bg-violet-100 text-violet-800 dark:bg-violet-950/50 dark:text-violet-200'
-                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                      : 'bg-surface-2 text-fg-muted',
                   ].join(' ')}
                 >
                   {selected.generated_by_ai ? 'AI 생성' : '규칙 기반'}
                 </span>
+                <button
+                  type="button"
+                  disabled={hwpxSaving}
+                  onClick={() => {
+                    const title = `${formatReportLabel(selected.report_date)} 주간 트렌드 리포트`
+                    const markdown = [
+                      `# ${title}`,
+                      '',
+                      `- **집계 구간**: ${formatPeriod(selected.period_start, selected.period_end)}`,
+                      `- **생성 방식**: ${selected.generated_by_ai ? 'AI 생성' : '규칙 기반'}`,
+                      '',
+                      '## 핵심 키워드 Top 5',
+                      '',
+                      ...(keywords.length ? keywords.map((k) => `${k.rank}. ${k.keyword}`) : ['- (키워드 없음)']),
+                      '',
+                      '## AI 종합 요약',
+                      '',
+                      selected.summary || '(요약 없음)',
+                    ].join('\n')
+                    void saveHwpx(markdown, { title, filename: `주간트렌드_${selected.report_date}` })
+                  }}
+                  className={adminBtnSecondary}
+                  title="한글 문서(.hwpx)로 저장"
+                >
+                  {hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}
+                </button>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <div className="md:col-span-2 xl:col-span-2">
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <div className="rounded-lg border border-border bg-surface p-4 shadow-sm">
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                       핵심 키워드 Top 5
                     </h2>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {keywords.length === 0 ? (
-                        <p className="text-xs text-slate-500 sm:col-span-2 lg:col-span-3">
+                        <p className="text-xs text-fg-subtle sm:col-span-2 lg:col-span-3">
                           키워드 데이터가 없습니다.
                         </p>
                       ) : (
@@ -207,20 +235,20 @@ export function WeeklyTrendReport() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm dark:border-slate-800 dark:from-slate-950 dark:to-slate-900">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <div className="rounded-lg border border-border bg-gradient-to-br from-slate-50 to-surface p-4 shadow-sm">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                     메타
                   </h2>
                   <dl className="mt-3 space-y-2 text-xs">
                     <div>
-                      <dt className="text-slate-500 dark:text-slate-400">생성 시각</dt>
-                      <dd className="font-medium text-slate-800 dark:text-slate-100">
+                      <dt className="text-fg-subtle">생성 시각</dt>
+                      <dd className="font-medium text-fg">
                         {new Date(selected.created_at).toLocaleString('ko-KR')}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-slate-500 dark:text-slate-400">리포트 ID</dt>
-                      <dd className="break-all font-mono text-[15px] text-slate-600 dark:text-slate-300">
+                      <dt className="text-fg-subtle">리포트 ID</dt>
+                      <dd className="break-all font-mono text-[15px] text-fg-muted">
                         {selected.id}
                       </dd>
                     </div>
@@ -228,11 +256,11 @@ export function WeeklyTrendReport() {
                 </div>
 
                 <div className="md:col-span-2 xl:col-span-3">
-                  <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/20">
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                  <div className="rounded-lg border border-indigo-100 bg-accent-soft/60 p-4">
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-accent">
                       AI 종합 요약
                     </h2>
-                    <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-100">
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg">
                       {selected.summary}
                     </p>
                   </div>

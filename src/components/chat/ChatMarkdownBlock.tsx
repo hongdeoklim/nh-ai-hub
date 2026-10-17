@@ -16,46 +16,46 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
   const isClaude = variant === 'claude'
 
   const textCls = isGemini
-    ? 'text-actual-14 text-[#1f1f1f] dark:text-stone-100'
+    ? 'text-[14px] text-[#1f1f1f]'
     : isClaude
-      ? 'text-[15px]! text-stone-900 dark:text-stone-100'
-      : 'text-sm text-slate-800 dark:text-slate-100'
+      ? 'text-[15px] text-fg'
+      : 'text-sm text-fg'
 
   const strongCls = isGemini
-    ? 'font-semibold text-[#1f1f1f] dark:text-stone-50'
+    ? 'font-semibold text-[#1f1f1f]'
     : isClaude
-      ? 'font-semibold text-stone-900 dark:text-stone-50'
-      : 'font-semibold text-slate-900 dark:text-slate-50'
+      ? 'font-semibold text-fg'
+      : 'font-semibold text-fg'
 
   const linkCls = isGemini
     ? 'font-medium text-[#0b57d0] underline decoration-[#0b57d0]/35 underline-offset-2 hover:decoration-[#0b57d0] dark:text-blue-400'
     : isClaude
-      ? 'font-medium text-orange-800 underline underline-offset-2 hover:text-orange-950 dark:text-orange-300'
-      : 'font-medium text-emerald-700 underline underline-offset-2 hover:text-emerald-900 dark:text-emerald-400'
+      ? 'font-medium text-brand underline underline-offset-2 hover:text-brand'
+      : 'font-medium text-success underline underline-offset-2 hover:text-emerald-900'
 
   const codeInlineCls = isGemini
-    ? 'rounded-md bg-[#eef2f8] px-1.5 py-0.5 font-mono text-[0.88em] text-[#1f1f1f] dark:bg-stone-800 dark:text-stone-100'
+    ? 'rounded-md bg-[#eef2f8] px-1.5 py-0.5 font-mono text-[0.88em] text-[#1f1f1f]'
     : isClaude
-      ? 'rounded bg-stone-200/80 px-1.5 py-0.5 font-mono text-[0.88em] dark:bg-stone-800'
-      : 'rounded bg-slate-200/80 px-1.5 py-0.5 font-mono text-[0.88em] dark:bg-slate-800'
+      ? 'rounded bg-surface-3/80 px-1.5 py-0.5 font-mono text-[0.88em]'
+      : 'rounded bg-surface-3/80 px-1.5 py-0.5 font-mono text-[0.88em]'
 
   const tableWrapCls = isGemini
-    ? 'my-3 overflow-x-auto rounded-xl border border-[#e3e3e3] dark:border-stone-700'
+    ? 'my-3 overflow-x-auto rounded-xl border border-[#e3e3e3]'
     : isClaude
-      ? 'my-3 overflow-x-auto rounded-xl border border-stone-200 dark:border-stone-700'
-      : 'my-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700'
+      ? 'my-3 overflow-x-auto rounded-xl border border-border'
+      : 'my-3 overflow-x-auto rounded-xl border border-border'
 
   const thCls = isGemini
-    ? 'border-b border-[#e3e3e3] bg-[#f0f4f9] px-3 py-2 text-left text-actual-13 font-semibold text-[#1f1f1f] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100'
+    ? 'border-b border-[#e3e3e3] bg-[#f0f4f9] px-3 py-2 text-left text-[13px] font-semibold text-[#1f1f1f]'
     : isClaude
-      ? 'border-b border-stone-200 bg-stone-100 px-3 py-2 text-left text-[13px]! font-semibold dark:border-stone-700 dark:bg-stone-800'
-      : 'border-b border-slate-200 bg-slate-100 px-3 py-2 text-left text-[13px]! font-semibold dark:border-slate-700 dark:bg-slate-800'
+      ? 'border-b border-border bg-surface-2 px-3 py-2 text-left text-[13px] font-semibold'
+      : 'border-b border-border bg-surface-2 px-3 py-2 text-left text-[13px] font-semibold'
 
   const tdCls = isGemini
-    ? 'border-b border-[#e3e3e3] px-3 py-2 align-top text-actual-13 text-[#1f1f1f] dark:border-stone-800 dark:text-stone-100'
+    ? 'border-b border-[#e3e3e3] px-3 py-2 align-top text-[13px] text-[#1f1f1f]'
     : isClaude
-      ? 'border-b border-stone-200 px-3 py-2 align-top text-[13px]! dark:border-stone-800'
-      : 'border-b border-slate-200 px-3 py-2 align-top text-[13px]! dark:border-slate-800'
+      ? 'border-b border-border px-3 py-2 align-top text-[13px]'
+      : 'border-b border-border px-3 py-2 align-top text-[13px]'
 
   return {
     p: ({ children }) => (
@@ -79,7 +79,7 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
       </h3>
     ),
     h4: ({ children }) => (
-      <h4 className={`mb-2 mt-3 text-[15px]! font-semibold leading-snug first:mt-0 ${textCls}`}>
+      <h4 className={`mb-2 mt-3 text-[15px] font-semibold leading-snug first:mt-0 ${textCls}`}>
         {children}
       </h4>
     ),
@@ -94,10 +94,10 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
       <blockquote
         className={`my-3 border-l-4 pl-3 italic ${
           isGemini
-            ? 'border-[#c4c7c5] text-[#444746] dark:border-stone-600 dark:text-stone-400'
+            ? 'border-[#c4c7c5] text-[#444746]'
             : isClaude
-              ? 'border-orange-300 text-stone-600 dark:border-orange-800 dark:text-stone-400'
-              : 'border-emerald-400 text-slate-600 dark:border-emerald-700 dark:text-slate-400'
+              ? 'border-brand/30 text-fg-muted'
+              : 'border-emerald-400 text-fg-muted'
         }`}
       >
         {children}
@@ -107,10 +107,10 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
       <hr
         className={`my-4 border-0 border-t ${
           isGemini
-            ? 'border-[#e3e3e3] dark:border-stone-700'
+            ? 'border-[#e3e3e3]'
             : isClaude
-              ? 'border-stone-200 dark:border-stone-700'
-              : 'border-slate-200 dark:border-slate-700'
+              ? 'border-border'
+              : 'border-border'
         }`}
       />
     ),
@@ -128,17 +128,17 @@ function buildMarkdownComponents(variant: MarkdownVariant): Components {
       }
 
       if (isBlock) {
-        return <code className={`block font-mono text-[13px]! ${className ?? ''}`}>{children}</code>
+        return <code className={`block font-mono text-[13px] ${className ?? ''}`}>{children}</code>
       }
       return <code className={codeInlineCls}>{children}</code>
     },
     pre: ({ children }) => (
       <pre
-        className={`my-3 max-h-[min(24rem,50vh)] overflow-auto rounded-xl border p-3 font-mono text-[13px]! leading-relaxed ${
+        className={`my-3 max-h-[min(24rem,50vh)] overflow-auto rounded-xl border p-3 font-mono text-[13px] leading-relaxed ${
           isGemini
-            ? 'border-[#c4c7c5] bg-[#f8fafd] text-[#1f1f1f] dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200'
+            ? 'border-[#c4c7c5] bg-[#f8fafd] text-[#1f1f1f]'
             : isClaude
-              ? 'border-stone-200 bg-stone-950 text-stone-100 dark:border-stone-700'
+              ? 'border-border bg-stone-950 text-stone-100'
               : 'border-slate-700 bg-slate-950 text-emerald-100'
         }`}
       >

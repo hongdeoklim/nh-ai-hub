@@ -63,11 +63,6 @@ export function DxfCanvas({
   const propsRef = useRef({ tool, currentLayer, snap, hiddenLayers, selectedIndex })
   const pendingRef = useRef<Point2D[] | null>(null) // 진행 중 그리기 정점
   const cursorRef = useRef<Point2D | null>(null) // 스냅된 커서 월드 좌표
-  useEffect(() => {
-    entitiesRef.current = entities
-    propsRef.current = { tool, currentLayer, snap, hiddenLayers, selectedIndex }
-    draw()
-  })
 
   const worldToScreen = (wx: number, wy: number, v: View) => ({
     sx: wx * v.scale + v.tx,
@@ -168,6 +163,13 @@ export function DxfCanvas({
     }
     ctx.restore()
   }, [])
+
+  // draw()가 항상 최신 값을 읽도록 ref 로 동기화 (frequent redraw) — draw 선언 뒤에 둔다
+  useEffect(() => {
+    entitiesRef.current = entities
+    propsRef.current = { tool, currentLayer, snap, hiddenLayers, selectedIndex }
+    draw()
+  })
 
   const resize = useCallback(() => {
     const canvas = canvasRef.current
@@ -357,13 +359,13 @@ export function DxfCanvas({
         onDoubleClick={finishPolyline}
         onKeyDown={onKeyDown}
         onContextMenu={(e) => e.preventDefault()}
-        className="h-full w-full touch-none rounded-xl bg-white outline-none dark:bg-stone-950"
+        className="h-full w-full touch-none rounded-xl bg-surface outline-none"
       />
       <div className="pointer-events-none absolute bottom-2 right-2 flex gap-1.5">
         <button
           type="button"
           onClick={fit}
-          className="pointer-events-auto rounded-lg border border-stone-200 bg-white/90 px-2.5 py-1 text-[12px]! font-medium text-stone-700 shadow-sm backdrop-blur transition-colors hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900/90 dark:text-stone-300 dark:hover:bg-stone-800 md:text-[13px]!"
+          className="pointer-events-auto rounded-lg border border-border bg-surface/90 px-2.5 py-1 text-[12px] font-medium text-fg-muted shadow-sm backdrop-blur transition-colors hover:bg-surface-2 md:text-[13px]"
         >
           맞춤
         </button>

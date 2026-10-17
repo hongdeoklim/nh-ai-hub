@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconFileText, IconHardHat } from '../components/common/icons'
+import { firstMarkdownHeading, useHwpxSave } from '../hooks/useHwpxSave'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -110,18 +113,18 @@ interface AssessmentRecord {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const RISK_CFG: Record<string, { label: string; cls: string }> = {
-  low:      { label: '낮음 (Low)',     cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' },
-  medium:   { label: '보통 (Medium)',  cls: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' },
-  high:     { label: '높음 (High)',    cls: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
-  critical: { label: '위험 (Critical)',cls: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  low:      { label: '낮음 (Low)',     cls: 'bg-success-soft text-success' },
+  medium:   { label: '보통 (Medium)',  cls: 'bg-warning-soft text-warning' },
+  high:     { label: '높음 (High)',    cls: 'bg-brand-soft text-brand' },
+  critical: { label: '위험 (Critical)',cls: 'bg-danger-soft text-danger' },
 }
 
 const GRADE_CLS: Record<string, string> = {
-  A: 'text-emerald-600', B: 'text-blue-600', C: 'text-amber-600', D: 'text-orange-600', F: 'text-red-600',
+  A: 'text-success', B: 'text-blue-600', C: 'text-amber-600', D: 'text-orange-600', F: 'text-danger',
 }
 
 const SEV_DOT: Record<string, string> = {
-  low: 'bg-emerald-500', medium: 'bg-amber-500', high: 'bg-orange-500', critical: 'bg-red-500',
+  low: 'bg-emerald-500', medium: 'bg-amber-500', high: 'bg-orange-500', critical: 'bg-danger',
   minor: 'bg-emerald-500', major: 'bg-amber-500',
 }
 
@@ -168,10 +171,10 @@ function riskLabel(score: number): string {
 }
 
 function riskBg(score: number): string {
-  if (score >= 15) return 'bg-red-100 text-red-800'
-  if (score >= 10) return 'bg-orange-100 text-orange-800'
-  if (score >= 5)  return 'bg-amber-100 text-amber-800'
-  return 'bg-emerald-100 text-emerald-800'
+  if (score >= 15) return 'bg-danger-soft text-danger'
+  if (score >= 10) return 'bg-brand-soft text-brand'
+  if (score >= 5)  return 'bg-warning-soft text-warning'
+  return 'bg-success-soft text-success'
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -195,7 +198,7 @@ const defaultQualityMeta = (): QualityMeta => ({
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+      <span className="mb-1 block text-xs font-semibold text-fg-muted">
         {label}{required && <span className="ml-0.5 text-red-500">*</span>}
       </span>
       {children}
@@ -203,7 +206,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   )
 }
 
-const inputCls = "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+const inputCls = "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
 const selectCls = inputCls
 
 function SafetyMetaForm({ value, onChange }: { value: SafetyMeta; onChange: (v: SafetyMeta) => void }) {
@@ -269,6 +272,29 @@ function ReportView({ record }: { record: AssessmentRecord }) {
   const safetyR  = record.result as SafetyResult
   const qualityR = record.result as QualityResult
   const meta     = record.report_metadata ?? {}
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
+
+  const handleHwpxSave = () => {
+    const reportTitle = isSafety ? '위험성평가 보고서' : '품질검사 보고서'
+    const overall = isSafety
+      ? (RISK_CFG[record.overall_level?.toLowerCase()]?.label ?? record.overall_level)
+      : `${record.overall_level}등급`
+    const body = record.report_text?.trim()
+      ? record.report_text
+      : [
+          `# ${reportTitle}`,
+          '',
+          `- **평가일**: ${fmtDate(record.created_at)}`,
+          `- **종합 결과**: ${overall}`,
+          '',
+          (isSafety ? safetyR.summary : qualityR.summary) ?? '',
+        ].join('\n')
+    const markdown = `${body}\n\n---\n\n> 본 보고서는 AI 분석 결과입니다. 공식 사용 시 전문가 검토가 필요합니다. · 생성일: ${fmtDate(record.created_at)}`
+    void saveHwpx(markdown, {
+      title: firstMarkdownHeading(body) || reportTitle,
+      filename: `${reportTitle}_${fmtDate(record.created_at)}`,
+    })
+  }
 
   const handlePrint = () => {
     const el = printRef.current
@@ -330,31 +356,41 @@ function ReportView({ record }: { record: AssessmentRecord }) {
   return (
     <div className="space-y-6">
       {/* 보고서 헤더 */}
-      <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+      <div className="rounded-2xl border border-border bg-surface">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div>
-            <h2 className="font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="font-bold text-fg">
               {isSafety ? '위험성평가 보고서' : '품질검사 보고서'}
             </h2>
-            <p className="mt-0.5 text-xs text-slate-400">
-              {record.preferred_model && <span className="mr-2 rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-800">{record.preferred_model}</span>}
+            <p className="mt-0.5 text-xs text-fg-subtle">
+              {record.preferred_model && <span className="mr-2 rounded bg-surface-2 px-1.5 py-0.5">{record.preferred_model}</span>}
               {fmtDate(record.created_at)}
             </p>
           </div>
           <div className="flex items-center gap-2">
             {isSafety ? (
-              <span className={`rounded-full px-3 py-1 text-sm font-bold ${RISK_CFG[record.overall_level?.toLowerCase()]?.cls ?? 'bg-slate-100 text-slate-600'}`}>
+              <span className={`rounded-full px-3 py-1 text-sm font-bold ${RISK_CFG[record.overall_level?.toLowerCase()]?.cls ?? 'bg-surface-2 text-fg-muted'}`}>
                 위험도 {RISK_CFG[record.overall_level?.toLowerCase()]?.label ?? record.overall_level}
               </span>
             ) : (
-              <span className={`text-3xl font-black ${GRADE_CLS[record.overall_level?.toUpperCase()] ?? 'text-slate-700'}`}>
+              <span className={`text-3xl font-black ${GRADE_CLS[record.overall_level?.toUpperCase()] ?? 'text-fg-muted'}`}>
                 {record.overall_level}등급
               </span>
             )}
             <button
               type="button"
+              onClick={handleHwpxSave}
+              disabled={hwpxSaving}
+              className="flex items-center gap-1.5 rounded-lg border border-brand/30 bg-brand-soft px-3 py-2 text-sm font-semibold text-brand hover:bg-brand-soft/70 disabled:opacity-50"
+              title="한글 문서(.hwpx)로 저장"
+            >
+              <IconFileText className="h-4 w-4" />
+              {hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}
+            </button>
+            <button
+              type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
               인쇄 / PDF 저장
@@ -366,15 +402,15 @@ function ReportView({ record }: { record: AssessmentRecord }) {
         {record.report_metadata && Object.keys(record.report_metadata).some(k => (record.report_metadata as unknown as Record<string,unknown>)[k]) && (
           <div className="overflow-x-auto px-5 py-4">
             <table className="w-full text-sm">
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-border">
                 {isSafety ? (
                   <>
                     {([['workplace','사업장명'],['project_name','공사명/작업명'],['work_type','작업 종류'],['work_stage','공사 단계'],['assessor_name','평가자'],['department','소속부서'],['assessment_date','평가일'],['worker_count','작업인원']] as const).map(([k,l]) => {
                       const v = (meta as Record<string,unknown>)[k]
                       return v ? (
                         <tr key={k}>
-                          <td className="w-32 py-2 pr-4 font-medium text-slate-500 dark:text-slate-400">{l}</td>
-                          <td className="py-2 text-slate-900 dark:text-slate-100">{String(v)}</td>
+                          <td className="w-32 py-2 pr-4 font-medium text-fg-subtle">{l}</td>
+                          <td className="py-2 text-fg">{String(v)}</td>
                         </tr>
                       ) : null
                     })}
@@ -385,8 +421,8 @@ function ReportView({ record }: { record: AssessmentRecord }) {
                       const v = (meta as Record<string,unknown>)[k]
                       return v ? (
                         <tr key={k}>
-                          <td className="w-32 py-2 pr-4 font-medium text-slate-500 dark:text-slate-400">{l}</td>
-                          <td className="py-2 text-slate-900 dark:text-slate-100">{String(v)}</td>
+                          <td className="w-32 py-2 pr-4 font-medium text-fg-subtle">{l}</td>
+                          <td className="py-2 text-fg">{String(v)}</td>
                         </tr>
                       ) : null
                     })}
@@ -399,50 +435,50 @@ function ReportView({ record }: { record: AssessmentRecord }) {
       </div>
 
       {/* 종합 소견 */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-700 dark:bg-slate-800/40">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">종합 소견</p>
-        <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+      <div className="rounded-xl border border-border bg-bg px-5 py-4">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-fg-subtle">종합 소견</p>
+        <p className="text-sm leading-relaxed text-fg">
           {isSafety ? safetyR.summary : qualityR.summary}
         </p>
       </div>
 
       {/* 위험성 평가표 (안전) */}
       {isSafety && safetyR.findings?.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <div className="border-b border-slate-100 px-5 py-3 dark:border-slate-800">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">위험성 평가표</h3>
-            <p className="mt-0.5 text-xs text-slate-400">위험성 = 가능성 × 중대성 | ≥15 매우높음 · ≥10 높음 · ≥5 보통 · &lt;5 낮음</p>
+        <div className="rounded-xl border border-border bg-surface">
+          <div className="border-b border-border px-5 py-3">
+            <h3 className="font-semibold text-fg">위험성 평가표</h3>
+            <p className="mt-0.5 text-xs text-fg-subtle">위험성 = 가능성 × 중대성 | ≥15 매우높음 · ≥10 높음 · ≥5 보통 · &lt;5 낮음</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+              <thead className="border-b border-border bg-bg">
                 <tr>
                   {['No','작업/공정','유해·위험요인','현재 조치','가능성','중대성','위험성','위험도','감소대책','잔류위험','관련법규'].map(h => (
-                    <th key={h} className="px-3 py-2.5 text-left font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">{h}</th>
+                    <th key={h} className="px-3 py-2.5 text-left font-semibold text-fg-muted whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-border">
                 {safetyR.findings.map((f, i) => {
                   const score = f.risk_score ?? (f.probability * f.severity)
                   return (
-                    <tr key={i} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                      <td className="px-3 py-2.5 font-medium text-slate-500">{f.no ?? i + 1}</td>
-                      <td className="px-3 py-2.5 text-slate-800 dark:text-slate-200">{f.work_activity}</td>
-                      <td className="px-3 py-2.5 font-medium text-slate-900 dark:text-slate-100">{f.hazard}</td>
-                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">{f.current_measures}</td>
+                    <tr key={i} className="hover:bg-surface-2/60">
+                      <td className="px-3 py-2.5 font-medium text-fg-subtle">{f.no ?? i + 1}</td>
+                      <td className="px-3 py-2.5 text-fg">{f.work_activity}</td>
+                      <td className="px-3 py-2.5 font-medium text-fg">{f.hazard}</td>
+                      <td className="px-3 py-2.5 text-fg-muted">{f.current_measures}</td>
                       <td className="px-3 py-2.5 text-center font-bold">{f.probability}</td>
                       <td className="px-3 py-2.5 text-center font-bold">{f.severity}</td>
                       <td className="px-3 py-2.5 text-center font-bold">{score}</td>
                       <td className="px-3 py-2.5 text-center">
                         <span className={`rounded-full px-2 py-0.5 font-semibold ${riskBg(score)}`}>{riskLabel(score)}</span>
                       </td>
-                      <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300">{f.reduction_measures}</td>
+                      <td className="px-3 py-2.5 text-fg-muted">{f.reduction_measures}</td>
                       <td className="px-3 py-2.5 text-center">
                         <span className={`inline-block h-2 w-2 rounded-full ${SEV_DOT[f.residual_risk_level?.toLowerCase()] ?? 'bg-slate-400'}`} />
                         <span className="ml-1">{SEV_LABEL_KO[f.residual_risk_level?.toLowerCase()] ?? f.residual_risk_level}</span>
                       </td>
-                      <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{f.regulation}</td>
+                      <td className="px-3 py-2.5 text-fg-subtle">{f.regulation}</td>
                     </tr>
                   )
                 })}
@@ -456,48 +492,48 @@ function ReportView({ record }: { record: AssessmentRecord }) {
       {!isSafety && (
         <>
           <div>
-            <div className="mb-1 flex justify-between text-xs text-slate-500">
+            <div className="mb-1 flex justify-between text-xs text-fg-subtle">
               <span>품질 점수</span>
               <span className="font-semibold">{qualityR.quality_score}점 / 100점</span>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="h-3 overflow-hidden rounded-full bg-surface-2">
               <div
-                className={`h-full rounded-full transition-all ${qualityR.quality_score >= 80 ? 'bg-emerald-500' : qualityR.quality_score >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
+                className={`h-full rounded-full transition-all ${qualityR.quality_score >= 80 ? 'bg-emerald-500' : qualityR.quality_score >= 60 ? 'bg-amber-500' : 'bg-danger'}`}
                 style={{ width: `${Math.min(100, qualityR.quality_score ?? 0)}%` }}
               />
             </div>
           </div>
 
           {qualityR.defects?.length > 0 && (
-            <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-              <div className="border-b border-slate-100 px-5 py-3 dark:border-slate-800">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100">결함 현황표</h3>
+            <div className="rounded-xl border border-border bg-surface">
+              <div className="border-b border-border px-5 py-3">
+                <h3 className="font-semibold text-fg">결함 현황표</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                  <thead className="border-b border-border bg-bg">
                     <tr>
                       {['No','위치','결함 분류','심각도','규모/범위','원인 분석','보수 방법','우선순위','기준'].map(h => (
-                        <th key={h} className="px-3 py-2.5 text-left font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-3 py-2.5 text-left font-semibold text-fg-muted whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tbody className="divide-y divide-border">
                     {qualityR.defects.map((d, i) => (
-                      <tr key={i} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                        <td className="px-3 py-2.5 font-medium text-slate-500">{d.no ?? i + 1}</td>
-                        <td className="px-3 py-2.5 text-slate-800 dark:text-slate-200">{d.location}</td>
-                        <td className="px-3 py-2.5 font-medium text-slate-900 dark:text-slate-100">{d.defect_type}</td>
+                      <tr key={i} className="hover:bg-surface-2/60">
+                        <td className="px-3 py-2.5 font-medium text-fg-subtle">{d.no ?? i + 1}</td>
+                        <td className="px-3 py-2.5 text-fg">{d.location}</td>
+                        <td className="px-3 py-2.5 font-medium text-fg">{d.defect_type}</td>
                         <td className="px-3 py-2.5">
-                          <span className={`rounded-full px-2 py-0.5 font-semibold text-[10px]! ${d.severity === 'critical' ? 'bg-red-100 text-red-800' : d.severity === 'major' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                          <span className={`rounded-full px-2 py-0.5 font-semibold text-[10px] ${d.severity === 'critical' ? 'bg-danger-soft text-danger' : d.severity === 'major' ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success'}`}>
                             {SEV_LABEL_KO[d.severity] ?? d.severity}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">{d.size_description ?? '-'}</td>
-                        <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">{d.cause_analysis ?? '-'}</td>
-                        <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300">{d.repair_method}</td>
-                        <td className="px-3 py-2.5 font-medium text-slate-700 dark:text-slate-300">{d.repair_priority}</td>
-                        <td className="px-3 py-2.5 text-slate-400">{d.standard_reference ?? '-'}</td>
+                        <td className="px-3 py-2.5 text-fg-muted">{d.size_description ?? '-'}</td>
+                        <td className="px-3 py-2.5 text-fg-muted">{d.cause_analysis ?? '-'}</td>
+                        <td className="px-3 py-2.5 text-fg-muted">{d.repair_method}</td>
+                        <td className="px-3 py-2.5 font-medium text-fg-muted">{d.repair_priority}</td>
+                        <td className="px-3 py-2.5 text-fg-subtle">{d.standard_reference ?? '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -510,13 +546,13 @@ function ReportView({ record }: { record: AssessmentRecord }) {
 
       {/* 준수/적합 사항 */}
       {(isSafety ? safetyR.compliant_items : qualityR.conformant_items)?.length > 0 && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 px-5 py-4 dark:border-emerald-800/40 dark:bg-emerald-950/20">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+        <div className="rounded-xl border border-success/30 bg-success-soft/50 px-5 py-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-success">
             {isSafety ? '준수 사항' : '적합 사항'}
           </p>
           <ul className="space-y-1">
             {(isSafety ? safetyR.compliant_items : qualityR.conformant_items).map((item, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <li key={i} className="flex items-start gap-2 text-sm text-fg-muted">
                 <span className="mt-1 shrink-0 text-emerald-500">✓</span>{item}
               </li>
             ))}
@@ -526,12 +562,12 @@ function ReportView({ record }: { record: AssessmentRecord }) {
 
       {/* 권고 사항 */}
       {(isSafety ? safetyR.recommendations : qualityR.recommendations)?.length > 0 && (
-        <div className="rounded-xl border border-slate-200 px-5 py-4 dark:border-slate-700">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">개선 권고 사항</p>
+        <div className="rounded-xl border border-border px-5 py-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-subtle">개선 권고 사항</p>
           <ul className="space-y-1">
             {(isSafety ? safetyR.recommendations : qualityR.recommendations).map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-                <span className="mt-0.5 shrink-0 text-slate-400">•</span>{r}
+              <li key={i} className="flex items-start gap-2 text-sm text-fg-muted">
+                <span className="mt-0.5 shrink-0 text-fg-subtle">•</span>{r}
               </li>
             ))}
           </ul>
@@ -541,16 +577,16 @@ function ReportView({ record }: { record: AssessmentRecord }) {
       {/* 법규/기준 */}
       {(isSafety ? safetyR.applicable_regulations : qualityR.applicable_standards)?.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">관련 법규 및 기준</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-subtle">관련 법규 및 기준</p>
           <div className="flex flex-wrap gap-1.5">
             {(isSafety ? safetyR.applicable_regulations : qualityR.applicable_standards).map((s, i) => (
-              <span key={i} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">{s}</span>
+              <span key={i} className="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-fg-muted">{s}</span>
             ))}
           </div>
         </div>
       )}
 
-      <p className="text-center text-xs text-slate-400">
+      <p className="text-center text-xs text-fg-subtle">
         ※ 본 보고서는 AI 분석 결과로, 공식 문서 사용 시 전문가 검토가 필요합니다.
       </p>
 
@@ -595,7 +631,7 @@ export function SiteAssessmentUserPage() {
     setHistory((data ?? []) as AssessmentRecord[])
   }, [])
 
-  useEffect(() => { void loadHistory() }, [loadHistory])
+  useEffect(() => { queueMicrotask(() => void loadHistory()) }, [loadHistory])
 
   const handleSubmit = useCallback(async () => {
     if (!imagePreview) { setError('사진을 먼저 업로드해주세요.'); return }
@@ -639,23 +675,18 @@ export function SiteAssessmentUserPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
-      <header>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200/80 bg-indigo-50/80 px-3 py-1 text-[10px]! font-semibold uppercase tracking-[0.12em] text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300 md:text-[11px]!">
-          <span aria-hidden>🦺</span> 현장 AI 평가
-        </span>
-        <h1 className="mt-3 text-[22px]! font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-[28px]!">
-          사진 한 장으로 현장 보고서를
-        </h1>
-        <p className="mt-1.5 text-[13px]! text-slate-500 dark:text-slate-400 md:text-[15px]!">
-          현장 사진과 기본 정보를 입력하면 AI가 위험성평가 / 품질검사 보고서를 자동 작성합니다.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="팀 · 현장 · 현장 AI 평가"
+        title="사진 한 장으로 현장 보고서를"
+        description="현장 사진과 기본 정보를 입력하면 AI가 위험성평가 / 품질검사 보고서를 자동 작성합니다."
+        icon={IconHardHat}
+      />
 
       {/* 탭 */}
-      <div className="flex w-fit gap-1 rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-slate-800 dark:bg-slate-900/50">
+      <div className="flex w-fit gap-1 rounded-xl border border-border bg-surface-2/70 p-1">
         {([['new','📝 새 보고서'],['history','🗂 보고서 이력']] as const).map(([t,l]) => (
           <button key={t} type="button" onClick={() => { setTab(t); setSelectedRecord(null) }}
-            className={`rounded-lg px-4 py-2 text-[13px]! font-semibold transition md:text-[14px]! ${tab===t ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-800 dark:text-indigo-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
+            className={`rounded-lg px-4 py-2 text-[13px] font-semibold transition md:text-[14px] ${tab===t ? 'bg-surface text-accent shadow-sm' : 'text-fg-subtle hover:text-fg'}`}>
             {l}
           </button>
         ))}
@@ -672,21 +703,21 @@ export function SiteAssessmentUserPage() {
             <div className="grid grid-cols-2 gap-2">
               {([['safety','🦺','안전보건 위험성평가'],['quality','🏗','품질관리 검사']] as const).map(([c,e,l]) => (
                 <button key={c} type="button" onClick={() => setCategory(c)}
-                  className={`flex flex-col items-start rounded-xl border p-3 text-left transition ${category===c ? 'border-indigo-400 bg-indigo-50 dark:border-indigo-600 dark:bg-indigo-950/40' : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/40'}`}>
+                  className={`flex flex-col items-start rounded-xl border p-3 text-left transition ${category===c ? 'border-indigo-400 bg-accent-soft' : 'border-border bg-surface hover:border-border-strong'}`}>
                   <span className="text-2xl">{e}</span>
-                  <span className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{l}</span>
+                  <span className="mt-1 text-sm font-semibold text-fg">{l}</span>
                 </button>
               ))}
             </div>
 
             {/* 사진 업로드 */}
             <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">현장 사진 <span className="text-red-500">*</span></p>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-subtle">현장 사진 <span className="text-red-500">*</span></p>
               {imagePreview ? (
-                <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-                  <img src={imagePreview} alt="" className="max-h-52 w-full object-contain bg-slate-50 dark:bg-slate-900" />
+                <div className="overflow-hidden rounded-xl border border-border">
+                  <img src={imagePreview} alt="" className="max-h-52 w-full object-contain bg-bg" />
                   <div className="flex items-center justify-between px-3 py-1.5">
-                    <span className="truncate text-xs text-slate-400">{imageFile?.name}</span>
+                    <span className="truncate text-xs text-fg-subtle">{imageFile?.name}</span>
                     <button type="button" onClick={resetForm} className="text-xs text-red-500 hover:underline">삭제</button>
                   </div>
                 </div>
@@ -696,10 +727,10 @@ export function SiteAssessmentUserPage() {
                   onDragLeave={() => setDragging(false)}
                   onDrop={async (e) => { e.preventDefault(); setDragging(false); const f=e.dataTransfer.files[0]; if(f) await handleFile(f) }}
                   onClick={() => fileRef.current?.click()}
-                  className={`flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-8 transition ${dragging ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' : 'border-slate-300 bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800/30'}`}>
+                  className={`flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-8 transition ${dragging ? 'border-indigo-400 bg-accent-soft' : 'border-border-strong bg-bg hover:border-border-strong'}`}>
                   <span className="text-3xl">📷</span>
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">클릭 또는 드래그해서 업로드</span>
-                  <span className="text-xs text-slate-400">JPG · PNG · WEBP · 최대 4MB</span>
+                  <span className="text-sm font-medium text-fg-muted">클릭 또는 드래그해서 업로드</span>
+                  <span className="text-xs text-fg-subtle">JPG · PNG · WEBP · 최대 4MB</span>
                 </button>
               )}
               <input ref={fileRef} type="file" accept="image/*" className="hidden"
@@ -713,7 +744,7 @@ export function SiteAssessmentUserPage() {
 
             {/* 메타데이터 폼 */}
             <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                 {category === 'safety' ? '위험성평가 기본 정보' : '품질검사 기본 정보'}
               </p>
               {category === 'safety'
@@ -724,11 +755,11 @@ export function SiteAssessmentUserPage() {
 
             {/* 모델 선택 */}
             <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">AI 모델</p>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-subtle">AI 모델</p>
               <div className="flex gap-2">
                 {MODEL_OPTIONS.map(m => (
                   <button key={m.value} type="button" onClick={() => setModel(m.value)}
-                    className={`flex-1 rounded-lg border py-2 text-xs font-medium transition ${model===m.value ? 'border-indigo-400 bg-indigo-50 text-indigo-700 dark:border-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300' : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400'}`}>
+                    className={`flex-1 rounded-lg border py-2 text-xs font-medium transition ${model===m.value ? 'border-indigo-400 bg-accent-soft text-accent' : 'border-border text-fg-muted hover:border-border-strong'}`}>
                     {m.label}
                   </button>
                 ))}
@@ -736,11 +767,11 @@ export function SiteAssessmentUserPage() {
             </div>
 
             {error && (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">{error}</p>
+              <p className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>
             )}
 
             <button type="button" disabled={busy || !imagePreview} onClick={() => void handleSubmit()}
-              className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50">
+              className="w-full rounded-xl bg-accent py-3 text-sm font-semibold text-white hover:bg-accent disabled:opacity-50">
               {busy ? '보고서 작성 중… (30~60초 소요)' : '📄 AI 보고서 생성'}
             </button>
           </div>
@@ -748,16 +779,16 @@ export function SiteAssessmentUserPage() {
           {/* 결과 패널 */}
           <div className="xl:col-span-3">
             {busy ? (
-              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-800">
+              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-accent/30">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-                <p className="text-sm text-slate-500">사진을 분석하고 보고서를 작성 중입니다…</p>
+                <p className="text-sm text-fg-subtle">사진을 분석하고 보고서를 작성 중입니다…</p>
               </div>
             ) : result ? (
               <ReportView record={result} />
             ) : (
-              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border">
                 <span className="text-4xl opacity-25">📄</span>
-                <p className="text-sm text-slate-400">기본 정보와 사진을 입력하고<br/>보고서 생성 버튼을 누르세요</p>
+                <p className="text-sm text-fg-subtle">기본 정보와 사진을 입력하고<br/>보고서 생성 버튼을 누르세요</p>
               </div>
             )}
           </div>
@@ -769,11 +800,11 @@ export function SiteAssessmentUserPage() {
         <div className="grid gap-6 xl:grid-cols-5">
           <div className="space-y-2 xl:col-span-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">최근 보고서</p>
-              <button type="button" onClick={() => void loadHistory()} className="text-xs text-indigo-600 hover:underline dark:text-indigo-400">새로고침</button>
+              <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">최근 보고서</p>
+              <button type="button" onClick={() => void loadHistory()} className="text-xs text-accent hover:underline">새로고침</button>
             </div>
             {history.length === 0
-              ? <p className="py-8 text-center text-sm text-slate-400">보고서 이력이 없습니다.</p>
+              ? <p className="py-8 text-center text-sm text-fg-subtle">보고서 이력이 없습니다.</p>
               : history.map(rec => {
                   const meta = rec.report_metadata as Record<string,unknown> | null
                   const title = rec.category === 'safety'
@@ -781,20 +812,20 @@ export function SiteAssessmentUserPage() {
                     : (meta?.facility_name ?? meta?.inspection_area ?? '무제')
                   return (
                     <button key={rec.id} type="button" onClick={() => setSelectedRecord(rec)}
-                      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${selectedRecord?.id===rec.id ? 'border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/30' : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/50'}`}>
+                      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${selectedRecord?.id===rec.id ? 'border-accent/30 bg-accent-soft' : 'border-border bg-surface hover:border-border-strong'}`}>
                       {rec.image_thumb_b64
                         ? <img src={rec.image_thumb_b64} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
-                        : <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-2xl dark:bg-slate-700">{rec.category==='safety'?'🦺':'🏗'}</div>
+                        : <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-2xl">{rec.category==='safety'?'🦺':'🏗'}</div>
                       }
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{String(title)}</p>
-                        <p className="text-xs text-indigo-600 dark:text-indigo-400">{rec.category==='safety' ? '안전보건' : '품질관리'}</p>
-                        <p className="text-xs text-slate-400">{fmtDate(rec.created_at)}</p>
+                        <p className="truncate text-sm font-medium text-fg">{String(title)}</p>
+                        <p className="text-xs text-accent">{rec.category==='safety' ? '안전보건' : '품질관리'}</p>
+                        <p className="text-xs text-fg-subtle">{fmtDate(rec.created_at)}</p>
                       </div>
                       <div className="shrink-0 text-sm font-bold">
                         {rec.category==='safety'
-                          ? <span className={`${RISK_CFG[rec.overall_level?.toLowerCase()]?.cls?.split(' ')[1] ?? 'text-slate-500'}`}>{RISK_CFG[rec.overall_level?.toLowerCase()]?.label?.split(' ')[0] ?? rec.overall_level}</span>
-                          : <span className={GRADE_CLS[rec.overall_level?.toUpperCase()] ?? 'text-slate-500'}>{rec.overall_level}</span>
+                          ? <span className={`${RISK_CFG[rec.overall_level?.toLowerCase()]?.cls?.split(' ')[1] ?? 'text-fg-subtle'}`}>{RISK_CFG[rec.overall_level?.toLowerCase()]?.label?.split(' ')[0] ?? rec.overall_level}</span>
+                          : <span className={GRADE_CLS[rec.overall_level?.toUpperCase()] ?? 'text-fg-subtle'}>{rec.overall_level}</span>
                         }
                       </div>
                     </button>
@@ -805,8 +836,8 @@ export function SiteAssessmentUserPage() {
           <div className="xl:col-span-3">
             {selectedRecord
               ? <ReportView record={selectedRecord} />
-              : <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                  <p className="text-sm text-slate-400">좌측에서 보고서를 선택하세요.</p>
+              : <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
+                  <p className="text-sm text-fg-subtle">좌측에서 보고서를 선택하세요.</p>
                 </div>
             }
           </div>

@@ -36,7 +36,7 @@ export function PromptLibraryMagnetSheet({
   const dragStartYRef = useRef(0)
   const dragStartHeightRef = useRef(readExpandedHeightPx())
   const expandedHeightRef = useRef(readExpandedHeightPx())
-  const [heightPx, setHeightPx] = useState(expandedHeightRef.current)
+  const [heightPx, setHeightPx] = useState(() => readExpandedHeightPx())
   const [isDragging, setIsDragging] = useState(false)
 
   const close = useCallback(() => {
@@ -105,7 +105,7 @@ export function PromptLibraryMagnetSheet({
       />
 
       <div
-        className="fixed inset-x-0 z-[25] flex min-h-0 flex-col overflow-hidden rounded-t-[1.35rem] border border-b-0 border-stone-300/85 bg-[#F4F1EA] shadow-[0_-10px_36px_rgba(28,25,23,0.14)] dark:border-stone-700 dark:bg-stone-900 lg:hidden"
+        className="fixed inset-x-0 z-[25] flex min-h-0 flex-col overflow-hidden rounded-t-[1.35rem] border border-b-0 border-border-strong/85 bg-surface-2 shadow-[0_-10px_36px_rgba(28,25,23,0.14)] lg:hidden"
         style={{
           bottom: COMPOSER_BOTTOM_OFFSET,
           height: heightPx,
@@ -114,14 +114,14 @@ export function PromptLibraryMagnetSheet({
         aria-expanded={expanded}
       >
         <div
-          className="flex shrink-0 touch-none flex-col items-center border-b border-stone-200/75 bg-[#F4F1EA]/95 px-3 pb-2.5 pt-2.5 dark:border-stone-700 dark:bg-stone-900/95"
+          className="flex shrink-0 touch-none flex-col items-center border-b border-border/75 bg-surface-2 px-3 pb-2.5 pt-2.5"
           onPointerDown={onHandlePointerDown}
           onPointerMove={onHandlePointerMove}
           onPointerUp={finishDrag}
           onPointerCancel={finishDrag}
         >
           <div
-            className="h-1 w-11 rounded-full bg-stone-400/90 dark:bg-stone-500"
+            className="h-1 w-11 rounded-full bg-stone-400/90"
             aria-hidden="true"
           />
         </div>

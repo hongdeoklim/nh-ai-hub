@@ -126,31 +126,31 @@ function CodeCanvasPanel({
     <div
       className={`my-2 overflow-hidden rounded-xl border shadow-sm ${
         isGemini
-          ? 'border-[#c4c7c5] bg-[#f8fafd] dark:border-stone-700 dark:bg-stone-950'
+          ? 'border-[#c4c7c5] bg-[#f8fafd]'
           : variant === 'claude'
-          ? 'border-stone-200 bg-stone-950 dark:border-stone-700'
+          ? 'border-border bg-stone-950'
           : 'border-slate-700 bg-slate-950'
       }`}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-1.5">
-        <span className="text-[11px]! font-semibold uppercase tracking-wide text-stone-400">
+      <div className="flex items-center justify-between gap-2 border-b border-border/10 px-3 py-1.5">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-fg-subtle">
           {language || 'code'}
         </span>
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className={`rounded-md px-2 py-0.5 text-[11px]! font-semibold ${
+          className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
             isGemini
-              ? 'text-[#444746] hover:bg-black/5 dark:text-stone-300 dark:hover:bg-white/10'
-              : 'text-stone-300 hover:bg-white/10'
+              ? 'text-[#444746] hover:bg-black/5'
+              : 'text-fg-subtle hover:bg-surface-2/10'
           }`}
         >
           {copied ? '복사됨' : '복사'}
         </button>
       </div>
       <pre
-        className={`max-h-[min(24rem,50vh)] overflow-auto p-3 text-[13px]! leading-relaxed ${
-          isGemini ? 'text-[#1f1f1f] dark:text-stone-200' : 'text-emerald-100'
+        className={`max-h-[min(24rem,50vh)] overflow-auto p-3 text-[13px] leading-relaxed ${
+          isGemini ? 'text-[#1f1f1f]' : 'text-emerald-100'
         }`}
       >
         <code>{code}</code>
@@ -191,7 +191,15 @@ export function ChatRichContent({
     [segments],
   )
 
-  let imageCursor = -1
+  // 이미지 세그먼트별 라이트박스 인덱스를 렌더 전에 미리 계산 (렌더 콜백 안에서의 변이 금지)
+  const imageIndexBySegment: number[] = []
+  {
+    let cursor = -1
+    for (const seg of segments) {
+      if (seg.kind === 'image') cursor += 1
+      imageIndexBySegment.push(cursor)
+    }
+  }
 
   return (
     <div className="space-y-1">
@@ -228,14 +236,13 @@ export function ChatRichContent({
             />
           )
         }
-        imageCursor += 1
-        const imgIdx = imageCursor
+        const imgIdx = imageIndexBySegment[i] ?? 0
         return (
           <button
             key={`img-${i}`}
             type="button"
             onClick={() => setLightboxIndex(imgIdx)}
-            className="group relative my-2 block w-full max-w-md overflow-hidden rounded-xl border border-stone-200/80 bg-stone-100 dark:border-stone-600 dark:bg-stone-900"
+            className="group relative my-2 block w-full max-w-md overflow-hidden rounded-xl border border-border/80 bg-surface-2"
           >
             <img
               src={seg.url}
@@ -243,7 +250,7 @@ export function ChatRichContent({
               className="max-h-72 w-full object-contain transition group-hover:brightness-95"
               loading="lazy"
             />
-            <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px]! font-semibold text-white opacity-0 transition group-hover:opacity-100">
+            <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
               크게 보기
             </span>
           </button>

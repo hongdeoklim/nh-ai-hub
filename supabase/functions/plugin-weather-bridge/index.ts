@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
+import { isHealthCheckRequest, verifyInternalBridgeSecret } from "../_shared/plugin-bridge-auth.ts"
 
 /**
  * 기상청(KMA) 단기예보 브릿지 — `nh.public-data.weather-forecast` 플러그인의
@@ -79,6 +79,9 @@ Deno.serve(async (req) => {
   const serviceKey =
     Deno.env.get("CORP_DATA_PORTAL_API_KEY")?.trim() || Deno.env.get("DATA_PORTAL_API_KEY")?.trim()
   if (!serviceKey) return json({ ok: false, error: "공공데이터포털 서비스키가 서버에 설정되지 않았습니다." }, 500)
+
+  // 연결 테스트: 사용자 자격 증명이 없는 서버 키 방식이라 키 설정 여부만 확인한다
+  if (isHealthCheckRequest(body)) return json({ ok: true, health_check: true })
 
   const cityRaw = body.arguments?.city?.trim()
   if (!cityRaw) return json({ ok: false, error: "city 인자가 필요합니다 (예: 서울, 부산)." }, 400)

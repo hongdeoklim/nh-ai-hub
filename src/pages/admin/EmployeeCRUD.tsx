@@ -25,6 +25,7 @@ import {
   EMPLOYEE_DEPARTMENTS,
   EMPLOYEE_JOB_TITLES,
 } from '../../types/employee-org'
+import { useDialogs } from '../../components/common/DialogProvider'
 
 type EmployeeRow = {
   id: string
@@ -64,7 +65,7 @@ function displayName(row: Pick<EmployeeRow, 'display_name' | 'email'>): string {
 function roleBadgeClass(role: string | null): string {
   return role === 'admin'
     ? 'bg-violet-100 text-violet-800 dark:bg-violet-950/50 dark:text-violet-200'
-    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+    : 'bg-surface-2 text-fg-muted'
 }
 
 function usageTone(used: number, limit: number): string {
@@ -76,6 +77,7 @@ function usageTone(used: number, limit: number): string {
 }
 
 export function EmployeeCRUD() {
+  const { confirm: confirmDialog } = useDialogs()
   const [rows, setRows] = useState<EmployeeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -384,9 +386,12 @@ export function EmployeeCRUD() {
           : `선택 ${selectedIds.size}명`
 
     if (
-      !window.confirm(
-        `${scopeLabel}의 토큰 사용량(current_token_usage)을 0으로 초기화합니다. 계속할까요?`,
-      )
+      !(await confirmDialog({
+        title: `${scopeLabel}의 토큰 사용량을 0으로 초기화합니다. 계속할까요?`,
+        description: 'current_token_usage 값이 즉시 0이 되며 되돌릴 수 없습니다.',
+        confirmLabel: '초기화',
+        tone: 'danger',
+      }))
     ) {
       return
     }
@@ -452,10 +457,10 @@ export function EmployeeCRUD() {
     <div className="mx-auto max-w-6xl space-y-5 text-base">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">
             직원 관리
           </h1>
-          <p className="mt-1 text-base text-slate-600 dark:text-slate-400">
+          <p className="mt-1 text-base text-fg-muted">
             전 직원 계정·권한·토큰 한도를 한 화면에서 운영합니다. Auth 계정 생성/수정/삭제는
             Edge Function으로 안전하게 처리됩니다.
           </p>
@@ -463,7 +468,7 @@ export function EmployeeCRUD() {
         <button
           type="button"
           onClick={() => openCreate()}
-          className="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent"
         >
           + 직원 등록
         </button>
@@ -475,17 +480,17 @@ export function EmployeeCRUD() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="이름·이메일·부서·직책 검색"
-          className="w-full max-w-xs rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="w-full max-w-xs rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg shadow-sm placeholder:text-fg-subtle focus:border-accent focus:outline-none focus:ring-2 focus:ring-focus/40"
         />
         <button
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
         >
           새로고침
         </button>
-        <span className="text-sm text-slate-500 dark:text-slate-400">
+        <span className="text-sm text-fg-subtle">
           {filteredRows.length}명 · 선택 {selectedCount}명
         </span>
       </div>
@@ -493,19 +498,19 @@ export function EmployeeCRUD() {
       {successMessage ? (
         <div
           role="status"
-          className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100"
+          className="rounded-lg border border-success/30 bg-success-soft px-4 py-3 text-sm text-success"
         >
           {successMessage}
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0 flex-1 space-y-1">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+            <h2 className="text-sm font-semibold text-fg">
               토큰 자동 초기화
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-fg-subtle">
               {formatNextResetLabel(tokenPolicy?.reset_day_of_month ?? null)}
               {tokenPolicy?.last_auto_reset_at
                 ? ` · 최근 실행: ${new Date(tokenPolicy.last_auto_reset_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`
@@ -513,20 +518,20 @@ export function EmployeeCRUD() {
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-2">
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <label className="block text-xs font-semibold text-fg-subtle">
               매월 초기화일 (1~28일)
               <input
                 type="date"
                 value={resetDayInput}
                 onChange={(e) => setResetDayInput(e.target.value)}
-                className="mt-1 block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="mt-1 block rounded-lg border border-border bg-surface px-3 py-2 text-sm"
               />
             </label>
             <button
               type="button"
               disabled={policyBusy}
               onClick={() => void submitSaveResetPolicy()}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
             >
               {policyBusy ? '저장 중…' : '정책 저장'}
             </button>
@@ -549,7 +554,7 @@ export function EmployeeCRUD() {
                   setPolicyBusy(false)
                 }
               }}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-fg-subtle transition hover:bg-surface-2"
             >
               해제
             </button>
@@ -557,67 +562,67 @@ export function EmployeeCRUD() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2.5 dark:border-indigo-950 dark:bg-indigo-950/20">
-        <span className="text-xs font-semibold uppercase tracking-wide text-indigo-900 dark:text-indigo-200">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-indigo-100 bg-accent-soft/60 px-3 py-2.5">
+        <span className="text-xs font-semibold uppercase tracking-wide text-accent">
           일괄 토큰
         </span>
         <button
           type="button"
           disabled={selectedCount === 0}
           onClick={() => openBulkGrant('selected')}
-          className="rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-indigo-800 shadow-sm transition hover:bg-indigo-100 disabled:opacity-40 dark:bg-slate-900 dark:text-indigo-200 dark:hover:bg-slate-800"
+          className="rounded-md bg-surface px-2.5 py-1.5 text-xs font-semibold text-accent shadow-sm transition hover:bg-accent-soft disabled:opacity-40"
         >
           선택 부여
         </button>
         <button
           type="button"
           onClick={() => openBulkGrant('all')}
-          className="rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-indigo-800 shadow-sm transition hover:bg-indigo-100 dark:bg-slate-900 dark:text-indigo-200 dark:hover:bg-slate-800"
+          className="rounded-md bg-surface px-2.5 py-1.5 text-xs font-semibold text-accent shadow-sm transition hover:bg-accent-soft"
         >
           전체 부여
         </button>
         <button
           type="button"
           onClick={() => openBulkGrant('department')}
-          className="rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-indigo-800 shadow-sm transition hover:bg-indigo-100 dark:bg-slate-900 dark:text-indigo-200 dark:hover:bg-slate-800"
+          className="rounded-md bg-surface px-2.5 py-1.5 text-xs font-semibold text-accent shadow-sm transition hover:bg-accent-soft"
         >
           부서별 부여
         </button>
-        <span className="mx-1 h-4 w-px bg-indigo-200 dark:bg-indigo-800" aria-hidden="true" />
+        <span className="mx-1 h-4 w-px bg-indigo-200" aria-hidden="true" />
         <button
           type="button"
           disabled={selectedCount === 0}
           onClick={() => openBulkReset('selected')}
-          className="rounded-md border border-amber-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-50 disabled:opacity-40 dark:border-amber-900 dark:bg-slate-900 dark:text-amber-200 dark:hover:bg-amber-950/30"
+          className="rounded-md border border-warning/30 bg-surface px-2.5 py-1.5 text-xs font-semibold text-warning transition hover:bg-warning-soft disabled:opacity-40"
         >
           선택 초기화
         </button>
         <button
           type="button"
           onClick={() => openBulkReset('all')}
-          className="rounded-md border border-amber-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-50 dark:border-amber-900 dark:bg-slate-900 dark:text-amber-200 dark:hover:bg-amber-950/30"
+          className="rounded-md border border-warning/30 bg-surface px-2.5 py-1.5 text-xs font-semibold text-warning transition hover:bg-warning-soft"
         >
           전체 초기화
         </button>
         <button
           type="button"
           onClick={() => openBulkReset('department')}
-          className="rounded-md border border-amber-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-50 dark:border-amber-900 dark:bg-slate-900 dark:text-amber-200 dark:hover:bg-amber-950/30"
+          className="rounded-md border border-warning/30 bg-surface px-2.5 py-1.5 text-xs font-semibold text-warning transition hover:bg-warning-soft"
         >
           부서별 초기화
         </button>
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <div className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[960px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
+            <thead className="border-b border-border bg-bg text-xs font-semibold uppercase tracking-wide text-fg-subtle">
               <tr>
                 <th className="w-10 px-3 py-2.5">
                   <input
@@ -625,7 +630,7 @@ export function EmployeeCRUD() {
                     checked={allVisibleSelected}
                     onChange={() => toggleSelectAllVisible()}
                     aria-label="현재 목록 전체 선택"
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-border-strong text-accent focus:ring-focus/40"
                   />
                 </th>
                 <th className="px-4 py-2.5">직원</th>
@@ -636,16 +641,16 @@ export function EmployeeCRUD() {
                 <th className="px-4 py-2.5 text-right">작업</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-fg-subtle">
                     불러오는 중…
                   </td>
                 </tr>
               ) : filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-fg-subtle">
                     표시할 직원이 없습니다.
                   </td>
                 </tr>
@@ -659,7 +664,7 @@ export function EmployeeCRUD() {
                   return (
                     <tr
                       key={u.id}
-                      className={`transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40 ${isSelected ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : ''}`}
+                      className={`transition hover:bg-surface-2/80 ${isSelected ? 'bg-accent-soft/50' : ''}`}
                     >
                       <td className="px-3 py-2.5">
                         <input
@@ -667,21 +672,21 @@ export function EmployeeCRUD() {
                           checked={isSelected}
                           onChange={() => toggleRowSelected(u.id)}
                           aria-label={`${displayName(u)} 선택`}
-                          className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          className="h-4 w-4 rounded border-border-strong text-accent focus:ring-focus/40"
                         />
                       </td>
                       <td className="max-w-[240px] px-4 py-2.5">
-                        <p className="truncate font-medium text-slate-900 dark:text-slate-50">
+                        <p className="truncate font-medium text-fg">
                           {displayName(u)}
                         </p>
-                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                        <p className="truncate text-xs text-fg-subtle">
                           {u.email}
                         </p>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-2.5 text-slate-600 dark:text-slate-300">
+                      <td className="whitespace-nowrap px-4 py-2.5 text-fg-muted">
                         {(u.department ?? '').trim() || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-2.5 text-slate-600 dark:text-slate-300">
+                      <td className="whitespace-nowrap px-4 py-2.5 text-fg-muted">
                         {(u.job_title ?? '').trim() || '—'}
                       </td>
                       <td className="px-4 py-2.5">
@@ -693,7 +698,7 @@ export function EmployeeCRUD() {
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex max-w-xs flex-col gap-1">
-                          <div className="flex justify-between text-xs tabular-nums text-slate-600 dark:text-slate-300">
+                          <div className="flex justify-between text-xs tabular-nums text-fg-muted">
                             <span>
                               {used.toLocaleString('ko-KR')} /{' '}
                               {limit.toLocaleString('ko-KR')}
@@ -701,7 +706,7 @@ export function EmployeeCRUD() {
                             <span className="font-medium">{pct}%</span>
                           </div>
                           <progress
-                            className={`h-1.5 w-full appearance-none overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-100 dark:[&::-webkit-progress-bar]:bg-slate-800 [&::-webkit-progress-value]:rounded-full ${usageTone(used, limit)}`}
+                            className={`h-1.5 w-full appearance-none overflow-hidden rounded-full bg-surface-2 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-100 dark:[&::-webkit-progress-bar]:bg-slate-800 [&::-webkit-progress-value]:rounded-full ${usageTone(used, limit)}`}
                             value={used}
                             max={limit > 0 ? limit : 1}
                             aria-label={`토큰 사용 ${pct}%`}
@@ -714,7 +719,7 @@ export function EmployeeCRUD() {
                             type="button"
                             disabled={busyId === u.id}
                             onClick={() => openGrant(u)}
-                            className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                            className="rounded-md border border-border px-2 py-1 text-xs font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
                           >
                             토큰
                           </button>
@@ -722,7 +727,7 @@ export function EmployeeCRUD() {
                             type="button"
                             disabled={busyId === u.id}
                             onClick={() => openEdit(u)}
-                            className="rounded-md bg-indigo-600 px-2 py-1 text-xs font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                            className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-white transition hover:bg-accent disabled:opacity-50"
                           >
                             수정
                           </button>
@@ -730,7 +735,7 @@ export function EmployeeCRUD() {
                             type="button"
                             disabled={busyId === u.id}
                             onClick={() => openDelete(u)}
-                            className="rounded-md border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
+                            className="rounded-md border border-danger/30 px-2 py-1 text-xs font-semibold text-danger transition hover:bg-danger-soft disabled:opacity-50"
                           >
                             삭제
                           </button>
@@ -755,33 +760,33 @@ export function EmployeeCRUD() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="employee-form-title"
-            className="max-h-[min(92dvh,40rem)] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+            className="max-h-[min(92dvh,40rem)] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="employee-form-title"
-              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+              className="text-lg font-semibold text-fg"
             >
               {modal === 'create' ? '직원 등록' : '직원 수정'}
             </h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-sm text-fg-subtle">
               {modal === 'create'
                 ? '등록 후 임시 비밀번호가 생성됩니다. 직원에게 안전하게 전달하세요.'
                 : '변경 사항은 Edge Function을 통해 Auth·프로필에 반영됩니다.'}
             </p>
 
             {tempPassword ? (
-              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
-                <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+              <div className="mt-4 rounded-lg border border-warning/30 bg-warning-soft p-4">
+                <p className="text-sm font-medium text-warning">
                   등록 완료 — 임시 비밀번호
                 </p>
-                <p className="mt-2 break-all font-mono text-sm text-amber-800 dark:text-amber-200">
+                <p className="mt-2 break-all font-mono text-sm text-warning">
                   {tempPassword}
                 </p>
                 <button
                   type="button"
                   onClick={() => closeModal()}
-                  className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                  className="mt-4 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent"
                 >
                   확인
                 </button>
@@ -789,7 +794,7 @@ export function EmployeeCRUD() {
             ) : (
               <>
                 <div className="mt-5 space-y-4">
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                     이메일
                     <input
                       type="email"
@@ -797,27 +802,27 @@ export function EmployeeCRUD() {
                       onChange={(e) =>
                         setForm((f) => ({ ...f, email: e.target.value }))
                       }
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                     />
                   </label>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                     이름
                     <input
                       value={form.display_name}
                       onChange={(e) =>
                         setForm((f) => ({ ...f, display_name: e.target.value }))
                       }
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                     />
                   </label>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                     부서
                     <select
                       value={form.department}
                       onChange={(e) =>
                         setForm((f) => ({ ...f, department: e.target.value }))
                       }
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                     >
                       <option value="">(미지정)</option>
                       {EMPLOYEE_DEPARTMENTS.map((d) => (
@@ -833,14 +838,14 @@ export function EmployeeCRUD() {
                       ) : null}
                     </select>
                   </label>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                     직책
                     <select
                       value={form.job_title}
                       onChange={(e) =>
                         setForm((f) => ({ ...f, job_title: e.target.value }))
                       }
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                     >
                       <option value="">(미지정)</option>
                       {EMPLOYEE_JOB_TITLES.map((t) => (
@@ -856,7 +861,7 @@ export function EmployeeCRUD() {
                       ) : null}
                     </select>
                   </label>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                     권한
                     <select
                       value={form.role}
@@ -866,19 +871,19 @@ export function EmployeeCRUD() {
                           role: e.target.value as AppUserRole,
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                     >
                       <option value="user">일반 (user)</option>
                       <option value="admin">관리자 (admin)</option>
                     </select>
                   </label>
                 </div>
-                <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
                   <button
                     type="button"
                     disabled={formBusy}
                     onClick={() => closeModal()}
-                    className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2"
                   >
                     취소
                   </button>
@@ -888,7 +893,7 @@ export function EmployeeCRUD() {
                     onClick={() =>
                       void (modal === 'create' ? submitCreate() : submitEdit())
                     }
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:opacity-60"
                   >
                     {formBusy ? '처리 중…' : modal === 'create' ? '등록' : '저장'}
                   </button>
@@ -909,17 +914,17 @@ export function EmployeeCRUD() {
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="delete-title"
-            className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+            className="w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="delete-title"
-              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+              className="text-lg font-semibold text-fg"
             >
               직원 삭제
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              <span className="font-medium text-slate-900 dark:text-slate-100">
+            <p className="mt-2 text-sm text-fg-muted">
+              <span className="font-medium text-fg">
                 {displayName(target)}
               </span>
               님의 Auth 계정과 프로필을 영구 삭제합니다. 되돌릴 수 없습니다.
@@ -929,7 +934,7 @@ export function EmployeeCRUD() {
                 type="button"
                 disabled={formBusy}
                 onClick={() => closeModal()}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2"
               >
                 취소
               </button>
@@ -937,7 +942,7 @@ export function EmployeeCRUD() {
                 type="button"
                 disabled={formBusy}
                 onClick={() => void submitDelete()}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60"
+                className="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60"
               >
                 {formBusy ? '삭제 중…' : '삭제'}
               </button>
@@ -956,16 +961,16 @@ export function EmployeeCRUD() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="grant-title"
-            className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+            className="w-full max-w-md rounded-xl border border-border bg-surface p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="grant-title"
-              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+              className="text-lg font-semibold text-fg"
             >
               토큰 한도 부여
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-sm text-fg-muted">
               {grantScope === 'all'
                 ? '전체 직원의 월간 token_limit를 증가시킵니다.'
                 : grantScope === 'department'
@@ -977,10 +982,10 @@ export function EmployeeCRUD() {
 
             <div className="mt-5 space-y-4">
               <fieldset className="space-y-2">
-                <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <legend className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   대상
                 </legend>
-                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="flex items-center gap-2 text-sm text-fg-muted">
                   <input
                     type="radio"
                     name="grant-scope"
@@ -989,7 +994,7 @@ export function EmployeeCRUD() {
                   />
                   선택한 직원 ({selectedCount}명)
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="flex items-center gap-2 text-sm text-fg-muted">
                   <input
                     type="radio"
                     name="grant-scope"
@@ -998,7 +1003,7 @@ export function EmployeeCRUD() {
                   />
                   전체 직원
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="flex items-center gap-2 text-sm text-fg-muted">
                   <input
                     type="radio"
                     name="grant-scope"
@@ -1010,12 +1015,12 @@ export function EmployeeCRUD() {
               </fieldset>
 
               {grantScope === 'department' ? (
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   부서
                   <select
                     value={grantDepartment}
                     onChange={(e) => setGrantDepartment(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                   >
                     <option value="">부서 선택</option>
                     {departmentOptions.map((d) => (
@@ -1027,7 +1032,7 @@ export function EmployeeCRUD() {
                 </label>
               ) : null}
 
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                 추가 할당량 (token_limit +N)
                 <input
                   type="number"
@@ -1035,17 +1040,17 @@ export function EmployeeCRUD() {
                   step={1}
                   value={grantAmount}
                   onChange={(e) => setGrantAmount(e.target.value)}
-                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm tabular-nums dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
                 />
               </label>
             </div>
 
-            <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
               <button
                 type="button"
                 disabled={formBusy}
                 onClick={() => closeModal()}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2"
               >
                 취소
               </button>
@@ -1053,7 +1058,7 @@ export function EmployeeCRUD() {
                 type="button"
                 disabled={formBusy}
                 onClick={() => void submitGrant()}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:opacity-60"
               >
                 {formBusy ? '처리 중…' : '부여하기'}
               </button>
@@ -1072,25 +1077,25 @@ export function EmployeeCRUD() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="reset-title"
-            className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+            className="w-full max-w-md rounded-xl border border-border bg-surface p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="reset-title"
-              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+              className="text-lg font-semibold text-fg"
             >
               토큰 사용량 초기화
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-sm text-fg-muted">
               current_token_usage를 0으로 되돌립니다. token_limit(한도)는 변경되지 않습니다.
             </p>
 
             <div className="mt-5 space-y-4">
               <fieldset className="space-y-2">
-                <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <legend className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   대상
                 </legend>
-                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="flex items-center gap-2 text-sm text-fg-muted">
                   <input
                     type="radio"
                     name="reset-scope"
@@ -1099,7 +1104,7 @@ export function EmployeeCRUD() {
                   />
                   선택한 직원 ({selectedCount}명)
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="flex items-center gap-2 text-sm text-fg-muted">
                   <input
                     type="radio"
                     name="reset-scope"
@@ -1108,7 +1113,7 @@ export function EmployeeCRUD() {
                   />
                   전체 직원
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="flex items-center gap-2 text-sm text-fg-muted">
                   <input
                     type="radio"
                     name="reset-scope"
@@ -1120,12 +1125,12 @@ export function EmployeeCRUD() {
               </fieldset>
 
               {resetScope === 'department' ? (
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   부서
                   <select
                     value={resetDepartment}
                     onChange={(e) => setResetDepartment(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                   >
                     <option value="">부서 선택</option>
                     {departmentOptions.map((d) => (
@@ -1138,12 +1143,12 @@ export function EmployeeCRUD() {
               ) : null}
             </div>
 
-            <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
               <button
                 type="button"
                 disabled={formBusy}
                 onClick={() => closeModal()}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2"
               >
                 취소
               </button>

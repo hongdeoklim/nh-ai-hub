@@ -23,6 +23,8 @@ import type {
   NotebookPinnedNote,
   NotebookSource,
 } from '../types/notebook'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconNotebook } from '../components/common/icons'
 
 function newId(): string {
   return crypto.randomUUID()
@@ -104,10 +106,10 @@ export function NotebookWorkspace() {
     queueMicrotask(() => void loadSources())
   }, [loadSources])
 
-  useEffect(() => {
-    if (sources.length === 0 || selectedIds.size > 0) return
+  // 선택된 소스가 없으면 앞쪽 3개를 기본 선택한다 (렌더 중 조정)
+  if (sources.length > 0 && selectedIds.size === 0) {
     setSelectedIds(new Set(sources.slice(0, Math.min(3, sources.length)).map((s) => s.id)))
-  }, [sources, selectedIds.size])
+  }
 
   useEffect(() => {
     queueMicrotask(() => void loadGraph())
@@ -335,20 +337,23 @@ export function NotebookWorkspace() {
   ])
 
   return (
-    <div className="notebook-workspace flex min-h-0 flex-1 flex-col bg-[#EBE9E4] dark:bg-stone-950">
-      <header className="shrink-0 border-b border-stone-200/90 bg-[#FAF9F6] px-4 py-3 dark:border-stone-800 dark:bg-stone-900 md:px-6">
-        <h1 className="text-lg font-bold text-stone-900 dark:text-stone-50">
-          📓 노트북 워크스페이스
-        </h1>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          출처 문서를 선택하고, 인용·지식 지도로 연결된 답변을 받으세요.
-        </p>
-        {processingDocId ? (
-          <p className="mt-1 text-xs text-orange-800 dark:text-orange-200">
-            문서 파싱·관계 추출 중…
-          </p>
-        ) : null}
-      </header>
+    <div className="notebook-workspace flex min-h-0 flex-1 flex-col bg-bg">
+      <div className="shrink-0 border-b border-border px-4 py-4 md:px-6">
+        <PageHeader
+          eyebrow="지식 · 노트북"
+          title="노트북 워크스페이스"
+          description="출처 문서를 선택하고, 인용·지식 지도로 연결된 답변을 받으세요."
+          icon={IconNotebook}
+          actions={
+            processingDocId ? (
+              <span className="inline-flex items-center gap-[6px] rounded-full bg-brand-soft px-[10px] py-[4px] text-xs font-medium text-brand">
+                <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-brand" aria-hidden="true" />
+                문서 파싱·관계 추출 중…
+              </span>
+            ) : undefined
+          }
+        />
+      </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-4">
         <div className="min-h-[14rem] lg:col-span-1">

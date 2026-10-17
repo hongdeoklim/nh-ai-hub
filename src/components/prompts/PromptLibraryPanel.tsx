@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import type { SavedPromptRow } from '../../types/prompts'
 import type { StaticOrgPromptItem } from '../../data/org-static-prompts'
+import { useDialogs } from '../common/DialogProvider'
 
 export type { StaticOrgPromptItem }
 
@@ -55,6 +56,7 @@ export function PromptLibraryPanel({
   promptPanelRegionId = 'prompt-library-panel',
   variant = 'sidebar',
 }: PromptLibraryPanelProps) {
+  const { confirm: confirmDialog } = useDialogs()
   const [tab, setTab] = useState<PromptTab>('org')
   const [saveOpen, setSaveOpen] = useState(false)
   const [saveTitle, setSaveTitle] = useState('')
@@ -86,12 +88,12 @@ export function PromptLibraryPanel({
   }
 
   const tabBase = isCompactSidebar
-    ? 'min-w-0 rounded-full px-1 py-1 text-center text-[9px]! font-semibold leading-tight transition-colors'
-    : 'min-w-0 rounded-full px-2 py-2 text-center text-[20px]! font-medium leading-tight transition-colors sm:px-3'
+    ? 'min-w-0 rounded-full px-1 py-1 text-center text-[9px] font-semibold leading-tight transition-colors'
+    : 'min-w-0 rounded-full px-2 py-2 text-center text-[20px] font-medium leading-tight transition-colors sm:px-3'
   const tabActive =
-    'bg-white text-stone-900 shadow-sm dark:bg-stone-700 dark:text-stone-50'
+    'bg-surface text-fg shadow-sm'
   const tabIdle =
-    'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100'
+    'text-fg-muted hover:text-fg'
 
   const orgTabLabel = isCompactSidebar ? '\uc804\uc0ac' : '\uc804\uc0ac \ud504\ub86c\ud504\ud2b8'
   const mineTabLabel = isCompactSidebar ? '\uac1c\uc778' : '\uac1c\uc778 \ud504\ub86c\ud504\ud2b8'
@@ -100,17 +102,17 @@ export function PromptLibraryPanel({
     <div
       className={
         variant === 'magnet'
-          ? 'sticky top-0 z-10 border-b border-stone-200/80 bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/95'
-          : 'border-b border-stone-200/80 px-2 py-2 dark:border-stone-700'
+          ? 'sticky top-0 z-10 border-b border-border/80 bg-surface-2 px-4 py-3 backdrop-blur-sm'
+          : 'border-b border-border/80 px-2 py-2'
       }
     >
       {variant === 'magnet' ? (
-        <p className="text-[17px]! font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
+        <p className="text-[17px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">
           {'\ud504\ub86c\ud504\ud2b8'}
         </p>
       ) : null}
       <div
-        className={`${variant === 'magnet' ? 'mt-2' : 'mt-0'} grid grid-cols-2 gap-0.5 rounded-full bg-stone-200/70 p-0.5 dark:bg-stone-800`}
+        className={`${variant === 'magnet' ? 'mt-2' : 'mt-0'} grid grid-cols-2 gap-0.5 rounded-full bg-surface-3/70 p-0.5`}
         role="tablist"
       >
         <button
@@ -136,29 +138,29 @@ export function PromptLibraryPanel({
   )
 
   const sectionLabelClass = isCompactSidebar
-    ? 'px-0.5 pb-0.5 text-[9px]! font-medium text-stone-500 dark:text-stone-400'
-    : 'px-1 pb-1 text-[17px]! font-medium text-stone-500 dark:text-stone-400'
+    ? 'px-0.5 pb-0.5 text-[9px] font-medium text-fg-subtle'
+    : 'px-1 pb-1 text-[17px] font-medium text-fg-subtle'
   const cardTitleClass = isCompactSidebar
-    ? 'truncate text-[10px]! font-semibold text-stone-900 dark:text-stone-50'
-    : 'text-[20px]! font-semibold text-stone-900 dark:text-stone-50'
+    ? 'truncate text-[10px] font-semibold text-fg'
+    : 'text-[20px] font-semibold text-fg'
   const cardBodyClass = isCompactSidebar
-    ? 'mt-0.5 line-clamp-2 text-[9px]! leading-snug text-stone-600 dark:text-stone-400'
-    : 'mt-1 text-[18px]! leading-snug text-stone-600 dark:text-stone-400'
+    ? 'mt-0.5 line-clamp-2 text-[9px] leading-snug text-fg-muted'
+    : 'mt-1 text-[18px] leading-snug text-fg-muted'
   const cardButtonClass = isCompactSidebar
-    ? 'group flex w-full flex-col rounded-lg border border-transparent bg-white/60 px-1.5 py-1.5 text-left shadow-sm transition hover:border-orange-300/80 hover:bg-white dark:bg-stone-800/80 dark:hover:border-orange-700/50 dark:hover:bg-stone-800 disabled:opacity-50'
-    : 'group flex w-full flex-col rounded-xl border border-transparent bg-white/60 px-3 py-2.5 text-left shadow-sm transition hover:border-orange-300/80 hover:bg-white dark:bg-stone-800/80 dark:hover:border-orange-700/50 dark:hover:bg-stone-800 disabled:opacity-50'
+    ? 'group flex w-full flex-col rounded-lg border border-transparent bg-surface/60 px-1.5 py-1.5 text-left shadow-sm transition hover:border-orange-300/80 hover:bg-surface-2 disabled:opacity-50'
+    : 'group flex w-full flex-col rounded-xl border border-transparent bg-surface/60 px-3 py-2.5 text-left shadow-sm transition hover:border-orange-300/80 hover:bg-surface-2 disabled:opacity-50'
   const badgeOrgClass = isCompactSidebar
-    ? 'rounded bg-orange-100 px-1 py-px text-[8px]! font-semibold text-orange-900 dark:bg-orange-950/80 dark:text-orange-100'
-    : 'rounded-md bg-orange-100 px-1.5 py-0.5 text-[15px]! font-semibold text-orange-900 dark:bg-orange-950/80 dark:text-orange-100'
+    ? 'rounded bg-brand-soft px-1 py-px text-[8px] font-semibold text-brand'
+    : 'rounded-md bg-brand-soft px-1.5 py-0.5 text-[15px] font-semibold text-brand'
   const badgeShareClass = isCompactSidebar
-    ? 'rounded bg-amber-100 px-1 py-px text-[8px]! font-semibold text-amber-950 dark:bg-amber-950/60 dark:text-amber-100'
-    : 'rounded-md bg-amber-100 px-1.5 py-0.5 text-[15px]! font-semibold text-amber-950 dark:bg-amber-950/60 dark:text-amber-100'
+    ? 'rounded bg-warning-soft px-1 py-px text-[8px] font-semibold text-warning'
+    : 'rounded-md bg-warning-soft px-1.5 py-0.5 text-[15px] font-semibold text-warning'
   const badgeMineClass = isCompactSidebar
-    ? 'rounded bg-stone-200 px-1 py-px text-[8px]! font-semibold text-stone-800 dark:bg-stone-700 dark:text-stone-100'
-    : 'rounded-md bg-stone-200 px-1.5 py-0.5 text-[15px]! font-semibold text-stone-800 dark:bg-stone-700 dark:text-stone-100'
+    ? 'rounded bg-surface-3 px-1 py-px text-[8px] font-semibold text-fg'
+    : 'rounded-md bg-surface-3 px-1.5 py-0.5 text-[15px] font-semibold text-fg'
 
   const tabContent = loading ? (
-    <p className="px-1 py-6 text-center text-xs text-stone-500">
+    <p className="px-1 py-6 text-center text-xs text-fg-subtle">
       {'\ubd88\ub7ec\uc624\ub294 \uc911\u2026'}
     </p>
   ) : tab === 'org' ? (
@@ -214,8 +216,8 @@ export function PromptLibraryPanel({
                 }
                 className={
                   isCompactSidebar
-                    ? 'group flex w-full flex-col rounded-lg border border-transparent bg-white/60 px-1.5 py-1.5 text-left shadow-sm transition hover:border-amber-300/80 hover:bg-white dark:bg-stone-800/80 dark:hover:border-amber-700/40 dark:hover:bg-stone-800 disabled:opacity-50'
-                    : 'group flex w-full flex-col rounded-xl border border-transparent bg-white/60 px-3 py-2.5 text-left shadow-sm transition hover:border-amber-300/80 hover:bg-white dark:bg-stone-800/80 dark:hover:border-amber-700/40 dark:hover:bg-stone-800 disabled:opacity-50'
+                    ? 'group flex w-full flex-col rounded-lg border border-transparent bg-surface/60 px-1.5 py-1.5 text-left shadow-sm transition hover:border-amber-300/80 hover:bg-surface-2 disabled:opacity-50'
+                    : 'group flex w-full flex-col rounded-xl border border-transparent bg-surface/60 px-3 py-2.5 text-left shadow-sm transition hover:border-amber-300/80 hover:bg-surface-2 disabled:opacity-50'
                 }
               >
                 <span
@@ -241,8 +243,8 @@ export function PromptLibraryPanel({
         onClick={() => openSaveModal()}
         className={
           isCompactSidebar
-            ? 'w-full rounded-lg border border-dashed border-stone-400/70 bg-white/50 px-1.5 py-2 text-[9px]! font-semibold text-stone-800 transition hover:border-orange-400 hover:bg-white dark:border-stone-600 dark:bg-stone-800/50 dark:text-stone-100 dark:hover:border-orange-700 disabled:opacity-50'
-            : 'w-full rounded-xl border border-dashed border-stone-400/70 bg-white/50 px-3 py-3 text-[20px]! font-semibold text-stone-800 transition hover:border-orange-400 hover:bg-white dark:border-stone-600 dark:bg-stone-800/50 dark:text-stone-100 dark:hover:border-orange-700 disabled:opacity-50'
+            ? 'w-full rounded-lg border border-dashed border-border-strong/70 bg-surface/50 px-1.5 py-2 text-[9px] font-semibold text-fg transition hover:border-orange-400 hover:bg-surface-2 disabled:opacity-50'
+            : 'w-full rounded-xl border border-dashed border-border-strong/70 bg-surface/50 px-3 py-3 text-[20px] font-semibold text-fg transition hover:border-orange-400 hover:bg-surface-2 disabled:opacity-50'
         }
       >
         {isCompactSidebar
@@ -251,14 +253,14 @@ export function PromptLibraryPanel({
       </button>
 
       {!userId ? (
-        <p className="text-center text-xs text-stone-500">
+        <p className="text-center text-xs text-fg-subtle">
           {
             '\ub85c\uadf8\uc778 \ud6c4 \uac1c\uc778 \ud504\ub86c\ud504\ud2b8\ub97c \uc800\uc7a5\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.'
           }
         </p>
       ) : myPrompts.length === 0 ? (
         <p
-          className={`rounded-xl bg-white/50 text-center text-xs leading-relaxed text-stone-600 dark:bg-stone-800/50 dark:text-stone-400 ${isCompactSidebar ? 'px-1.5 py-3' : 'px-3 py-6'}`}
+          className={`rounded-xl bg-surface/50 text-center text-xs leading-relaxed text-fg-muted ${isCompactSidebar ? 'px-1.5 py-3' : 'px-3 py-6'}`}
         >
           {'\uc800\uc7a5\ub41c \ud504\ub86c\ud504\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.'}
           {!isCompactSidebar ? (
@@ -275,7 +277,7 @@ export function PromptLibraryPanel({
           {myPrompts.map((row) => (
             <li
               key={row.id}
-              className={`flex gap-1 rounded-xl border border-stone-200/80 bg-white/70 shadow-sm dark:border-stone-700 dark:bg-stone-800/70 ${isCompactSidebar ? 'p-0.5' : 'p-1'}`}
+              className={`flex gap-1 rounded-xl border border-border/80 bg-surface/70 shadow-sm ${isCompactSidebar ? 'p-0.5' : 'p-1'}`}
             >
               <button
                 type="button"
@@ -286,7 +288,7 @@ export function PromptLibraryPanel({
                     promptId: row.id,
                   })
                 }
-                className={`min-w-0 flex-1 rounded-lg text-left transition hover:bg-stone-50 dark:hover:bg-stone-700/80 disabled:opacity-50 ${isCompactSidebar ? 'px-1 py-1' : 'px-2 py-2'}`}
+                className={`min-w-0 flex-1 rounded-lg text-left transition hover:bg-surface-2 disabled:opacity-50 ${isCompactSidebar ? 'px-1 py-1' : 'px-2 py-2'}`}
               >
                 <span
                   className={`flex items-center ${isCompactSidebar ? 'gap-1' : 'gap-2'}`}
@@ -303,18 +305,17 @@ export function PromptLibraryPanel({
               <button
                 type="button"
                 disabled={disabled}
-                className="shrink-0 rounded-lg px-2 text-stone-400 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                className="shrink-0 rounded-lg px-2 text-fg-subtle hover:bg-danger-soft hover:text-danger"
                 aria-label={'\ud504\ub86c\ud504\ud2b8 \uc0ad\uc81c'}
                 title={'\uc0ad\uc81c'}
                 onClick={() => {
-                  if (
-                    !window.confirm(
-                      `\u300c${row.title}\u300d \ud504\ub86c\ud504\ud2b8\ub97c \uc0ad\uc81c\ud560\uae4c\uc694?`,
-                    )
-                  ) {
-                    return
-                  }
                   void (async () => {
+                    const ok = await confirmDialog({
+                      title: `「${row.title}」 프롬프트를 삭제할까요?`,
+                      confirmLabel: '삭제',
+                      tone: 'danger',
+                    })
+                    if (!ok) return
                     const r = await onDeletePrompt(row.id)
                     if (!r.ok) toast.error(r.message)
                     else await onRefresh()
@@ -350,8 +351,8 @@ export function PromptLibraryPanel({
       id={promptPanelRegionId}
       className={
         variant === 'magnet'
-          ? 'flex h-full min-h-0 w-full min-w-0 flex-col bg-[#F4F1EA] dark:bg-stone-900'
-          : 'flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden border-b border-stone-200/90 bg-[#F4F1EA] dark:border-stone-700 dark:bg-stone-900 lg:border-b-0 lg:border-r'
+          ? 'flex h-full min-h-0 w-full min-w-0 flex-col bg-surface-2'
+          : 'flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden border-b border-border/90 bg-surface-2 lg:border-b-0 lg:border-r'
       }
     >
       {tabHeader}
@@ -368,30 +369,30 @@ export function PromptLibraryPanel({
           <div
             role="dialog"
             aria-labelledby="save-prompt-title"
-            className="w-full max-w-lg rounded-2xl border border-stone-200 bg-[#FAF9F6] p-5 shadow-xl dark:border-stone-700 dark:bg-stone-900"
+            className="w-full max-w-lg rounded-2xl border border-border bg-bg p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="save-prompt-title"
-              className="text-base font-semibold text-stone-900 dark:text-stone-50"
+              className="text-base font-semibold text-fg"
             >
               {'\uac1c\uc778 \ud504\ub86c\ud504\ud2b8 \uc800\uc7a5'}
             </h2>
-            <label className="mt-4 block text-xs font-medium text-stone-600 dark:text-stone-400">
+            <label className="mt-4 block text-xs font-medium text-fg-muted">
               {'\uc81c\ubaa9'}
               <input
                 value={saveTitle}
                 onChange={(e) => setSaveTitle(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+                className="mt-1 w-full rounded-xl border border-border-strong bg-surface px-3 py-2 text-sm"
               />
             </label>
-            <label className="mt-3 block text-xs font-medium text-stone-600 dark:text-stone-400">
+            <label className="mt-3 block text-xs font-medium text-fg-muted">
               {'\ub0b4\uc6a9'}
               <textarea
                 value={saveBody}
                 onChange={(e) => setSaveBody(e.target.value)}
                 rows={6}
-                className="mt-1 w-full resize-y rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100"
+                className="mt-1 w-full resize-y rounded-xl border border-border-strong bg-surface px-3 py-2 text-sm"
               />
             </label>
             <div className="mt-4 flex justify-end gap-2">
@@ -399,7 +400,7 @@ export function PromptLibraryPanel({
                 type="button"
                 disabled={saveBusy}
                 onClick={() => setSaveOpen(false)}
-                className="rounded-xl px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-200/80 dark:text-stone-300 dark:hover:bg-stone-800"
+                className="rounded-xl px-4 py-2 text-sm font-medium text-fg-muted hover:bg-surface-3/80"
               >
                 {'\ucde8\uc18c'}
               </button>
@@ -407,7 +408,7 @@ export function PromptLibraryPanel({
                 type="button"
                 disabled={saveBusy}
                 onClick={() => void submitSave()}
-                className="rounded-xl bg-orange-700 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-800 disabled:opacity-60"
+                className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-brand-fg hover:bg-brand-strong disabled:opacity-60"
               >
                 {saveBusy ? '\uc800\uc7a5 \uc911\u2026' : '\uc800\uc7a5'}
               </button>

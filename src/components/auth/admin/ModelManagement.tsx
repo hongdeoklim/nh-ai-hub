@@ -23,6 +23,7 @@ import {
   type AiModelRow,
   type AiModelType,
 } from '../../../types/ai-models'
+import { useDialogs } from '../../common/DialogProvider'
 
 type ModalMode = 'create' | 'edit'
 
@@ -53,20 +54,20 @@ const INITIAL_FORM: FormState = {
 function costBadgeClass(costInfo: string): string {
   const level = costInfo.trim()
   if (level === '저렴' || level === '초저가') {
-    return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200'
+    return 'bg-success-soft text-success'
   }
   if (level === '높음' || level === '프리미엄') {
-    return 'bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200'
+    return 'bg-warning-soft text-warning'
   }
-  return 'bg-stone-200/90 text-stone-700 dark:bg-stone-700/80 dark:text-stone-200'
+  return 'bg-surface-3/90 text-fg-muted'
 }
 
 function providerBadgeClass(provider: AiModelProvider): string {
   switch (provider) {
     case 'anthropic':
-      return 'bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200'
+      return 'bg-brand-soft text-brand'
     case 'openai':
-      return 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200'
+      return 'bg-success-soft text-success'
     default:
       return 'bg-blue-100 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200'
   }
@@ -79,7 +80,7 @@ function typeBadgeClass(type: AiModelType): string {
   if (type === 'video') {
     return 'bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-200'
   }
-  return 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200'
+  return 'bg-surface-2 text-fg'
 }
 
 function modelTypeLabel(type: AiModelType): string {
@@ -89,6 +90,7 @@ function modelTypeLabel(type: AiModelType): string {
 }
 
 export function ModelManagement() {
+  const { confirm: confirmDialog } = useDialogs()
   const { profile, session } = useAuth()
   const [rows, setRows] = useState<AiModelRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -187,9 +189,12 @@ export function ModelManagement() {
   }
 
   async function handleDelete(row: AiModelRow) {
-    const confirmed = window.confirm(
-      `「${row.display_name}」(${row.api_id}) 모델을 삭제할까요?\n삭제 후에는 복구할 수 없습니다.`,
-    )
+    const confirmed = await confirmDialog({
+      title: `「${row.display_name}」(${row.api_id}) 모델을 삭제할까요?`,
+      description: '삭제 후에는 복구할 수 없습니다.',
+      confirmLabel: '삭제',
+      tone: 'danger',
+    })
     if (!confirmed) return
 
     setBusyId(row.id)
@@ -374,7 +379,7 @@ export function ModelManagement() {
             <button
               type="button"
               onClick={openCreate}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 active:bg-indigo-800 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent active:bg-indigo-800"
             >
             <svg
               className="h-4 w-4"
@@ -399,7 +404,7 @@ export function ModelManagement() {
       {successMessage ? (
         <div
           role="status"
-          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-100"
+          className="rounded-xl border border-success/30 bg-success-soft px-4 py-3 text-sm text-emerald-950"
         >
           {successMessage}
         </div>
@@ -408,49 +413,49 @@ export function ModelManagement() {
       {error ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100"
+          className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-red-900"
         >
           {error}
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-            <thead className="bg-slate-50 dark:bg-slate-950/60">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-bg">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   공급사
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   모델 이름
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   비용 등급
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   상세 업무 가이드
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   API ID
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   타입
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   활성
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   관리
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
                   <td
                     colSpan={8}
-                    className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+                    className="px-4 py-10 text-center text-sm text-fg-subtle"
                   >
                     모델 목록을 불러오는 중…
                   </td>
@@ -459,10 +464,10 @@ export function ModelManagement() {
                 <tr>
                   <td
                     colSpan={8}
-                    className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+                    className="px-4 py-10 text-center text-sm text-fg-subtle"
                   >
                     <p>등록된 AI 모델이 없습니다.</p>
-                    <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                    <p className="mt-2 text-xs text-fg-subtle">
                       「새로운 AI 모델 추가」로 저장하거나 「AI 최신 동기화」로 카탈로그를
                       불러오세요.
                     </p>
@@ -472,7 +477,7 @@ export function ModelManagement() {
                 rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+                    className="transition hover:bg-surface-2/80"
                   >
                     <td className="px-4 py-3">
                       <span
@@ -482,11 +487,11 @@ export function ModelManagement() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                      <p className="text-sm font-medium text-fg">
                         {row.display_name}
                       </p>
                       {row.hint ? (
-                        <p className="mt-0.5 max-w-xs text-xs leading-snug text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 max-w-xs text-xs leading-snug text-fg-subtle">
                           {row.hint}
                         </p>
                       ) : null}
@@ -499,12 +504,12 @@ export function ModelManagement() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="max-w-sm text-xs leading-snug text-slate-600 dark:text-slate-300">
+                      <p className="max-w-sm text-xs leading-snug text-fg-muted">
                         {row.description?.trim() || '—'}
                       </p>
                     </td>
                     <td className="px-4 py-3">
-                      <code className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                      <code className="rounded-md bg-surface-2 px-2 py-1 text-xs text-fg">
                         {row.api_id}
                       </code>
                     </td>
@@ -525,12 +530,12 @@ export function ModelManagement() {
                         onClick={() => void handleToggleActive(row)}
                         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-50 ${
                           row.is_active
-                            ? 'bg-indigo-600 dark:bg-indigo-500'
-                            : 'bg-slate-300 dark:bg-slate-700'
+                            ? 'bg-accent'
+                            : 'bg-surface-3'
                         }`}
                       >
                         <span
-                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+                          className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow transition ${
                             row.is_active ? 'translate-x-5' : 'translate-x-0.5'
                           }`}
                         />
@@ -541,7 +546,7 @@ export function ModelManagement() {
                         <button
                           type="button"
                           onClick={() => openEdit(row)}
-                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-accent transition hover:bg-accent-soft"
                         >
                           수정
                         </button>
@@ -549,7 +554,7 @@ export function ModelManagement() {
                           type="button"
                           disabled={busyId === row.id}
                           onClick={() => void handleDelete(row)}
-                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50 dark:text-red-300 dark:hover:bg-red-950/40"
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-danger transition hover:bg-danger-soft disabled:opacity-50"
                         >
                           삭제
                         </button>
@@ -573,13 +578,13 @@ export function ModelManagement() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="ai-model-modal-title"
-            className="flex max-h-[min(85vh,34rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+            className="flex max-h-[min(85vh,34rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="shrink-0 border-b border-slate-200 px-5 py-3 dark:border-slate-700">
+            <div className="shrink-0 border-b border-border px-5 py-3">
               <h2
                 id="ai-model-modal-title"
-                className="text-base font-semibold text-slate-900 dark:text-slate-50"
+                className="text-base font-semibold text-fg"
               >
                 {modalMode === 'create' ? '새로운 AI 모델 추가' : 'AI 모델 수정'}
               </h2>
@@ -593,14 +598,14 @@ export function ModelManagement() {
               {saveError ? (
                 <div
                   role="alert"
-                  className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100"
+                  className="rounded-xl border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-red-900"
                 >
                   {saveError}
                 </div>
               ) : null}
 
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="mb-1 block text-xs font-semibold text-fg-muted">
                   공급사
                 </span>
                 <select
@@ -611,7 +616,7 @@ export function ModelManagement() {
                       provider: event.target.value as AiModelProvider,
                     }))
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-500/30 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 >
                   <option value="google">Google (Gemini)</option>
                   <option value="openai">OpenAI</option>
@@ -620,7 +625,7 @@ export function ModelManagement() {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="mb-1 block text-xs font-semibold text-fg-muted">
                   모델 이름
                 </span>
                 <input
@@ -631,12 +636,12 @@ export function ModelManagement() {
                     setForm((prev) => ({ ...prev, display_name: event.target.value }))
                   }
                   placeholder="예: Gemini 2.5 Flash"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-500/30 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="mb-1 block text-xs font-semibold text-fg-muted">
                   API ID
                 </span>
                 <input
@@ -648,12 +653,12 @@ export function ModelManagement() {
                   }
                   placeholder="예: gemini-2.5-flash"
                   disabled={modalMode === 'edit'}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-800"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2 disabled:cursor-not-allowed disabled:bg-surface-2"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="mb-1 block text-xs font-semibold text-fg-muted">
                   타입
                 </span>
                 <select
@@ -664,7 +669,7 @@ export function ModelManagement() {
                       model_type: event.target.value as AiModelType,
                     }))
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-500/30 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 >
                   <option value="text">텍스트</option>
                   <option value="image">이미지</option>
@@ -673,7 +678,7 @@ export function ModelManagement() {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="mb-1 block text-xs font-semibold text-fg-muted">
                   짧은 안내 (컴포저, 선택)
                 </span>
                 <textarea
@@ -683,12 +688,12 @@ export function ModelManagement() {
                     setForm((prev) => ({ ...prev, hint: event.target.value }))
                   }
                   placeholder="컴포저 하단에 표시되는 한 줄 안내"
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-500/30 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="mb-1 block text-xs font-semibold text-fg-muted">
                   비용 등급
                 </span>
                 <select
@@ -696,7 +701,7 @@ export function ModelManagement() {
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, cost_info: event.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-500/30 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 >
                   <option value="저렴">저렴</option>
                   <option value="보통">보통</option>
@@ -706,7 +711,7 @@ export function ModelManagement() {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="mb-1 block text-xs font-semibold text-fg-muted">
                   상세 업무 가이드
                 </span>
                 <textarea
@@ -716,24 +721,24 @@ export function ModelManagement() {
                     setForm((prev) => ({ ...prev, description: event.target.value }))
                   }
                   placeholder="모델 드롭다운 호버·관리자 테이블에 표시되는 업무 가이드"
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-500/30 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
                 />
               </label>
 
               <div className="flex flex-wrap items-center gap-4 pb-1">
-                <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="inline-flex items-center gap-2 text-sm text-fg-muted">
                   <input
                     type="checkbox"
                     checked={form.is_active}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, is_active: event.target.checked }))
                     }
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-border-strong text-accent focus:ring-focus/40"
                   />
                   활성화
                 </label>
 
-                <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <label className="inline-flex items-center gap-2 text-sm text-fg-muted">
                   <span>정렬</span>
                   <input
                     type="number"
@@ -744,25 +749,25 @@ export function ModelManagement() {
                         sort_order: Number(event.target.value) || 0,
                       }))
                     }
-                    className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-950"
+                    className="w-24 rounded-lg border border-border px-2 py-1 text-sm"
                   />
                 </label>
               </div>
               </div>
 
-              <div className="flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-700 dark:bg-slate-900">
+              <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-surface px-5 py-3">
                 <button
                   type="button"
                   disabled={saveBusy}
                   onClick={() => setModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-fg-muted transition hover:bg-surface-2 disabled:opacity-50"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={saveBusy}
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                  className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent disabled:opacity-50"
                 >
                   {saveBusy ? '저장 중…' : modalMode === 'create' ? '추가' : '저장'}
                 </button>

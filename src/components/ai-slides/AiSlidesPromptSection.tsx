@@ -79,7 +79,7 @@ export const AiSlidesPromptSection = forwardRef<
           onGuideModeChange={onGuideModeChange}
         />
 
-        <div className="search-input-wrapper input-wrapper mt-3 w-full overflow-visible rounded-[16px] border border-gray-200 bg-white shadow-[0px_6px_30px_0px_rgba(0,0,0,0.08)] dark:border-[#e6e9eb40] dark:bg-[#333333]">
+        <div className="search-input-wrapper input-wrapper mt-3 w-full overflow-visible rounded-[16px] border border-border bg-surface shadow-[0px_6px_30px_0px_rgba(0,0,0,0.08)] dark:border-[#e6e9eb40] dark:bg-[#333333]">
           <div className="slides-template input relative cursor-text px-[12px] pb-[12px] pt-3">
             <ChatInput
               value={draft}

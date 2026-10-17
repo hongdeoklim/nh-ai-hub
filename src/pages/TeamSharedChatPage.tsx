@@ -351,7 +351,7 @@ export function TeamSharedChatPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#FAF9F6] dark:bg-stone-950">
+    <div className="flex min-h-0 flex-1 flex-col bg-bg">
       <TokenRequestModal
         open={tokenModalOpen}
         onClose={() => {
@@ -365,19 +365,19 @@ export function TeamSharedChatPage() {
         presetSummary={modalPreset}
       />
 
-      <header className="shrink-0 border-b border-stone-200/90 px-4 py-3 backdrop-blur-md dark:border-stone-800 md:px-6">
-        <nav className="mb-2 text-[11px]! text-stone-600 dark:text-stone-400">
+      <header className="shrink-0 border-b border-border/90 px-4 py-3 backdrop-blur-md md:px-6">
+        <nav className="mb-2 text-[11px] text-fg-muted">
           <Link
             to={`/teams/${teamId ?? ''}`}
-            className="underline hover:text-stone-900 dark:hover:text-stone-200"
+            className="underline hover:text-fg"
           >
             ← 팀으로
           </Link>
           <span className="mx-1">/</span>
-          <span className="text-stone-800 dark:text-stone-200">{title}</span>
+          <span className="text-fg">{title}</span>
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-[15px]! font-semibold text-stone-900 dark:text-stone-50 md:text-base">
+          <h1 className="text-[15px] font-semibold text-fg md:text-base">
             공유 채팅
           </h1>
           {tokenLimit > 0 && remainingPct <= 10 ? (
@@ -391,7 +391,7 @@ export function TeamSharedChatPage() {
                   setTokenModalOpen(true)
                 })
               }}
-              className="rounded-full border border-amber-500/60 bg-amber-50 px-3 py-1 text-[11px]! font-semibold text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+              className="rounded-full border border-amber-500/60 bg-warning-soft px-3 py-1 text-[11px] font-semibold text-warning"
             >
               관리자에게 요청
             </button>
@@ -412,7 +412,7 @@ export function TeamSharedChatPage() {
         </ChatArtifactLayout>
       </ChatArtifactProvider>
 
-      <div className="shrink-0 border-t border-stone-200/90 bg-[#FAF9F6] px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] dark:border-stone-800 dark:bg-stone-950 md:px-6 md:py-3 md:pb-4">
+      <div className="shrink-0 border-t border-border/90 bg-bg px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:px-6 md:py-3 md:pb-4">
         <ChatInput
           value={draft}
           onChange={setDraft}
@@ -428,7 +428,7 @@ export function TeamSharedChatPage() {
               value={selectedModel}
               disabled={isSending || !profile}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="min-w-0 max-w-[min(70vw,16rem)] flex-1 cursor-pointer truncate rounded-md border border-stone-300/90 bg-white py-0.5 pl-1.5 pr-1 text-[11px]! font-medium text-stone-800 shadow-sm outline-none ring-orange-600/20 focus:ring-1 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-100 sm:text-[12px]!"
+              className="min-w-0 max-w-[min(70vw,16rem)] flex-1 cursor-pointer truncate rounded-md border border-border-strong/90 bg-surface py-0.5 pl-1.5 pr-1 text-[11px] font-medium text-fg shadow-sm outline-none ring-focus/40 focus:ring-1 disabled:opacity-50 sm:text-[12px]"
             >
               {modelOptions.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -439,12 +439,12 @@ export function TeamSharedChatPage() {
           }
           composerMeta={
             <div className="flex flex-col gap-1">
-              <p className="text-[10px]! leading-tight text-stone-500 dark:text-stone-500">
+              <p className="text-[10px] leading-tight text-fg-subtle">
                 같은 팀 대화에는 약 4초 간격 동기화(MVP)·토큰은 발신자(JWT 기준)
               </p>
               <Link
                 to="/workspace-tools"
-                className="text-[10px]! font-semibold text-orange-800 underline underline-offset-2 hover:text-orange-950 dark:text-orange-300 dark:hover:text-orange-200"
+                className="text-[10px] font-semibold text-brand underline underline-offset-2 hover:text-brand"
               >
                 워크스페이스 연동·문서 업로드 열기
               </Link>

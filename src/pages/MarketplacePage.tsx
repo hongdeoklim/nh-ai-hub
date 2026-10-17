@@ -10,6 +10,10 @@ import {
   type ExtensionType,
   type MarketplaceExtension,
 } from '../services/marketplace'
+import { PageHeader } from '../components/common/PageHeader'
+import { IconStore } from '../components/common/icons'
+import { useDialogs } from '../components/common/DialogProvider'
+import { EmptyState } from '../components/common/EmptyState'
 
 // ── Type metadata ────────────────────────────────────────────────────────────
 
@@ -31,14 +35,14 @@ const TYPE_META: Record<ExtensionType, { label: string; icon: string; color: str
   skill: {
     label: 'Skill',
     icon: '⚡',
-    color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+    color: 'bg-warning-soft text-warning',
     desc: '설치 즉시 사용 — AI가 특정 업무 형식으로 답변합니다.',
     badge: '설치 후 바로 사용 가능',
   },
   public_data: {
     label: 'Public Data',
     icon: '📡',
-    color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
+    color: 'bg-success-soft text-success',
     desc: '공공기관 API 데이터를 AI 채팅에서 조회합니다.',
     badge: '공공데이터포털 API 키 필요',
   },
@@ -139,9 +143,9 @@ interface HowToStartProps {
 function HowToStart({ type, onGoConfig }: HowToStartProps) {
   if (type === 'skill') {
     return (
-      <div className="rounded-xl bg-amber-50 p-4 dark:bg-amber-950/30">
-        <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">⚡ 설치만 하면 바로 사용 가능합니다</p>
-        <p className="mt-1.5 text-sm leading-6 text-amber-700 dark:text-amber-400">
+      <div className="rounded-xl bg-warning-soft p-4">
+        <p className="text-sm font-semibold text-warning">⚡ 설치만 하면 바로 사용 가능합니다</p>
+        <p className="mt-1.5 text-sm leading-6 text-warning">
           별도 계정이나 API 키 없이 설치 즉시 AI 채팅에서 사용할 수 있습니다. 설치 후 채팅창에 원하는 내용을 입력해 보세요.
         </p>
       </div>
@@ -177,9 +181,9 @@ function HowToStart({ type, onGoConfig }: HowToStartProps) {
   }
   if (type === 'public_data') {
     return (
-      <div className="rounded-xl bg-emerald-50 p-4 dark:bg-emerald-950/30">
-        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">📡 공공데이터 연결 3단계</p>
-        <ol className="mt-2 space-y-1.5 text-sm leading-6 text-emerald-700 dark:text-emerald-400">
+      <div className="rounded-xl bg-success-soft p-4">
+        <p className="text-sm font-semibold text-success">📡 공공데이터 연결 3단계</p>
+        <ol className="mt-2 space-y-1.5 text-sm leading-6 text-success">
           <li><span className="mr-2 font-bold">1.</span><strong>공공데이터포털 (data.go.kr)</strong>에 회원가입 후 해당 API를 신청합니다.</li>
           <li><span className="mr-2 font-bold">2.</span>승인된 API 키를 복사합니다. <span className="text-xs opacity-75">(보통 1~2일 소요)</span></li>
           <li><span className="mr-2 font-bold">3.</span>설치 후 <button onClick={onGoConfig} className="underline font-semibold">설정 탭</button>에 API 키를 붙여넣습니다.</li>
@@ -206,7 +210,7 @@ function InfoTab({ ext, manifest, portalUrl, docsUrl, onGoConfig }: InfoTabProps
   return (
     <div className="space-y-5">
       {/* 한 줄 설명 */}
-      <p className="text-sm leading-7 text-stone-700 dark:text-stone-300">{ext.description}</p>
+      <p className="text-sm leading-7 text-fg-muted">{ext.description}</p>
 
       {/* 시작하는 방법 */}
       <HowToStart type={ext.extension_type} onGoConfig={onGoConfig} />
@@ -214,12 +218,12 @@ function InfoTab({ ext, manifest, portalUrl, docsUrl, onGoConfig }: InfoTabProps
       {/* 이 확장이 할 수 있는 것 */}
       {tools.length > 0 && (
         <div>
-          <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-stone-400">이 확장으로 할 수 있는 것</p>
+          <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-fg-subtle">이 확장으로 할 수 있는 것</p>
           <ul className="space-y-2">
             {tools.map((t) => (
-              <li key={t.name} className="flex items-start gap-3 rounded-xl bg-stone-50 px-4 py-3 dark:bg-stone-800">
+              <li key={t.name} className="flex items-start gap-3 rounded-xl bg-bg px-4 py-3">
                 <span className="mt-0.5 text-base">✅</span>
-                <span className="text-sm leading-6 text-stone-700 dark:text-stone-300">{t.description}</span>
+                <span className="text-sm leading-6 text-fg-muted">{t.description}</span>
               </li>
             ))}
           </ul>
@@ -229,10 +233,10 @@ function InfoTab({ ext, manifest, portalUrl, docsUrl, onGoConfig }: InfoTabProps
       {/* 필요 권한 */}
       {ext.required_scopes.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-400">이 확장이 요청하는 권한</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-fg-subtle">이 확장이 요청하는 권한</p>
           <div className="flex flex-wrap gap-1.5">
             {ext.required_scopes.map((s) => (
-              <span key={s} className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+              <span key={s} className="rounded-full bg-surface-2 px-3 py-1 text-xs text-fg-muted">
                 {scopeLabel(s)}
               </span>
             ))}
@@ -303,28 +307,28 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center"
       onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
     >
-      <div className="w-full max-w-lg rounded-t-2xl bg-white shadow-2xl dark:bg-stone-900 sm:rounded-2xl">
+      <div className="w-full max-w-lg rounded-t-2xl bg-surface shadow-2xl sm:rounded-2xl">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-stone-100 px-6 py-5 dark:border-stone-800">
+        <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{typeof manifest.icon === 'string' ? manifest.icon : meta.icon}</span>
             <div>
-              <span className={`inline-block rounded-full px-2 py-0.5 text-[11px]! font-bold uppercase ${meta.color}`}>{meta.label}</span>
-              <h2 className="mt-1 text-lg font-bold text-stone-950 dark:text-white">{ext.name}</h2>
-              <p className="text-xs text-stone-500">v{ext.version} · {ext.provider}</p>
+              <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${meta.color}`}>{meta.label}</span>
+              <h2 className="mt-1 text-lg font-bold text-fg">{ext.name}</h2>
+              <p className="text-xs text-fg-subtle">v{ext.version} · {ext.provider}</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="mt-1 rounded-lg p-1 text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800">✕</button>
+          <button type="button" onClick={onClose} className="mt-1 rounded-lg p-1 text-fg-subtle hover:bg-surface-2">✕</button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-0 border-b border-stone-100 dark:border-stone-800">
+        <div className="flex gap-0 border-b border-border">
           {(['info', ...(hasConfig ? ['config'] : []), ...(prompt ? ['preview'] : [])] as Array<'info' | 'config' | 'preview'>).map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`px-5 py-3 text-sm font-semibold transition-colors ${tab === t ? 'border-b-2 border-orange-700 text-orange-800 dark:border-orange-400 dark:text-orange-300' : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'}`}
+              className={`px-5 py-3 text-sm font-semibold transition-colors ${tab === t ? 'border-b-2 border-orange-700 text-brand' : 'text-fg-subtle hover:text-fg'}`}
             >
               {t === 'info' ? '정보' : t === 'config' ? '설정' : '미리보기'}
             </button>
@@ -337,12 +341,12 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
 
           {tab === 'config' && (
             <div className="space-y-5">
-              <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
+              <p className="text-sm leading-6 text-fg-muted">
                 아래 항목을 입력한 뒤 <strong>저장</strong> 버튼을 누르면 설정이 완료됩니다.
               </p>
               {fields.map((f) => (
                 <div key={f.key}>
-                  <label className="mb-1.5 block text-sm font-semibold text-stone-700 dark:text-stone-300">
+                  <label className="mb-1.5 block text-sm font-semibold text-fg-muted">
                     {f.label}
                     {f.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
@@ -351,7 +355,7 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
                     aria-label={f.label} value={form[f.key] ?? ''}
                     onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
                     placeholder={f.label}
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-orange-600 focus:outline-none dark:border-stone-700 dark:bg-stone-800 dark:text-white"
+                    className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
                   />
                 </div>
               ))}
@@ -360,29 +364,29 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
 
           {tab === 'preview' && prompt && (
             <div className="space-y-3">
-              <div className="rounded-xl bg-amber-50 p-4 dark:bg-amber-950/30">
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">💡 이렇게 사용하세요</p>
-                <p className="mt-1 text-sm leading-6 text-amber-700 dark:text-amber-400">
+              <div className="rounded-xl bg-warning-soft p-4">
+                <p className="text-sm font-semibold text-warning">💡 이렇게 사용하세요</p>
+                <p className="mt-1 text-sm leading-6 text-warning">
                   AI 채팅창에 원하는 내용을 입력하면 아래 형식에 맞게 자동으로 답변합니다.
-                  <code className="mx-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs dark:bg-amber-900">{'{{중괄호}}'}</code>
+                  <code className="mx-1 rounded bg-warning-soft px-1.5 py-0.5 text-xs">{'{{중괄호}}'}</code>
                   부분을 실제 내용으로 채워서 요청하세요.
                 </p>
               </div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">AI가 사용하는 프롬프트 형식</p>
-              <pre className="whitespace-pre-wrap rounded-xl bg-stone-50 p-4 text-xs leading-6 text-stone-800 dark:bg-stone-800 dark:text-stone-200">{prompt}</pre>
+              <p className="text-xs font-semibold uppercase tracking-wider text-fg-subtle">AI가 사용하는 프롬프트 형식</p>
+              <pre className="whitespace-pre-wrap rounded-xl bg-bg p-4 text-xs leading-6 text-fg">{prompt}</pre>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-stone-100 px-6 py-4 dark:border-stone-800">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800">닫기</button>
+        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-fg-muted hover:bg-surface-2">닫기</button>
           {tab === 'config' ? (
             <button
               type="button"
               disabled={busy}
               onClick={() => void handleSubmit()}
-              className="rounded-lg bg-orange-800 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-orange-700"
+              className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
             >
               {busy ? '저장 중…' : ext.installation ? '설정 저장' : '설치 및 저장'}
             </button>
@@ -391,7 +395,7 @@ function DetailModal({ ext, onClose, onInstall, onUpdateConfig, busy }: DetailMo
               type="button"
               disabled={busy}
               onClick={() => void (hasConfig ? setTab('config') : handleSubmit())}
-              className="rounded-lg bg-orange-800 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-orange-700"
+              className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
             >
               {hasConfig ? '설치 설정하기' : busy ? '설치 중…' : '설치'}
             </button>
@@ -421,23 +425,23 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
   const hasConfig = getConfigFields(ext.config_schema).length > 0
 
   return (
-    <article className="flex flex-col rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-stone-800 dark:bg-stone-900">
+    <article className="flex flex-col rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <span className="text-2xl">{icon}</span>
           <div>
-            <span className={`rounded-full px-2 py-0.5 text-[10px]! font-bold uppercase ${meta.color}`}>{meta.label}</span>
-            <h2 className="mt-1 text-base font-bold text-stone-950 dark:text-white">{ext.name}</h2>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${meta.color}`}>{meta.label}</span>
+            <h2 className="mt-1 text-base font-bold text-fg">{ext.name}</h2>
           </div>
         </div>
-        <span className="shrink-0 text-xs text-stone-400">v{ext.version}</span>
+        <span className="shrink-0 text-xs text-fg-subtle">v{ext.version}</span>
       </div>
 
-      <p className="mt-3 grow text-sm leading-6 text-stone-600 dark:text-stone-400 line-clamp-2">{ext.description}</p>
-      <p className="mt-2 text-xs text-stone-400">{ext.provider}</p>
+      <p className="mt-3 grow text-sm leading-6 text-fg-muted line-clamp-2">{ext.description}</p>
+      <p className="mt-2 text-xs text-fg-subtle">{ext.provider}</p>
 
       {installed && (
-        <div className={`mt-3 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${installed.enabled ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-stone-100 text-stone-500 dark:bg-stone-800'}`}>
+        <div className={`mt-3 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${installed.enabled ? 'bg-success-soft text-success' : 'bg-surface-2 text-fg-subtle'}`}>
           <span className={`h-1.5 w-1.5 rounded-full ${installed.enabled ? 'bg-emerald-500' : 'bg-stone-400'}`} />
           {installed.enabled ? '활성' : '비활성'}
         </div>
@@ -447,7 +451,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
         <button
           type="button"
           onClick={onDetail}
-          className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+          className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
         >
           자세히
         </button>
@@ -456,7 +460,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
             type="button"
             disabled={busy}
             onClick={hasConfig ? onDetail : onInstall}
-            className="rounded-lg bg-orange-800 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 hover:bg-orange-700"
+            className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-brand-fg disabled:opacity-50 hover:bg-brand-strong"
           >
             {busy ? '설치 중…' : '설치'}
           </button>
@@ -466,7 +470,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
               type="button"
               disabled={busy}
               onClick={onToggle}
-              className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
             >
               {busy ? '…' : installed.enabled ? '비활성화' : '활성화'}
             </button>
@@ -474,7 +478,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
               <button
                 type="button"
                 onClick={onDetail}
-                className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-fg-muted hover:bg-surface-2"
               >
                 설정
               </button>
@@ -483,7 +487,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
               type="button"
               disabled={busy}
               onClick={onUninstall}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger-soft"
             >
               제거
             </button>
@@ -497,6 +501,7 @@ function ExtensionCard({ ext, busy, onInstall, onToggle, onUninstall, onDetail }
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export function MarketplacePage() {
+  const { confirm: confirmDialog } = useDialogs()
   const [extensions, setExtensions] = useState<MarketplaceExtension[]>([])
   const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('all')
   const [search, setSearch] = useState('')
@@ -559,36 +564,39 @@ export function MarketplacePage() {
   const handleToggle = (ext: MarketplaceExtension) =>
     run(ext.id, () => setExtensionEnabled(ext.installation!.id, !ext.installation!.enabled))
 
-  const handleUninstall = (ext: MarketplaceExtension) => {
-    if (!window.confirm(`"${ext.name}"을(를) 제거하시겠습니까?`)) return Promise.resolve()
-    return run(ext.id, () => uninstallExtension(ext.installation!.id))
+  const handleUninstall = async (ext: MarketplaceExtension) => {
+    const ok = await confirmDialog({
+      title: `"${ext.name}"을(를) 제거하시겠습니까?`,
+      confirmLabel: '제거',
+      tone: 'danger',
+    })
+    if (!ok) return
+    await run(ext.id, () => uninstallExtension(ext.installation!.id))
   }
 
   const installedCount = extensions.filter((x) => x.installation?.enabled).length
 
-  // Sync detailExt after reload so modal reflects latest state
-  useEffect(() => {
-    if (!detailExt) return
-    const fresh = extensions.find((x) => x.id === detailExt.id)
-    if (fresh) setDetailExt(fresh)
-  }, [extensions]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 새로고침 후에도 상세 모달이 최신 상태를 보이도록 목록에서 다시 찾는다 (파생값)
+  const detailView = detailExt
+    ? extensions.find((x) => x.id === detailExt.id) ?? detailExt
+    : null
 
   return (
-    <main className="min-h-full overflow-y-auto bg-[#FAF9F6] px-4 py-8 dark:bg-stone-950 md:px-8">
+    <main className="min-h-full overflow-y-auto bg-bg px-4 py-8 md:px-8">
       <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <p className="text-sm font-semibold uppercase tracking-wider text-orange-800 dark:text-orange-300">NH Extension Hub</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-stone-950 dark:text-white">Marketplace</h1>
-            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">Plugin, MCP, Skill, Public Data 확장을 설치하고 AI 채팅에서 바로 사용하세요.</p>
-          </div>
-          {installedCount > 0 && (
-            <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-              {installedCount}개 활성 중
-            </span>
-          )}
-        </div>
+        <PageHeader
+          eyebrow="자동화 · 마켓플레이스"
+          title="Marketplace"
+          description="Plugin, MCP, Skill, Public Data 확장을 설치하고 AI 채팅에서 바로 사용하세요."
+          icon={IconStore}
+          actions={
+            installedCount > 0 ? (
+              <span className="rounded-full bg-success-soft px-[12px] py-[4px] text-sm font-semibold text-success">
+                {installedCount}개 활성 중
+              </span>
+            ) : undefined
+          }
+        />
 
         {/* Type summary */}
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -599,11 +607,11 @@ export function MarketplacePage() {
                 key={t}
                 type="button"
                 onClick={() => setFilter(t)}
-                className={`rounded-xl border p-3 text-left transition-all ${filter === t ? 'border-orange-700 bg-orange-50 dark:bg-orange-950/30' : 'border-stone-200 bg-white hover:border-stone-300 dark:border-stone-800 dark:bg-stone-900'}`}
+                className={`rounded-xl border p-3 text-left transition-all ${filter === t ? 'border-orange-700 bg-brand-soft' : 'border-border bg-surface hover:border-border-strong'}`}
               >
                 <span className="text-xl">{meta.icon}</span>
-                <p className="mt-1 text-sm font-bold text-stone-900 dark:text-white">{meta.label}</p>
-                <p className="text-xs text-stone-500">{counts[t] ?? 0}개</p>
+                <p className="mt-1 text-sm font-bold text-fg">{meta.label}</p>
+                <p className="text-xs text-fg-subtle">{counts[t] ?? 0}개</p>
               </button>
             )
           })}
@@ -616,7 +624,7 @@ export function MarketplacePage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="확장 검색…"
-            className="min-w-48 flex-1 rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-orange-600 focus:outline-none dark:border-stone-700 dark:bg-stone-900 dark:text-white"
+            className="min-w-48 flex-1 rounded-xl border border-border-strong bg-surface px-4 py-2 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
           />
           <div className="flex flex-wrap gap-2" role="group" aria-label="Marketplace 필터">
             {FILTERS.map((item) => (
@@ -624,11 +632,11 @@ export function MarketplacePage() {
                 key={item.id}
                 type="button"
                 onClick={() => setFilter(item.id)}
-                className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${filter === item.id ? 'border-orange-700 bg-orange-700 text-white' : 'border-stone-300 bg-white text-stone-600 hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300'}`}
+                className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${filter === item.id ? 'border-orange-700 bg-brand text-brand-fg' : 'border-border-strong bg-surface text-fg-muted hover:border-border-strong'}`}
               >
                 {item.label}
                 {counts[item.id] !== undefined && (
-                  <span className="ml-1.5 rounded-full bg-black/10 px-1.5 py-0.5 text-[10px]!">{counts[item.id]}</span>
+                  <span className="ml-1.5 rounded-full bg-black/10 px-1.5 py-0.5 text-[10px]">{counts[item.id]}</span>
                 )}
               </button>
             ))}
@@ -636,18 +644,20 @@ export function MarketplacePage() {
         </div>
 
         {/* Error / loading */}
-        {error && <p className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
+        {error && <p className="mt-6 rounded-xl bg-danger-soft p-4 text-sm text-danger">{error}</p>}
         {loading && (
-          <div className="mt-10 flex items-center justify-center gap-2 text-stone-500">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-orange-700" />
+          <div className="mt-10 flex items-center justify-center gap-2 text-fg-subtle">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-border-strong border-t-orange-700" />
             불러오는 중…
           </div>
         )}
         {!loading && visible.length === 0 && (
-          <div className="mt-10 text-center">
-            <p className="text-2xl">🔍</p>
-            <p className="mt-2 text-stone-500">{search ? `"${search}"에 해당하는 확장이 없습니다.` : '표시할 확장이 없습니다.'}</p>
-          </div>
+          <EmptyState
+            className="mt-10"
+            icon={IconStore}
+            title={search ? `"${search}"에 해당하는 확장이 없습니다` : '표시할 확장이 없습니다'}
+            description="다른 검색어나 종류를 선택해 보세요."
+          />
         )}
 
         {/* Grid */}
@@ -661,7 +671,7 @@ export function MarketplacePage() {
                 const meta = TYPE_META[t]
                 return (
                   <section key={t} className="mt-8">
-                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-stone-500">
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-fg-subtle">
                       <span>{meta.icon}</span> {meta.label}
                       <span className="ml-1 text-xs font-normal normal-case">{meta.desc}</span>
                     </h3>
@@ -701,13 +711,13 @@ export function MarketplacePage() {
       </div>
 
       {/* Detail Modal */}
-      {detailExt && (
+      {detailView && (
         <DetailModal
-          ext={detailExt}
-          busy={busyId === detailExt.id}
+          ext={detailView}
+          busy={busyId === detailView.id}
           onClose={() => setDetailExt(null)}
-          onInstall={(config) => handleInstall(detailExt, config).then(() => setDetailExt(null))}
-          onUpdateConfig={(config) => handleUpdateConfig(detailExt, config)}
+          onInstall={(config) => handleInstall(detailView, config).then(() => setDetailExt(null))}
+          onUpdateConfig={(config) => handleUpdateConfig(detailView, config)}
         />
       )}
     </main>

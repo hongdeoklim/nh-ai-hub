@@ -16,14 +16,14 @@ function SectionCard({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-xl border border-stone-200/90 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-950/60">
-      <h3 className="flex items-start gap-2 text-sm font-semibold text-stone-900 dark:text-stone-50">
-        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-800 dark:bg-orange-950/60 dark:text-orange-200">
+    <section className="rounded-xl border border-border/90 bg-surface p-4 shadow-sm">
+      <h3 className="flex items-start gap-2 text-sm font-semibold text-fg">
+        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand">
           {number}
         </span>
         <span className="pt-0.5 leading-snug">{title}</span>
       </h3>
-      <div className="mt-3 space-y-2.5 text-[13px]! leading-relaxed text-stone-700 dark:text-stone-300">
+      <div className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-fg-muted">
         {children}
       </div>
     </section>
@@ -32,7 +32,7 @@ function SectionCard({
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="list-disc space-y-1.5 pl-5 marker:text-orange-600 dark:marker:text-orange-400">
+    <ul className="list-disc space-y-1.5 pl-5 marker:text-brand">
       {items.map((item) => (
         <li key={item}>{item}</li>
       ))}
@@ -74,29 +74,29 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="ai-usage-guide-title"
-        className="flex max-h-[min(92dvh,44rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-stone-200 bg-[#FAF9F6] shadow-2xl dark:border-stone-700 dark:bg-stone-900 sm:max-h-[min(88dvh,40rem)]"
+        className="flex max-h-[min(92dvh,44rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-bg shadow-2xl sm:max-h-[min(88dvh,40rem)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="shrink-0 border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-4 dark:border-stone-700 dark:from-orange-950/40 dark:to-stone-900 sm:px-5">
+        <div className="shrink-0 border-b border-border bg-gradient-to-r from-brand-soft to-amber-50 px-4 py-4 sm:px-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px]! font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-brand">
                 공지
               </p>
               <h2
                 id="ai-usage-guide-title"
-                className="mt-1 text-base font-semibold leading-snug text-stone-900 dark:text-stone-50 sm:text-lg"
+                className="mt-1 text-base font-semibold leading-snug text-fg sm:text-lg"
               >
                 사내 AI 업무 활용 가이드라인
               </h2>
-              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+              <p className="mt-1 text-sm text-fg-muted">
                 스마트하게, 비용 효율적으로
               </p>
             </div>
             <button
               type="button"
               onClick={() => onClose()}
-              className="shrink-0 rounded-lg p-2 text-stone-500 hover:bg-stone-200/80 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+              className="shrink-0 rounded-lg p-2 text-fg-subtle hover:bg-surface-3/80 hover:text-fg"
               aria-label="도움말 닫기"
             >
               <svg
@@ -122,10 +122,10 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 sm:py-5"
         >
           <div className="space-y-4">
-            <p className="rounded-xl border border-orange-200/80 bg-orange-50/70 px-4 py-3 text-[13px]! leading-relaxed text-stone-800 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-stone-200">
+            <p className="rounded-xl border border-brand/30 bg-brand-soft/70 px-4 py-3 text-[13px] leading-relaxed text-fg">
               우리 사내 AI 포털은 업무 시간을 획기적으로 줄여주는 강력한 도구입니다.
               하지만 잘못 사용하면 불필요한 비용이 발생할 수 있습니다.{' '}
-              <strong className="font-semibold text-stone-900 dark:text-stone-50">
+              <strong className="font-semibold text-fg">
                 &quot;한 번의 질문으로 정확한 답을 얻는 것&quot;
               </strong>
               이 비용 절감과 업무 효율의 핵심입니다.
@@ -162,11 +162,11 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
                 ]}
               />
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-[12px]! text-red-900 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-100">
+                <div className="rounded-lg border border-danger/30 bg-danger-soft/80 px-3 py-2 text-[12px] text-red-900">
                   <span className="font-semibold">예시 (X)</span>
                   <p className="mt-1">&quot;상하이 공항 사진 그려줘&quot;</p>
                 </div>
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-[12px]! text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100">
+                <div className="rounded-lg border border-success/30 bg-success-soft/80 px-3 py-2 text-[12px] text-success">
                   <span className="font-semibold">예시 (O)</span>
                   <p className="mt-1">
                     &quot;상하이 공항 터미널의 현대적인 내부 전경, 비즈니스 분위기,
@@ -209,12 +209,12 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
               />
             </SectionCard>
 
-            <section className="rounded-xl border border-amber-300/80 bg-amber-50/80 p-4 dark:border-amber-800/60 dark:bg-amber-950/25">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-950 dark:text-amber-100">
+            <section className="rounded-xl border border-warning/30 bg-warning-soft/80 p-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-warning">
                 <span aria-hidden="true">🛡️</span>
                 주의사항
               </h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px]! leading-relaxed text-amber-950/90 marker:text-amber-700 dark:text-amber-100/90 dark:marker:text-amber-400">
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px] leading-relaxed text-amber-950/90 marker:text-warning">
                 <li>
                   <strong className="font-semibold">보안:</strong> 사내 비밀, 고객
                   개인정보, 미공개 계약서는 절대 업로드하지 마세요. (이미 시스템이
@@ -229,7 +229,7 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
               </ul>
             </section>
 
-            <p className="rounded-xl bg-stone-100/80 px-4 py-3 text-center text-[13px]! leading-relaxed text-stone-700 dark:bg-stone-800/60 dark:text-stone-300">
+            <p className="rounded-xl bg-surface-2/80 px-4 py-3 text-center text-[13px] leading-relaxed text-fg-muted">
               우리의 목표는 AI를 부려먹는 &apos;스마트한 인재&apos;가 되는 것입니다.
               효율적인 사용법을 익혀 농협네트웍스의 업무 디지털 혁신을 함께 만들어
               갑시다.
@@ -237,11 +237,11 @@ export function AiUsageGuideDialog({ open, onClose }: AiUsageGuideDialogProps) {
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-stone-200 px-4 py-3 dark:border-stone-700 sm:px-5">
+        <div className="shrink-0 border-t border-border px-4 py-3 sm:px-5">
           <button
             type="button"
             onClick={() => onClose()}
-            className="w-full rounded-xl bg-orange-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-800 active:bg-orange-900 dark:bg-orange-600 dark:hover:bg-orange-500"
+            className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-fg transition hover:bg-brand-strong active:bg-brand-strong"
           >
             확인
           </button>

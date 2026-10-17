@@ -30,8 +30,8 @@ export function AiDesignerCategoryBar({
                 onClick={() => onSelect(category.id)}
                 aria-pressed={active}
                 aria-label={category.label}
-                className={`category-card group relative block h-[118px] w-24 shrink-0 overflow-hidden rounded-lg bg-white/60 shadow-[0_3px_30px_rgba(0,0,0,0.06)] backdrop-blur-[25px] transition-all duration-300 hover:scale-110 dark:bg-white/10 ${
-                  active ? 'scale-105 ring-2 ring-orange-500/70' : ''
+                className={`category-card group relative block h-[118px] w-24 shrink-0 overflow-hidden rounded-lg bg-surface/60 shadow-[0_3px_30px_rgba(0,0,0,0.06)] backdrop-blur-[25px] transition-all duration-300 hover:scale-110 ${
+                  active ? 'scale-105 ring-2 ring-focus/40' : ''
                 }`}
               >
                 <div className="glow-background absolute inset-0 z-0">
@@ -58,7 +58,7 @@ export function AiDesignerCategoryBar({
                     </div>
                   </div>
 
-                  <span className="card-title mt-4 w-full truncate px-1 text-center text-[14px]! font-bold leading-normal tracking-[-0.16px] text-[#232425] dark:text-white">
+                  <span className="card-title mt-4 w-full truncate px-1 text-center text-[14px] font-bold leading-normal tracking-[-0.16px] text-[#232425]">
                     {category.label}
                   </span>
                 </div>

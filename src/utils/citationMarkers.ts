@@ -10,7 +10,7 @@ export type CitationTextPart =
     }
 
 const CITATION_MARKER_RE =
-  /\[(\d{1,2})\]|\[출처:\s*([^\]]+?)\]|\[([^\[\]]+\.(?:pdf|docx?|xlsx?|pptx?|hwp|txt|md))\]/gi
+  /\[(\d{1,2})\]|\[출처:\s*([^\]]+?)\]|\[([^[\]]+\.(?:pdf|docx?|xlsx?|pptx?|hwp|txt|md))\]/gi
 
 function truncateSnippet(text: string, max = 160): string {
   const t = text.replace(/\s+/g, ' ').trim()

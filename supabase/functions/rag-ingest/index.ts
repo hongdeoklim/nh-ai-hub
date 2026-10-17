@@ -23,6 +23,11 @@ function readEnv(name: string): string | undefined {
   return v && v.length > 0 ? v : undefined
 }
 
+/** 동시에 보낼 임베딩 요청 수 (Gemini 분당 한도와 처리 시간의 절충) */
+const EMBED_CONCURRENCY = 4
+/** 이전 청크를 지울 때 한 번에 넘길 id 수 (요청 URL 길이 제한) */
+const DELETE_BATCH = 200
+
 function chunkText(text: string): string[] {
   const chunks: string[] = []
   let start = 0
@@ -182,48 +187,74 @@ Deno.serve(async (req) => {
   }
 
   const chunks = chunkText(text)
-  const rows: Array<Record<string, unknown>> = []
   const errors: Array<{ chunk_index: number; message: string }> = []
+  const embeddings: Array<number[] | null> = new Array(chunks.length).fill(null)
 
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i]!
-    try {
-      const embedding = await embedTextWithGemini(geminiKey, chunk)
-      rows.push({
-        file_name: fileName,
-        content: chunk,
-        chunk_index: i,
-        embedding: `[${embedding.join(",")}]`,
-        uploaded_by: uploadedBy,
-        content_hash: contentHash,
-      })
-    } catch (e) {
-      errors.push({ chunk_index: i, message: e instanceof Error ? e.message : String(e) })
+  // 큰 문서가 드라이브 동기화의 파일당 시간 제한에 걸리지 않도록 청크를 몇 개씩 동시에 임베딩한다
+  let cursor = 0
+  const worker = async () => {
+    while (cursor < chunks.length) {
+      const i = cursor++
+      try {
+        embeddings[i] = await embedTextWithGemini(geminiKey, chunks[i]!)
+      } catch (e) {
+        errors.push({ chunk_index: i, message: e instanceof Error ? e.message : String(e) })
+      }
     }
   }
+  await Promise.all(Array.from({ length: Math.min(EMBED_CONCURRENCY, chunks.length) }, worker))
+
+  // 일부 청크라도 실패하면 해시를 저장하지 않는다. 저장하면 다음 동기화가 "변경 없음"으로
+  // 건너뛰어 빠진 청크가 영원히 채워지지 않는다.
+  const complete = errors.length === 0
+  const rows: Array<Record<string, unknown>> = []
+  embeddings.forEach((embedding, i) => {
+    if (!embedding) return
+    rows.push({
+      file_name: fileName,
+      content: chunks[i]!,
+      chunk_index: i,
+      embedding: `[${embedding.join(",")}]`,
+      uploaded_by: uploadedBy,
+      content_hash: complete ? contentHash : null,
+    })
+  })
 
   // 임베딩이 전부 실패하면 기존 청크를 지우지 않고 그대로 둔다.
   if (rows.length === 0) {
+    errors.sort((a, b) => a.chunk_index - b.chunk_index)
     return jsonResponse({ ok: false, fileName, chunks_total: chunks.length, inserted: 0, errors }, 500)
   }
 
-  // 같은 파일명의 기존 청크 삭제 (upsert 효과)
-  await admin.from("company_documents").delete().eq("file_name", fileName)
+  // 기존 청크 id 를 먼저 확보하고, 새 청크 INSERT 가 성공한 뒤에만 지운다.
+  // (예전에는 먼저 지우고 넣어서 INSERT 가 실패하면 문서가 통째로 사라졌다)
+  const { data: oldRows } = await admin
+    .from("company_documents")
+    .select("id")
+    .eq("file_name", fileName)
+  const oldIds = (oldRows ?? []).map((row: { id: string }) => row.id)
 
   // 일괄 INSERT 1문 — dify-sync 웹훅 트리거(문 단위)가 문서당 1회만 발동된다.
-  let inserted = 0
   const { error: insertError } = await admin.from("company_documents").insert(rows)
   if (insertError) {
     errors.push({ chunk_index: -1, message: insertError.message })
-  } else {
-    inserted = rows.length
+    return jsonResponse({ ok: false, fileName, chunks_total: chunks.length, inserted: 0, errors }, 500)
   }
 
+  for (let start = 0; start < oldIds.length; start += DELETE_BATCH) {
+    const batch = oldIds.slice(start, start + DELETE_BATCH)
+    const { error: deleteError } = await admin.from("company_documents").delete().in("id", batch)
+    if (deleteError) errors.push({ chunk_index: -2, message: `이전 청크 정리 실패: ${deleteError.message}` })
+  }
+
+  errors.sort((a, b) => a.chunk_index - b.chunk_index)
   return jsonResponse({
-    ok: inserted > 0,
+    ok: true,
     fileName,
     chunks_total: chunks.length,
-    inserted,
+    inserted: rows.length,
+    // 일부 청크가 빠졌으면 다음 동기화 때 다시 임베딩한다
+    partial: !complete,
     errors: errors.length > 0 ? errors : undefined,
   })
 })

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { GeminiThinkingDots } from './GeminiSparkleIcon'
 
@@ -16,11 +16,12 @@ export function ThinkingProcessPanel({
   const showThinkingPhase =
     streaming && (thinkingOpen || thinking.trim().length === 0)
   const [manualExpanded, setManualExpanded] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    if (!streaming) return
-    setManualExpanded(null)
-  }, [streaming])
+  // 새 스트리밍이 시작되면 수동 펼침 상태를 초기화 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  const [prevStreaming, setPrevStreaming] = useState(streaming)
+  if (streaming !== prevStreaming) {
+    setPrevStreaming(streaming)
+    if (streaming) setManualExpanded(null)
+  }
 
   const expanded = manualExpanded ?? showThinkingPhase
 
@@ -31,7 +32,7 @@ export function ThinkingProcessPanel({
       <button
         type="button"
         onClick={() => setManualExpanded((prev) => !(prev ?? showThinkingPhase))}
-        className="inline-flex h-9 max-w-full items-center gap-2 rounded-full px-2 py-1 text-left text-actual-13 font-medium text-[#444746] transition hover:bg-[#e9eef6] dark:text-stone-400 dark:hover:bg-stone-800"
+        className="inline-flex h-9 max-w-full items-center gap-2 rounded-full px-2 py-1 text-left text-[13px] font-medium text-[#444746] transition hover:bg-[#e9eef6]"
         aria-expanded={expanded}
       >
         <span
@@ -42,10 +43,10 @@ export function ThinkingProcessPanel({
             <path d="M12 2.5 14.6 9.4 21.5 12 14.6 14.6 12 21.5 9.4 14.6 2.5 12 9.4 9.4Z" />
           </svg>
         </span>
-        <span className="truncate text-actual-13">{label}</span>
+        <span className="truncate text-[13px]">{label}</span>
         <svg
           viewBox="0 0 24 24"
-          className={`h-4 w-4 shrink-0 text-[#5f6368] transition-transform duration-200 dark:text-stone-500 ${
+          className={`h-4 w-4 shrink-0 text-[#5f6368] transition-transform duration-200 ${
             expanded ? 'rotate-180' : ''
           }`}
           fill="none"
@@ -58,13 +59,13 @@ export function ThinkingProcessPanel({
       </button>
 
       {expanded ? (
-        <div className="mt-1 rounded-2xl border border-[#e3e3e3] bg-[#f8fafd] px-4 py-3 text-actual-13 leading-relaxed text-[#444746] dark:border-stone-700 dark:bg-stone-900/60 dark:text-stone-300">
+        <div className="mt-1 rounded-2xl border border-[#e3e3e3] bg-[#f8fafd] px-4 py-3 text-[13px] leading-relaxed text-[#444746]">
           {thinking.trim().length > 0 ? (
             <p className="whitespace-pre-wrap">{thinking}</p>
           ) : streaming ? (
             <GeminiThinkingDots />
           ) : (
-            <p className="text-[#5f6368] dark:text-stone-500">
+            <p className="text-[#5f6368]">
               표시할 사고 과정이 없습니다.
             </p>
           )}

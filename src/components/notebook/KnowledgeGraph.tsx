@@ -130,8 +130,14 @@ export function KnowledgeGraph({
     [data],
   )
 
-  useEffect(() => {
+  // 그래프 데이터가 바뀌면 시뮬레이션을 새로 만든다 (렌더 중 조정)
+  const [simSource, setSimSource] = useState(data)
+  if (simSource !== data) {
+    setSimSource(data)
     setSim(buildSimGraph(data))
+  }
+
+  useEffect(() => {
     alphaRef.current = 1
   }, [graphKey, data])
 
@@ -179,7 +185,7 @@ export function KnowledgeGraph({
   if (loading) {
     return (
       <div className="flex h-full min-h-[12rem] items-center justify-center p-4">
-        <p className="text-xs text-stone-500">지식 지도를 불러오는 중…</p>
+        <p className="text-xs text-fg-subtle">지식 지도를 불러오는 중…</p>
       </div>
     )
   }
@@ -187,10 +193,10 @@ export function KnowledgeGraph({
   if (data.nodes.length === 0) {
     return (
       <div className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-2 p-4 text-center">
-        <p className="text-xs font-medium text-stone-600 dark:text-stone-400">
+        <p className="text-xs font-medium text-fg-muted">
           선택된 출처가 없습니다.
         </p>
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-fg-subtle">
           왼쪽에서 문서를 선택하면 연관 그래프가 표시됩니다.
         </p>
       </div>
@@ -199,7 +205,7 @@ export function KnowledgeGraph({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-stone-200/90 bg-stone-50/80 dark:border-stone-700 dark:bg-stone-950/60">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border/90 bg-bg/80">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           className="h-full w-full"
@@ -209,7 +215,7 @@ export function KnowledgeGraph({
           <rect
             width={WIDTH}
             height={HEIGHT}
-            className="fill-stone-50 dark:fill-stone-950"
+            className="fill-stone-50"
           />
           {sim.links.map((link) => {
             const strokeW = 0.8 + link.weight * 2.2
@@ -220,7 +226,7 @@ export function KnowledgeGraph({
                 y1={link.source.y}
                 x2={link.target.x}
                 y2={link.target.y}
-                className="stroke-stone-300 dark:stroke-stone-600"
+                className="stroke-stone-300"
                 strokeWidth={strokeW}
                 strokeOpacity={0.55 + link.weight * 0.35}
               />
@@ -253,8 +259,8 @@ export function KnowledgeGraph({
                   r={active ? r + 2 : r}
                   className={
                     isDoc
-                      ? 'fill-orange-200 stroke-orange-700 dark:fill-orange-950/60 dark:stroke-orange-400'
-                      : 'fill-stone-200 stroke-stone-500 dark:fill-stone-800 dark:stroke-stone-400'
+                      ? 'fill-brand stroke-orange-700'
+                      : 'fill-stone-200 stroke-stone-500'
                   }
                   strokeWidth={active ? 2 : 1.2}
                 />
@@ -262,7 +268,7 @@ export function KnowledgeGraph({
                   x={node.x}
                   y={node.y + r + 10}
                   textAnchor="middle"
-                  className="fill-stone-700 text-[10px]! font-medium dark:fill-stone-200"
+                  className="fill-stone-700 text-[10px] font-medium"
                 >
                   {node.label}
                 </text>
@@ -271,17 +277,17 @@ export function KnowledgeGraph({
           })}
         </svg>
         {hoverNode ? (
-          <div className="pointer-events-none absolute bottom-2 left-2 right-2 rounded-lg border border-stone-200/90 bg-white/95 px-2.5 py-2 shadow-sm dark:border-stone-700 dark:bg-stone-900/95">
-            <p className="text-xs font-bold text-stone-900 dark:text-stone-50">
+          <div className="pointer-events-none absolute bottom-2 left-2 right-2 rounded-lg border border-border/90 bg-surface/95 px-2.5 py-2 shadow-sm">
+            <p className="text-xs font-bold text-fg">
               {hoverNode.kind === 'document' ? '📄 ' : '🔗 '}
               {hoverNode.label}
             </p>
             {hoverNode.summary && hoverNode.summary !== hoverNode.label ? (
-              <p className="mt-0.5 line-clamp-2 text-xs text-stone-600 dark:text-stone-400">
+              <p className="mt-0.5 line-clamp-2 text-xs text-fg-muted">
                 {hoverNode.summary}
               </p>
             ) : null}
-            <p className="mt-1 text-xs text-stone-500">클릭하여 채팅에 반영</p>
+            <p className="mt-1 text-xs text-fg-subtle">클릭하여 채팅에 반영</p>
           </div>
         ) : null}
       </div>

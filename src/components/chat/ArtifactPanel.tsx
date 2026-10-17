@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
+import { useHwpxSave } from '../../hooks/useHwpxSave'
 import type { ArtifactType, ChatArtifact } from '../../store/chat-artifact'
 import {
   contentContainsTable,
@@ -35,21 +36,21 @@ function MarkdownTableView({ content }: { content: string }) {
 
   if (!rows) {
     return (
-      <pre className="whitespace-pre-wrap text-sm leading-relaxed text-stone-800 dark:text-stone-100">
+      <pre className="whitespace-pre-wrap text-sm leading-relaxed text-fg">
         {content}
       </pre>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-stone-200 dark:border-stone-700">
+    <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
-        <thead className="bg-stone-100 dark:bg-stone-800">
+        <thead className="bg-surface-2">
           <tr>
             {rows.header.map((cell, i) => (
               <th
                 key={`h-${i}`}
-                className="border-b border-stone-200 px-4 py-2.5 font-semibold text-stone-900 dark:border-stone-700 dark:text-stone-50"
+                className="border-b border-border px-4 py-2.5 font-semibold text-fg"
               >
                 {cell}
               </th>
@@ -60,12 +61,12 @@ function MarkdownTableView({ content }: { content: string }) {
           {rows.body.map((row, ri) => (
             <tr
               key={`r-${ri}`}
-              className="border-b border-stone-100 last:border-0 dark:border-stone-800"
+              className="border-b border-border last:border-0"
             >
               {row.map((cell, ci) => (
                 <td
                   key={`c-${ri}-${ci}`}
-                  className="px-4 py-2.5 align-top text-stone-700 dark:text-stone-200"
+                  className="px-4 py-2.5 align-top text-fg-muted"
                 >
                   {cell}
                 </td>
@@ -82,27 +83,27 @@ function MarkdownDocumentView({ content }: { content: string }) {
   const blocks = useMemo(() => content.split('\n'), [content])
 
   return (
-    <div className="space-y-3 text-[15px]! leading-relaxed text-stone-800 dark:text-stone-100">
+    <div className="space-y-3 text-[15px] leading-relaxed text-fg">
       {blocks.map((line, i) => {
         const trimmed = line.trimEnd()
         if (!trimmed.trim()) return <div key={`sp-${i}`} className="h-2" />
         if (/^###\s+/.test(trimmed)) {
           return (
-            <h3 key={`h3-${i}`} className="text-lg font-bold text-stone-900 dark:text-stone-50">
+            <h3 key={`h3-${i}`} className="text-lg font-bold text-fg">
               {trimmed.replace(/^###\s+/, '')}
             </h3>
           )
         }
         if (/^##\s+/.test(trimmed)) {
           return (
-            <h2 key={`h2-${i}`} className="text-xl font-bold text-stone-900 dark:text-stone-50">
+            <h2 key={`h2-${i}`} className="text-xl font-bold text-fg">
               {trimmed.replace(/^##\s+/, '')}
             </h2>
           )
         }
         if (/^#\s+/.test(trimmed)) {
           return (
-            <h1 key={`h1-${i}`} className="text-2xl font-bold text-stone-900 dark:text-stone-50">
+            <h1 key={`h1-${i}`} className="text-2xl font-bold text-fg">
               {trimmed.replace(/^#\s+/, '')}
             </h1>
           )
@@ -127,10 +128,10 @@ function ArtifactBody({ artifact }: { artifact: ChatArtifact }) {
   if (artifact.type === 'html') {
     return (
       <div className="space-y-3">
-        <p className="text-xs text-stone-500 dark:text-stone-400">
+        <p className="text-xs text-fg-subtle">
           HTML 소스 미리보기 (실행되지 않습니다)
         </p>
-        <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px]! leading-relaxed text-emerald-100">
+        <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px] leading-relaxed text-emerald-100">
           <code>{artifact.content}</code>
         </pre>
       </div>
@@ -138,7 +139,7 @@ function ArtifactBody({ artifact }: { artifact: ChatArtifact }) {
   }
   if (artifact.type === 'code') {
     return (
-      <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px]! leading-relaxed text-emerald-100">
+      <pre className="overflow-x-auto rounded-xl bg-stone-950 p-4 text-[13px] leading-relaxed text-emerald-100">
         <code>{artifact.content}</code>
       </pre>
     )
@@ -182,17 +183,24 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
     window.setTimeout(() => setDownloadDone(false), 1800)
   }, [artifact.content, artifact.title])
 
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
+  const handleHwpxSave = useCallback(() => {
+    // 코드는 코드 블록으로 감싸 고정폭 글꼴로 보존
+    const markdown = artifact.type === 'code' ? `\`\`\`\n${artifact.content}\n\`\`\`` : artifact.content
+    void saveHwpx(markdown, { title: artifact.title || '문서' })
+  }, [artifact.content, artifact.title, artifact.type, saveHwpx])
+
   return (
     <aside
-      className="flex h-full min-h-0 w-full flex-col border-stone-200 bg-[#FAFAF8] shadow-xl dark:border-stone-800 dark:bg-stone-950 md:border-l md:shadow-none"
+      className="flex h-full min-h-0 w-full flex-col border-border bg-bg shadow-xl md:border-l md:shadow-none"
       aria-label="아티팩트 패널"
     >
-      <header className="flex shrink-0 items-center gap-2 border-b border-stone-200/90 px-4 py-3 dark:border-stone-800 sm:gap-3">
+      <header className="flex shrink-0 items-center gap-2 border-b border-border/90 px-4 py-3 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px]! font-semibold uppercase tracking-[0.16em] text-orange-700 dark:text-orange-400">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">
             Artifact · {TYPE_LABEL[artifact.type]}
           </p>
-          <h2 className="truncate text-base font-bold text-stone-900 dark:text-stone-50">
+          <h2 className="truncate text-base font-bold text-fg">
             {artifact.title}
           </h2>
         </div>
@@ -200,7 +208,7 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
           <button
             type="button"
             onClick={handleCsvDownload}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-emerald-300/90 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100 dark:hover:bg-emerald-950/60 sm:px-3"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-success/30 bg-success-soft px-2.5 py-1.5 text-xs font-semibold text-success transition hover:bg-success-soft/70 sm:px-3"
             aria-label="엑셀 CSV 다운로드"
           >
             <span aria-hidden="true">{downloadDone ? '✓' : '⬇️'}</span>
@@ -212,17 +220,30 @@ export function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps) {
             </span>
           </button>
         ) : null}
+        {artifact.type !== 'html' ? (
+          <button
+            type="button"
+            onClick={handleHwpxSave}
+            disabled={hwpxSaving}
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand/30 bg-brand-soft px-2.5 py-1.5 text-xs font-semibold text-brand transition hover:bg-brand-soft/70 disabled:opacity-50 sm:px-3"
+            aria-label="한글 문서(HWPX)로 저장"
+            title="한글 문서(.hwpx)로 저장"
+          >
+            <span className="hidden sm:inline">{hwpxSaving ? '저장 중…' : '한글(HWPX) 저장'}</span>
+            <span className="sm:hidden">{hwpxSaving ? '…' : 'HWPX'}</span>
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-800 hover:bg-stone-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800"
+          className="shrink-0 rounded-lg border border-border-strong bg-surface px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface-2"
         >
           {copied ? '복사됨' : '복사하기'}
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-200/80 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-fg-subtle hover:bg-surface-3/80 hover:text-fg"
           aria-label="아티팩트 닫기"
         >
           ×

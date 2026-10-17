@@ -64,9 +64,9 @@ export function Login() {
 
     return (
 
-      <div className="app-shell flex min-h-dvh items-center justify-center bg-slate-100 dark:bg-slate-950">
+      <div className="app-shell flex min-h-dvh items-center justify-center bg-surface-2">
 
-        <p className="text-sm text-slate-600 dark:text-slate-400">세션 확인 중…</p>
+        <p className="text-sm text-fg-muted">세션 확인 중…</p>
 
       </div>
 
@@ -198,21 +198,21 @@ export function Login() {
 
   return (
 
-    <div className="app-shell flex min-h-dvh flex-col bg-gradient-to-b from-emerald-50/90 via-white to-slate-100 dark:from-emerald-950/40 dark:via-slate-950 dark:to-slate-950">
+    <div className="app-shell flex min-h-dvh flex-col bg-gradient-to-b from-brand-soft/90 via-bg to-surface-2">
 
-      <header className="border-b border-slate-200/80 bg-white/80 px-4 py-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 md:px-8">
+      <header className="border-b border-border/80 bg-surface/80 px-4 py-4 backdrop-blur-md md:px-8">
 
         <div className="mx-auto flex max-w-lg items-center justify-between gap-4 md:max-w-4xl">
 
           <div className="flex flex-col">
 
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand">
 
               NH Networks
 
             </span>
 
-            <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white md:text-xl">
+            <span className="text-lg font-bold tracking-tight text-fg md:text-xl">
 
               NH-AX-HUB
 
@@ -220,7 +220,7 @@ export function Login() {
 
           </div>
 
-          <p className="hidden text-right text-xs text-slate-500 dark:text-slate-400 sm:block sm:max-w-xs">
+          <p className="hidden text-right text-xs text-fg-subtle sm:block sm:max-w-xs">
 
             농협네트웍스 임직원 전용 생성형 AI 포털
 
@@ -234,9 +234,9 @@ export function Login() {
 
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-10 md:py-16">
 
-        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none md:p-8">
+        <div className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-pop md:p-8">
 
-          <h1 className="text-center text-xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-center text-xl font-bold text-fg">
 
             사내 계정 로그인
 
@@ -252,7 +252,7 @@ export function Login() {
 
                 htmlFor="login-email"
 
-                className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                className="mb-1 block text-xs font-semibold text-fg-muted"
 
               >
 
@@ -274,7 +274,7 @@ export function Login() {
 
                 onChange={(event) => setEmail(event.target.value)}
 
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-emerald-500/30 placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-fg outline-none ring-focus/40 placeholder:text-fg-subtle focus:ring-2"
 
                 placeholder="name@nhnetworks.co.kr"
 
@@ -288,7 +288,7 @@ export function Login() {
 
                 htmlFor="login-password"
 
-                className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                className="mb-1 block text-xs font-semibold text-fg-muted"
 
               >
 
@@ -310,7 +310,7 @@ export function Login() {
 
                 onChange={(event) => setPassword(event.target.value)}
 
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-fg outline-none ring-focus/40 focus:ring-2"
 
               />
 
@@ -322,7 +322,7 @@ export function Login() {
 
               <p
 
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
+                className="rounded-xl border border-danger/30 bg-danger-soft px-3 py-2 text-xs text-danger"
 
                 role="alert"
 
@@ -342,7 +342,7 @@ export function Login() {
 
               disabled={submitting || loading}
 
-              className="mt-2 flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-2 flex w-full items-center justify-center rounded-xl bg-brand py-3 text-sm font-semibold text-brand-fg shadow-sm hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
 
             >
 
@@ -356,13 +356,13 @@ export function Login() {
 
               <div className="absolute inset-0 flex items-center">
 
-                <span className="w-full border-t border-slate-200 dark:border-slate-700" />
+                <span className="w-full border-t border-border" />
 
               </div>
 
               <div className="relative flex justify-center text-xs">
 
-                <span className="bg-white px-2 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                <span className="bg-surface px-2 text-fg-subtle">
 
                   또는
 
@@ -380,7 +380,7 @@ export function Login() {
 
               onClick={handleGoogleLogin}
 
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface py-3 text-sm font-semibold text-fg-muted shadow-sm transition-colors hover:bg-surface-2"
 
             >
 
@@ -444,7 +444,7 @@ export function Login() {
 
                 disabled={passkeyBusy || submitting}
 
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface py-3 text-sm font-semibold text-fg-muted shadow-sm transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
 
               >
 
@@ -460,9 +460,9 @@ export function Login() {
 
             {showTempLogin ? (
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 dark:border-amber-900 dark:bg-amber-950/40">
+              <div className="rounded-xl border border-warning/30 bg-warning-soft px-3 py-3">
 
-                <p className="mb-2 text-[17px] leading-relaxed text-amber-950 dark:text-amber-100">
+                <p className="mb-2 text-[17px] leading-relaxed text-warning">
 
                   로컬 개발 전용: `.env` 의{' '}
 
@@ -480,7 +480,7 @@ export function Login() {
 
                   onClick={() => void handleTempDevLogin()}
 
-                  className="flex w-full items-center justify-center rounded-xl border border-amber-600/40 bg-white py-2.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-100 dark:hover:bg-slate-800"
+                  className="flex w-full items-center justify-center rounded-xl border border-amber-600/40 bg-surface py-2.5 text-xs font-semibold text-warning hover:bg-warning-soft disabled:cursor-not-allowed disabled:opacity-60"
 
                 >
 

@@ -55,10 +55,13 @@ export function AiSheetsPage() {
     }
   }, [])
 
-  useEffect(() => {
-    const preferred = profile?.preferred_ai?.trim()
-    if (preferred) setSelectedModel(preferred)
-  }, [profile?.preferred_ai])
+  // 프로필의 선호 모델이 정해지거나 바뀌면 선택값에 반영한다 (렌더 중 조정)
+  const profilePreferredAi = profile?.preferred_ai?.trim() ?? ''
+  const [syncedPreferredAi, setSyncedPreferredAi] = useState('')
+  if (profilePreferredAi !== syncedPreferredAi) {
+    setSyncedPreferredAi(profilePreferredAi)
+    if (profilePreferredAi) setSelectedModel(profilePreferredAi)
+  }
 
   const versionRows = useMemo(
     () => buildModelSelectOptions(registryModels, selectedModel),
@@ -190,7 +193,7 @@ export function AiSheetsPage() {
   const starterChips = useMemo(() => AI_SHEETS_STARTERS, [])
 
   return (
-    <div className="main-inner sheets-agent-new chat-agent flex min-h-0 flex-1 flex-col overflow-hidden bg-[#FAF9F6] dark:bg-stone-950">
+    <div className="main-inner sheets-agent-new chat-agent flex min-h-0 flex-1 flex-col overflow-hidden bg-bg">
       <AiSheetsLandingLayout
         draft={draft}
         onDraftChange={handleDraftChange}

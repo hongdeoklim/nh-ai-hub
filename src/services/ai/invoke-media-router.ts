@@ -26,7 +26,7 @@ export type InvokeMediaRouterResult =
   | { ok: false; message: string; httpStatus?: number; aborted?: boolean }
 
 function buildImageMarkdown(prompt: string, mediaUrl: string): string {
-  const alt = prompt.slice(0, 80).replace(/[\[\]]/g, '') || '생성 이미지'
+  const alt = prompt.slice(0, 80).replace(/[[\]]/g, '') || '생성 이미지'
   return `![${alt}](${mediaUrl})`
 }
 

@@ -127,7 +127,7 @@ export async function fetchEdgeFunction(
       headers: buildEdgeFunctionHeaders(accessToken, extraHeaders),
     })
   } catch (error) {
-    throw new Error(formatFetchNetworkError(url, error))
+    throw new Error(formatFetchNetworkError(url, error), { cause: error })
   }
 }
 

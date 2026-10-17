@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-import { formatElapsedKo, type ChatUiVariant } from './ChatMessage'
+import type { ChatUiVariant } from './ChatMessage'
+import { formatElapsedKo } from '../../utils/format-elapsed'
 import {
   getMessageFeedback,
   saveFeedbackToDb,
@@ -9,6 +10,7 @@ import {
   type MessageFeedbackRating,
 } from '../../lib/chat-message-feedback'
 import { saveGoodAnswerToKnowledge } from '../../lib/knowledge-from-chat'
+import { firstMarkdownHeading, useHwpxSave } from '../../hooks/useHwpxSave'
 import {
   exportAssistantToGoogleDocs,
   openGmailDraft,
@@ -50,24 +52,24 @@ function iconBtnClass(variant: ChatUiVariant): string {
   const isGemini = variant === 'gemini'
   const isClaude = variant === 'claude'
   if (isGemini) {
-    return 'rounded-full p-2 transition text-[#444746] hover:bg-[#e9eef6] dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-200'
+    return 'rounded-full p-2 transition text-[#444746] hover:bg-[#e9eef6]'
   }
   if (isClaude) {
-    return 'rounded-full p-2 transition text-stone-400 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-200'
+    return 'rounded-full p-2 transition text-fg-subtle hover:bg-surface-2 hover:text-fg'
   }
-  return 'rounded-full p-2 transition text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200'
+  return 'rounded-full p-2 transition text-fg-subtle hover:bg-surface-2 hover:text-fg'
 }
 
 function feedbackBtnClass(variant: ChatUiVariant, active: boolean): string {
   const base = iconBtnClass(variant)
   if (!active) return base
   if (variant === 'gemini') {
-    return `${base} bg-[#e9eef6] text-[#0b57d0] dark:bg-stone-800 dark:text-blue-400`
+    return `${base} bg-[#e9eef6] text-[#0b57d0] dark:text-blue-400`
   }
   if (variant === 'claude') {
-    return `${base} bg-stone-100 text-orange-700 dark:bg-stone-800 dark:text-orange-400`
+    return `${base} bg-surface-2 text-brand`
   }
-  return `${base} bg-slate-100 text-emerald-600 dark:bg-slate-700 dark:text-emerald-400`
+  return `${base} bg-surface-2 text-success`
 }
 
 function ThumbsUpIcon({ filled }: { filled: boolean }) {
@@ -157,6 +159,7 @@ export function AssistantMessageFooter({
   elapsedMs,
   usage,
 }: AssistantMessageFooterProps) {
+  const { save: saveHwpx, saving: hwpxSaving } = useHwpxSave()
   const isGemini = variant === 'gemini'
   const [menuOpen, setMenuOpen] = useState(false)
   const [shareDone, setShareDone] = useState(false)
@@ -172,9 +175,12 @@ export function AssistantMessageFooter({
   const [isFetchingDetail, setIsFetchingDetail] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
+  // 다른 메시지로 바뀌면 저장된 피드백을 다시 읽는다 (렌더 중 조정 — effect 연쇄 렌더 방지)
+  const [feedbackFor, setFeedbackFor] = useState(messageId)
+  if (feedbackFor !== messageId) {
+    setFeedbackFor(messageId)
     setFeedback(getMessageFeedback(messageId))
-  }, [messageId])
+  }
 
   const handleFeedback = useCallback(
     async (target: MessageFeedbackRating) => {
@@ -215,7 +221,7 @@ export function AssistantMessageFooter({
         }
       }
     },
-    [messageId, messageType, feedback],
+    [messageId, messageType, feedback, userPrompt, answerText],
   )
 
   const handleSubmitFeedback = useCallback(async () => {
@@ -278,18 +284,18 @@ export function AssistantMessageFooter({
   }, [answerText, speaking])
 
   const timeCls = isGemini
-    ? 'text-[#444746] dark:text-stone-500'
+    ? 'text-[#444746]'
     : variant === 'claude'
-      ? 'text-stone-500 dark:text-stone-500'
-      : 'text-slate-400 dark:text-slate-500'
+      ? 'text-fg-subtle'
+      : 'text-fg-subtle'
 
   const menuItemCls =
-    'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-actual-11 text-stone-800 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-stone-800'
+    'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[11px] text-fg hover:bg-surface-2'
 
   return (
     <div
       className={`mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 ${
-        isGemini ? 'pt-1' : 'border-t border-stone-200/70 pt-2 dark:border-stone-800'
+        isGemini ? 'pt-1' : 'border-t border-border/70 pt-2'
       }`}
     >
       <div className="flex min-w-0 flex-wrap items-center justify-start gap-0.5">
@@ -298,7 +304,7 @@ export function AssistantMessageFooter({
             type="button"
             disabled={regenerateDisabled}
             onClick={() => onContinue()}
-            className="mr-1 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[12px]! font-medium text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+            className="mr-1 inline-flex items-center gap-1.5 rounded-full border border-warning/30 bg-warning-soft px-3 py-1 text-[12px] font-medium text-warning transition hover:bg-warning-soft disabled:cursor-not-allowed disabled:opacity-40"
             title="답변이 중간에 끊겼습니다. 끊긴 지점부터 이어서 생성합니다."
           >
             <svg
@@ -319,18 +325,18 @@ export function AssistantMessageFooter({
           </button>
         ) : null}
         {shareDone ? (
-          <span className="px-1 text-[13px]! font-medium text-[#0b57d0] dark:text-blue-400">
+          <span className="px-1 text-[13px] font-medium text-[#0b57d0] dark:text-blue-400">
             공유됨!
           </span>
         ) : null}
         {copied ? (
           <span
-            className={`px-1 text-[13px]! font-medium ${
+            className={`px-1 text-[13px] font-medium ${
               isGemini
                 ? 'text-[#0b57d0] dark:text-blue-400'
                 : variant === 'claude'
-                  ? 'text-orange-700 dark:text-orange-400'
-                  : 'text-emerald-600 dark:text-emerald-400'
+                  ? 'text-brand'
+                  : 'text-success'
             }`}
           >
             복사됨!
@@ -338,12 +344,12 @@ export function AssistantMessageFooter({
         ) : null}
         {bookmarkDone ? (
           <span
-            className={`px-1 text-[13px]! font-medium ${
+            className={`px-1 text-[13px] font-medium ${
               isGemini
                 ? 'text-[#0b57d0] dark:text-blue-400'
                 : variant === 'claude'
-                  ? 'text-amber-700 dark:text-amber-400'
-                  : 'text-emerald-600 dark:text-emerald-400'
+                  ? 'text-warning'
+                  : 'text-success'
             }`}
           >
             스크랩 완료!
@@ -465,7 +471,7 @@ export function AssistantMessageFooter({
           {menuOpen ? (
             <div
               role="menu"
-              className="absolute bottom-full right-0 z-50 mb-1 min-w-[11rem] overflow-hidden rounded-xl border border-stone-200 bg-white py-1 shadow-lg dark:border-stone-700 dark:bg-stone-900"
+              className="absolute bottom-full right-0 z-50 mb-1 min-w-[11rem] overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-lg"
             >
               <button
                 type="button"
@@ -496,6 +502,19 @@ export function AssistantMessageFooter({
                 type="button"
                 role="menuitem"
                 className={menuItemCls}
+                disabled={hwpxSaving}
+                onClick={() => {
+                  const title = firstMarkdownHeading(answerText) || userPrompt.slice(0, 48).trim() || 'AI 답변'
+                  void saveHwpx(answerText, { title })
+                  setMenuOpen(false)
+                }}
+              >
+                한글(HWPX)로 저장
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={menuItemCls}
                 onClick={() => {
                   openGmailDraft({
                     subject: userPrompt.slice(0, 80) || 'AI 답변 공유',
@@ -521,8 +540,8 @@ export function AssistantMessageFooter({
               >
                 법적 문제 신고
               </button>
-              <div className="mx-3 my-1 border-t border-stone-200 dark:border-stone-700" />
-              <p className="px-3 py-2 text-actual-11 text-stone-500 dark:text-stone-400">
+              <div className="mx-3 my-1 border-t border-border" />
+              <p className="px-3 py-2 text-[11px] text-fg-subtle">
                 모델: {modelLabel}
               </p>
             </div>
@@ -530,7 +549,7 @@ export function AssistantMessageFooter({
         </div>
       </div>
 
-      <p className={`ml-auto shrink-0 text-[12px]! tabular-nums ${timeCls}`}>
+      <p className={`ml-auto shrink-0 text-[12px] tabular-nums ${timeCls}`}>
         {typeof elapsedMs === 'number' && elapsedMs > 0 ? (
           <span title="생성 소요 시간">{formatElapsedKo(elapsedMs)} · </span>
         ) : null}
@@ -550,18 +569,18 @@ export function AssistantMessageFooter({
           onClick={() => setIsModalOpen(false)}
         >
           <div 
-            className="w-full max-w-md overflow-hidden rounded-2xl border border-stone-200 bg-white p-5 shadow-2xl transition-all dark:border-stone-800 dark:bg-stone-900 animate-in zoom-in-95 duration-200"
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-2xl transition-all animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 모달 헤더 */}
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-stone-900 dark:text-stone-50">
+              <h3 className="text-base font-semibold text-fg">
                 답변 피드백 보내기
               </h3>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="rounded-full p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-200"
+                className="rounded-full p-1 text-fg-subtle hover:bg-surface-2 hover:text-fg"
                 aria-label="닫기"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -572,12 +591,12 @@ export function AssistantMessageFooter({
 
             {/* 모달 바디 */}
             <div className="mb-4">
-              <p className="mb-3 text-[13px]! text-stone-500 dark:text-stone-400">
+              <p className="mb-3 text-[13px] text-fg-subtle">
                 어떤 점이 아쉬웠는지 알려주시면 NH-AX-HUB 시스템이 더욱 정확하게 학습하고 답변을 고도화하는 데 반영됩니다.
               </p>
               {isFetchingDetail ? (
                 <div className="flex h-32 items-center justify-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-stone-200 border-t-[#0b57d0] dark:border-stone-700 dark:border-t-blue-400" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-[#0b57d0] dark:border-t-blue-400" />
                 </div>
               ) : (
                 <div className="relative">
@@ -586,11 +605,11 @@ export function AssistantMessageFooter({
                     value={feedbackText}
                     onChange={(e) => setFeedbackText(e.target.value.slice(0, 1000))}
                     placeholder="답변의 오류나 아쉬운 부분에 대해 자유롭게 적어주세요. (선택사항, 최대 1000자)"
-                    className="w-full resize-none rounded-xl border border-stone-200 bg-white p-3 text-[14px]! leading-relaxed text-stone-800 outline-none ring-[#0b57d0]/10 transition focus:border-[#0b57d0] focus:ring-4 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-100 dark:ring-blue-400/10"
+                    className="w-full resize-none rounded-xl border border-border bg-surface p-3 text-[14px] leading-relaxed text-fg outline-none ring-[#0b57d0]/10 transition focus:border-[#0b57d0] focus:ring-4 dark:ring-blue-400/10"
                     maxLength={1000}
                     autoFocus
                   />
-                  <div className="mt-1 text-right text-[11px]! text-stone-400 dark:text-stone-500">
+                  <div className="mt-1 text-right text-[11px] text-fg-subtle">
                     {feedbackText.length} / 1000자
                   </div>
                 </div>
@@ -602,7 +621,7 @@ export function AssistantMessageFooter({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="rounded-lg border border-stone-200 bg-white px-3.5 py-2 text-[13px]! font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
+                className="rounded-lg border border-border bg-surface px-3.5 py-2 text-[13px] font-semibold text-fg-muted hover:bg-surface-2"
               >
                 취소
               </button>
@@ -610,11 +629,11 @@ export function AssistantMessageFooter({
                 type="button"
                 disabled={isSubmitting || isFetchingDetail}
                 onClick={() => void handleSubmitFeedback()}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b57d0] px-4 py-2 text-[13px]! font-semibold text-white shadow-sm hover:bg-[#0842a0] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b57d0] px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-[#0842a0] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="h-3 w-3 animate-spin rounded-full border border-white/30 border-t-white" />
+                    <div className="h-3 w-3 animate-spin rounded-full border border-border/30 border-t-white" />
                     저장 중...
                   </>
                 ) : (

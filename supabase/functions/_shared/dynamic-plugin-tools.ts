@@ -4,6 +4,7 @@ import { z } from "npm:zod@4.4.3"
 
 import { resolveBuiltinPluginTool } from "./builtin-plugin-tools.ts"
 import { decryptPluginCredential, pluginAuthHeaders } from "./plugin-credentials.ts"
+import { internalBridgeHeaders } from "./plugin-bridge-auth.ts"
 import { createMcpAiTools } from './mcp-client.ts'
 
 export type ActivePluginRow = {
@@ -100,14 +101,14 @@ function createHttpProxyTool(
       const abortController = new AbortController()
       const timer = setTimeout(() => abortController.abort(), 25_000)
       try {
-        const internalBridgeSecret = Deno.env.get("PLUGIN_BRIDGE_INTERNAL_SECRET")?.trim()
         const res = await fetch(endpointUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "X-NH-AI-Plugin": row.id,
             "X-NH-AI-User": userId,
-            ...(internalBridgeSecret ? { "X-NH-Internal-Secret": internalBridgeSecret } : {}),
+            // 내부 시크릿은 우리 Edge Function 주소일 때만 (제3자 플러그인 URL 로 유출 금지)
+            ...internalBridgeHeaders(endpointUrl),
             ...pluginAuthHeaders(row, credential),
           },
           body: JSON.stringify({
@@ -294,7 +295,18 @@ export async function createDynamicPluginTools(deps: {
           .in("extension_id", pluginIds),
       ])
 
-    if (!installationError && !permissionError) {
+    // 설치·권한 정보를 확인할 수 없으면 플러그인을 노출하지 않는다 (실패 시 닫힘).
+    // 예전에는 조회 오류가 나면 필터를 통째로 건너뛰어, 차단된 플러그인까지 모두 노출됐다.
+    // 테이블이 아직 없는 환경(42P01)은 "설치·권한 규칙 없음"으로 본다.
+    const lookupFailed = (e: { code?: string } | null) => Boolean(e && e.code !== "42P01")
+    if (lookupFailed(installationError) || lookupFailed(permissionError)) {
+      console.error(
+        "[dynamic-plugin-tools] 설치·권한 조회 실패 — 플러그인 도구를 노출하지 않습니다",
+        installationError ?? permissionError,
+      )
+      return {}
+    }
+    {
       rows = rows.filter((row) => {
         const pluginInstallations = (installations ?? []).filter((item) => item.extension_id === row.id)
         const requiresInstallation = row.extension_type !== 'plugin'

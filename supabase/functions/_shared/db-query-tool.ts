@@ -30,8 +30,16 @@ function getAllowedViews(): Set<string> {
     "ai_db_view_projects",    // 프로젝트 현황 뷰
     "ai_db_view_inventory",   // 재고 현황 뷰
     "ai_db_view_budget",      // 예산·비용 뷰
-    "token_logs",             // AI 토큰 사용 로그 (읽기 전용)
+    "token_logs",             // AI 토큰 사용 로그 (읽기 전용 · 호출한 사용자 본인 행만)
   ])
+}
+
+/**
+ * 사용자별 데이터라 호출한 사용자 본인 행만 돌려줘야 하는 테이블 → 소유자 컬럼.
+ * AI 도구는 service-role 클라이언트(RLS 우회)로 조회하므로 코드에서 강제한다.
+ */
+const USER_SCOPED_TABLES: Record<string, string> = {
+  token_logs: "user_id",
 }
 
 export type DbQueryResult = {
@@ -103,6 +111,8 @@ export async function executeDbQuery(
     filter_value?: string
     limit?: number
   },
+  /** 도구를 호출한 사용자 — 사용자별 테이블은 이 사용자 행만 조회한다 */
+  scope: { userId?: string | null } = {},
 ): Promise<DbQueryResult> {
   const check = validateViewName(input.view_name)
   if (!check.ok || !check.sanitized) {
@@ -111,12 +121,20 @@ export async function executeDbQuery(
 
   const viewName = check.sanitized
   const limit = Math.min(Math.max(1, input.limit ?? 30), 100)
+  const ownerColumn = USER_SCOPED_TABLES[viewName]
+  if (ownerColumn && !scope.userId) {
+    return { ok: false, viewName, error: "본인 확인이 필요한 데이터라 조회할 수 없습니다." }
+  }
 
   try {
     let query = admin
       .from(viewName)
       .select("*")
       .limit(limit)
+    // 사용자별 테이블은 본인 행으로 고정 (아래 사용자 필터와 AND 로 결합되어 덮어쓸 수 없다)
+    if (ownerColumn && scope.userId) {
+      query = query.eq(ownerColumn, scope.userId) as typeof query
+    }
 
     // 단순 등가 필터 (컬럼명도 영문+숫자+언더바만 허용)
     if (input.filter_column && input.filter_value !== undefined) {
@@ -148,7 +166,9 @@ export async function executeDbQuery(
       rows,
       markdownTable,
       message:
-        `'${viewName}' 에서 ${rows.length}건 조회 완료. rows(JSON) 및 markdownTable 을 근거로 답변하세요.`,
+        `'${viewName}' 에서 ${rows.length}건 조회 완료` +
+        (ownerColumn ? " (현재 사용자 본인 데이터만)" : "") +
+        ". rows(JSON) 및 markdownTable 을 근거로 답변하세요.",
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)

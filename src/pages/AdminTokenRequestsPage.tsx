@@ -18,6 +18,8 @@ import {
   updateTokenAllocationRequestAdmin,
   type TokenAllocationRequestRow,
 } from '../services/token-allocation-requests'
+import { EmptyState } from '../components/common/EmptyState'
+import { IconCoins } from '../components/common/icons'
 
 function requesterLabel(row: TokenAllocationRequestRow): string {
   const name = row.users?.display_name?.trim()
@@ -71,7 +73,7 @@ export function AdminTokenRequestsPage() {
 
   if (loading && !profile) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500">
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-fg-subtle">
         불러오는 중…
       </div>
     )
@@ -179,14 +181,14 @@ export function AdminTokenRequestsPage() {
         }
       />
 
-      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
+      <div className="rounded-lg border border-border bg-bg px-4 py-3 text-sm text-fg-muted">
         <p>
           승인 시 입력한 토큰량이 요청자의{' '}
-          <span className="font-medium text-slate-800 dark:text-slate-100">token_limit</span>
+          <span className="font-medium text-fg">token_limit</span>
           에 즉시 더해집니다.{' '}
           <Link
             to="/admin/employees"
-            className="font-medium text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
+            className="font-medium text-accent underline-offset-2 hover:underline"
           >
             직원 관리
           </Link>
@@ -195,39 +197,36 @@ export function AdminTokenRequestsPage() {
       </div>
 
       {loadError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <div className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
           {loadError}
         </div>
       ) : null}
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            대기 중인 요청이 없습니다
-          </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            직원이 토큰 부족 시 요청을 보내면 이 목록에 표시됩니다.
-          </p>
-        </div>
+        <EmptyState
+          icon={IconCoins}
+          title="대기 중인 요청이 없습니다"
+          description="직원이 토큰 부족 시 요청을 보내면 이 목록에 표시됩니다."
+        />
       ) : (
         <div className={adminTableWrap}>
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+          <ul className="divide-y divide-border">
             {rows.map((row) => (
               <li key={row.id} className="px-4 py-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                    <p className="text-sm font-medium text-fg">
                       {requesterLabel(row)}
                     </p>
-                    <p className="mt-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                    <p className="mt-0.5 text-xs tabular-nums text-fg-subtle">
                       {formatWhen(row.created_at)}
                     </p>
-                    <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
                       {row.message}
                     </p>
                   </div>
                   <div className="flex w-full shrink-0 flex-col gap-2 sm:max-w-xs">
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                       부여 토큰량
                       <input
                         type="number"
@@ -241,10 +240,10 @@ export function AdminTokenRequestsPage() {
                             [row.id]: e.target.value,
                           }))
                         }
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm tabular-nums dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
                       />
                     </label>
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                       관리자 메모 (선택)
                       <input
                         type="text"
@@ -257,7 +256,7 @@ export function AdminTokenRequestsPage() {
                           }))
                         }
                         placeholder="승인·거부 사유"
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                       />
                     </label>
                     <div className="flex gap-2 pt-1">

@@ -55,7 +55,7 @@ function IconCheck({ className }: { className?: string }) {
 
 /** Genspark `.slides-settings-bar` 트리거 — 라벨만, chevron 없음 */
 const barTriggerCls =
-  'inline-flex h-7 max-h-7 shrink-0 cursor-pointer select-none items-center whitespace-nowrap rounded-md border-0 bg-transparent px-2 text-[13px]! font-medium leading-none text-[#0D0D0D] outline-none transition hover:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-orange-500/25 dark:text-stone-100 dark:hover:bg-white/5'
+  'inline-flex h-7 max-h-7 shrink-0 cursor-pointer select-none items-center whitespace-nowrap rounded-md border-0 bg-transparent px-2 text-[13px] font-medium leading-none text-[#0D0D0D] outline-none transition hover:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-focus/50'
 
 type BarDropdownProps = {
   menuId: string
@@ -140,7 +140,7 @@ function BarDropdown({
               id={menuId}
               role="listbox"
               aria-label={ariaLabel}
-              className="dropdown-menu fixed z-[200] overflow-hidden rounded-xl border border-[#E8E8E8] bg-white shadow-[0px_8px_24px_rgba(0,0,0,0.12)] dark:border-stone-700 dark:bg-[#2A2A2A]"
+              className="dropdown-menu fixed z-[200] overflow-hidden rounded-xl border border-[#E8E8E8] bg-surface shadow-[0px_8px_24px_rgba(0,0,0,0.12)] dark:bg-[#2A2A2A]"
               style={{
                 top: anchor.top,
                 left: anchor.left,
@@ -161,7 +161,7 @@ function BarDropdown({
 function BarDivider() {
   return (
     <span
-      className="mx-0.5 h-4 w-px shrink-0 self-center bg-[#E0E0E0] dark:bg-stone-600"
+      className="mx-0.5 h-4 w-px shrink-0 self-center bg-[#E0E0E0]"
       aria-hidden="true"
     />
   )
@@ -198,11 +198,11 @@ export function AiSlidesSettingsBar({
 
   return (
     <div
-      className="slides-settings-bar inline-flex h-9 max-h-9 w-fit max-w-full flex-nowrap items-center gap-0 overflow-visible rounded-lg bg-[#F5F5F5] p-1 text-[13px]! leading-none dark:bg-stone-800/90"
+      className="slides-settings-bar inline-flex h-9 max-h-9 w-fit max-w-full flex-nowrap items-center gap-0 overflow-visible rounded-lg bg-surface-2 p-1 text-[13px] leading-none"
       role="toolbar"
       aria-label="슬라이드 생성 설정"
     >
-      <div className="style-mode-toggle inline-flex h-7 max-h-7 shrink-0 items-center rounded-md bg-white p-0.5 shadow-sm dark:bg-stone-900">
+      <div className="style-mode-toggle inline-flex h-7 max-h-7 shrink-0 items-center rounded-md bg-surface p-0.5 shadow-sm">
         {AI_SLIDES_STYLE_MODES.map((mode) => {
           const active = styleMode === mode.id
           return (
@@ -210,10 +210,10 @@ export function AiSlidesSettingsBar({
               key={mode.id}
               type="button"
               onClick={() => onStyleModeChange(mode.id)}
-              className={`h-6 whitespace-nowrap rounded px-2.5 text-[13px]! font-medium leading-none transition ${
+              className={`h-6 whitespace-nowrap rounded px-2.5 text-[13px] font-medium leading-none transition ${
                 active
-                  ? 'bg-[#0D0D0D] text-white dark:bg-stone-100 dark:text-stone-900'
-                  : 'text-[#525252] hover:text-[#0D0D0D] dark:text-stone-400 dark:hover:text-stone-100'
+                  ? 'bg-[#0D0D0D] text-white'
+                  : 'text-[#525252] hover:text-[#0D0D0D]'
               }`}
             >
               {mode.label}
@@ -244,19 +244,19 @@ export function AiSlidesSettingsBar({
               aria-selected={selected}
               className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition ${
                 selected
-                  ? 'bg-[#F5F5F5] dark:bg-stone-700/60'
-                  : 'hover:bg-[#F5F5F5]/80 dark:hover:bg-stone-700/40'
+                  ? 'bg-surface-2'
+                  : 'hover:bg-[#F5F5F5]/80'
               }`}
               onClick={() => {
                 onImageEngineChange(engine.id)
                 closeMenu()
               }}
             >
-              <span className="text-[13px]! font-medium text-[#0D0D0D] dark:text-stone-50">
+              <span className="text-[13px] font-medium text-[#0D0D0D]">
                 {engine.label}
               </span>
               {selected ? (
-                <IconCheck className="shrink-0 text-[#0D0D0D] dark:text-stone-200" />
+                <IconCheck className="shrink-0 text-[#0D0D0D]" />
               ) : null}
             </button>
           )
@@ -285,8 +285,8 @@ export function AiSlidesSettingsBar({
               aria-selected={selected}
               className={`flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left transition ${
                 selected
-                  ? 'bg-[#F5F5F5] dark:bg-stone-700/60'
-                  : 'hover:bg-[#F5F5F5]/80 dark:hover:bg-stone-700/40'
+                  ? 'bg-surface-2'
+                  : 'hover:bg-[#F5F5F5]/80'
               }`}
               onClick={() => {
                 onAspectRatioChange(ratio.id)
@@ -294,15 +294,15 @@ export function AiSlidesSettingsBar({
               }}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[13px]! font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
+                <span className="block text-[13px] font-medium leading-snug text-[#0D0D0D]">
                   {ratio.label}
                 </span>
-                <span className="mt-0.5 block text-[12px]! leading-snug text-[#737373] dark:text-stone-400">
+                <span className="mt-0.5 block text-[12px] leading-snug text-[#737373]">
                   {ratio.hint}
                 </span>
               </span>
               {selected ? (
-                <IconCheck className="mt-0.5 shrink-0 text-[#0D0D0D] dark:text-stone-200" />
+                <IconCheck className="mt-0.5 shrink-0 text-[#0D0D0D]" />
               ) : null}
             </button>
           )
@@ -331,8 +331,8 @@ export function AiSlidesSettingsBar({
               aria-selected={selected}
               className={`flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left transition ${
                 selected
-                  ? 'bg-[#F5F5F5] dark:bg-stone-700/60'
-                  : 'hover:bg-[#F5F5F5]/80 dark:hover:bg-stone-700/40'
+                  ? 'bg-surface-2'
+                  : 'hover:bg-[#F5F5F5]/80'
               }`}
               onClick={() => {
                 onGuideModeChange(mode.id)
@@ -340,15 +340,15 @@ export function AiSlidesSettingsBar({
               }}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[13px]! font-medium leading-snug text-[#0D0D0D] dark:text-stone-50">
+                <span className="block text-[13px] font-medium leading-snug text-[#0D0D0D]">
                   {mode.label}
                 </span>
-                <span className="mt-0.5 block text-[12px]! leading-snug text-[#737373] dark:text-stone-400">
+                <span className="mt-0.5 block text-[12px] leading-snug text-[#737373]">
                   {mode.hint}
                 </span>
               </span>
               {selected ? (
-                <IconCheck className="mt-0.5 shrink-0 text-[#0D0D0D] dark:text-stone-200" />
+                <IconCheck className="mt-0.5 shrink-0 text-[#0D0D0D]" />
               ) : null}
             </button>
           )

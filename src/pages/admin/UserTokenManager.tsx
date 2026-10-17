@@ -100,24 +100,24 @@ export function UserTokenManager() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+        <h1 className="text-2xl font-bold tracking-tight text-fg">
           직원·토큰 관리
         </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-subtle">
           전 직원의 월간 한도와 사용량을 확인하고, 필요 시 추가 한도를 부여합니다.
         </p>
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[840px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
+            <thead className="border-b border-border bg-bg text-xs font-semibold uppercase tracking-wide text-fg-subtle">
               <tr>
                 <th className="px-4 py-3">이름</th>
                 <th className="px-4 py-3">부서</th>
@@ -125,16 +125,16 @@ export function UserTokenManager() {
                 <th className="px-4 py-3 text-right">작업</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={4} className="px-4 py-10 text-center text-fg-subtle">
                     불러오는 중…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={4} className="px-4 py-10 text-center text-fg-subtle">
                     사용자가 없습니다.
                   </td>
                 </tr>
@@ -146,31 +146,31 @@ export function UserTokenManager() {
                   return (
                     <tr
                       key={u.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+                      className="hover:bg-surface-2/80"
                     >
                       <td className="max-w-[240px] px-4 py-3">
-                        <p className="truncate font-semibold text-slate-900 dark:text-slate-50">
+                        <p className="truncate font-semibold text-fg">
                           {displayName(u)}
                         </p>
-                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                        <p className="truncate text-xs text-fg-subtle">
                           {u.email}
                         </p>
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-fg-muted">
                         {(u.department ?? '').trim() || '—'}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1 sm:max-w-xs">
-                          <div className="flex justify-between text-xs tabular-nums text-slate-600 dark:text-slate-300">
+                          <div className="flex justify-between text-xs tabular-nums text-fg-muted">
                             <span>
                               {used.toLocaleString('ko-KR')} /{' '}
                               {limit.toLocaleString('ko-KR')}
                             </span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-100">
+                            <span className="font-semibold text-fg">
                               {p}%
                             </span>
                           </div>
-                          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
                             <div
                               className={`h-full rounded-full transition-[width] ${
                                 p >= 90
@@ -189,7 +189,7 @@ export function UserTokenManager() {
                           type="button"
                           disabled={busyId === u.id}
                           onClick={() => openGrantModal(u)}
-                          className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                          className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-accent disabled:opacity-50"
                         >
                           + 토큰 부여
                         </button>
@@ -213,27 +213,27 @@ export function UserTokenManager() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="grant-modal-title"
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+            className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="grant-modal-title"
-              className="text-lg font-bold text-slate-900 dark:text-slate-50"
+              className="text-lg font-bold text-fg"
             >
               토큰 한도 부여
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              <span className="font-semibold text-slate-900 dark:text-slate-100">
+            <p className="mt-2 text-sm text-fg-muted">
+              <span className="font-semibold text-fg">
                 {displayName(modalUser)}
               </span>
               님의{' '}
-              <span className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              <span className="font-mono text-xs font-semibold text-accent">
                 token_limit
               </span>
               을 증가시킵니다.
             </p>
 
-            <label className="mt-5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <label className="mt-5 block text-xs font-semibold uppercase tracking-wide text-fg-subtle">
               추가 할당량 (토큰)
               <input
                 type="number"
@@ -241,13 +241,13 @@ export function UserTokenManager() {
                 step={1}
                 value={grantAmount}
                 onChange={(e) => setGrantAmount(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm tabular-nums dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm tabular-nums"
               />
             </label>
 
-            <p className="mt-3 text-[17px] leading-relaxed text-slate-500 dark:text-slate-400">
+            <p className="mt-3 text-[17px] leading-relaxed text-fg-subtle">
               현재 한도:{' '}
-              <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">
+              <span className="font-semibold tabular-nums text-fg-muted">
                 {Number(modalUser.token_limit).toLocaleString('ko-KR')}
               </span>{' '}
               · RPC{' '}
@@ -257,12 +257,12 @@ export function UserTokenManager() {
               로 반영됩니다.
             </p>
 
-            <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
               <button
                 type="button"
                 disabled={grantBusy}
                 onClick={() => closeModal()}
-                className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-xl px-4 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2"
               >
                 취소
               </button>
@@ -270,7 +270,7 @@ export function UserTokenManager() {
                 type="button"
                 disabled={grantBusy}
                 onClick={() => void submitGrant()}
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:opacity-60"
               >
                 {grantBusy ? '처리 중…' : '부여하기'}
               </button>

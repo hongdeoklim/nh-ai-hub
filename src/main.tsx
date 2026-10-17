@@ -28,6 +28,7 @@ if (import.meta.env.PROD) {
         '     · VITE_SUPABASE_ANON_KEY\n' +
         '  2. 로컬 점검: npm run deploy:check-env\n' +
         '  3. 상세 가이드: 프로젝트 루트 DEPLOY_GUIDE.md',
+      { cause: err },
     )
   }
 } else if (!isSupabaseConfigured || !clientAiEnvStatus.configured) {

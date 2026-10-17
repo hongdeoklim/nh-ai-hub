@@ -96,7 +96,7 @@ function TokenTrendTooltip({ active, payload, label }: ChartTooltipProps) {
   const value = payload[0]?.value ?? 0
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 shadow-lg">
-      <p className="text-xs font-medium text-slate-300">날짜 {label}</p>
+      <p className="text-xs font-medium text-fg-subtle">날짜 {label}</p>
       <p className="mt-1 text-xs tabular-nums text-white">
         토큰 {value.toLocaleString('ko-KR')}
       </p>
@@ -110,7 +110,7 @@ function ShareTooltip({ active, payload }: ChartTooltipProps) {
   const name = payload[0]?.name ?? ''
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 shadow-lg">
-      <p className="text-xs font-medium text-slate-300">{name}</p>
+      <p className="text-xs font-medium text-fg-subtle">{name}</p>
       <p className="mt-1 text-xs tabular-nums text-white">비율 {value}%</p>
     </div>
   )
@@ -126,16 +126,16 @@ function StatCard({
   hint?: string
 }) {
   return (
-    <article className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-indigo-500/5 blur-2xl" />
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+    <article className="group relative overflow-hidden rounded-xl border border-border/80 bg-surface p-5 shadow-sm">
+      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/10 blur-2xl" />
+      <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-50">
+      <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-fg">
         {value}
       </p>
       {hint && (
-        <p className="mt-2 text-xs leading-snug text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-xs leading-snug text-fg-subtle">
           {hint}
         </p>
       )}
@@ -185,40 +185,40 @@ function DepartmentBudgetUsageSection() {
 
   return (
     <section aria-label="부서별 예산 사용 현황">
-      <article className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+      <article className="overflow-hidden rounded-xl border border-border/80 bg-surface shadow-sm">
+        <div className="border-b border-border px-6 py-4">
+          <h2 className="text-sm font-semibold text-fg">
             부서별 예산 사용 현황
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs text-fg-subtle">
             department_budgets · 월간 한도 대비 누적 사용(USD)
           </p>
         </div>
         {loading ? (
-          <p className="px-6 py-8 text-sm text-slate-500 dark:text-slate-400">불러오는 중…</p>
+          <p className="px-6 py-8 text-sm text-fg-subtle">불러오는 중…</p>
         ) : error ? (
-          <p className="px-6 py-8 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="px-6 py-8 text-sm text-danger">{error}</p>
         ) : rows.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-slate-500 dark:text-slate-400">
+          <p className="px-6 py-8 text-sm text-fg-subtle">
             등록된 부서 예산 데이터가 없습니다.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+          <ul className="divide-y divide-border">
             {rows.map((row) => {
               const limit = Math.max(row.monthly_limit_usd, 0.0001)
               const pct = Math.min(100, Math.round((row.current_usage_usd / limit) * 100))
-              const barTone = pct >= 80 ? 'bg-red-500' : 'bg-indigo-500 dark:bg-indigo-400'
+              const barTone = pct >= 80 ? 'bg-danger' : 'bg-accent'
               return (
                 <li key={row.target_department} className="px-6 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    <span className="text-sm font-medium text-fg">
                       {row.target_department}
                     </span>
-                    <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                    <span className="text-xs tabular-nums text-fg-subtle">
                       {formatUsd(row.current_usage_usd)} / {formatUsd(row.monthly_limit_usd)} ({pct}%)
                     </span>
                   </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
                     <div className={`h-full rounded-full transition-all ${barTone}`} style={{ width: `${pct}%` }} />
                   </div>
                 </li>
@@ -371,7 +371,7 @@ export function ModernAdminDashboard() {
   }
 
   useEffect(() => {
-    void load()
+    queueMicrotask(() => void load())
   }, [])
 
   const thisMonth = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
@@ -384,7 +384,7 @@ export function ModernAdminDashboard() {
         actions={
           <div className="flex items-center gap-2">
             {refreshedAt && (
-              <span className="text-xs text-slate-400 dark:text-slate-500">
+              <span className="text-xs text-fg-subtle">
                 업데이트 {refreshedAt.toLocaleTimeString('ko-KR')}
               </span>
             )}
@@ -392,7 +392,7 @@ export function ModernAdminDashboard() {
               type="button"
               onClick={() => void load()}
               disabled={loading}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:bg-surface-2 disabled:opacity-50"
             >
               {loading ? '로딩 중…' : '새로고침'}
             </button>
@@ -401,13 +401,13 @@ export function ModernAdminDashboard() {
       />
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+        <div className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-xs text-danger">
           오류: {error}
         </div>
       )}
 
       {loading && !metrics ? (
-        <div className="flex h-40 items-center justify-center text-sm text-slate-400">
+        <div className="flex h-40 items-center justify-center text-sm text-fg-subtle">
           데이터 불러오는 중…
         </div>
       ) : metrics ? (
@@ -436,17 +436,17 @@ export function ModernAdminDashboard() {
           </section>
 
           <section aria-label="사용량 차트" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <article className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+            <article className="rounded-xl border border-border/80 bg-surface p-6 shadow-sm lg:col-span-2">
               <div className="mb-4">
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                <h2 className="text-sm font-semibold text-fg">
                   최근 7일 토큰 사용량
                 </h2>
-                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-0.5 text-xs text-fg-subtle">
                   일별 prompt + completion 합산 추이
                 </p>
               </div>
               {metrics.tokenTrend.every((p) => p.tokens === 0) ? (
-                <div className="flex h-72 items-center justify-center text-sm text-slate-400">
+                <div className="flex h-72 items-center justify-center text-sm text-fg-subtle">
                   최근 7일 토큰 데이터가 없습니다.
                 </div>
               ) : (
@@ -478,17 +478,17 @@ export function ModernAdminDashboard() {
               )}
             </article>
 
-            <article className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <article className="rounded-xl border border-border/80 bg-surface p-6 shadow-sm">
               <div className="mb-4">
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                <h2 className="text-sm font-semibold text-fg">
                   부서별 비용 비율
                 </h2>
-                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-0.5 text-xs text-fg-subtle">
                   department_budgets current_usage_usd 기준
                 </p>
               </div>
               {metrics.deptShare.length === 0 ? (
-                <div className="flex h-52 items-center justify-center text-sm text-slate-400">
+                <div className="flex h-52 items-center justify-center text-sm text-fg-subtle">
                   부서 예산 데이터가 없습니다.
                 </div>
               ) : (
@@ -519,7 +519,7 @@ export function ModernAdminDashboard() {
                     {metrics.deptShare.map((dept) => (
                       <li
                         key={dept.name}
-                        className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300"
+                        className="flex items-center justify-between gap-2 text-xs text-fg-muted"
                       >
                         <span className="flex min-w-0 items-center gap-2">
                           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: dept.color }} />
@@ -537,36 +537,36 @@ export function ModernAdminDashboard() {
           <DepartmentBudgetUsageSection />
 
           <section aria-label="최근 시스템 로그">
-            <article className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+            <article className="overflow-hidden rounded-xl border border-border/80 bg-surface shadow-sm">
+              <div className="border-b border-border px-6 py-4">
+                <h2 className="text-sm font-semibold text-fg">
                   최근 시스템 로그
                 </h2>
-                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-0.5 text-xs text-fg-subtle">
                   activity_logs 최신 5건
                 </p>
               </div>
               {metrics.recentLogs.length === 0 ? (
-                <p className="px-6 py-8 text-sm text-slate-500 dark:text-slate-400">
+                <p className="px-6 py-8 text-sm text-fg-subtle">
                   최근 로그가 없습니다.
                 </p>
               ) : (
-                <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                <ul className="divide-y divide-border">
                   {metrics.recentLogs.map((log) => {
                     const meta = resolveActivityAction(log.action_type)
                     return (
                       <li
                         key={log.id}
-                        className="flex flex-wrap items-start gap-3 px-6 py-4 transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+                        className="flex flex-wrap items-start gap-3 px-6 py-4 transition hover:bg-surface-2/80"
                       >
                         <span className={activityBadgeClassName(log.action_type)}>
                           {meta.label}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-slate-800 dark:text-slate-100">
+                          <p className="text-sm text-fg">
                             {log.description}
                           </p>
-                          <p className="mt-1 text-xs tabular-nums text-slate-400 dark:text-slate-500">
+                          <p className="mt-1 text-xs tabular-nums text-fg-subtle">
                             {formatLogTime(log.created_at)}
                           </p>
                         </div>

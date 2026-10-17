@@ -2,6 +2,7 @@ import {
   startTransition,
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -27,7 +28,6 @@ import {
 } from '../components/prompts/PromptLibraryPanel'
 import { PromptLibraryMagnetSheet } from '../components/prompts/PromptLibraryMagnetSheet'
 import { TokenRequestModal } from '../components/settings/TokenRequestModal'
-import { AccountHeaderActions } from '../components/layout/AccountHeaderActions'
 import { useAppUi } from '../contexts/AppUiContext'
 import {
   routePromptToModelId,
@@ -47,6 +47,8 @@ import { invokeCreativeGenerate } from '../services/ai/invoke-creative'
 import { invokeMediaRouter } from '../services/ai/invoke-media-router'
 import { invokeDeepResearch } from '../services/ai/deep-research-client'
 import { invokeAiChat } from '../services/ai/invoke-chat'
+import { resolveAiTransport } from '../services/ai/api'
+import { FOLLOWUP_INSTRUCTION, splitFollowups } from '../lib/chat-followups'
 import {
   buildModelSelectOptions,
   fetchActiveMediaAiModels,
@@ -128,6 +130,7 @@ import {
   manualProviderChoiceForModelId,
   type DashboardProviderPreference,
 } from '../constants/dashboard-model-catalog'
+import { toast } from 'sonner'
 
 type ReferenceSnippet =
   | { key: string; kind: 'text'; title: string; sourceUrl: string; body: string }
@@ -229,12 +232,11 @@ const DEEP_RESEARCH_LOADING_MESSAGE =
   '🤖 3개의 AI(Claude, GPT, Gemini)가 회의 중입니다... (약 15~30초 소요)'
 
 export function Dashboard() {
-  const { profile, profileError, refreshProfile, signOut } = useAuth()
+  const { profile, profileError, refreshProfile } = useAuth()
   const {
     registerNewChatHandler,
     registerPromptPanel,
     openSettings,
-    requestNewChat,
   } = useAppUi()
   const [selectedModel, setSelectedModel] = useState<string>('auto')
   const [selectedProvider, setSelectedProvider] =
@@ -428,17 +430,29 @@ export function Dashboard() {
     }
   }, [])
 
-  const safeRegistryModels = Array.isArray(registryModels) ? registryModels : []
+  const safeRegistryModels = useMemo(
+    () => (Array.isArray(registryModels) ? registryModels : []),
+    [registryModels],
+  )
   const textRegistryModels = useMemo(
     () => filterActiveTextModels(safeRegistryModels),
     [safeRegistryModels],
   )
-  const safeMediaImageModels = Array.isArray(mediaImageModels)
-    ? filterActiveMediaModels(mediaImageModels, 'image')
-    : []
-  const safeMediaVideoModels = Array.isArray(mediaVideoModels)
-    ? filterActiveMediaModels(mediaVideoModels, 'video')
-    : []
+  // 매 렌더 새 배열이 되면 ChatInput·자동 전송 effect 가 불필요하게 다시 돈다
+  const safeMediaImageModels = useMemo(
+    () =>
+      Array.isArray(mediaImageModels)
+        ? filterActiveMediaModels(mediaImageModels, 'image')
+        : [],
+    [mediaImageModels],
+  )
+  const safeMediaVideoModels = useMemo(
+    () =>
+      Array.isArray(mediaVideoModels)
+        ? filterActiveMediaModels(mediaVideoModels, 'video')
+        : [],
+    [mediaVideoModels],
+  )
 
   const versionRows = useMemo(() => {
     if (selectedProvider === 'auto') {
@@ -621,6 +635,30 @@ export function Dashboard() {
     rememberLastPrivateThread(threadId)
   }, [threadId, navigate])
 
+  // 다른 화면에서 넘긴 프롬프트 자동 전송 — 항상 최신 handleSend·handleMediaGenerate 를 쓰되
+  // effect 재실행 조건(threadId·프로필·엔진 목록)에는 넣지 않는다 (React 19.2 useEffectEvent)
+  const sendBootstrapPrompt = useEffectEvent((text: string) => {
+    queueMicrotask(() => {
+      handleSend({
+        text,
+        experimental_attachments: [],
+        imageFiles: [],
+      })
+    })
+  })
+  const generateBootstrapImage = useEffectEvent((text: string, engine: string) => {
+    queueMicrotask(() => {
+      void handleMediaGenerate('image', text, engine)
+    })
+  })
+
+  /*
+   * 대화(threadId) 전환 · 다른 화면에서 넘긴 1회성 부트스트랩(세션 저장소) 소비 구간.
+   * 저장소 읽기·삭제, ref 갱신, 포커스 같은 외부 동기화가 상태 갱신과 한 덩어리이고,
+   * AI Sheets 부트스트랩이 쓴 시트 컨텍스트를 뒤의 effect 가 같은 커밋에서 읽어야 하므로
+   * (선언 순서 의존) 렌더 중 조정으로 옮기지 않고 effect 로 유지한다.
+   */
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setReferenceSnippets([])
     sendQueueRef.current = []
@@ -669,13 +707,7 @@ export function Dashboard() {
       return
     }
     slidesAutoSendPendingRef.current = null
-    queueMicrotask(() => {
-      handleSend({
-        text,
-        experimental_attachments: [],
-        imageFiles: [],
-      })
-    })
+    sendBootstrapPrompt(text)
   }, [threadId, profile?.id])
 
   useEffect(() => {
@@ -714,20 +746,12 @@ export function Dashboard() {
       if (!engine || mediaEnginesLoading) return
       designerAutoSendPendingRef.current = null
       designerUseImageRef.current = false
-      queueMicrotask(() => {
-        void handleMediaGenerate('image', text, engine)
-      })
+      generateBootstrapImage(text, engine)
       return
     }
     designerAutoSendPendingRef.current = null
     designerUseImageRef.current = false
-    queueMicrotask(() => {
-      handleSend({
-        text,
-        experimental_attachments: [],
-        imageFiles: [],
-      })
-    })
+    sendBootstrapPrompt(text)
   }, [threadId, profile?.id, safeMediaImageModels, mediaEnginesLoading])
 
   useEffect(() => {
@@ -765,13 +789,7 @@ export function Dashboard() {
       return
     }
     sheetsAutoSendPendingRef.current = null
-    queueMicrotask(() => {
-      handleSend({
-        text,
-        experimental_attachments: [],
-        imageFiles: [],
-      })
-    })
+    sendBootstrapPrompt(text)
   }, [threadId, profile?.id])
 
   const loadSheetsPreview = useCallback(
@@ -800,10 +818,12 @@ export function Dashboard() {
     setSheetsAgentContext(ctx)
     if (ctx?.range) setSheetsRange(ctx.range)
   }, [threadId])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
-    if (!sheetsAgentContext?.spreadsheetId) return
-    void loadSheetsPreview(sheetsAgentContext.spreadsheetId, sheetsRange)
+    const spreadsheetId = sheetsAgentContext?.spreadsheetId
+    if (!spreadsheetId) return
+    queueMicrotask(() => void loadSheetsPreview(spreadsheetId, sheetsRange))
   }, [sheetsAgentContext?.spreadsheetId, sheetsRange, loadSheetsPreview])
 
   useEffect(() => {
@@ -843,7 +863,7 @@ export function Dashboard() {
           if (!googleConnected) {
             if (!askedDriveConnect) {
               askedDriveConnect = true
-              window.alert(
+              toast.info(
                 '구글 계정 연동이 필요합니다. 설정 → 워크스페이스 연동에서 Google을 연결하면 드라이브 문서 본문을 채팅에 넣을 수 있습니다.',
               )
             }
@@ -859,7 +879,7 @@ export function Dashboard() {
           const res = await exportDriveFileForChat(fid)
           if (ac.signal.aborted) return
           if (!res.ok) {
-            window.alert(`「${item.file_name}」 불러오기 실패: ${res.message}`)
+            toast.error(`「${item.file_name}」 불러오기 실패: ${res.message}`)
             snippets.push({
               key: crypto.randomUUID(),
               kind: 'link_only',
@@ -1062,7 +1082,7 @@ export function Dashboard() {
     if (!profile?.id) return
     const result = await hideOrgPromptForUser(supabase, profile.id, promptId)
     if (!result.ok) {
-      window.alert(result.message)
+      toast.error(result.message)
       return
     }
     startTransition(() =>
@@ -1233,8 +1253,39 @@ export function Dashboard() {
   /** 잘린 답변 이어쓰기: 모델에게 끊긴 지점부터 계속 쓰도록 지시하는 user 턴 */
   const CONTINUE_INSTRUCTION =
     '직전 답변이 출력 한도 때문에 중간에 끊겼습니다. 인사말·요약·이미 작성한 내용의 반복 없이, 끊긴 지점부터 곧바로 이어서 작성하세요.'
-  /** finishReason length/interrupted 시 같은 턴에서 자동으로 이어쓰는 최대 횟수 */
-  const MAX_AUTO_CONTINUES = 2
+  /**
+   * finishReason length/interrupted 시 같은 턴에서 자동으로 이어쓰는 최대 횟수.
+   * 회차마다 별도 요청이라 출력 한도·엣지 함수 시간 제한을 각각 새로 받는다.
+   * 사용자가 '이어서 생성'을 누르지 않아도 긴 답변이 끝까지 나오도록 넉넉히 둔다.
+   */
+  const MAX_AUTO_CONTINUES = 5
+
+  /**
+   * 추천 질문("이어서 물어보기")을 붙일 수 있는 일반 텍스트 대화인지.
+   * 캔버스·Dify·브라우저 직접 호출(실험실 오버레이 미지원)과 워크플로(전용 프롬프트)는 제외한다.
+   */
+  function followupsSupported(model: string, composerTool: string | null): boolean {
+    return (
+      composerTool !== 'canvas' &&
+      model !== 'dify-ax' &&
+      resolveAiTransport() !== 'direct' &&
+      !activeWorkflowSystemPrompt
+    )
+  }
+
+  /** ai-chat 실험실 오버레이: 워크플로 프롬프트(대체) 또는 추천 질문 지시문(추가) */
+  function buildChatLab(withFollowups: boolean) {
+    if (activeWorkflowSystemPrompt) {
+      return {
+        system_prompt: activeWorkflowSystemPrompt,
+        system_prompt_mode: 'replace' as const,
+      }
+    }
+    if (withFollowups) {
+      return { system_prompt: FOLLOWUP_INSTRUCTION, system_prompt_mode: 'append' as const }
+    }
+    return undefined
+  }
 
   async function executeChatTurn(
     item: PendingChatTurn,
@@ -1463,11 +1514,14 @@ export function Dashboard() {
       const apiMessages = buildMessagesForApi(historySnapshot, apiPrompt, {
         excludeLastUser: item.regenerate === true,
       })
+      const withFollowups =
+        !hasImages && followupsSupported(modelNow, composerToolMode)
       const callAiChat = (messagesForApi: typeof apiMessages) =>
         invokeAiChat({
         supabase,
         messages: messagesForApi,
         activeModel: modelNow,
+        difyThreadId: turnThreadId,
         providerPreference: selectedProviderRef.current,
         composerTool: composerToolMode === 'canvas' ? 'canvas' : null,
         internetSearchEnabled: item.internetSearch,
@@ -1481,10 +1535,7 @@ export function Dashboard() {
           legacyAttachments.length > 0
             ? legacyAttachments
             : undefined,
-        experimental_lab: activeWorkflowSystemPrompt ? {
-          system_prompt: activeWorkflowSystemPrompt,
-          system_prompt_mode: 'replace',
-        } : undefined,
+        experimental_lab: buildChatLab(withFollowups),
         tokenLimit,
         currentTokenUsage,
         signal,
@@ -1493,12 +1544,15 @@ export function Dashboard() {
           if (composerToolMode === 'canvas') canvasStreamText += delta
           streamRawText += delta
           const { thinkingContent, content } = splitThinkingStream(streamRawText)
+          const visible = withFollowups
+            ? splitFollowups(content, { partial: true }).body
+            : content
           setMessages((prev) =>
             prev.map((message) =>
               message.id === assistantId
                 ? {
                     ...message,
-                    content,
+                    content: visible,
                     thinkingContent,
                   }
                 : message,
@@ -1590,12 +1644,22 @@ export function Dashboard() {
       {
         const generationElapsedMs = Date.now() - genStartMs
         const hasUsage = usageTotal.inputTokens + usageTotal.outputTokens > 0
+        // 본문 끝의 추천 질문 블록을 떼어 칩으로 보여준다 (잘린 답변은 블록이 없으니 건너뜀)
+        const finalSplit = withFollowups && outcome.ok
+          ? splitFollowups(splitThinkingStream(streamRawText).content)
+          : null
         setMessages((prev) =>
           prev.map((message) =>
             message.id === assistantId
               ? {
                   ...message,
                   ...(endedTruncated ? { truncated: true } : {}),
+                  ...(finalSplit
+                    ? {
+                        content: finalSplit.body,
+                        followups: endedTruncated ? undefined : finalSplit.followups,
+                      }
+                    : {}),
                   elapsedMs: generationElapsedMs,
                   ...(hasUsage ? { usage: { ...usageTotal } } : {}),
                 }
@@ -1754,10 +1818,11 @@ export function Dashboard() {
       'auto'
     const modelNow = rawModel.toLowerCase() === 'auto' ? 'auto' : rawModel
 
-    // 끊긴 말풍선까지의 대화 + 이어쓰기 지시
-    const historyThroughAssistant = messages.slice(0, assistantIndex + 1)
-    const apiMessages = [
-      ...buildMessagesForApi(historyThroughAssistant),
+    // 끊긴 말풍선 이전 대화 + 지금까지의 답변 + 이어쓰기 지시 (회차마다 최신 답변으로 다시 구성)
+    const historyBeforeAssistant = buildMessagesForApi(messages.slice(0, assistantIndex))
+    const continueMessages = (answerSoFar: string) => [
+      ...historyBeforeAssistant,
+      { role: 'assistant' as const, content: answerSoFar },
       { role: 'user' as const, content: CONTINUE_INSTRUCTION },
     ]
 
@@ -1767,6 +1832,7 @@ export function Dashboard() {
     const { signal } = turnAbort
 
     let streamRawText = assistant.content
+    const continueWithFollowups = followupsSupported(modelNow, null)
     const contStartMs = Date.now()
     setIsSending(true)
     setMessages((prev) =>
@@ -1778,18 +1844,14 @@ export function Dashboard() {
     )
 
     try {
-      const outcome = await invokeAiChat({
+      const callContinue = () => invokeAiChat({
         supabase,
-        messages: apiMessages,
+        messages: continueMessages(streamRawText),
         activeModel: modelNow,
+        difyThreadId: turnThreadId,
         providerPreference: selectedProviderRef.current,
         composerTool: null,
-        experimental_lab: activeWorkflowSystemPrompt
-          ? {
-              system_prompt: activeWorkflowSystemPrompt,
-              system_prompt_mode: 'replace',
-            }
-          : undefined,
+        experimental_lab: buildChatLab(continueWithFollowups),
         tokenLimit: profileNow.token_limit ?? 0,
         currentTokenUsage: profileNow.current_token_usage ?? 0,
         signal,
@@ -1797,12 +1859,15 @@ export function Dashboard() {
           if (threadIdRef.current !== turnThreadId) return
           streamRawText += delta
           const { thinkingContent, content } = splitThinkingStream(streamRawText)
+          const visible = continueWithFollowups
+            ? splitFollowups(content, { partial: true }).body
+            : content
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
                 ? {
                     ...m,
-                    content,
+                    content: visible,
                     thinkingContent: thinkingContent ?? m.thinkingContent,
                   }
                 : m,
@@ -1811,29 +1876,61 @@ export function Dashboard() {
         },
       })
 
+      const usageTotal = { inputTokens: 0, outputTokens: 0 }
+      const addUsage = (result: Awaited<ReturnType<typeof callContinue>>) => {
+        if (!result.ok || !result.usage) return
+        usageTotal.inputTokens += result.usage.inputTokens
+        usageTotal.outputTokens += result.usage.outputTokens
+      }
+      const endedTruncated = (result: Awaited<ReturnType<typeof callContinue>>) =>
+        result.ok &&
+        (result.finishReason === 'length' || result.finishReason === 'interrupted')
+
+      // 버튼 한 번으로 끝까지: 또 잘리면 자동 이어쓰기 한도까지 계속 이어 쓴다
+      let outcome = await callContinue()
+      addUsage(outcome)
+      let rounds = 0
+      while (
+        endedTruncated(outcome) &&
+        rounds < MAX_AUTO_CONTINUES &&
+        !signal.aborted &&
+        threadIdRef.current === turnThreadId
+      ) {
+        rounds += 1
+        outcome = await callContinue()
+        addUsage(outcome)
+      }
+
       if (threadIdRef.current !== turnThreadId) return
       if (signal.aborted) return
 
+      const hasUsage = usageTotal.inputTokens + usageTotal.outputTokens > 0
+      const stillTruncated = endedTruncated(outcome)
+      const finalSplit =
+        continueWithFollowups && outcome.ok
+          ? splitFollowups(splitThinkingStream(streamRawText).content)
+          : null
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId
             ? {
                 ...m,
                 streaming: false,
-                truncated:
-                  outcome.ok &&
-                  (outcome.finishReason === 'length' ||
-                    outcome.finishReason === 'interrupted'),
+                truncated: stillTruncated,
+                ...(finalSplit
+                  ? {
+                      content: finalSplit.body,
+                      followups: stillTruncated ? undefined : finalSplit.followups,
+                    }
+                  : {}),
                 elapsedMs: (m.elapsedMs ?? 0) + (Date.now() - contStartMs),
-                ...(outcome.ok && outcome.usage
+                ...(hasUsage
                   ? {
                       usage: {
                         inputTokens:
-                          (m.usage?.inputTokens ?? 0) +
-                          outcome.usage.inputTokens,
+                          (m.usage?.inputTokens ?? 0) + usageTotal.inputTokens,
                         outputTokens:
-                          (m.usage?.outputTokens ?? 0) +
-                          outcome.usage.outputTokens,
+                          (m.usage?.outputTokens ?? 0) + usageTotal.outputTokens,
                       },
                     }
                   : {}),
@@ -1926,7 +2023,7 @@ export function Dashboard() {
           return { ...message, content: result.message, streaming: false }
         }
         if (actionType === 'image' && result.mediaUrl) {
-          const alt = trimmed.slice(0, 80).replace(/[\[\]]/g, '') || '생성 이미지'
+          const alt = trimmed.slice(0, 80).replace(/[[\]]/g, '') || '생성 이미지'
           return {
             ...message,
             content: result.markdown || `![${alt}](${result.mediaUrl})`,
@@ -1941,6 +2038,11 @@ export function Dashboard() {
       }),
     )
     setIsSending(false)
+  }
+
+  /** "이어서 물어보기" 칩 → 그 질문을 그대로 다음 메시지로 보낸다 */
+  function handleFollowupSelect(text: string) {
+    handleSend({ text, experimental_attachments: [], imageFiles: [] })
   }
 
   function handleSend(payload: ChatSendPayload) {
@@ -2019,7 +2121,7 @@ export function Dashboard() {
 
   return (
     <ChatArtifactProvider>
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#FAF9F6] dark:bg-transparent lg:flex-row">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-bg dark:bg-transparent lg:flex-row">
       <div
         className={`hidden min-w-0 shrink-0 transition-[width] duration-200 ease-out lg:flex lg:h-full lg:max-h-none ${
           promptPanelExpanded
@@ -2048,26 +2150,9 @@ export function Dashboard() {
         <GeminiChatBackground
           active={isSending || messages.some((message) => message.streaming)}
         />
-        <header className="hidden shrink-0 items-center gap-1 border-b border-stone-200/90 bg-[#FAF9F6]/95 px-2 py-1 backdrop-blur-md dark:border-stone-800/60 dark:bg-[#050508]/55 md:flex md:px-3 md:py-1.5">
-          <h1 className="min-w-0">
-            <button
-              type="button"
-              onClick={() => requestNewChat()}
-              className="text-left text-2xl font-semibold leading-none tracking-tight text-stone-900 transition hover:text-orange-800 dark:text-stone-50 dark:hover:text-orange-200"
-              aria-label="홈 · 새 채팅"
-              title="홈 · 새 채팅"
-            >
-              NH-AX-HUB
-            </button>
-          </h1>
-          <AccountHeaderActions
-            onOpenSettings={openSettings}
-            onSignOut={signOut}
-          />
-        </header>
 
         {activeWorkflowTitle && (
-          <div className="shrink-0 border-b border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200 flex flex-wrap items-center justify-between gap-2 md:px-6">
+          <div className="shrink-0 border-b border-accent/30 bg-accent-soft px-4 py-3 text-sm text-accent flex flex-wrap items-center justify-between gap-2 md:px-6">
             <div className="flex items-center gap-2">
               <span className="text-base leading-none">✨</span>
               <span>
@@ -2088,7 +2173,7 @@ export function Dashboard() {
         )}
 
         {profileError ? (
-          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100 md:px-6">
+          <div className="shrink-0 border-b border-warning/30 bg-warning-soft px-4 py-2 text-xs text-warning md:px-6">
             {profileError}{' '}
             <button
               type="button"
@@ -2103,7 +2188,7 @@ export function Dashboard() {
         {profile &&
         dashboardTokenBudget.limit > 0 &&
         dashboardTokenBudget.pct <= 10 ? (
-          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-[12px]! text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100 md:px-6">
+          <div className="shrink-0 border-b border-warning/30 bg-warning-soft px-4 py-2 text-[12px] text-warning md:px-6">
             <span className="font-medium">
               월간 토큰 예산이 10% 이하입니다 (남은 비율 약 {dashboardTokenBudget.pct}
               %).
@@ -2157,6 +2242,7 @@ export function Dashboard() {
                     onBookmarkAssistant={handleBookmarkAssistant}
                     onRegenerateAssistant={handleRegenerateAssistant}
                     onContinueAssistant={(index) => void handleContinueAssistant(index)}
+                    onFollowupSelect={handleFollowupSelect}
                     regenerateDisabled={isSending}
                     onCommitMessageEdit={handleCommitMessageEdit}
                     topPanel={null}
@@ -2182,6 +2268,7 @@ export function Dashboard() {
                 onBookmarkAssistant={handleBookmarkAssistant}
                 onRegenerateAssistant={handleRegenerateAssistant}
                 onContinueAssistant={(index) => void handleContinueAssistant(index)}
+                    onFollowupSelect={handleFollowupSelect}
                 regenerateDisabled={isSending}
                 onCommitMessageEdit={handleCommitMessageEdit}
                 topPanel={
@@ -2212,10 +2299,10 @@ export function Dashboard() {
           </ChatArtifactLayout>
           )}
 
-        <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-20 shrink-0 border-t border-stone-200/90 bg-[#FAF9F6]/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md gemini-zero-dark-composer dark:border-stone-800/80 md:pointer-events-auto md:relative md:inset-x-auto md:bottom-auto md:z-0 md:bg-transparent md:px-6 md:pb-4 md:pt-2 md:backdrop-blur-none ${isSending ? 'gemini-zero-dark-composer--generating' : ''}`}>
+        <div className={`pointer-events-none fixed inset-x-0 bottom-[var(--app-bottom-nav,0px)] z-20 shrink-0 border-t border-border bg-surface/95 px-3 py-2 pb-[max(8px,calc(env(safe-area-inset-bottom)_-_var(--app-bottom-nav,0px)))] backdrop-blur-md gemini-zero-dark-composer md:pointer-events-auto md:relative md:inset-x-auto md:bottom-auto md:z-0 md:bg-transparent md:px-6 md:pb-4 md:pt-2 md:backdrop-blur-none ${isSending ? 'gemini-zero-dark-composer--generating' : ''}`}>
           <div className="pointer-events-auto">
           {referenceBootstrapBusy ? (
-            <div className="mx-auto mb-1 max-w-3xl rounded-lg border border-orange-200/80 bg-orange-50/95 px-3 py-2 text-[11px]! font-medium text-orange-950 dark:border-orange-900 dark:bg-orange-950/35 dark:text-orange-100">
+            <div className="mx-auto mb-1 max-w-3xl rounded-lg border border-brand/30 bg-brand-soft/95 px-3 py-2 text-[11px] font-medium text-brand">
               구글 드라이브에서 자료를 불러오는 중입니다…
             </div>
           ) : null}
@@ -2224,14 +2311,14 @@ export function Dashboard() {
               {referenceSnippets.map((s) => (
                 <span
                   key={s.key}
-                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-stone-300/90 bg-white px-2.5 py-1 text-[11px]! font-medium text-stone-800 shadow-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
+                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-border-strong/90 bg-surface px-2.5 py-1 text-[11px] font-medium text-fg shadow-sm"
                 >
                   <span className="truncate" title={s.title}>
                     📎 {s.title}
                   </span>
                   <button
                     type="button"
-                    className="shrink-0 rounded-full px-1 text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-stone-50"
+                    className="shrink-0 rounded-full px-1 text-fg-subtle hover:bg-surface-2 hover:text-fg"
                     aria-label={`${s.title} 참조 제거`}
                     onClick={() => removeReferenceSnippet(s.key)}
                   >
@@ -2274,7 +2361,7 @@ export function Dashboard() {
             belowInputRow={
               registryModelsLoading ? (
                 <div
-                  className="inline-flex h-[28px] min-w-[136px] max-w-[min(52vw,14rem)] animate-pulse items-center rounded-full bg-stone-200/90 px-3 dark:bg-stone-700/80"
+                  className="inline-flex h-[28px] min-w-[136px] max-w-[min(52vw,14rem)] animate-pulse items-center rounded-full bg-surface-3/90 px-3"
                   aria-hidden="true"
                 />
               ) : (
@@ -2292,7 +2379,7 @@ export function Dashboard() {
                         event.target.value as DashboardProviderPreference,
                       )
                     }
-                    className="h-[28px] w-[120px] max-w-[38vw] min-w-0 shrink rounded-full border-0 bg-stone-100/95 px-2 text-[12px]! font-medium text-stone-700 outline-none ring-orange-600/20 transition hover:bg-stone-200/90 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90"
+                    className="h-[28px] w-[120px] max-w-[38vw] min-w-0 shrink rounded-full border-0 bg-surface-2/95 px-2 text-[12px] font-medium text-fg-muted outline-none ring-focus/40 transition hover:bg-surface-3/90 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="auto">자동 추천</option>
                     <option value="openai">ChatGPT/OpenAI</option>

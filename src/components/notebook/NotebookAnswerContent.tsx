@@ -33,7 +33,7 @@ export function NotebookAnswerContent({
   }, [citations])
 
   return (
-    <p className="whitespace-pre-wrap text-sm leading-relaxed text-stone-800 dark:text-stone-100">
+    <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg">
       {parts.map((part, i) => {
         if (part.kind === 'text') {
           return <span key={`t-${i}`}>{part.value}</span>

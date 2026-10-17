@@ -36,14 +36,14 @@ export function NotebookRightPanel({
   const tabBtn =
     'flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition-colors duration-200'
   const tabActive =
-    'bg-orange-100 text-orange-950 shadow-sm dark:bg-orange-950/50 dark:text-orange-50'
+    'bg-brand-soft text-brand shadow-sm'
   const tabIdle =
-    'text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800'
+    'text-fg-muted hover:bg-surface-2'
 
   return (
-    <section className="flex h-full min-h-0 flex-col border-l border-stone-200/90 bg-white/80 dark:border-stone-800 dark:bg-stone-900/60">
-      <header className="shrink-0 border-b border-stone-200/90 px-3 py-3 dark:border-stone-800">
-        <div className="flex gap-1 rounded-xl bg-stone-100/90 p-1 dark:bg-stone-800/80">
+    <section className="flex h-full min-h-0 flex-col border-l border-border/90 bg-surface/80">
+      <header className="shrink-0 border-b border-border/90 px-3 py-3">
+        <div className="flex gap-1 rounded-xl bg-surface-2/90 p-1">
           <button
             type="button"
             className={`${tabBtn} ${tab === 'graph' ? tabActive : tabIdle}`}
@@ -71,7 +71,7 @@ export function NotebookRightPanel({
           aria-hidden={tab !== 'graph'}
         >
           <div className="flex min-h-0 flex-1 flex-col p-3">
-            <p className="mb-2 shrink-0 text-xs text-stone-500 dark:text-stone-400">
+            <p className="mb-2 shrink-0 text-xs text-fg-subtle">
               선택된 출처 간 연관 관계 · 핵심 키워드
             </p>
             <div className="min-h-0 flex-1">

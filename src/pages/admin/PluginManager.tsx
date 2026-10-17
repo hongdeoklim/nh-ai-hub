@@ -55,13 +55,13 @@ function ToggleSwitch({
         'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-transparent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
         checked
           ? 'bg-emerald-500 shadow-inner shadow-emerald-900/20'
-          : 'bg-slate-300 dark:bg-slate-600',
+          : 'bg-surface-3',
         disabled || busy ? 'cursor-not-allowed opacity-60' : 'hover:brightness-105',
       ].join(' ')}
     >
       <span
         className={[
-          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ease-out',
+          'pointer-events-none inline-block h-5 w-5 rounded-full bg-surface shadow-md ring-0 transition-transform duration-200 ease-out',
           checked ? 'translate-x-5' : 'translate-x-0.5',
         ].join(' ')}
       />
@@ -197,17 +197,17 @@ export function PluginManager() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+        <h1 className="text-2xl font-bold tracking-tight text-fg">
           플러그인 관리
         </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-1 text-sm text-fg-subtle">
           활성화된 플러그인만 Edge AI 호출 시 동적 도구로 로드됩니다. 비활성 행은 모델에 노출되지
           않습니다.
         </p>
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -215,95 +215,95 @@ export function PluginManager() {
       <div className="grid gap-6 lg:grid-cols-12">
         <form
           onSubmit={addPlugin}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-4"
+          className="rounded-2xl border border-border bg-surface p-6 shadow-sm lg:col-span-4"
         >
-          <h2 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+          <h2 className="text-sm font-bold text-fg">
             새 플러그인 등록
           </h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs leading-relaxed text-fg-subtle">
             등록 직후에는 비활성 상태입니다. 호출 URL 을 연결한 뒤 목록에서 ON 할 수 있습니다.
           </p>
           <div className="mt-5 space-y-4">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
               확장 유형
-              <select value={formExtensionType} onChange={(e) => setFormExtensionType(e.target.value as PluginRow['extension_type'])} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950">
+              <select value={formExtensionType} onChange={(e) => setFormExtensionType(e.target.value as PluginRow['extension_type'])} className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <option value="plugin">Plugin</option><option value="mcp">MCP Server</option><option value="skill">Skill</option><option value="public_data">Public Data</option>
               </select>
             </label>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
               표시 이름
               <input
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
                 placeholder="예: 내부 견적 API"
               />
             </label>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
               도구 함수명{' '}
-              <span className="font-normal normal-case text-slate-400">
+              <span className="font-normal normal-case text-fg-subtle">
                 (tool_function_name)
               </span>
               <input
                 value={formToolFn}
                 onChange={(e) => setFormToolFn(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 font-mono text-sm"
                 placeholder="get_internal_quote"
               />
             </label>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
               설명
               <textarea
                 value={formDesc}
                 onChange={(e) => setFormDesc(e.target.value)}
                 rows={3}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
                 placeholder="모델에게 노출될 도구 설명"
               />
             </label>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
               호출 URL{' '}
-              <span className="font-normal normal-case text-slate-400">(선택)</span>
+              <span className="font-normal normal-case text-fg-subtle">(선택)</span>
               <input
                 value={formUrl}
                 onChange={(e) => setFormUrl(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-xs dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 font-mono text-xs"
                 placeholder="https://… 비우면 Edge 에서 호출 스킵"
               />
             </label>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">
               인증 방식
-              <select value={formAuthType} onChange={(e) => setFormAuthType(e.target.value as PluginRow['auth_type'])} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950">
+              <select value={formAuthType} onChange={(e) => setFormAuthType(e.target.value as PluginRow['auth_type'])} className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <option value="none">인증 없음</option><option value="bearer">Bearer Token</option><option value="api_key">API Key Header</option>
               </select>
             </label>
-            {formAuthType !== 'none' && <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">인증 헤더 이름<input value={formAuthHeader} onChange={(e) => setFormAuthHeader(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-950" placeholder={formAuthType === 'bearer' ? 'Authorization' : 'X-API-Key'} /></label>}
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">연결 방식<select value={formConnectionMode} onChange={(e) => setFormConnectionMode(e.target.value as PluginRow['connection_mode'])} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"><option value="admin_shared">관리자 공용</option><option value="per_user">사용자별</option><option value="workspace_install">관리자 설치형</option><option value="hybrid">개인/공용 선택</option></select></label>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">키 발급 URL<input type="url" value={formSetupUrl} onChange={(e) => setFormSetupUrl(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" /></label>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">공식 문서 URL<input type="url" value={formDocsUrl} onChange={(e) => setFormDocsUrl(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" /></label>
+            {formAuthType !== 'none' && <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">인증 헤더 이름<input value={formAuthHeader} onChange={(e) => setFormAuthHeader(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 font-mono text-sm" placeholder={formAuthType === 'bearer' ? 'Authorization' : 'X-API-Key'} /></label>}
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">연결 방식<select value={formConnectionMode} onChange={(e) => setFormConnectionMode(e.target.value as PluginRow['connection_mode'])} className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"><option value="admin_shared">관리자 공용</option><option value="per_user">사용자별</option><option value="workspace_install">관리자 설치형</option><option value="hybrid">개인/공용 선택</option></select></label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">키 발급 URL<input type="url" value={formSetupUrl} onChange={(e) => setFormSetupUrl(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm" /></label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-fg-muted">공식 문서 URL<input type="url" value={formDocsUrl} onChange={(e) => setFormDocsUrl(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm" /></label>
           </div>
           <button
             type="submit"
             disabled={formBusy}
-            className="mt-5 w-full rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+            className="mt-5 w-full rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
           >
             등록
           </button>
         </form>
 
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-8">
-          <div className="border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+        <div className="rounded-2xl border border-border bg-surface shadow-sm lg:col-span-8">
+          <div className="border-b border-border px-6 py-4">
+            <h2 className="text-sm font-bold text-fg">
               레지스트리
             </h2>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-xs text-fg-subtle">
               행 우측 스위치로 즉시 활성/비활성을 전환합니다.
             </p>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-950/80 dark:text-slate-400">
+              <thead className="bg-bg text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                 <tr>
                   <th className="px-6 py-3">플러그인</th>
                   <th className="px-6 py-3">함수명</th>
@@ -311,16 +311,16 @@ export function PluginManager() {
                   <th className="px-6 py-3 text-center">상태</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-border">
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={4} className="px-6 py-12 text-center text-fg-subtle">
                       불러오는 중…
                     </td>
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={4} className="px-6 py-12 text-center text-fg-subtle">
                       등록된 플러그인이 없습니다.
                     </td>
                   </tr>
@@ -328,31 +328,31 @@ export function PluginManager() {
                   rows.map((p) => (
                     <tr
                       key={p.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+                      className="hover:bg-surface-2/80"
                     >
                       <td className="max-w-[14rem] px-6 py-4 align-middle">
                         <p
                           id={`plug-${p.id}-title`}
-                          className="font-semibold text-slate-900 dark:text-slate-50"
+                          className="font-semibold text-fg"
                         >
                           {p.name}
                         </p>
-                        <p className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+                        <p className="mt-1 line-clamp-2 text-xs text-fg-subtle">
                           {p.description?.trim() ? p.description : '설명 없음'}
                         </p>
                       </td>
                       <td className="px-6 py-4 align-middle">
-                        <code className="rounded-md bg-slate-100 px-2 py-1 text-[17px] font-semibold text-indigo-800 dark:bg-slate-800 dark:text-indigo-300">
+                        <code className="rounded-md bg-surface-2 px-2 py-1 text-[17px] font-semibold text-accent">
                           {p.tool_function_name?.trim() || '—'}
                         </code>
                       </td>
                       <td className="max-w-[12rem] px-6 py-4 align-middle">
-                        <p className="truncate font-mono text-[17px] text-slate-600 dark:text-slate-300">
+                        <p className="truncate font-mono text-[17px] text-fg-muted">
                           {(p.endpoint_url ?? '').trim()
                             ? p.endpoint_url
                             : '— (미설정)'}
                         </p>
-                        <p className="mt-1 text-[15px] text-slate-400">
+                        <p className="mt-1 text-[15px] text-fg-subtle">
                           {p.auth_type === 'none' ? '인증 없음' : `${p.auth_type} · ${p.connection_mode}`}
                         </p>
                       </td>
@@ -369,8 +369,8 @@ export function PluginManager() {
                             className={[
                               'text-xs font-semibold uppercase tracking-wide',
                               p.is_active
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : 'text-slate-400',
+                                ? 'text-success'
+                                : 'text-fg-subtle',
                             ].join(' ')}
                           >
                             {p.is_active ? 'ON' : 'OFF'}

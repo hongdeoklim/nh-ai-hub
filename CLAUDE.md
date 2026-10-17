@@ -31,13 +31,20 @@
    모바일 대응은 `sm:` / `md:` / `lg:` 접두사를 사용하고,
    별도 미디어쿼리 CSS를 새로 작성하지 않는다.
 
-6. **크기 유틸은 px 고정값으로 지정한다.**
-   이 앱은 루트 폰트가 24px라 rem 기반 유틸(`h-8`, `max-h-[10.5rem]` 등)이
-   표준(16px)의 1.5배로 렌더된다. 신규·수정 UI의 높이·너비·최대치는
-   `h-[28px]`, `max-h-[168px]`처럼 px 임의값을 사용한다.
-   (잔여 rem 정리 후 루트 16px 전환 예정 — 전역 전환은 별도 승인 필요)
+6. **루트 폰트는 16px(Tailwind 표준 스케일)이다. (2026-10 전환 완료)**
+   `h-8`, `gap-3`, `text-sm` 같은 기본 유틸이 설계값 그대로 렌더되므로 그대로 사용한다.
+   `text-[13px]!` 처럼 `!`(important) 접미사로 폰트 보정 규칙을 우회하던 관행은 폐지됐다 —
+   `.app-shell`/`.admin-shell` 의 역보정 CSS 는 모두 제거됐고, 기본 타이포는 `@layer base` 에만 둔다.
+   모바일 입력창(input/textarea)은 iOS 자동 확대를 피하기 위해 16px 이상(`text-base`)으로 지정한다.
 
-7. 위 규칙과 충돌하는 기존 코드를 발견하면, 임의로 전면 리팩터링하지 말고
+7. **색상은 시맨틱 토큰 유틸로 쓴다.** `bg-bg` `bg-surface` `bg-surface-2` `border-border`
+   `text-fg` `text-fg-muted` `text-fg-subtle` `bg-brand` `text-brand` `bg-brand-soft` `text-accent`
+   `text-success|warning|danger` (+ `-soft` 배경). 토큰이 다크 모드를 내포하므로 `dark:` 변형을
+   덧붙이지 않는다. 치환표는 `docs/REDESIGN-2026-10.md` §6.
+   페이지 상단은 `components/common/PageHeader`, 빈 목록은 `EmptyState`, 확인/입력은
+   `ConfirmDialog`/`PromptDialog`(window.alert/confirm/prompt 금지)를 사용한다.
+
+8. 위 규칙과 충돌하는 기존 코드를 발견하면, 임의로 전면 리팩터링하지 말고
    먼저 사용자에게 알린 뒤 진행한다.
 
 ## 작업 일반 규칙

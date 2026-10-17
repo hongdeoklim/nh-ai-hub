@@ -13,6 +13,7 @@ import { Login } from './pages/Login'
 import { PrivateChatHomeRedirect } from './pages/PrivateChatHomeRedirect'
 import { AdminRoute } from './routes/AdminRoute'
 import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt'
+import { DialogProvider } from './components/common/DialogProvider'
 const Scrapbook = lazy(() =>
   import('./pages/Scrapbook').then((m) => ({ default: m.Scrapbook })),
 )
@@ -159,8 +160,8 @@ const KnowledgeGraphPage = lazy(() =>
 const DevUiCheckPage = lazy(() =>
   import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevUiCheckPage })),
 )
-const DevSidebarDockCheckPage = lazy(() =>
-  import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevSidebarDockCheckPage })),
+const DevShellCheckPage = lazy(() =>
+  import('./pages/DevUiCheckPage').then((m) => ({ default: m.DevShellCheckPage })),
 )
 const KnowledgeHubPage = lazy(() =>
   import('./pages/KnowledgeHubPage').then((m) => ({ default: m.KnowledgeHubPage })),
@@ -172,10 +173,77 @@ const CadAgentPage = lazy(() =>
   import('./pages/CadAgentPage').then((m) => ({ default: m.CadAgentPage })),
 )
 
+/**
+ * 사용자 포털 화면 라우트 (MainLayout 하위, lazy). 실제 앱과 DEV 검수 라우트(__ui-check/app/*)가 공유한다.
+ */
+const portalPageRoutes = (
+  <>
+    <Route path="scrapbook" element={<Scrapbook />} />
+    <Route path="ai-slides" element={<AiSlidesPage />} />
+    <Route path="workflows" element={<WorkflowsPage />} />
+    <Route path="marketplace" element={<MarketplacePage />} />
+    <Route path="ai-planner" element={<AiProductPlannerPage />} />
+    <Route path="ai-planner/:sessionId" element={<AiProductPlannerPage />} />
+    <Route path="ai-designer" element={<AiDesignerPage />} />
+    <Route path="ai-sheets" element={<AiSheetsPage />} />
+    <Route path="ai-office" element={<UniverOfficePage />} />
+    <Route path="reference-room" element={<ReferenceRoom />} />
+    <Route path="knowledge-hub" element={<KnowledgeHubPage />} />
+    <Route path="automation-studio" element={<AutomationStudioPage />} />
+    <Route path="cad-agent" element={<CadAgentPage />} />
+    <Route path="teams" element={<TeamsPage />} />
+    <Route path="teams/:teamId" element={<TeamDetailPage />} />
+    <Route
+      path="teams/:teamId/chat/:conversationId"
+      element={<TeamSharedChatPage />}
+    />
+    <Route
+      path="oauth/google-integration"
+      element={<GoogleIntegrationCallback />}
+    />
+    <Route
+      path="workspace-tools"
+      element={<WorkspaceIntegrationsPage />}
+    />
+    <Route path="notebook" element={<NotebookWorkspace />} />
+    <Route path="site-assessment" element={<SiteAssessmentUserPage />} />
+    <Route path="library" element={<LibraryPage />} />
+    <Route
+      path="oauth/microsoft-integration"
+      element={<MicrosoftIntegrationCallback />}
+    />
+  </>
+)
+
+/**
+ * 관리자 콘솔 화면 라우트 (AdminLayout 하위). 실제 앱과 DEV 검수 라우트(__ui-check/admin/*)가 공유한다.
+ */
+const adminPageRoutes = (
+  <>
+    <Route index element={<ModernAdminDashboard />} />
+    <Route path="employees" element={<EmployeeCRUD />} />
+    <Route path="teams" element={<TeamManager />} />
+    <Route path="activity-logs" element={<ActivityLogViewer />} />
+    <Route path="weekly-reports" element={<WeeklyTrendReport />} />
+    <Route path="tokens" element={<Navigate to="/admin/employees" replace />} />
+    <Route path="token-requests" element={<AdminTokenRequestsPage />} />
+    <Route path="plugins" element={<PluginManager />} />
+    <Route path="lab" element={<AiLab />} />
+    <Route path="audit" element={<ChatAudit />} />
+    <Route path="reference" element={<KnowledgeAdmin />} />
+    <Route path="templates" element={<TemplateManager />} />
+    <Route path="models" element={<ModelManagement />} />
+    <Route path="ax" element={<AxDashboard />} />
+    <Route path="feedback" element={<FeedbackDashboard />} />
+    <Route path="push" element={<PushComposer />} />
+    <Route path="site-assessment" element={<SiteAssessmentPage />} />
+  </>
+)
+
 function AuthSpinner() {
   return (
-    <div className="app-shell flex min-h-dvh w-full items-center justify-center bg-slate-100 dark:bg-slate-950">
-      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+    <div className="app-shell flex min-h-dvh w-full items-center justify-center bg-bg">
+      <p className="text-sm font-medium text-fg-muted">
         인증 정보를 불러오는 중…
       </p>
     </div>
@@ -219,63 +287,14 @@ function AppRoutes() {
           <Route path="chat/:threadId" element={<Dashboard />} />
 
           <Route element={<LazyRouteOutlet />}>
-            <Route path="scrapbook" element={<Scrapbook />} />
-            <Route path="ai-slides" element={<AiSlidesPage />} />
-            <Route path="workflows" element={<WorkflowsPage />} />
-            <Route path="marketplace" element={<MarketplacePage />} />
-            <Route path="ai-planner" element={<AiProductPlannerPage />} />
-            <Route path="ai-planner/:sessionId" element={<AiProductPlannerPage />} />
-            <Route path="ai-designer" element={<AiDesignerPage />} />
-            <Route path="ai-sheets" element={<AiSheetsPage />} />
-            <Route path="ai-office" element={<UniverOfficePage />} />
-            <Route path="reference-room" element={<ReferenceRoom />} />
-            <Route path="knowledge-hub" element={<KnowledgeHubPage />} />
-            <Route path="automation-studio" element={<AutomationStudioPage />} />
-            <Route path="cad-agent" element={<CadAgentPage />} />
-            <Route path="teams" element={<TeamsPage />} />
-            <Route path="teams/:teamId" element={<TeamDetailPage />} />
-            <Route
-              path="teams/:teamId/chat/:conversationId"
-              element={<TeamSharedChatPage />}
-            />
-            <Route
-              path="oauth/google-integration"
-              element={<GoogleIntegrationCallback />}
-            />
-            <Route
-              path="workspace-tools"
-              element={<WorkspaceIntegrationsPage />}
-            />
-            <Route path="notebook" element={<NotebookWorkspace />} />
-            <Route path="site-assessment" element={<SiteAssessmentUserPage />} />
-            <Route path="library" element={<LibraryPage />} />
-            <Route
-              path="oauth/microsoft-integration"
-              element={<MicrosoftIntegrationCallback />}
-            />
+            {portalPageRoutes}
           </Route>
         </Route>
 
         <Route path="admin" element={<AdminRoute />}>
           <Route element={<LazyAdminOutlet />}>
             <Route element={<AdminLayout />}>
-              <Route index element={<ModernAdminDashboard />} />
-              <Route path="employees" element={<EmployeeCRUD />} />
-              <Route path="teams" element={<TeamManager />} />
-              <Route path="activity-logs" element={<ActivityLogViewer />} />
-              <Route path="weekly-reports" element={<WeeklyTrendReport />} />
-              <Route path="tokens" element={<Navigate to="/admin/employees" replace />} />
-              <Route path="token-requests" element={<AdminTokenRequestsPage />} />
-              <Route path="plugins" element={<PluginManager />} />
-              <Route path="lab" element={<AiLab />} />
-              <Route path="audit" element={<ChatAudit />} />
-              <Route path="reference" element={<KnowledgeAdmin />} />
-              <Route path="templates" element={<TemplateManager />} />
-              <Route path="models" element={<ModelManagement />} />
-              <Route path="ax" element={<AxDashboard />} />
-              <Route path="feedback" element={<FeedbackDashboard />} />
-              <Route path="push" element={<PushComposer />} />
-              <Route path="site-assessment" element={<SiteAssessmentPage />} />
+              {adminPageRoutes}
             </Route>
           </Route>
           <Route path="knowledge-graph" element={<KnowledgeGraphPage />} />
@@ -315,14 +334,25 @@ function AppRoutes() {
               </Suspense>
             }
           />
-          <Route
-            path="__ui-check/sidebar-dock"
-            element={
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <DevSidebarDockCheckPage />
-              </Suspense>
-            }
-          />
+          {/* 앱 셸 v2 + 디자인 토큰 검수 — MainLayout 안에서 렌더 (로그인 불필요) */}
+          <Route path="__ui-check/shell" element={<MainLayout />}>
+            <Route element={<LazyRouteOutlet />}>
+              <Route index element={<DevShellCheckPage />} />
+              <Route path="*" element={<DevShellCheckPage />} />
+            </Route>
+          </Route>
+          {/* 포털 화면 레이아웃 검수 — 로그인 없이 /__ui-check/app/<경로> 로 각 화면의 셸·헤더를 확인 (데이터는 로드되지 않음) */}
+          {/* 관리자 콘솔 레이아웃 검수 — 로그인/권한 없이 /__ui-check/admin/<경로> (데이터는 로드되지 않음) */}
+          <Route path="__ui-check/admin" element={<LazyAdminOutlet />}>
+            <Route element={<AdminLayout />}>{adminPageRoutes}</Route>
+          </Route>
+          <Route path="__ui-check/app" element={<MainLayout />}>
+            <Route path="chat/:threadId" element={<Dashboard />} />
+            <Route element={<LazyRouteOutlet />}>
+              <Route index element={<DevShellCheckPage />} />
+              {portalPageRoutes}
+            </Route>
+          </Route>
         </>
       ) : null}
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -334,10 +364,12 @@ export default function App() {
   return (
     <AuthProvider>
       <AppUiProvider>
-        <AppRoutes />
-        <ReloadPrompt />
-        <PwaInstallPrompt />
-        <Toaster position="top-center" richColors closeButton />
+        <DialogProvider>
+          <AppRoutes />
+          <ReloadPrompt />
+          <PwaInstallPrompt />
+          <Toaster position="top-center" richColors closeButton />
+        </DialogProvider>
       </AppUiProvider>
     </AuthProvider>
   )

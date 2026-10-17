@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -5,23 +6,59 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    // 기본은 node. 컴포넌트 테스트(*.test.tsx)는 파일 첫 줄 `// @vitest-environment jsdom` 으로 DOM 을 켠다.
+    include: ['src/**/*.test.{ts,tsx}'],
+    environment: 'node',
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512.png'],
       manifest: {
+        id: '/',
         name: 'NH-AX-HUB',
         short_name: 'NH-AX-HUB',
-        description: 'NH AI Inside Hub — 사내 AI 업무 포털',
-        theme_color: '#020617',
-        background_color: '#020617',
+        description: 'NH-AX-HUB — 농협네트웍스 임직원 전용 생성형 AI 업무 포털',
+        theme_color: '#f5f7f4',
+        background_color: '#f5f7f4',
         display: 'standalone',
-        orientation: 'portrait',
+        display_override: ['standalone', 'minimal-ui'],
+        // 태블릿·데스크톱 PWA 에서 가로 모드를 막지 않는다
+        orientation: 'any',
         scope: '/',
         start_url: '/',
         lang: 'ko-KR',
+        categories: ['business', 'productivity'],
+        // 홈 화면 아이콘 길게 누르기 / 작업 표시줄 점프 리스트
+        shortcuts: [
+          {
+            name: '새 채팅',
+            short_name: '채팅',
+            url: '/',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: '사내 자료실',
+            short_name: '자료실',
+            url: '/reference-room',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: '자동화 스튜디오',
+            short_name: '자동화',
+            url: '/automation-studio',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: '노트북 워크스페이스',
+            short_name: '노트북',
+            url: '/notebook',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+        ],
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -36,7 +73,8 @@ export default defineConfig({
             purpose: 'any',
           },
           {
-            src: 'pwa-512x512.png',
+            // 안전 영역(중앙 80%) 안에 로고가 들어가도록 별도 제작
+            src: 'pwa-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
@@ -44,11 +82,36 @@ export default defineConfig({
         ],
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,webmanifest}'],
+        // 무거운 편집기/관리자 청크는 설치 시 프리캐시하지 않고 첫 사용 때 런타임 캐시한다
+        // (프리캐시 21MB → 셸 중심으로 축소: 설치·업데이트 다운로드 감소)
+        globIgnores: [
+          '**/vendor-univer-*.js',
+          '**/vendor-mermaid-*.js',
+          '**/vendor-graph3d-*.js',
+          '**/vendor-d3-*.js',
+          '**/vendor-xlsx-*.js',
+          '**/page-admin-*.js',
+          '**/page-workspace-*.js',
+          '**/page-teams-*.js',
+        ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/functions\//],
         runtimeCaching: [
+          {
+            // 해시가 붙은 빌드 산출물은 불변 → 첫 사용 후 캐시 우선
+            urlPattern: ({ url, request }) =>
+              url.origin === self.location.origin &&
+              url.pathname.startsWith('/assets/') &&
+              (request.destination === 'script' || request.destination === 'style'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'app-assets-on-demand',
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: ({ url }) => url.hostname.includes('supabase.co'),
             handler: 'NetworkOnly',

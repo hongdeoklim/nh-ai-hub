@@ -26,10 +26,8 @@ import type { AiModelRow } from '../../types/ai-models'
 import { compressChatImageFile } from '../../utils/compress-chat-image'
 
 import { ChatAttachmentPreviewStrip } from './ChatAttachmentPreviewStrip'
-import {
-  MediaEngineBentoPanel,
-  mediaEngineLabel,
-} from './MediaEngineBentoPanel'
+import { MediaEngineBentoPanel } from './MediaEngineBentoPanel'
+import { mediaEngineLabel } from '../../lib/media-engine-label'
 
 export type { ChatExperimentalAttachment, ChatSendPayload }
 
@@ -137,6 +135,16 @@ function IconSpinner(props: { className?: string }) {
       />
     </svg>
   )
+}
+
+/** 선택한 미디어 엔진이 목록에 없으면 첫 엔진으로 대체 (목록이 비면 선택값 유지) */
+function resolveMediaModelId(
+  engines: readonly AiModelRow[],
+  picked: string,
+): string {
+  if (engines.length === 0) return picked
+  if (picked && engines.some((row) => row?.api_id === picked)) return picked
+  return engines[0]?.api_id ?? ''
 }
 
 function randomId() {
@@ -336,31 +344,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       onError: (message) => toast.error(message),
     })
 
-    useEffect(() => {
-      if (safeMediaImageEngines.length === 0) return
-      setSelectedImageModelId((current) => {
-        if (
-          current &&
-          safeMediaImageEngines.some((row) => row?.api_id === current)
-        ) {
-          return current
-        }
-        return safeMediaImageEngines[0]?.api_id ?? ''
-      })
-    }, [safeMediaImageEngines])
-
-    useEffect(() => {
-      if (safeMediaVideoEngines.length === 0) return
-      setSelectedVideoModelId((current) => {
-        if (
-          current &&
-          safeMediaVideoEngines.some((row) => row?.api_id === current)
-        ) {
-          return current
-        }
-        return safeMediaVideoEngines[0]?.api_id ?? ''
-      })
-    }, [safeMediaVideoEngines])
+    // 엔진 목록에 없는 선택값은 첫 엔진으로 대체한다 (effect 동기화 대신 렌더 중 파생)
+    const imageModelId = resolveMediaModelId(safeMediaImageEngines, selectedImageModelId)
+    const videoModelId = resolveMediaModelId(safeMediaVideoEngines, selectedVideoModelId)
 
     useEffect(() => {
       latestValueRef.current = value
@@ -410,10 +396,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [attachMenuOpen, metaMenuOpen, toolsMenuOpen])
 
     useLayoutEffect(() => {
-      if (!attachMenuOpen) {
-        setAttachMenuAnchor(null)
-        return
-      }
+      if (!attachMenuOpen) return
 
       function updatePosition() {
         const button = attachButtonRef.current
@@ -432,10 +415,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [attachMenuOpen])
 
     useLayoutEffect(() => {
-      if (!toolsMenuOpen) {
-        setToolsMenuAnchor(null)
-        return
-      }
+      if (!toolsMenuOpen) return
 
       function updatePosition() {
         const button = toolsButtonRef.current
@@ -454,10 +434,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [toolsMenuOpen])
 
     useLayoutEffect(() => {
-      if (!metaMenuOpen) {
-        setMetaMenuAnchor(null)
-        return
-      }
+      if (!metaMenuOpen) return
 
       function updatePosition() {
         const button = metaButtonRef.current
@@ -485,20 +462,41 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       }
     }, [metaMenuOpen])
 
-    useEffect(() => {
-      if (disableAttachments) setAttachMenuOpen(false)
-    }, [disableAttachments])
-
-    useEffect(() => {
-      if (disabled) {
+    // 메뉴가 닫히면 위치 앵커를 비우고, 입력·첨부가 비활성화되면 열린 메뉴를 닫는다.
+    // effect 로 동기화하면 한 번 더 렌더되므로 렌더 중에 조정한다.
+    const menuSync = {
+      attach: attachMenuOpen,
+      tools: toolsMenuOpen,
+      meta: metaMenuOpen,
+      disabled,
+      disableAttachments,
+    }
+    const [prevMenuSync, setPrevMenuSync] = useState(menuSync)
+    if (
+      prevMenuSync.attach !== menuSync.attach ||
+      prevMenuSync.tools !== menuSync.tools ||
+      prevMenuSync.meta !== menuSync.meta ||
+      prevMenuSync.disabled !== menuSync.disabled ||
+      prevMenuSync.disableAttachments !== menuSync.disableAttachments
+    ) {
+      setPrevMenuSync(menuSync)
+      if (!attachMenuOpen) setAttachMenuAnchor(null)
+      if (!toolsMenuOpen) setToolsMenuAnchor(null)
+      if (!metaMenuOpen) setMetaMenuAnchor(null)
+      if (disabled && !prevMenuSync.disabled) {
         setAttachMenuOpen(false)
         setMetaMenuOpen(false)
         setToolsMenuOpen(false)
       }
-    }, [disabled])
+      if (disableAttachments && !prevMenuSync.disableAttachments) {
+        setAttachMenuOpen(false)
+      }
+    }
 
     useEffect(() => {
       if (!disableAttachments) return
+      // 미리보기 blob URL(외부 자원) 해제와 함께 비워야 하므로 effect 에서 처리한다
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAttachments((prev) => {
         prev.forEach((a) => URL.revokeObjectURL(a.previewUrl))
         return []
@@ -728,7 +726,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           return false
         }
         const mediaModelId =
-          actionType === 'image' ? selectedImageModelId : selectedVideoModelId
+          actionType === 'image' ? imageModelId : videoModelId
         if (!mediaModelId.trim()) {
           toast.error('미디어 엔진을 선택해 주세요.')
           return false
@@ -747,8 +745,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         generating,
         mediaBusy,
         onMediaGenerate,
-        selectedImageModelId,
-        selectedVideoModelId,
+        imageModelId,
+        videoModelId,
         value,
       ],
     )
@@ -820,8 +818,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     const isSoftShell = isClaude || isGemini
 
     const toolbarIdleBtn = isSoftShell
-      ? 'text-stone-500 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800/80'
-      : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700'
+      ? 'text-fg-subtle hover:bg-surface-2'
+      : 'text-fg-subtle hover:bg-surface-2'
 
     const showDeepResearchToggle = typeof onDeepResearchChange === 'function'
     const showInternetSearchToggle =
@@ -861,7 +859,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       const engines =
         mediaKind === 'image' ? safeMediaImageEngines : safeMediaVideoEngines
       const selectedModelId =
-        mediaKind === 'image' ? selectedImageModelId : selectedVideoModelId
+        mediaKind === 'image' ? imageModelId : videoModelId
       const active = composerTool === mediaKind
       const panelOpen = mediaEnginePanel === mediaKind
       const busy = mediaBusy === mediaKind
@@ -912,10 +910,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               )}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
+              <span className="block text-[13px] font-medium text-fg">
                 {tool.label}
               </span>
-              <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+              <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
                 {engineName || tool.hint}
               </span>
             </span>
@@ -923,7 +921,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-violet-700 dark:text-violet-300" />
             ) : (
               <svg
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-400"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg-subtle"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -965,15 +963,15 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }
 
     const toolboxPillClass = isSoftShell
-      ? 'bg-stone-100/95 text-stone-700 hover:bg-stone-200/90 dark:bg-stone-800/95 dark:text-stone-200 dark:hover:bg-stone-700/90'
-      : 'bg-slate-100/95 text-slate-700 hover:bg-slate-200/90 dark:bg-slate-800/95 dark:text-slate-200'
+      ? 'bg-surface-2/95 text-fg-muted hover:bg-surface-3/90'
+      : 'bg-surface-2/95 text-fg-muted hover:bg-surface-3/90'
 
     const popupPanelClass = isSoftShell
-      ? 'border-stone-200 bg-white dark:border-stone-600 dark:bg-stone-900'
-      : 'border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-900'
+      ? 'border-border bg-surface'
+      : 'border-border bg-surface'
 
     const toolboxMenuItemClass =
-      'flex w-full items-start gap-3 px-3 py-2.5 text-left transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-45 dark:hover:bg-stone-800'
+      'flex w-full items-start gap-3 px-3 py-2.5 text-left transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45'
 
     const closeMenus = () => {
       setAttachMenuOpen(false)
@@ -983,8 +981,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }
 
     const metaPanelSurfaceClass = isSoftShell
-      ? 'border-stone-200/80 bg-stone-50/95 dark:border-stone-700 dark:bg-stone-950/80'
-      : 'border-slate-200 bg-slate-50/95 dark:border-slate-700 dark:bg-slate-900/80'
+      ? 'border-border/80 bg-bg/95'
+      : 'border-border bg-bg/95'
 
     const metaMenuPanel =
       metaMenuOpen && metaMenuAnchor && composerMeta
@@ -1031,16 +1029,16 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 <button
                   type="button"
                   role="menuitem"
-                  className="flex w-full flex-col px-3 py-2.5 text-left hover:bg-stone-100 dark:hover:bg-stone-800"
+                  className="flex w-full flex-col px-3 py-2.5 text-left hover:bg-surface-2"
                   onClick={() => {
                     closeMenus()
                     queueMicrotask(() => fileInputRef.current?.click())
                   }}
                 >
-                  <span className="text-[13px]! font-medium text-stone-800 dark:text-stone-100">
+                  <span className="text-[13px] font-medium text-fg">
                     이미지 첨부
                   </span>
-                  <span className="mt-0.5 text-[11px]! text-stone-500 dark:text-stone-400">
+                  <span className="mt-0.5 text-[11px] text-fg-subtle">
                     JPG, PNG · 최대 1024px · 1MB
                   </span>
                 </button>
@@ -1050,7 +1048,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   disabled={!onOpenWorkspaceTools}
                   className={`flex w-full flex-col px-3 py-2.5 text-left ${
                     onOpenWorkspaceTools
-                      ? 'hover:bg-stone-100 dark:hover:bg-stone-800'
+                      ? 'hover:bg-surface-2'
                       : 'cursor-not-allowed opacity-60'
                   }`}
                   onClick={() => {
@@ -1059,10 +1057,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     queueMicrotask(() => onOpenWorkspaceTools())
                   }}
                 >
-                  <span className="text-[13px]! font-medium text-stone-800 dark:text-stone-100">
+                  <span className="text-[13px] font-medium text-fg">
                     파일·문서 첨부
                   </span>
-                  <span className="mt-0.5 text-[11px]! text-stone-500 dark:text-stone-400">
+                  <span className="mt-0.5 text-[11px] text-fg-subtle">
                     Google Drive · Microsoft 365
                   </span>
                 </button>
@@ -1077,8 +1075,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         aria-label="입력 보조 정보"
         className={`composer-meta-rail hidden w-full shrink-0 overflow-y-auto overscroll-contain rounded-xl border px-2 py-1.5 shadow-sm md:block md:max-h-none md:w-[10.25rem] md:max-w-[10.25rem] md:self-stretch ${
           isSoftShell
-            ? 'border-stone-200/80 bg-stone-50/95 dark:border-stone-700 dark:bg-stone-950/80'
-            : 'border-slate-200 bg-slate-50/95 dark:border-slate-700 dark:bg-slate-900/80'
+            ? 'border-border/80 bg-bg/95'
+            : 'border-border bg-bg/95'
         }`}
         style={{
           fontSize: '11px',
@@ -1103,13 +1101,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         {budgetToastVisible ? (
           <div
             role="alert"
-            className="absolute bottom-full left-0 right-0 z-50 mb-2 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-900 shadow-lg dark:border-red-900/60 dark:bg-red-950/90 dark:text-red-100"
+            className="absolute bottom-full left-0 right-0 z-50 mb-2 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2.5 text-sm text-red-900 shadow-lg"
           >
             <p className="min-w-0 flex-1 leading-snug">{BUDGET_TOAST_MESSAGE}</p>
             <button
               type="button"
               onClick={dismissBudgetToast}
-              className="shrink-0 rounded p-0.5 text-red-700 hover:bg-red-100 dark:text-red-200 dark:hover:bg-red-900/50"
+              className="shrink-0 rounded p-0.5 text-danger hover:bg-danger-soft"
               aria-label="알림 닫기"
             >
               <svg
@@ -1178,8 +1176,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               ? 'rounded-none border-0 bg-transparent shadow-none'
               : `rounded-2xl border shadow-sm transition-shadow ${
                   isSoftShell
-                    ? 'border-stone-200/90 bg-white focus-within:border-stone-300 focus-within:shadow-md dark:border-stone-700 dark:bg-stone-900 dark:focus-within:border-stone-500'
-                    : 'border-slate-200 bg-white focus-within:border-slate-300 focus-within:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-slate-500'
+                    ? 'border-border/90 bg-surface focus-within:border-stone-300 focus-within:shadow-md dark:focus-within:border-stone-500'
+                    : 'border-border bg-surface focus-within:border-slate-300 focus-within:shadow-md dark:focus-within:border-slate-500'
                 }`
           }`}
         >
@@ -1203,10 +1201,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 disabled={disabled}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className={`box-border min-h-[24px] max-h-[168px] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 text-[16px]! leading-relaxed outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`box-border min-h-[24px] max-h-[168px] w-full min-w-0 resize-none overflow-y-hidden bg-transparent py-0.5 text-[16px] leading-relaxed outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 ${
                   isSoftShell
-                    ? 'text-stone-900 placeholder:text-stone-400 dark:text-stone-100 dark:placeholder:text-stone-500'
-                    : 'text-slate-900 placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500'
+                    ? 'text-fg placeholder:text-fg-subtle'
+                    : 'text-fg placeholder:text-fg-subtle'
                 }`}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
@@ -1222,7 +1220,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
               <div ref={toolsWrapRef} className="relative flex shrink-0 items-center gap-1">
                 {activeToolMeta ? (
-                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px]! font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">{activeToolMeta.label}</span>
                     <button
                       type="button"
@@ -1238,7 +1236,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   </span>
                 ) : null}
                 {deepResearchEnabled ? (
-                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px]! font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">Deep Research</span>
                     <button
                       type="button"
@@ -1254,7 +1252,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   </span>
                 ) : null}
                 {internetSearchEnabled ? (
-                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px]! font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                  <span className="flex max-w-[8rem] items-center gap-0.5 rounded-full bg-violet-100 pl-2 pr-1 py-1 text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                     <span className="truncate">인터넷 검색</span>
                     <button
                       type="button"
@@ -1289,7 +1287,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   title="도구 · AI 기능"
                 >
                   <IconSliders className="h-4 w-4 shrink-0" />
-                  <span className="text-[11px]! font-medium leading-none">도구</span>
+                  <span className="text-[11px] font-medium leading-none">도구</span>
                 </button>
                 {toolsMenuOpen && toolsMenuAnchor
                   ? createPortal(
@@ -1304,8 +1302,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           left: toolsMenuAnchor.left,
                         }}
                       >
-                    <div className="border-b border-stone-100 px-3 py-2.5 dark:border-stone-700">
-                      <p className="text-[13px]! font-semibold text-stone-900 dark:text-stone-50">
+                    <div className="border-b border-border px-3 py-2.5">
+                      <p className="text-[13px] font-semibold text-fg">
                         도구
                       </p>
                     </div>
@@ -1321,14 +1319,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             queueMicrotask(() => fileInputRef.current?.click())
                           }}
                         >
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-stone-600 dark:text-stone-300">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
                             <IconPlus className="h-4 w-4" />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px] font-medium text-fg">
                               이미지 첨부
                             </span>
-                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
                               JPG, PNG · 최대 1024px · 1MB
                             </span>
                           </span>
@@ -1344,16 +1342,16 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             queueMicrotask(() => onOpenWorkspaceTools())
                           }}
                         >
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-stone-600 dark:text-stone-300">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px] font-medium text-fg">
                               파일·문서 첨부
                             </span>
-                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
                               Google Drive · Microsoft 365
                             </span>
                           </span>
@@ -1367,21 +1365,21 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             queueMicrotask(() => documentInputRef.current?.click())
                           }}
                         >
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-stone-600 dark:text-stone-300">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px] font-medium text-fg">
                               로컬 파일 업로드
                             </span>
-                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
                               PDF, DOCX, TXT 등 다양한 포맷 지원
                             </span>
                           </span>
                         </button>
-                        <div className="mx-3 my-1 border-t border-stone-100 dark:border-stone-700" />
+                        <div className="mx-3 my-1 border-t border-border" />
                         </>
                       ) : null}
                       {showDeepResearchToggle ? (
@@ -1407,10 +1405,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px] font-medium text-fg">
                               Deep Research
                             </span>
-                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
                               Claude·GPT·Gemini 교차 검증
                             </span>
                           </span>
@@ -1442,10 +1440,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
+                            <span className="block text-[13px] font-medium text-fg">
                               인터넷 검색
                             </span>
-                            <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+                            <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
                               Gemini·Claude·GPT 실시간 웹 정보
                             </span>
                           </span>
@@ -1488,10 +1486,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                                   )}
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                  <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">
+                                  <span className="block text-[13px] font-medium text-fg">
                                     {tool.label}
                                   </span>
-                                  <span className="mt-0.5 block text-[11px]! leading-snug text-stone-500 dark:text-stone-400">
+                                  <span className="mt-0.5 block text-[11px] leading-snug text-fg-subtle">
                                     {tool.hint}
                                   </span>
                                 </span>
@@ -1513,14 +1511,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             onOpenReferenceRoom()
                           }}
                         >
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-orange-800 dark:text-orange-300">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-brand">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">사내 자료실</span>
-                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">문서·드라이브 참조</span>
+                            <span className="block text-[13px] font-medium text-fg">사내 자료실</span>
+                            <span className="mt-0.5 block text-[11px] text-fg-subtle">문서·드라이브 참조</span>
                           </span>
                         </button>
                       ) : null}
@@ -1535,14 +1533,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             onOpenNotebook()
                           }}
                         >
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-orange-800 dark:text-orange-300">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-brand">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">노트북 워크스페이스</span>
-                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">RAG · 사내 문서 분석</span>
+                            <span className="block text-[13px] font-medium text-fg">노트북 워크스페이스</span>
+                            <span className="mt-0.5 block text-[11px] text-fg-subtle">RAG · 사내 문서 분석</span>
                           </span>
                         </button>
                       ) : null}
@@ -1557,14 +1555,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           setTimeout(() => textareaRef.current?.focus(), 0)
                         }}
                       >
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-stone-500">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-subtle">
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                           </svg>
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">가이드 학습</span>
-                          <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">새로운 내용 공부하고 배우기</span>
+                          <span className="block text-[13px] font-medium text-fg">가이드 학습</span>
+                          <span className="mt-0.5 block text-[11px] text-fg-subtle">새로운 내용 공부하고 배우기</span>
                         </span>
                       </button>
 
@@ -1578,14 +1576,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                           setTimeout(() => textareaRef.current?.focus(), 0)
                         }}
                       >
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-stone-500">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-subtle">
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                           </svg>
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">개인 인텔리전스 Labs</span>
-                          <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">데이터 분석 요청</span>
+                          <span className="block text-[13px] font-medium text-fg">개인 인텔리전스 Labs</span>
+                          <span className="mt-0.5 block text-[11px] text-fg-subtle">데이터 분석 요청</span>
                         </span>
                       </button>
 
@@ -1599,14 +1597,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                             onOpenWorkspaceTools()
                           }}
                         >
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-orange-800 dark:text-orange-300">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-brand">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">워크스페이스 연동</span>
-                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">Google · Microsoft</span>
+                            <span className="block text-[13px] font-medium text-fg">워크스페이스 연동</span>
+                            <span className="mt-0.5 block text-[11px] text-fg-subtle">Google · Microsoft</span>
                           </span>
                         </button>
                       ) : null}
@@ -1615,21 +1613,21 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                         <button
                           type="button"
                           role="menuitem"
-                          className={`${toolboxMenuItemClass} border-t border-stone-100 dark:border-stone-800`}
+                          className={`${toolboxMenuItemClass} border-t border-border`}
                           onClick={() => {
                             closeMenus()
                             onOpenSettings()
                           }}
                         >
-                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-stone-600 dark:text-stone-300">
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-fg-muted">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px]! font-medium text-stone-900 dark:text-stone-50">채팅 맞춤설정</span>
-                            <span className="mt-0.5 block text-[11px]! text-stone-500 dark:text-stone-400">프로필 · AI 선호 설정</span>
+                            <span className="block text-[13px] font-medium text-fg">채팅 맞춤설정</span>
+                            <span className="mt-0.5 block text-[11px] text-fg-subtle">프로필 · AI 선호 설정</span>
                           </span>
                         </button>
                       ) : null}
@@ -1680,7 +1678,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   onClick={handleMicToggle}
                   className={`relative flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 ${
                     isListening
-                      ? 'animate-pulse bg-red-100 text-red-600 ring-2 ring-red-500/60 dark:bg-red-950/50 dark:text-red-300 dark:ring-red-400/50'
+                      ? 'animate-pulse bg-danger-soft text-danger ring-2 ring-red-500/60'
                       : `${toolbarIdleBtn} rounded-full`
                   }`}
                   aria-label={isListening ? '음성 입력 중지' : '음성 입력'}
@@ -1701,15 +1699,15 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     {isListening ? (
                       <>
                         <span
-                          className="h-2.5 w-0.5 animate-pulse rounded-full bg-red-500 motion-safe:animate-bounce [animation-delay:0ms] dark:bg-red-400"
+                          className="h-2.5 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:0ms]"
                           aria-hidden="true"
                         />
                         <span
-                          className="h-3.5 w-0.5 animate-pulse rounded-full bg-red-500 motion-safe:animate-bounce [animation-delay:120ms] dark:bg-red-400"
+                          className="h-3.5 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:120ms]"
                           aria-hidden="true"
                         />
                         <span
-                          className="h-2 w-0.5 animate-pulse rounded-full bg-red-500 motion-safe:animate-bounce [animation-delay:240ms] dark:bg-red-400"
+                          className="h-2 w-0.5 animate-pulse rounded-full bg-danger motion-safe:animate-bounce [animation-delay:240ms]"
                           aria-hidden="true"
                         />
                       </>
@@ -1730,8 +1728,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     isGemini
                       ? 'bg-[#0b57d0] hover:bg-[#0842a0] active:bg-[#063078]'
                       : isSoftShell
-                        ? 'bg-orange-700 hover:bg-orange-800 active:bg-orange-900'
-                        : 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800'
+                        ? 'bg-brand hover:bg-brand-strong active:bg-brand-strong'
+                        : 'bg-brand hover:bg-brand-strong active:bg-emerald-800'
                   }`}
                 >
                   <IconStopSquare className="h-3.5 w-3.5 md:h-4 md:w-4" />
@@ -1746,8 +1744,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     isGemini
                       ? 'bg-[#0b57d0] hover:bg-[#0842a0] active:bg-[#063078]'
                       : isSoftShell
-                        ? 'bg-orange-700 hover:bg-orange-800 active:bg-orange-900'
-                        : 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800'
+                        ? 'bg-brand hover:bg-brand-strong active:bg-brand-strong'
+                        : 'bg-brand hover:bg-brand-strong active:bg-emerald-800'
                   }`}
                 >
                   <svg
