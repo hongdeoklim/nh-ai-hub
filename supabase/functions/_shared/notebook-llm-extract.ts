@@ -133,29 +133,35 @@ ${peerBlock}
 - target_document_id는 반드시 비교 대상 목록의 id만 사용
 - JSON 외 텍스트 금지`
 
-  const modelId =
-    readEnv("NOTEBOOK_EXTRACT_MODEL") ??
-    "claude-3-5-sonnet-20241022"
+  // 개체·관계 추출은 짧은 구조화 작업이라 저비용 모델로 충분하다.
+  // (예전 기본값 claude-3-5-sonnet-20241022 는 종료된 모델이라 호출이 실패했다)
+  const modelId = readEnv("NOTEBOOK_EXTRACT_MODEL") ?? "claude-haiku-4-5"
 
   let raw = ""
 
-  if (anthropicKey) {
-    const anthropic = createAnthropic({ apiKey: anthropicKey })
-    const { text } = await generateText({
-      model: anthropic(modelId),
-      prompt,
-      maxOutputTokens: 2048,
-    })
-    raw = text
-  } else if (openaiKey) {
-    const openai = createOpenAI({ apiKey: openaiKey })
-    const { text } = await generateText({
-      model: openai("gpt-4o-mini"),
-      prompt,
-      maxOutputTokens: 2048,
-    })
-    raw = text
-  } else {
+  try {
+    if (anthropicKey) {
+      const anthropic = createAnthropic({ apiKey: anthropicKey })
+      const { text } = await generateText({
+        model: anthropic(modelId),
+        prompt,
+        maxOutputTokens: 2048,
+      })
+      raw = text
+    } else if (openaiKey) {
+      const openai = createOpenAI({ apiKey: openaiKey })
+      const { text } = await generateText({
+        model: openai("gpt-4o-mini"),
+        prompt,
+        maxOutputTokens: 2048,
+      })
+      raw = text
+    } else {
+      return heuristicExtract(currentFileName, documentText, peerDocs)
+    }
+  } catch (e) {
+    // 모델 호출이 실패해도 키워드 기반 추출로 그래프 노드는 만든다
+    console.warn("[notebook-llm-extract] LLM 추출 실패, 휴리스틱으로 대체:", e instanceof Error ? e.message : e)
     return heuristicExtract(currentFileName, documentText, peerDocs)
   }
 

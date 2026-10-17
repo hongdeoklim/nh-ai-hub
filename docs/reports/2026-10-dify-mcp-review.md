@@ -37,6 +37,12 @@
    - 앱이 부르는 `process-document` 함수가 저장소에 없다 (`src/services/notebook/processDocumentClient.ts:17`). 그런데도 성공처럼 처리되어 파일명 노드만 생긴다.
    - HWP/HWPX 원본을 Dify 로 그대로 보내지만 Dify 기본 설정은 HWP 를 읽지 못한다. Drive 동기화는 PDF·DOCX·HWP 를 건너뛴다.
    - 수정: 미사용 상태인 `_shared/notebook-document-parser.ts`(PDF·HWPX 텍스트 추출)로 본문을 뽑아 `create_by_text` 로 보낸다.
+   - ✅ 코드 작성(배포 필요): 빠져 있던 `process-document` 함수를 마이그레이션 설계대로 구현했다.
+     GCS 원본 → 본문 추출(PDF·HWPX·엑셀·CSV·텍스트) → `document_chunks` + OpenAI 임베딩(1536) → `document_entities`·`document_relations`.
+     본인 업로드·자료실은 업로더 또는 관리자만 처리, 한 문서 최대 120청크. 개체 추출 기본 모델이 종료된 모델(claude-3-5-sonnet-20241022)이라
+     `claude-haiku-4-5` 로 바꾸고, 모델 실패 시 키워드 추출로 대체한다.
+     남은 것: 결과는 노트북·지식 허브·지식 그래프에서 쓰이며, 메인 AI 채팅(`company_documents`)과 Dify 에는 아직 연결되지 않았다(연동 방향 결정 후).
+     구형 HWP(바이너리)는 여전히 본문을 읽지 못한다.
 3. **[높음] `dify-knowledge-bridge` 가 Dify 외부 지식 API 규격과 다르다**
    - Dify 는 `POST /retrieval` 에 `{knowledge_id, query, retrieval_setting:{top_k, score_threshold}}` 를 보내고 `{records:[{content, score, title, metadata}]}` 를 기대한다. 현재 브릿지는 `{query, limit, type}` → `{success, results}` 이다.
    - 유사도 임계값이 0.7 로 고정이라 앱 내부 검색(0.25 + 하이브리드)보다 결과가 훨씬 적게 나올 가능성이 크다.
