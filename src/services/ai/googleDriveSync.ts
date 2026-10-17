@@ -38,6 +38,10 @@ export type RagIngestResponse = {
   file_name?: string
   chunks_total?: number
   inserted?: number
+  /** 원문이 바뀌지 않아 임베딩을 건너뜀 */
+  skipped?: boolean
+  /** 일부 청크 임베딩 실패 — 다음 동기화 때 다시 시도됨 */
+  partial?: boolean
   failed?: number
   errors?: Array<{ chunk_index: number; message: string }>
   error?: string
@@ -354,6 +358,7 @@ export async function syncGoogleDriveFolderToRag(options?: {
   const total = textFiles.length
   let filesIngested = 0
   let filesFailed = 0
+  let filesSkipped = 0
 
   for (let i = 0; i < textFiles.length; i++) {
     const file = textFiles[i]!
@@ -393,7 +398,10 @@ export async function syncGoogleDriveFolderToRag(options?: {
       continue
     }
 
-    if ((ingested.data.inserted ?? 0) > 0) {
+    if (ingested.data.skipped) {
+      // 내용이 그대로라 재임베딩을 건너뛴 문서 — 실패가 아니다
+      filesSkipped++
+    } else if ((ingested.data.inserted ?? 0) > 0) {
       filesIngested++
     } else {
       filesFailed++
@@ -406,18 +414,19 @@ export async function syncGoogleDriveFolderToRag(options?: {
 
   onProgress?.({
     phase: 'done',
-    message: `동기화 완료 — ${filesIngested}건 학습, ${filesFailed}건 실패`,
+    message: `동기화 완료 — ${filesIngested}건 학습, ${filesSkipped}건 변경 없음, ${filesFailed}건 실패`,
     processed: total,
     total,
   })
 
   return {
-    ok: filesIngested > 0 && filesFailed === 0 ? true : filesIngested > 0,
+    // 새로 학습했거나 변경 없음으로 확인된 문서가 하나라도 있으면 동기화 자체는 성공
+    ok: filesIngested + filesSkipped > 0,
     folderId: rootListed.folderId,
     filesListed: total,
     textCandidates: total,
     filesIngested,
-    filesSkipped: 0,
+    filesSkipped,
     filesFailed,
     errors,
   }
